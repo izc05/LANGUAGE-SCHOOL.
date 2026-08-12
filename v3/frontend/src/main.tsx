@@ -8,6 +8,7 @@ import './styles/admin-cms.css'
 import './styles/admin-students.css'
 import './styles/admin-academy.css'
 import './styles/auth-session.css'
+import './styles/student-portal.css'
 
 const root = document.getElementById('root')
 
