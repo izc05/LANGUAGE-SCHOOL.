@@ -10,8 +10,8 @@ Este archivo es la **fuente de verdad** del desarrollo. Cada bloque se marca por
 - Frontend: React + TypeScript + Vite
 - Backend: PocketBase `0.39.9`
 - Producción prevista: Raspberry Pi 4 + SSD + disco externo de backup
-- Frente activo: **FASE 9.2 · Raspberry Pi 4 + SSD**
-- Bloqueo actual: ejecución física pendiente de disponer de la Raspberry/SSD delante.
+- Frente activo: **FASE 9.1B.4 · Completar web pública (Profesores + Sobre nosotros + endurecimiento visual)**
+- Hardware: **FASE 9.2 sigue pendiente**, pero no bloquea la preproducción en GitHub.
 
 ### Estados
 - ✅ COMPLETADA = implementada y validada.
@@ -27,7 +27,8 @@ Este archivo es la **fuente de verdad** del desarrollo. Cada bloque se marca por
 - Secretos, `.env`, `pb_data`, backups y datos privados fuera de GitHub.
 
 ## FASE 1 · Frontend público y portales — ✅ COMPLETADA
-- `/`, `/blog`, `/acceso`, `/alumno`, `/profesor`, `/admin`.
+- Web pública, blog y acceso.
+- Portales `/alumno`, `/profesor` y `/admin`.
 - Responsive + GitHub Actions.
 
 ## FASE 2 · CMS y gestión académica visual — ✅ COMPLETADA
@@ -46,16 +47,13 @@ Este archivo es la **fuente de verdad** del desarrollo. Cada bloque se marca por
 8. `1786564500_allow_teacher_student_file_read.js`
 9. `1786564800_tighten_teacher_attendance_scope.js`
 
-### Correcciones de fundación descubiertas por CI real
-- Migración 1 personaliza la colección `users` incorporada por PocketBase; no crea ni elimina otra `users`.
+### Revalidación de fundación
+- La migración 1 personaliza la colección `users` incorporada por PocketBase.
 - Colecciones base con timestamps declaran `created` y `updated` como `autodate`.
-- CI inspecciona la salida real de `migrate up`/rollback y falla ante errores impresos.
-- CI levanta PocketBase 0.39.9 real y comprueba `/api/health`.
-
-Validación:
-- fresh database + todas las migraciones ✅
-- arranque PocketBase real ✅
-- rollback última migración ✅
+- CI detecta errores impresos por `migrate up`/rollback aunque el proceso no falle por sí solo.
+- PocketBase 0.39.9 real se levanta temporalmente en CI y pasa `/api/health`.
+- Fresh database + todas las migraciones ✅
+- Rollback ✅
 
 ## FASE 4 · CMS real ↔ PocketBase — ✅ COMPLETADA
 - Home, editor, multimedia y blog conectados.
@@ -71,159 +69,138 @@ Validación:
 - `studentPortal.ts`.
 - `/alumno`, `/alumno/archivos`, `/alumno/material`, `/alumno/tareas`, `/alumno/clases`, `/alumno/avisos`.
 - Archivos privados protegidos.
+- Alumno A no puede leer matrícula/usuario/grupo/archivo de Alumno B.
+- Descarga protegida por token validada.
 - Frontend CI ✅
-
-### 6.7 Prueba A/B — ✅ COMPLETADA EN POCKETBASE REAL TEMPORAL
-`security-isolation-smoke.sh` demuestra:
-- Alumno A puede leer su matrícula y no la de B.
-- Alumno A no puede leer usuario/grupo/archivo de B.
-- conocer IDs ajenos no concede acceso.
-- Alumno A descarga su archivo protegido con token.
-- Alumno B no puede descargar el archivo protegido de A.
-
----
+- PocketBase CI ✅
 
 ## FASE 7 · Profesor real — ✅ COMPLETADA Y VALIDADA A/B
-
-### 7.1–7.5 — ✅ COMPLETADAS
-- `teacherPortal.ts`, `teacherStudents.ts`, `teacherClasses.ts`.
 - `/profesor`, `/profesor/alumnos`, `/profesor/clases`, `/profesor/material`, `/profesor/tareas`, `/profesor/correcciones`.
 - Profesor restringido a grupos/alumnos propios.
 - Archivos del alumno: solo lectura/descarga con relación académica activa.
-- Asistencia: solo alumno `ACTIVE` del grupo de la clase; `class` y `student` inmutables al actualizar.
+- Asistencia solo de alumnos `ACTIVE` del grupo.
+- Profesor A/B y revocación al pausar matrícula validados en PocketBase real temporal.
 - Frontend CI ✅
-
-### 7.6 Prueba seguridad profesor — ✅ COMPLETADA EN POCKETBASE REAL TEMPORAL
-`security-isolation-smoke.sh` demuestra:
-- Profesor A ve Alumno A/Grupo A y no Alumno B/Grupo B.
-- Profesor B no ve Alumno A.
-- Profesor A relacionado puede descargar archivo protegido de Alumno A.
-- Profesor B no puede descargarlo.
-- Profesor A puede registrar asistencia de Alumno A en Grupo A.
-- Profesor A no puede registrar asistencia de Alumno B fuera del grupo.
-- Profesor A no puede publicar material a Alumno B no relacionado.
-- al pausar la matrícula A, el profesor pierde inmediatamente lectura y descarga del archivo de A.
-
-Validación conjunta:
 - PocketBase CI ✅
-- Frontend CI ✅
-
----
 
 ## FASE 8 · Administración académica real — ✅ COMPLETADA Y VALIDADA END-TO-END
-
-### 8.1 Servicios ADMIN — ✅
-`adminAcademic.ts`: usuarios, perfiles, cursos, grupos, matrículas, clases y asistencia.
-
-### 8.2 Alumnos y profesores — ✅
-- `/admin/alumnos`: alta cuenta+perfil, activar/desactivar, curso/grupo/profesor/próxima clase reales.
-- `/admin/profesores`: alta cuenta+perfil, activar/desactivar, grupos/alumnos/clases reales.
-
-### 8.3 Cursos, grupos y matrículas — ✅
-- `/admin/cursos` real.
-- curso/visibilidad/archivo-reactivación.
-- grupo con profesor, año, horario y capacidad.
-- matrícula/reactivación/pausa/finalización/cancelación.
-- ocupación desde matrículas `ACTIVE`.
-
-### 8.4 Calendario y asistencia ADMIN — ✅
-- `/admin/clases` real.
-- calendario semanal, filtros profesor/grupo, programación, estados y asistencia global.
-
-### 8.5 Validación ADMIN — ✅
-`admin-flow-smoke.sh` ejecuta sobre PocketBase real temporal:
-`superuser temporal → ADMIN aplicación → login ADMIN → profesor+perfil → alumno+perfil → curso → grupo → matrícula → clase → asistencia`.
-
-Resultado:
-- flujo ADMIN completo ✅
-- reglas ADMIN reales ✅
-- servidor PocketBase real ✅
+- `adminAcademic.ts` centraliza usuarios, perfiles, cursos, grupos, matrículas, clases y asistencia.
+- `/admin/alumnos` real.
+- `/admin/profesores` real.
+- `/admin/cursos` real: cursos, grupos, profesor, capacidad, matrícula y ocupación.
+- `/admin/clases` real: calendario semanal, estados y asistencia global.
+- `admin-flow-smoke.sh` prueba `ADMIN → profesor → alumno → curso → grupo → matrícula → clase → asistencia`.
 - Frontend CI ✅
+- PocketBase CI ✅
 
 ---
 
-## FASE 9 · Raspberry Pi 4 y producción — 🟡 EN CURSO
+## FASE 9 · Producción y preproducción — 🟡 EN CURSO
 
 ### 9.1 Paquete reproducible de producción — ✅ COMPLETADA Y VALIDADA
 
-Arquitectura fijada:
+Arquitectura:
 `Internet → Cloudflare Tunnel → 127.0.0.1:8080 Nginx → React + /api/* → 127.0.0.1:8090 PocketBase`.
 
-Paquete creado en `v3/infrastructure/`:
-
-#### Configuración
-- `.env.example` sin secretos.
-- `PUBLIC_ORIGIN` para compilar frontend conectado.
-- PocketBase 0.39.9 ARM64 fijado.
-- SHA-256 oficial fijado y comprobado en CI.
-
-#### Raspberry/PocketBase
-- `raspberry-pi/prepare-production-env.sh`.
-- `raspberry-pi/install-pocketbase.sh`.
-- `raspberry-pi/language-school-pocketbase.service` endurecido con systemd.
-- `raspberry-pi/migrate.sh` con detección explícita de errores de migración.
-- `raspberry-pi/bootstrap-admin.sh` interactivo: superuser local + primer ADMIN de aplicación, sin guardar contraseñas.
-- `raspberry-pi/deploy-frontend.sh`.
-- `raspberry-pi/health-check.sh`.
-
-#### Reverse proxy
-- `reverse-proxy/language-school.nginx.conf`.
-- `reverse-proxy/install-nginx.sh`.
-- Nginx escucha solo en `127.0.0.1:8080`.
-- PocketBase escucha solo en `127.0.0.1:8090`.
-- Solo `/api/*` se reenvía a PocketBase; `/_/` no se publica.
-
-#### Cloudflare
-- `cloudflare/README.md`.
-- `cloudflare/config.yml.example` sin credenciales.
-- origen fijado a `http://127.0.0.1:8080`.
-- catch-all final `http_status:404`.
-
-#### Backup/restore
-- `backups/backup.sh`: aborta si el disco configurado no es un mountpoint real, detiene PocketBase, crea tar consistente, SHA-256, retención y reinicia servicio.
-- `backups/restore.sh`: exige checksum, conserva estado previo y hace rollback automático si PocketBase no vuelve sano.
-- `backups/install-backup.sh`.
-- `backups/language-school-backup.service`.
-- `backups/language-school-backup.timer`: diario 03:30 con retraso aleatorio máximo de 15 min.
-
-#### Documentación
-- `infrastructure/README.md`: runbook exacto de instalación y actualización.
-- `infrastructure/PRODUCTION-CHECKLIST.md`: verificación física antes de sustituir la web anterior.
-
-#### V3 Infrastructure CI
-Nuevo workflow `.github/workflows/v3-infrastructure-ci.yml` valida:
-- sintaxis de todos los scripts Bash.
-- ausencia de claves tipo password/token/secret en `.env.example`.
-- descarga y SHA-256 real del ZIP ARM64 oficial de PocketBase 0.39.9.
-- sintaxis Nginx mediante `nginx -t`.
-- catch-all de Cloudflare.
-- calendario systemd del backup.
-
-Validación conjunta al cierre de 9.1:
+Preparado en `v3/infrastructure/`:
+- PocketBase 0.39.9 ARM64 fijado y checksum oficial validado.
+- servicio `systemd` endurecido.
+- migraciones, bootstrap ADMIN, deploy frontend y health-check.
+- Nginx localhost-only.
+- Cloudflare Tunnel hacia Nginx, nunca PocketBase directo.
+- backup con comprobación de mountpoint, checksum y retención.
+- restore con rollback automático si PocketBase no vuelve sano.
+- timer nocturno.
+- runbook y checklist de producción.
 - V3 Infrastructure CI ✅
-- V3 PocketBase CI ✅
-- V3 Frontend CI ✅
+
+### 9.1B Preproducción en GitHub — 🟡 EN CURSO
+
+#### 9.1B.1 Auditoría ADMIN — ✅ COMPLETADA
+Se detectaron dos enlaces de menú sin ruta real:
+- `/admin/tarifas`
+- `/admin/configuracion`
+
+Se implementó:
+- `siteManagement.ts`.
+- `/admin/tarifas`: CRUD de `pricing_plans`, activar/ocultar/destacar/eliminar.
+- `/admin/configuracion`: nombre academia, logo, dirección, email, teléfono, WhatsApp y redes.
+- modo demo preservado.
+- Frontend CI ✅
+
+#### 9.1B.2 E2E de navegador — ✅ COMPLETADA
+Se añadió `v3/e2e/` con **Playwright 1.62.1** y workflow `V3 E2E CI`.
+
+El pipeline ejecuta:
+1. PocketBase 0.39.9 temporal desde cero.
+2. migraciones reales.
+3. usuarios E2E ADMIN / TEACHER / STUDENT.
+4. frontend compilado con `VITE_APP_MODE=connected`.
+5. Chromium real.
+6. login y redirección por rol.
+7. navegación ADMIN.
+8. navegación TEACHER.
+9. navegación STUDENT.
+10. rechazo de rutas de otros roles.
+11. logout.
+12. comprobación móvil sin scroll horizontal.
+
+Resultado: V3 E2E CI ✅
+
+#### 9.1B.3 Web pública Programas/Tarifas/Contacto — ✅ COMPLETADA
+Nuevas rutas:
+- `/programas`
+- `/tarifas`
+- `/contacto`
+
+Implementado:
+- `publicAcademy.ts`.
+- Programas leen cursos `ACTIVE + public_visible` de PocketBase.
+- Tarifas leen solo planes `active` de PocketBase.
+- Los datos demo **no aparecen en modo connected si la colección real está vacía**.
+- Contacto crea `contact_requests` con estado `NEW`.
+- `SiteShell` lee `site_settings` para nombre, logo, dirección, email, teléfono e Instagram.
+- El logo que se suba desde ADMIN puede mostrarse automáticamente en header/footer.
+- navegación pública actualizada.
+- estados vacíos seguros.
+
+Validación E2E real:
+- curso público leído desde PocketBase ✅
+- tarifa pública leída desde PocketBase ✅
+- formulario de contacto crea solicitud ✅
+- ADMIN/TEACHER/STUDENT siguen funcionando ✅
+- prueba móvil ✅
+- Frontend CI ✅
+- PocketBase CI ✅
+- V3 E2E CI ✅
+
+#### 9.1B.4 Profesores + Sobre nosotros + endurecimiento visual — 🟡 EN CURSO
+Objetivo siguiente:
+- perfil público de profesor sin exponer email/teléfono privado.
+- página `/profesores`.
+- página `/sobre-nosotros` editable.
+- completar navegación pública.
+- revisar 404/errores y SEO básico.
 
 ### 9.2 Raspberry + SSD — 🔒 PENDIENTE DE HARDWARE
-Siguiente ejecución física:
 1. instalar sistema ARM64 en SSD;
 2. confirmar boot desde SSD;
 3. configurar usuario, SSH, hostname y red;
 4. clonar/actualizar repositorio;
-5. aplicar el paquete 9.1 siguiendo `infrastructure/README.md` y `PRODUCTION-CHECKLIST.md`.
+5. aplicar paquete 9.1.
 
 ### 9.3 HTTPS / acceso exterior — ⏳ PENDIENTE DE 9.2
-- crear/conectar Cloudflare Tunnel.
+- Cloudflare Tunnel.
 - dominio/subdominio definitivo.
-- validar HTTPS y `/api/health` exterior.
+- HTTPS y `/api/health` exterior.
 - confirmar que `/_/` no está publicado.
 
 ### 9.4 Backup/restore físico — ⏳ PENDIENTE DE 9.2
-- montar disco externo por UUID.
+- disco externo por UUID.
 - primera copia manual.
 - habilitar timer.
-- prueba real de ausencia del disco.
-- prueba real de restauración.
+- probar ausencia de disco.
+- restauración real.
 
 ## FASE 10 · Piloto y endurecimiento — ⏳ PENDIENTE
 - 2–3 alumnos.
@@ -237,6 +214,6 @@ Siguiente ejecución física:
 ---
 
 ## Dirección del proyecto
-`Estructura → Frontend → CMS → PocketBase → CMS real → Login → Alumno → Profesor → Admin académico → Seguridad A/B → Producción → Raspberry → Piloto`
+`Estructura → Frontend → CMS → PocketBase → Login → Alumno → Profesor → Admin → Seguridad A/B → Producción preparada → Preproducción web/E2E → Raspberry → Piloto`
 
-Cada nueva sesión debe empezar leyendo este archivo y actualizarlo al finalizar cada bloque relevante.
+Cada sesión debe empezar leyendo este archivo y actualizarlo al finalizar cada bloque relevante.
