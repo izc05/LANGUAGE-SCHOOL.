@@ -4,6 +4,7 @@ import HomePage from '../pages/public/HomePage'
 import BlogPage from '../pages/public/BlogPage'
 import LoginPage from '../pages/auth/LoginPage'
 import StudentDashboard from '../pages/student/StudentDashboard'
+import StudentFilesPage from '../pages/student/StudentFilesPage'
 import TeacherDashboard from '../pages/teacher/TeacherDashboard'
 import AdminDashboard from '../pages/admin/AdminDashboard'
 import AdminSiteEditor from '../pages/admin/AdminSiteEditor'
@@ -22,6 +23,7 @@ export default function App() {
       <Route path="/acceso" element={<LoginPage />} />
 
       <Route path="/alumno" element={<RequireRole allow={['STUDENT']}><StudentDashboard /></RequireRole>} />
+      <Route path="/alumno/archivos" element={<RequireRole allow={['STUDENT']}><StudentFilesPage /></RequireRole>} />
       <Route path="/profesor" element={<RequireRole allow={['TEACHER']}><TeacherDashboard /></RequireRole>} />
 
       <Route path="/admin" element={<RequireRole allow={['ADMIN']}><AdminDashboard /></RequireRole>} />
@@ -33,6 +35,7 @@ export default function App() {
       <Route path="/admin/cursos" element={<RequireRole allow={['ADMIN']}><AdminCoursesPage /></RequireRole>} />
       <Route path="/admin/clases" element={<RequireRole allow={['ADMIN']}><AdminClassesPage /></RequireRole>} />
 
+      <Route path="/alumno/*" element={<Navigate to="/alumno" replace />} />
       <Route path="/admin/*" element={<Navigate to="/admin" replace />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
