@@ -1,0 +1,440 @@
+.teacher-admin-grid,
+.course-admin-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.course-admin-grid {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.teacher-admin-card,
+.course-admin-card {
+  display: grid;
+  gap: 18px;
+}
+
+.teacher-card-heading {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 12px;
+  align-items: center;
+}
+
+.teacher-avatar {
+  width: 54px;
+  height: 54px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--ink);
+  color: white;
+  border: 2px solid var(--gold);
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+}
+
+.teacher-card-heading h3,
+.course-admin-card h3 {
+  margin: 3px 0 3px;
+}
+
+.teacher-card-heading p,
+.course-admin-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: .78rem;
+}
+
+.teacher-card-metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.teacher-card-metrics > div,
+.course-admin-card dl > div {
+  display: grid;
+  gap: 3px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fafbf9;
+}
+
+.teacher-card-metrics span,
+.teacher-availability span,
+.course-capacity span,
+.course-admin-card dt {
+  color: var(--muted);
+  font-size: .66rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.teacher-card-metrics strong {
+  font-size: 1.15rem;
+}
+
+.teacher-availability {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.teacher-card-actions,
+.course-card-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 7px;
+}
+
+.course-card-actions {
+  grid-template-columns: 1fr 1fr;
+}
+
+.teacher-card-actions button,
+.course-card-actions button {
+  min-height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: white;
+  color: var(--ink-soft);
+  font-size: .72rem;
+  font-weight: 700;
+}
+
+.teacher-load-panel {
+  display: grid;
+  gap: 15px;
+}
+
+.teacher-load-list {
+  display: grid;
+  gap: 14px;
+}
+
+.teacher-load-list > div {
+  display: grid;
+  grid-template-columns: 150px 1fr 78px;
+  gap: 14px;
+  align-items: center;
+  font-size: .78rem;
+}
+
+.teacher-load-list > div > div {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e9edea;
+}
+
+.teacher-load-list i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--sage-dark), var(--sage));
+}
+
+.teacher-load-list strong {
+  text-align: right;
+}
+
+.course-admin-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.course-card-number {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  color: #d7ddd8;
+  font-family: 'Playfair Display', serif;
+  font-size: 1.5rem;
+}
+
+.course-capacity {
+  display: grid;
+  gap: 8px;
+}
+
+.course-capacity > div:first-child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.course-admin-card dl {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.course-admin-card dt,
+.course-admin-card dd {
+  margin: 0;
+}
+
+.course-admin-card dd {
+  color: var(--ink);
+  font-size: .8rem;
+  font-weight: 700;
+}
+
+.groups-overview-panel {
+  display: grid;
+  gap: 2px;
+}
+
+.group-row {
+  display: grid;
+  grid-template-columns: 68px 1.4fr .55fr .7fr auto;
+  gap: 14px;
+  align-items: center;
+  min-height: 68px;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink-soft);
+  font-size: .78rem;
+}
+
+.group-row:last-child {
+  border-bottom: 0;
+}
+
+.group-row > div {
+  display: grid;
+  gap: 2px;
+}
+
+.group-row small {
+  color: var(--muted);
+}
+
+.group-code {
+  display: grid;
+  place-items: center;
+  min-height: 34px;
+  border-radius: 9px;
+  background: #eef3ee;
+  color: var(--sage-dark);
+  font-size: .68rem;
+  font-weight: 800;
+}
+
+.calendar-admin-panel {
+  overflow: hidden;
+}
+
+.calendar-actions {
+  display: flex;
+  gap: 5px;
+}
+
+.calendar-actions button {
+  min-width: 38px;
+  min-height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: white;
+  color: var(--ink-soft);
+  font-weight: 700;
+}
+
+.week-calendar {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--line);
+}
+
+.calendar-day {
+  min-height: 380px;
+  background: #fff;
+}
+
+.calendar-day-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 58px;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--line);
+  background: #f7f9f6;
+}
+
+.calendar-day-heading span {
+  color: var(--muted);
+  font-size: .72rem;
+  font-weight: 700;
+}
+
+.calendar-day-heading strong {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.4rem;
+}
+
+.calendar-day-body {
+  display: grid;
+  align-content: start;
+  gap: 9px;
+  padding: 10px;
+}
+
+.calendar-class {
+  display: grid;
+  gap: 4px;
+  min-height: 96px;
+  padding: 12px;
+  border: 1px solid #d8e2d9;
+  border-left: 3px solid var(--sage-dark);
+  border-radius: 12px;
+  background: #f5f9f5;
+  color: var(--ink);
+  text-align: left;
+}
+
+.calendar-class span,
+.calendar-class small {
+  color: var(--muted);
+  font-size: .68rem;
+}
+
+.calendar-class strong {
+  font-size: .82rem;
+}
+
+.class-bottom-grid {
+  align-items: start;
+}
+
+.upcoming-class-list {
+  display: grid;
+}
+
+.upcoming-class-list > div {
+  display: grid;
+  grid-template-columns: 58px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  min-height: 62px;
+  border-bottom: 1px solid var(--line);
+}
+
+.upcoming-class-list > div:last-child {
+  border-bottom: 0;
+}
+
+.upcoming-class-list > span,
+.upcoming-class-list b {
+  font-size: .75rem;
+}
+
+.upcoming-class-list > div > span {
+  color: var(--sage-dark);
+  font-weight: 800;
+}
+
+.upcoming-class-list > div > div {
+  display: grid;
+  gap: 2px;
+}
+
+.upcoming-class-list small,
+.upcoming-class-list b {
+  color: var(--muted);
+}
+
+.availability-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.availability-grid button {
+  min-height: 92px;
+  display: grid;
+  align-content: center;
+  gap: 3px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: #fafbf9;
+  color: var(--ink);
+  text-align: left;
+  padding: 14px;
+}
+
+.availability-grid span,
+.availability-grid small {
+  color: var(--muted);
+  font-size: .68rem;
+}
+
+.availability-grid strong {
+  font-size: 1.1rem;
+}
+
+@media (max-width: 1250px) {
+  .course-admin-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .teacher-admin-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .week-calendar {
+    overflow-x: auto;
+    grid-template-columns: repeat(5, minmax(180px, 1fr));
+  }
+}
+
+@media (max-width: 800px) {
+  .teacher-admin-grid,
+  .course-admin-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .teacher-load-list > div {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .teacher-load-list strong {
+    text-align: left;
+  }
+
+  .group-row {
+    grid-template-columns: 62px 1fr;
+    gap: 8px;
+    padding: 10px 0;
+  }
+
+  .group-row > span:not(.group-code) {
+    grid-column: 2;
+  }
+}
+
+@media (max-width: 560px) {
+  .teacher-card-heading {
+    grid-template-columns: auto 1fr;
+  }
+
+  .teacher-card-heading .status {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .teacher-card-actions,
+  .availability-grid {
+    grid-template-columns: 1fr;
+  }
+}
