@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router'
 import App from './app/App'
 import './styles/global.css'
 import './styles/admin-cms.css'
+import './styles/admin-students.css'
 
 const root = document.getElementById('root')
 
