@@ -5,6 +5,9 @@ import LoginPage from '../pages/auth/LoginPage'
 import StudentDashboard from '../pages/student/StudentDashboard'
 import TeacherDashboard from '../pages/teacher/TeacherDashboard'
 import AdminDashboard from '../pages/admin/AdminDashboard'
+import AdminSiteEditor from '../pages/admin/AdminSiteEditor'
+import AdminMediaLibrary from '../pages/admin/AdminMediaLibrary'
+import AdminBlogManager from '../pages/admin/AdminBlogManager'
 
 export default function App() {
   return (
@@ -15,6 +18,10 @@ export default function App() {
       <Route path="/alumno" element={<StudentDashboard />} />
       <Route path="/profesor" element={<TeacherDashboard />} />
       <Route path="/admin" element={<AdminDashboard />} />
+      <Route path="/admin/web" element={<AdminSiteEditor />} />
+      <Route path="/admin/blog" element={<AdminBlogManager />} />
+      <Route path="/admin/multimedia" element={<AdminMediaLibrary />} />
+      <Route path="/admin/*" element={<Navigate to="/admin" replace />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
