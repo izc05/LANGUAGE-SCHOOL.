@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import SiteShell from '../../components/SiteShell'
+import { getMediaById, getMediaUrl } from '../../services/pocketbase/media'
 import {
   demoHomeContent,
   getPublishedHomeContent,
@@ -23,18 +24,34 @@ const steps = [
 
 export default function HomePage() {
   const [homeContent, setHomeContent] = useState<HomePageContent>(demoHomeContent)
+  const [heroImageUrl, setHeroImageUrl] = useState<string | null>(null)
 
   useEffect(() => {
     let mounted = true
 
-    getPublishedHomeContent()
-      .then((content) => {
-        if (mounted) setHomeContent(content)
-      })
-      .catch(() => {
+    async function loadHome() {
+      try {
+        const content = await getPublishedHomeContent()
+        if (!mounted) return
+        setHomeContent(content)
+
+        if (content.hero.mediaId) {
+          try {
+            const media = await getMediaById(content.hero.mediaId)
+            if (mounted) setHeroImageUrl(getMediaUrl(media, '1400x1000'))
+          } catch {
+            if (mounted) setHeroImageUrl(null)
+          }
+        } else {
+          setHeroImageUrl(null)
+        }
+      } catch {
         // La web pública nunca queda inutilizada si PocketBase no responde.
         // Conservamos el contenido local seguro y evitamos mostrar detalles internos al visitante.
-      })
+      }
+    }
+
+    void loadHome()
 
     return () => {
       mounted = false
@@ -60,7 +77,17 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="hero-visual" aria-label="Vista conceptual de la plataforma del alumno">
+          <div
+            className="hero-visual"
+            aria-label="Vista conceptual de la plataforma del alumno"
+            style={heroImageUrl ? {
+              backgroundImage: `linear-gradient(rgba(16,38,60,.14), rgba(16,38,60,.22)), url(${heroImageUrl})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              borderRadius: '32px',
+              boxShadow: 'var(--shadow)',
+            } : undefined}
+          >
             <div className="hero-orbit orbit-one" />
             <div className="hero-orbit orbit-two" />
             <article className="portal-card portal-card-main">
