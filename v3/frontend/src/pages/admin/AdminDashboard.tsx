@@ -1,8 +1,20 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import DashboardShell from '../../components/DashboardShell'
+import { countNewContactRequests } from '../../services/pocketbase/contactRequests'
 import { adminNav } from './adminNav'
 
 export default function AdminDashboard() {
+  const [newContacts, setNewContacts] = useState<number | null>(null)
+
+  useEffect(() => {
+    let mounted = true
+    countNewContactRequests()
+      .then((count) => { if (mounted) setNewContacts(count) })
+      .catch(() => { if (mounted) setNewContacts(null) })
+    return () => { mounted = false }
+  }, [])
+
   return (
     <DashboardShell role="Administrador" name="Admin" nav={[...adminNav]}>
       <div className="dashboard-content">
@@ -10,16 +22,17 @@ export default function AdminDashboard() {
           <div>
             <span className="eyebrow">CONTROL DE LA ACADEMIA</span>
             <h2>Gestiona la web y la plataforma sin tocar GitHub.</h2>
-            <p>La V3 ya separa contenido público, blog y multimedia para que después cada acción se guarde en PocketBase.</p>
+            <p>La V3 conecta contenido público, academia y solicitudes con PocketBase desde un único panel.</p>
           </div>
-          <Link className="button button-primary" to="/admin/blog">+ Nuevo artículo</Link>
+          <Link className="button button-primary" to="/admin/contactos">Ver solicitudes</Link>
         </div>
 
         <section className="metric-grid">
-          <article><span>Alumnos activos</span><strong>36</strong><small>+3 este mes</small></article>
-          <article><span>Profesores</span><strong>3</strong><small>Todos activos</small></article>
-          <article><span>Artículos</span><strong>12</strong><small>2 borradores</small></article>
-          <article><span>Archivos</span><strong>284</strong><small>Demo · SSD pendiente</small></article>
+          <article><span>Solicitudes nuevas</span><strong>{newContacts ?? '—'}</strong><small><Link to="/admin/contactos">Abrir bandeja →</Link></small></article>
+          <article><span>Alumnos activos</span><strong>36</strong><small>Demo visual · se sustituirá por métrica real</small></article>
+          <article><span>Profesores</span><strong>3</strong><small>Demo visual · se sustituirá por métrica real</small></article>
+          <article><span>Artículos</span><strong>12</strong><small>Demo visual · se sustituirá por métrica real</small></article>
+          <article><span>Archivos</span><strong>284</strong><small>Demo visual · SSD pendiente</small></article>
         </section>
 
         <div className="admin-action-grid">
@@ -27,6 +40,11 @@ export default function AdminDashboard() {
             <span className="action-icon">WEB</span>
             <div><span className="eyebrow eyebrow-light">CMS</span><h3>Editar página de inicio</h3><p>Cambia textos, llamadas a la acción, secciones e imágenes sin editar código.</p></div>
             <Link to="/admin/web">Abrir editor →</Link>
+          </article>
+          <article className="admin-action-card">
+            <span className="action-icon">MSG</span>
+            <div><span className="eyebrow">CONTACTOS</span><h3>Solicitudes de información</h3><p>Revisa mensajes de la web y controla si están nuevos, contactados o cerrados.</p></div>
+            <Link to="/admin/contactos">Abrir bandeja →</Link>
           </article>
           <article className="admin-action-card">
             <span className="action-icon">IMG</span>
@@ -45,18 +63,17 @@ export default function AdminDashboard() {
             <div className="panel-heading"><div><span className="eyebrow">WEB PÚBLICA</span><h3>Contenido editable</h3></div><span className="status success">Preparado</span></div>
             <div className="settings-list">
               <Link to="/admin/web"><span><strong>Portada</strong><small>Título, subtítulo, botones e imagen principal</small></span><b>→</b></Link>
-              <Link to="/admin/web"><span><strong>Programas</strong><small>Kids, Teens, Adultos y Exámenes</small></span><b>→</b></Link>
-              <Link to="/admin/web"><span><strong>Contacto</strong><small>Teléfono, email, horarios y ubicación</small></span><b>→</b></Link>
-              <Link to="/admin/web"><span><strong>Identidad</strong><small>Logo, colores y datos generales</small></span><b>→</b></Link>
+              <Link to="/admin/web/sobre-nosotros"><span><strong>Sobre nosotros</strong><small>Historia, enfoque y valores</small></span><b>→</b></Link>
+              <Link to="/admin/profesores/publicos"><span><strong>Profesores web</strong><small>Perfiles públicos sin exponer datos privados</small></span><b>→</b></Link>
+              <Link to="/admin/configuracion"><span><strong>Identidad y contacto</strong><small>Logo, canales y datos generales</small></span><b>→</b></Link>
             </div>
           </section>
 
           <section className="panel">
-            <div className="panel-heading"><div><span className="eyebrow">BLOG</span><h3>Últimos contenidos</h3></div><Link to="/admin/blog">Nuevo</Link></div>
+            <div className="panel-heading"><div><span className="eyebrow">CONTACTO</span><h3>Seguimiento comercial</h3></div><Link to="/admin/contactos">Ver todas</Link></div>
             <div className="content-list">
-              <div><span className="content-state published">Publicado</span><div><strong>5 formas de ganar confianza al hablar</strong><small>Speaking · hoy</small></div></div>
-              <div><span className="content-state draft">Borrador</span><div><strong>Guía B1 para septiembre</strong><small>Exams · editado ayer</small></div></div>
-              <div><span className="content-state published">Publicado</span><div><strong>Vocabulario sin listas infinitas</strong><small>Vocabulary · hace 4 días</small></div></div>
+              <div><span className="content-state draft">Nuevas</span><div><strong>{newContacts ?? '—'} pendientes de revisar</strong><small>Mensajes recibidos desde el formulario público</small></div></div>
+              <div><span className="content-state published">Flujo</span><div><strong>NEW → CONTACTED → CLOSED</strong><small>Sin eliminar el histórico de la solicitud</small></div></div>
             </div>
           </section>
         </div>
