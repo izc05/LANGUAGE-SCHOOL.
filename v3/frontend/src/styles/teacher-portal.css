@@ -1,0 +1,29 @@
+.teacher-portal-page { display: grid; gap: 24px; }
+.teacher-page-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; }
+.teacher-page-heading h2 { margin: 8px 0 10px; font-size: clamp(2.2rem, 4vw, 3.7rem); line-height: 1; }
+.teacher-page-heading p { max-width: 720px; margin: 0; color: var(--muted); line-height: 1.65; }
+.teacher-authoring-grid { display: grid; grid-template-columns: minmax(300px,.72fr) minmax(0,1.28fr); gap: 20px; align-items: start; }
+.teacher-authoring-form,.teacher-record-list { display: grid; gap: 18px; }
+.teacher-check { display: flex; gap: 9px; align-items: center; color: var(--ink-soft); font-size: .84rem; }
+.teacher-record-list > div:last-child { display: grid; }
+.teacher-record-list article { display: grid; grid-template-columns: auto minmax(0,1fr) auto; gap: 13px; align-items: center; padding: 15px 0; border-bottom: 1px solid var(--line); }
+.teacher-record-list article:last-child { border-bottom: 0; }
+.teacher-record-icon { width: 46px; height: 46px; display: grid; place-items: center; border-radius: 13px; background: #edf3ee; color: var(--sage-dark); font-size: .7rem; font-weight: 800; }
+.teacher-record-list article > div:nth-child(2) { min-width: 0; display: grid; gap: 4px; }
+.teacher-record-list small { color: var(--muted); }
+.teacher-record-actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.teacher-record-actions button { min-height: 34px; padding: 0 9px; border: 1px solid var(--line); border-radius: 9px; background: #fff; color: var(--ink-soft); font-size: .7rem; font-weight: 700; }
+.teacher-record-actions button:hover { background: #f4f7f4; }
+.teacher-corrections-grid { display: grid; grid-template-columns: minmax(300px,.78fr) minmax(0,1.22fr); gap: 20px; align-items: start; }
+.teacher-correction-list,.teacher-correction-detail { display: grid; gap: 18px; }
+.teacher-correction-list > div:last-child { display: grid; }
+.teacher-correction-list button { width: 100%; display: grid; grid-template-columns: auto minmax(0,1fr) auto; gap: 11px; align-items: center; padding: 14px 0; border: 0; border-bottom: 1px solid var(--line); background: transparent; color: var(--ink); text-align: left; }
+.teacher-correction-list button.active { margin-inline: -9px; width: calc(100% + 18px); padding-inline: 9px; border-radius: 12px; background: #f4f7f3; }
+.teacher-correction-list button > span:nth-child(2) { min-width: 0; display: grid; gap: 3px; }
+.teacher-correction-list small { color: var(--muted); }
+.teacher-correction-list em { font-style: normal; }
+.teacher-correction-detail form { display: grid; gap: 18px; }
+.teacher-answer-box { display: grid; gap: 8px; padding: 17px; border-radius: 15px; background: #f6f7f4; border: 1px solid var(--line); }
+.teacher-answer-box p { margin: 0; color: var(--ink-soft); line-height: 1.65; white-space: pre-wrap; }
+@media (max-width: 980px) { .teacher-authoring-grid,.teacher-corrections-grid { grid-template-columns: 1fr; } }
+@media (max-width: 700px) { .teacher-page-heading { flex-direction: column; align-items: flex-start; } .teacher-record-list article { grid-template-columns: auto 1fr; } .teacher-record-actions { grid-column: 1 / -1; justify-content: flex-start; } .teacher-correction-list button { grid-template-columns: auto 1fr; } .teacher-correction-list em { grid-column: 2; justify-self: start; } }
