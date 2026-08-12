@@ -77,6 +77,7 @@ export default function SiteShell({ children }: SiteShellProps) {
 
   return (
     <div className="site-shell">
+      <a className="skip-link" href="#main-content">Saltar al contenido</a>
       <header className="site-header">
         <div className="container header-inner">
           <Link className="brand" to="/" aria-label={`${brandName} - Inicio`}>
@@ -105,7 +106,7 @@ export default function SiteShell({ children }: SiteShellProps) {
         </div>
       </header>
 
-      <main>{children}</main>
+      <main id="main-content" tabIndex={-1}>{children}</main>
 
       <footer className="site-footer">
         <div className="container footer-grid">
