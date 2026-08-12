@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+PB_URL="${PB_URL:-http://127.0.0.1:8090}"
+SUPERUSER_EMAIL="${PB_SUPERUSER_EMAIL:-e2e-superuser@example.com}"
+SUPERUSER_PASSWORD="${PB_SUPERUSER_PASSWORD:-E2eSuperuserPass123!}"
+ADMIN_EMAIL="${E2E_ADMIN_EMAIL:-e2e-admin@example.com}"
+ADMIN_PASSWORD="${E2E_ADMIN_PASSWORD:-E2eAdminPass123!}"
+TEACHER_EMAIL="${E2E_TEACHER_EMAIL:-e2e-teacher@example.com}"
+TEACHER_PASSWORD="${E2E_TEACHER_PASSWORD:-E2eTeacherPass123!}"
+STUDENT_EMAIL="${E2E_STUDENT_EMAIL:-e2e-student@example.com}"
+STUDENT_PASSWORD="${E2E_STUDENT_PASSWORD:-E2eStudentPass123!}"
+
+post_json() {
+  local url="$1" token="$2" body="$3"
+  if [[ -n "$token" ]]; then
+    curl -fsS -X POST "$url" -H 'Content-Type: application/json' -H "Authorization: $token" --data "$body"
+  else
+    curl -fsS -X POST "$url" -H 'Content-Type: application/json' --data "$body"
+  fi
+}
+
+authenticate() {
+  post_json "$PB_URL/api/collections/$1/auth-with-password" '' \
+    "$(jq -nc --arg identity "$2" --arg password "$3" '{identity:$identity,password:$password}')"
+}
+
+create_record() {
+  post_json "$PB_URL/api/collections/$1/records" "$2" "$3"
+}
+
+echo 'E2E seed: authenticating superuser'
+SUPER_AUTH="$(authenticate '_superusers' "$SUPERUSER_EMAIL" "$SUPERUSER_PASSWORD")"
+SUPER_TOKEN="$(jq -r '.token' <<<"$SUPER_AUTH")"
+
+echo 'E2E seed: creating application ADMIN'
+ADMIN="$(create_record 'users' "$SUPER_TOKEN" "$(jq -nc --arg email "$ADMIN_EMAIL" --arg password "$ADMIN_PASSWORD" '{email:$email,password:$password,passwordConfirm:$password,name:"E2E",surname:"Admin",role:"ADMIN",status:"ACTIVE",phone:""}')")"
+ADMIN_ID="$(jq -r '.id' <<<"$ADMIN")"
+ADMIN_AUTH="$(authenticate 'users' "$ADMIN_EMAIL" "$ADMIN_PASSWORD")"
+ADMIN_TOKEN="$(jq -r '.token' <<<"$ADMIN_AUTH")"
+
+echo 'E2E seed: creating teacher and student'
+TEACHER="$(create_record 'users' "$ADMIN_TOKEN" "$(jq -nc --arg email "$TEACHER_EMAIL" --arg password "$TEACHER_PASSWORD" '{email:$email,password:$password,passwordConfirm:$password,name:"E2E",surname:"Teacher",role:"TEACHER",status:"ACTIVE",phone:""}')")"
+TEACHER_ID="$(jq -r '.id' <<<"$TEACHER")"
+create_record 'teacher_profiles' "$ADMIN_TOKEN" "$(jq -nc --arg user "$TEACHER_ID" '{user:$user,bio:"E2E teacher",specialties:["B1"],public_profile:false,active:true}')" >/dev/null
+
+STUDENT="$(create_record 'users' "$ADMIN_TOKEN" "$(jq -nc --arg email "$STUDENT_EMAIL" --arg password "$STUDENT_PASSWORD" '{email:$email,password:$password,passwordConfirm:$password,name:"E2E",surname:"Student",role:"STUDENT",status:"ACTIVE",phone:""}')")"
+STUDENT_ID="$(jq -r '.id' <<<"$STUDENT")"
+create_record 'student_profiles' "$ADMIN_TOKEN" "$(jq -nc --arg user "$STUDENT_ID" '{user:$user,guardian_name:"",guardian_phone:"",notes_private:"",active:true}')" >/dev/null
+
+echo 'E2E seed: creating academic chain'
+COURSE="$(create_record 'courses' "$ADMIN_TOKEN" '{"title":"E2E English B1","slug":"e2e-english-b1","level":"B1","description":"Browser test course","status":"ACTIVE","public_visible":true}')"
+COURSE_ID="$(jq -r '.id' <<<"$COURSE")"
+GROUP="$(create_record 'groups' "$ADMIN_TOKEN" "$(jq -nc --arg course "$COURSE_ID" --arg teacher "$TEACHER_ID" '{name:"E2E B1 Group",course:$course,teacher:$teacher,academic_year:"2026/27",schedule_text:"Thursday 18:00",capacity:8,status:"ACTIVE"}')")"
+GROUP_ID="$(jq -r '.id' <<<"$GROUP")"
+create_record 'enrollments' "$ADMIN_TOKEN" "$(jq -nc --arg student "$STUDENT_ID" --arg group "$GROUP_ID" '{student:$student,group:$group,status:"ACTIVE",joined_at:"2026-08-12 10:00:00.000Z"}')" >/dev/null
+create_record 'classes' "$ADMIN_TOKEN" "$(jq -nc --arg group "$GROUP_ID" --arg teacher "$TEACHER_ID" '{group:$group,teacher:$teacher,starts_at:"2026-08-13 18:00:00.000Z",ends_at:"2026-08-13 19:00:00.000Z",topic:"E2E Speaking class",description:"Browser test",status:"SCHEDULED"}')" >/dev/null
+
+echo "E2E seed complete: admin=$ADMIN_ID teacher=$TEACHER_ID student=$STUDENT_ID group=$GROUP_ID"
