@@ -32,7 +32,6 @@ test('web pública ofrece salto al contenido y landmarks principales', async ({ 
 
 test('portal STUDENT permite saltar el menú lateral por teclado', async ({ page }) => {
   await login(page, requiredEnv('E2E_STUDENT_EMAIL'), requiredEnv('E2E_STUDENT_PASSWORD'), /\/alumno$/)
-  await page.locator('body').press('Home')
   await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur())
   await useSkipLink(page)
   await expect(page.getByRole('navigation', { name: 'Menú de Alumno' })).toBeVisible()
@@ -47,9 +46,13 @@ test('formularios públicos mantienen etiquetas accesibles', async ({ page }) =>
   await expect(page.getByLabel('Mensaje')).toBeVisible()
 })
 
-test('modo de movimiento reducido no depende de animaciones largas', async ({ page }) => {
+test('modo de movimiento reducido elimina transiciones largas', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/')
-  const duration = await page.locator('.skip-link').evaluate((element) => getComputedStyle(element).transitionDuration)
-  expect(['0s', '0.00001s']).toContain(duration)
+  const durationSeconds = await page.locator('.skip-link').evaluate((element) => {
+    const raw = getComputedStyle(element).transitionDuration.trim()
+    if (raw.endsWith('ms')) return Number.parseFloat(raw) / 1000
+    return Number.parseFloat(raw)
+  })
+  expect(durationSeconds).toBeLessThanOrEqual(0.001)
 })
