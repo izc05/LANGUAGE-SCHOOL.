@@ -77,7 +77,7 @@ export default function TeacherClassesPage() {
   const [classes, setClasses] = useState<ClassRecord[]>(isDemoMode ? [demoClass] : [])
   const [selectedId, setSelectedId] = useState<string | null>(isDemoMode ? demoClass.id : null)
   const [enrollments, setEnrollments] = useState<TeacherEnrollmentRecord[]>(isDemoMode ? demoEnrollments : [])
-  const [attendance, setAttendance] = useState<AttendanceRecord[]>([])
+  const [attendance, setAttendanceRecords] = useState<AttendanceRecord[]>([])
   const [loading, setLoading] = useState(!isDemoMode)
   const [detailLoading, setDetailLoading] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -120,7 +120,7 @@ export default function TeacherClassesPage() {
       .then(([studentRecords, attendanceRecords]) => {
         if (!mounted) return
         setEnrollments(studentRecords)
-        setAttendance(attendanceRecords)
+        setAttendanceRecords(attendanceRecords)
       })
       .catch(() => { if (mounted) setError('No se ha podido cargar la asistencia de esta clase.') })
       .finally(() => { if (mounted) setDetailLoading(false) })
@@ -161,7 +161,7 @@ export default function TeacherClassesPage() {
     } catch { setError('No se ha podido cambiar el estado de la clase.') }
   }
 
-  async function setAttendance(studentId: string, status: AttendanceRecord['status']) {
+  async function registerAttendance(studentId: string, status: AttendanceRecord['status']) {
     if (!selectedClass) return
     setError(null); setMessage(null)
     if (isDemoMode) {
@@ -169,12 +169,12 @@ export default function TeacherClassesPage() {
       const next: AttendanceRecord = existing
         ? { ...existing, status }
         : { id: `demo-att-${studentId}`, collectionId: '', collectionName: 'attendance', created: '', updated: '', expand: {}, class: selectedClass.id, student: studentId, status, notes: '' }
-      setAttendance((current) => [...current.filter((item) => item.student !== studentId), next])
+      setAttendanceRecords((current) => [...current.filter((item) => item.student !== studentId), next])
       return
     }
     try {
       const updated = await setTeacherAttendance({ classRecord: selectedClass, studentId, status })
-      setAttendance((current) => [...current.filter((item) => item.student !== studentId), updated])
+      setAttendanceRecords((current) => [...current.filter((item) => item.student !== studentId), updated])
     } catch (attendanceError) {
       setError(attendanceError instanceof Error ? attendanceError.message : 'No se ha podido registrar la asistencia.')
     }
@@ -248,9 +248,9 @@ export default function TeacherClassesPage() {
                   <span className="avatar-mini">{name.charAt(0).toUpperCase()}</span>
                   <div><strong>{name}</strong><small>{student?.email || 'Alumno autorizado'} · {attendanceLabel(current?.status)}</small></div>
                   <div className="teacher-attendance-actions">
-                    <button className={current?.status === 'PRESENT' ? 'active' : ''} type="button" onClick={() => void setAttendance(enrollment.student, 'PRESENT')}>Presente</button>
-                    <button className={current?.status === 'ABSENT' ? 'active' : ''} type="button" onClick={() => void setAttendance(enrollment.student, 'ABSENT')}>Ausente</button>
-                    <button className={current?.status === 'JUSTIFIED' ? 'active' : ''} type="button" onClick={() => void setAttendance(enrollment.student, 'JUSTIFIED')}>Justificada</button>
+                    <button className={current?.status === 'PRESENT' ? 'active' : ''} type="button" onClick={() => void registerAttendance(enrollment.student, 'PRESENT')}>Presente</button>
+                    <button className={current?.status === 'ABSENT' ? 'active' : ''} type="button" onClick={() => void registerAttendance(enrollment.student, 'ABSENT')}>Ausente</button>
+                    <button className={current?.status === 'JUSTIFIED' ? 'active' : ''} type="button" onClick={() => void registerAttendance(enrollment.student, 'JUSTIFIED')}>Justificada</button>
                   </div>
                 </article>
               })}
