@@ -11,6 +11,13 @@ if [[ "${EUID}" -ne 0 ]]; then
   exit 1
 fi
 
+for command in curl jq systemctl journalctl; do
+  command -v "$command" >/dev/null || {
+    echo "Missing required command: $command" >&2
+    exit 1
+  }
+done
+
 if [[ ! -x "$PB_BIN" ]]; then
   echo "PocketBase binary not found: $PB_BIN" >&2
   exit 1
