@@ -10,7 +10,7 @@ Este archivo es la **fuente de verdad** del desarrollo. Cada bloque se marca por
 - Frontend: React + TypeScript + Vite
 - Backend: PocketBase `0.39.9`
 - Producción prevista: Raspberry Pi 4 + SSD + disco externo de backup
-- Frente activo: **FASE 8.3 · Cursos, grupos y matrículas**
+- Frente activo: **FASE 8.4 · Calendario y asistencia ADMIN**
 - Validaciones bloqueadas por servidor físico: **6.7 y 7.6**
 
 ### Estados
@@ -103,17 +103,7 @@ Demostrar aislamiento Profesor A/Profesor B y rechazo de accesos fuera de relaci
 ## FASE 8 · Administración académica real — 🟡 EN CURSO
 
 ### 8.1 Servicios ADMIN — ✅ COMPLETADA
-`adminAcademic.ts` centraliza:
-- usuarios y roles.
-- alta de alumno + perfil.
-- alta de profesor + perfil.
-- cursos.
-- grupos.
-- matrículas.
-- clases.
-- asistencia.
-
-Validación:
+`adminAcademic.ts` centraliza usuarios, perfiles, cursos, grupos, matrículas, clases y asistencia.
 - Frontend CI ✅
 - PocketBase CI ✅
 
@@ -135,21 +125,33 @@ Validación:
 - Frontend CI ✅
 - PocketBase CI ✅
 
-### 8.3 Cursos, grupos y matrículas — 🟡 EN CURSO
-Objetivo:
-- cursos reales.
-- crear/editar/archivar curso.
-- grupos reales.
-- asignar profesor a grupo.
-- capacidad y horario.
-- matricular alumno en grupo.
-- pausar/finalizar/cancelar matrícula.
-- ocupación calculada desde matrículas activas.
+### 8.3 Cursos, grupos y matrículas — ✅ COMPLETADA
 
-### 8.4 Calendario y asistencia ADMIN — ⏳ PENDIENTE
-- clases globales.
-- filtros por profesor/grupo.
-- asistencia y revisión.
+`/admin/cursos`
+- cursos reales desde PocketBase.
+- alta de curso y visibilidad pública/privada.
+- archivar/reactivar curso.
+- grupos reales con curso, profesor, año, horario y capacidad.
+- alta de grupo con profesor asignado.
+- pausar/reactivar grupo.
+- matrícula alumno → grupo.
+- si la relación alumno/grupo ya existía, se reactiva el registro histórico en lugar de duplicarlo.
+- pausar/reactivar/finalizar/cancelar matrícula.
+- ocupación global y por curso/grupo calculada desde matrículas `ACTIVE`.
+- modo demo preservado.
+
+Validación:
+- Frontend CI ✅
+- PocketBase CI ✅
+
+### 8.4 Calendario y asistencia ADMIN — 🟡 EN CURSO
+Objetivo:
+- clases globales reales.
+- filtros por profesor y grupo.
+- programar clase desde ADMIN.
+- actualizar estado de clase.
+- seleccionar clase y revisar alumnos del grupo.
+- registrar/corregir asistencia.
 
 ### 8.5 Validación ADMIN — ⏳ PENDIENTE
 Flujo completo: alta → grupo → matrícula → clase → asistencia.
