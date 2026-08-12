@@ -33,6 +33,29 @@ test('web pública y login cargan en modo conectado', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Entrar' })).toBeEnabled()
 })
 
+test('programas y tarifas públicas consumen PocketBase real', async ({ page }) => {
+  await page.goto('/programas')
+  await expect(page.getByRole('heading', { name: 'Encuentra el inglés que encaja contigo.' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'E2E English B1' })).toBeVisible()
+
+  await page.goto('/tarifas')
+  await expect(page.getByRole('heading', { name: 'Precios claros, sin letra pequeña.' })).toBeVisible()
+  await expect(page.getByText('E2E Monthly')).toBeVisible()
+  await expect(page.getByText('45 €')).toBeVisible()
+})
+
+test('formulario público registra una solicitud', async ({ page }) => {
+  await page.goto('/contacto?interes=E2E%20English%20B1')
+  await expect(page.getByRole('heading', { name: 'Cuéntanos qué quieres conseguir.' })).toBeVisible()
+  await page.getByLabel('Nombre').fill('E2E Visitor')
+  await page.getByLabel('Email').fill('visitor-e2e@example.com')
+  await page.getByLabel('Teléfono').fill('600000000')
+  await expect(page.getByLabel('Me interesa')).toHaveValue('E2E English B1')
+  await page.getByLabel('Mensaje').fill('Quiero información sobre el programa de prueba.')
+  await page.getByRole('button', { name: 'Enviar solicitud' }).click()
+  await expect(page.getByText('Solicitud enviada. Nos pondremos en contacto contigo.')).toBeVisible()
+})
+
 test('ruta privada sin sesión redirige al acceso', async ({ page }) => {
   await page.goto('/admin')
   await expect(page).toHaveURL(/\/acceso$/)
