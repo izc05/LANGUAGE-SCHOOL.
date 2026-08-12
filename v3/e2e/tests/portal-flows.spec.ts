@@ -78,7 +78,7 @@ test('ADMIN navega por el CMS completo', async ({ page }) => {
   await nav.getByRole('link', { name: 'Profesores web' }).click()
   await expect(page).toHaveURL(/\/admin\/profesores\/publicos$/)
   await expect(page.getByRole('heading', { name: 'Perfiles públicos del equipo' })).toBeVisible()
-  await expect(page.getByDisplayValue('E2E Public Teacher')).toBeVisible()
+  await expect(page.locator('input[value="E2E Public Teacher"]')).toBeVisible()
 
   await nav.getByRole('link', { name: 'Tarifas' }).click()
   await expect(page).toHaveURL(/\/admin\/tarifas$/)
