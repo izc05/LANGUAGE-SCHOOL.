@@ -31,6 +31,10 @@ export async function listMedia(usage?: MediaUsage): Promise<MediaRecord[]> {
   })
 }
 
+export async function getMediaById(id: string): Promise<MediaRecord> {
+  return pb.collection(collections.mediaLibrary).getOne<MediaRecord>(id)
+}
+
 export async function createMedia(input: CreateMediaInput): Promise<MediaRecord> {
   const currentUser = getCurrentUser()
   if (!currentUser) throw new Error('Debes iniciar sesión para subir archivos.')
