@@ -1,0 +1,142 @@
+name: V3 E2E CI
+
+on:
+  pull_request:
+    paths:
+      - 'v3/frontend/**'
+      - 'v3/pocketbase/**'
+      - 'v3/e2e/**'
+      - '.github/workflows/v3-e2e-ci.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'v3/frontend/**'
+      - 'v3/pocketbase/**'
+      - 'v3/e2e/**'
+      - '.github/workflows/v3-e2e-ci.yml'
+
+jobs:
+  browser-flows:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PB_URL: http://127.0.0.1:8090
+      PB_SUPERUSER_EMAIL: e2e-superuser@example.com
+      PB_SUPERUSER_PASSWORD: E2eSuperuserPass123!
+      E2E_BASE_URL: http://127.0.0.1:4173
+      E2E_ADMIN_EMAIL: e2e-admin@example.com
+      E2E_ADMIN_PASSWORD: E2eAdminPass123!
+      E2E_TEACHER_EMAIL: e2e-teacher@example.com
+      E2E_TEACHER_PASSWORD: E2eTeacherPass123!
+      E2E_STUDENT_EMAIL: e2e-student@example.com
+      E2E_STUDENT_PASSWORD: E2eStudentPass123!
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Download PocketBase 0.39.9
+        run: |
+          mkdir -p "$RUNNER_TEMP/pocketbase"
+          gh release download v0.39.9 \
+            --repo pocketbase/pocketbase \
+            --pattern 'pocketbase_0.39.9_linux_amd64.zip' \
+            --dir "$RUNNER_TEMP/pocketbase"
+          unzip -q "$RUNNER_TEMP/pocketbase/pocketbase_0.39.9_linux_amd64.zip" -d "$RUNNER_TEMP/pocketbase"
+          chmod +x "$RUNNER_TEMP/pocketbase/pocketbase"
+
+      - name: Apply migrations to fresh E2E database
+        run: |
+          mkdir -p "$RUNNER_TEMP/language-school-e2e-pb-data"
+          set +e
+          OUTPUT=$("$RUNNER_TEMP/pocketbase/pocketbase" migrate up \
+            --dir="$RUNNER_TEMP/language-school-e2e-pb-data" \
+            --migrationsDir="$GITHUB_WORKSPACE/v3/pocketbase/pb_migrations" 2>&1)
+          EXIT_CODE=$?
+          set -e
+          printf '%s\n' "$OUTPUT"
+          if [ "$EXIT_CODE" -ne 0 ] || printf '%s\n' "$OUTPUT" | grep -Eqi '(^|[[:space:]])Error:|failed to apply migration'; then
+            echo 'E2E PocketBase migrations failed.' >&2
+            exit 1
+          fi
+
+      - name: Create temporary E2E superuser
+        run: |
+          "$RUNNER_TEMP/pocketbase/pocketbase" superuser create \
+            "$PB_SUPERUSER_EMAIL" "$PB_SUPERUSER_PASSWORD" \
+            --dir="$RUNNER_TEMP/language-school-e2e-pb-data"
+
+      - name: Start PocketBase
+        run: |
+          nohup "$RUNNER_TEMP/pocketbase/pocketbase" serve \
+            --http=127.0.0.1:8090 \
+            --dir="$RUNNER_TEMP/language-school-e2e-pb-data" \
+            --migrationsDir="$GITHUB_WORKSPACE/v3/pocketbase/pb_migrations" \
+            >"$RUNNER_TEMP/e2e-pocketbase.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/e2e-pocketbase.pid"
+          for attempt in {1..30}; do
+            curl -fsS "$PB_URL/api/health" >/dev/null && exit 0
+            sleep 1
+          done
+          cat "$RUNNER_TEMP/e2e-pocketbase.log" >&2
+          exit 1
+
+      - name: Seed connected browser users
+        run: bash "$GITHUB_WORKSPACE/v3/e2e/seed-e2e.sh"
+
+      - name: Install and build connected frontend
+        working-directory: v3/frontend
+        env:
+          VITE_APP_MODE: connected
+          VITE_POCKETBASE_URL: http://127.0.0.1:8090
+        run: |
+          npm install
+          npm run build
+
+      - name: Start Vite preview
+        working-directory: v3/frontend
+        run: |
+          nohup npm run preview -- --host 127.0.0.1 --port 4173 >"$RUNNER_TEMP/e2e-frontend.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/e2e-frontend.pid"
+          for attempt in {1..30}; do
+            curl -fsS "$E2E_BASE_URL" >/dev/null && exit 0
+            sleep 1
+          done
+          cat "$RUNNER_TEMP/e2e-frontend.log" >&2
+          exit 1
+
+      - name: Install Playwright 1.62.1
+        working-directory: v3/e2e
+        run: |
+          npm install
+          npx playwright install --with-deps chromium
+
+      - name: Run connected browser flows
+        working-directory: v3/e2e
+        run: npm test
+
+      - name: Upload Playwright diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v3-e2e-diagnostics
+          path: |
+            v3/e2e/playwright-report
+            v3/e2e/test-results
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Stop temporary services
+        if: always()
+        run: |
+          for pid_file in "$RUNNER_TEMP/e2e-frontend.pid" "$RUNNER_TEMP/e2e-pocketbase.pid"; do
+            if [ -f "$pid_file" ]; then
+              kill "$(cat "$pid_file")" 2>/dev/null || true
+            fi
+          done
