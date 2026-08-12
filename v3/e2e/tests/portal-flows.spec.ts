@@ -25,8 +25,15 @@ async function logout(page: Page) {
   await expect(page).toHaveURL(/\/acceso$/)
 }
 
+async function expectNoHorizontalPageOverflow(page: Page) {
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
+  expect(overflow).toBeLessThanOrEqual(1)
+}
+
 test('web pública y login cargan en modo conectado', async ({ page }) => {
   await page.goto('/')
+  await expect(page).toHaveTitle('Language School · Inglés con confianza')
+  await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', /Academia de idiomas/)
   await expect(page.getByText('Language School').first()).toBeVisible()
   await page.goto('/acceso')
   await expect(page.getByText('Acceso protegido mediante PocketBase.')).toBeVisible()
@@ -35,20 +42,24 @@ test('web pública y login cargan en modo conectado', async ({ page }) => {
 
 test('programas, profesores, sobre nosotros y tarifas consumen PocketBase real', async ({ page }) => {
   await page.goto('/programas')
+  await expect(page).toHaveTitle('Programas · Language School')
   await expect(page.getByRole('heading', { name: 'Encuentra el inglés que encaja contigo.' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'E2E English B1' })).toBeVisible()
 
   await page.goto('/profesores')
+  await expect(page).toHaveTitle('Profesores · Language School')
   await expect(page.getByRole('heading', { name: 'Aprender mejor empieza por sentirse acompañado.' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'E2E Public Teacher' })).toBeVisible()
   await expect(page.getByText('English Teacher · B1 & Speaking')).toBeVisible()
   await expect(page.getByText('e2e-teacher@example.com')).toHaveCount(0)
 
   await page.goto('/sobre-nosotros')
+  await expect(page).toHaveTitle('Sobre nosotros · Language School')
   await expect(page.getByRole('heading', { name: 'Una academia cercana para aprender y usar el idioma con confianza.' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Aprender no debería sentirse como memorizar por memorizar.' })).toBeVisible()
 
   await page.goto('/tarifas')
+  await expect(page).toHaveTitle('Tarifas · Language School')
   await expect(page.getByRole('heading', { name: 'Precios claros, sin letra pequeña.' })).toBeVisible()
   await expect(page.getByText('E2E Monthly')).toBeVisible()
   await expect(page.getByText('45 €')).toBeVisible()
@@ -56,6 +67,7 @@ test('programas, profesores, sobre nosotros y tarifas consumen PocketBase real',
 
 test('formulario público registra una solicitud', async ({ page }) => {
   await page.goto('/contacto?interes=E2E%20English%20B1')
+  await expect(page).toHaveTitle('Contacto · Language School')
   await expect(page.getByRole('heading', { name: 'Cuéntanos qué quieres conseguir.' })).toBeVisible()
   await page.getByLabel('Nombre').fill('E2E Visitor')
   await page.getByLabel('Email').fill('visitor-e2e@example.com')
@@ -64,6 +76,14 @@ test('formulario público registra una solicitud', async ({ page }) => {
   await page.getByLabel('Mensaje').fill('Quiero información sobre el programa de prueba.')
   await page.getByRole('button', { name: 'Enviar solicitud' }).click()
   await expect(page.getByText('Solicitud enviada. Nos pondremos en contacto contigo.')).toBeVisible()
+})
+
+test('URL pública desconocida muestra 404 real sin redirigir al inicio', async ({ page }) => {
+  await page.goto('/pagina-que-no-existe')
+  await expect(page).toHaveURL(/\/pagina-que-no-existe$/)
+  await expect(page).toHaveTitle('Página no encontrada · Language School')
+  await expect(page.getByRole('heading', { name: 'Esta página no está disponible.' })).toBeVisible()
+  await expect(page.getByText('404')).toBeVisible()
 })
 
 test('ruta privada sin sesión redirige al acceso', async ({ page }) => {
@@ -134,10 +154,15 @@ test('STUDENT navega y no puede entrar en otros portales', async ({ page }) => {
   await logout(page)
 })
 
-test('portada móvil sin scroll horizontal', async ({ page }) => {
-  await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto('/')
-  await expect(page.getByText('Language School').first()).toBeVisible()
-  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
-  expect(overflow).toBeLessThanOrEqual(1)
+test('cabecera pública responsive sin desbordamiento en móvil y tablet', async ({ page }) => {
+  for (const viewport of [
+    { width: 390, height: 844 },
+    { width: 768, height: 1024 },
+  ]) {
+    await page.setViewportSize(viewport)
+    await page.goto('/')
+    await expect(page.getByText('Language School').first()).toBeVisible()
+    await expect(page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('link', { name: 'Sobre nosotros' })).toBeVisible()
+    await expectNoHorizontalPageOverflow(page)
+  }
 })
