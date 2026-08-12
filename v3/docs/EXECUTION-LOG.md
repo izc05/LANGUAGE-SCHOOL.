@@ -10,8 +10,8 @@ Este archivo es la **fuente de verdad** del desarrollo. Cada bloque se marca por
 - Frontend: React + TypeScript + Vite
 - Backend: PocketBase `0.39.9`
 - Producción prevista: Raspberry Pi 4 + SSD + disco externo de backup
-- Frente activo: **FASES 6.7 + 7.6 · Seguridad A/B en PocketBase temporal**
-- Hardware: FASE 9 sigue pendiente de SSD/Raspberry, pero ya no bloquea las pruebas de reglas porque CI levanta PocketBase real temporal.
+- Frente activo: **FASE 9.1 · Preparación reproducible de producción**
+- Ejecución física FASE 9: pendiente de Raspberry/SSD, pero el paquete de despliegue puede prepararse ya en GitHub.
 
 ### Estados
 - ✅ COMPLETADA = implementada y validada.
@@ -47,15 +47,15 @@ Este archivo es la **fuente de verdad** del desarrollo. Cada bloque se marca por
 9. `1786564800_tighten_teacher_attendance_scope.js`
 
 ### Correcciones de fundación descubiertas por CI real
-- Migración 1 ya **personaliza la colección `users` incorporada por PocketBase**; no intenta crear ni borrar una segunda `users`.
-- Las colecciones base declaran `created` y `updated` mediante `autodate` cuando la aplicación los usa para índices/ordenación.
-- El workflow ya no acepta falsos positivos: inspecciona la salida de `migrate up`/rollback y falla ante errores impresos por PocketBase.
-- CI levanta un servidor PocketBase 0.39.9 real y comprueba `/api/health`.
+- Migración 1 personaliza la colección `users` incorporada por PocketBase; no crea ni elimina otra `users`.
+- Colecciones base con timestamps declaran `created` y `updated` como `autodate`.
+- CI inspecciona la salida real de `migrate up`/rollback y falla ante errores impresos.
+- CI levanta PocketBase 0.39.9 real y comprueba `/api/health`.
 
-Validación actual:
-- Fresh database + todas las migraciones ✅
-- Arranque PocketBase real ✅
-- Rollback última migración ✅
+Validación:
+- fresh database + todas las migraciones ✅
+- arranque PocketBase real ✅
+- rollback última migración ✅
 
 ## FASE 4 · CMS real ↔ PocketBase — ✅ COMPLETADA
 - Home, editor, multimedia y blog conectados.
@@ -67,21 +67,23 @@ Validación actual:
 
 ---
 
-## FASE 6 · Alumno real — 🟡 IMPLEMENTACIÓN COMPLETA / SEGURIDAD A/B EN VALIDACIÓN
+## FASE 6 · Alumno real — ✅ COMPLETADA Y VALIDADA A/B
 - `studentPortal.ts`.
 - `/alumno`, `/alumno/archivos`, `/alumno/material`, `/alumno/tareas`, `/alumno/clases`, `/alumno/avisos`.
 - Archivos privados protegidos.
 - Frontend CI ✅
 
-### 6.7 Prueba A/B — 🟡 EN CURSO EN CI
-Debe demostrar:
-- Alumno A no puede leer usuario, matrícula ni archivo de Alumno B.
+### 6.7 Prueba A/B — ✅ COMPLETADA EN POCKETBASE REAL TEMPORAL
+`security-isolation-smoke.sh` demuestra:
+- Alumno A puede leer su matrícula y no la de B.
+- Alumno A no puede leer usuario/grupo/archivo de B.
 - conocer IDs ajenos no concede acceso.
-- token de archivo protegido funciona para propietario y falla para alumno ajeno.
+- Alumno A descarga su archivo protegido con token.
+- Alumno B no puede descargar el archivo protegido de A.
 
 ---
 
-## FASE 7 · Profesor real — 🟡 IMPLEMENTACIÓN COMPLETA / SEGURIDAD A/B EN VALIDACIÓN
+## FASE 7 · Profesor real — ✅ COMPLETADA Y VALIDADA A/B
 
 ### 7.1–7.5 — ✅ COMPLETADAS
 - `teacherPortal.ts`, `teacherStudents.ts`, `teacherClasses.ts`.
@@ -91,11 +93,20 @@ Debe demostrar:
 - Asistencia: solo alumno `ACTIVE` del grupo de la clase; `class` y `student` inmutables al actualizar.
 - Frontend CI ✅
 
-### 7.6 Prueba seguridad profesor — 🟡 EN CURSO EN CI
-Debe demostrar:
-- Profesor A no puede leer grupo/alumno/archivo de Profesor B.
-- Profesor relacionado sí puede descargar archivo protegido de su alumno.
-- Profesor no puede registrar asistencia para alumno fuera del grupo.
+### 7.6 Prueba seguridad profesor — ✅ COMPLETADA EN POCKETBASE REAL TEMPORAL
+`security-isolation-smoke.sh` demuestra:
+- Profesor A ve Alumno A/Grupo A y no Alumno B/Grupo B.
+- Profesor B no ve Alumno A.
+- Profesor A relacionado puede descargar archivo protegido de Alumno A.
+- Profesor B no puede descargarlo.
+- Profesor A puede registrar asistencia de Alumno A en Grupo A.
+- Profesor A no puede registrar asistencia de Alumno B fuera del grupo.
+- Profesor A no puede publicar material a Alumno B no relacionado.
+- al pausar la matrícula A, el profesor pierde inmediatamente lectura y descarga del archivo de A.
+
+Validación conjunta:
+- PocketBase CI ✅
+- Frontend CI ✅
 
 ---
 
@@ -119,29 +130,48 @@ Debe demostrar:
 - `/admin/clases` real.
 - calendario semanal, filtros profesor/grupo, programación, estados y asistencia global.
 
-### 8.5 Validación ADMIN — ✅ COMPLETADA
-CI ejecuta sobre PocketBase temporal el flujo real:
-`superuser temporal → ADMIN de aplicación → login ADMIN → profesor+perfil → alumno+perfil → curso → grupo → matrícula → clase → asistencia`.
+### 8.5 Validación ADMIN — ✅
+`admin-flow-smoke.sh` ejecuta sobre PocketBase real temporal:
+`superuser temporal → ADMIN aplicación → login ADMIN → profesor+perfil → alumno+perfil → curso → grupo → matrícula → clase → asistencia`.
 
 Resultado:
 - flujo ADMIN completo ✅
 - reglas ADMIN reales ✅
-- PocketBase server real ✅
+- servidor PocketBase real ✅
 - Frontend CI ✅
 
 ---
 
-## FASE 9 · Raspberry Pi 4 y producción — 🔒 PENDIENTE DE HARDWARE
-- SSD.
-- sistema 64-bit.
-- PocketBase ARM64.
-- servicio persistente.
-- migraciones.
-- primer ADMIN.
-- frontend.
-- HTTPS / Cloudflare.
-- backup externo automático.
-- prueba de restauración.
+## FASE 9 · Raspberry Pi 4 y producción — 🟡 PREPARACIÓN EN CURSO / EJECUCIÓN FÍSICA PENDIENTE
+
+### 9.1 Paquete reproducible de producción — 🟡 EN CURSO
+Preparar en repositorio:
+- estructura de directorios de producción.
+- variables `.env.example` sin secretos.
+- instalación PocketBase ARM64 fijada a versión.
+- servicio `systemd`.
+- build/deploy frontend.
+- reverse proxy/local binding.
+- scripts de migración y health-check.
+- backup y restore.
+- checklist de despliegue.
+
+### 9.2 Raspberry + SSD — 🔒 PENDIENTE DE HARDWARE
+- instalar sistema 64-bit.
+- boot desde SSD.
+- usuario/SSH.
+- aplicar paquete 9.1.
+
+### 9.3 HTTPS / acceso exterior — ⏳ PENDIENTE
+- Cloudflare Tunnel o proxy equivalente.
+- dominio/subdominio.
+- frontend y API sin exponer base de datos.
+
+### 9.4 Backup/restore físico — ⏳ PENDIENTE
+- disco externo.
+- backup automático.
+- retención.
+- prueba de restauración real.
 
 ## FASE 10 · Piloto y endurecimiento — ⏳ PENDIENTE
 - 2–3 alumnos.
@@ -155,6 +185,6 @@ Resultado:
 ---
 
 ## Dirección del proyecto
-`Estructura → Frontend → CMS → PocketBase → CMS real → Login → Alumno → Profesor → Admin académico → Seguridad A/B → Raspberry → Piloto`
+`Estructura → Frontend → CMS → PocketBase → CMS real → Login → Alumno → Profesor → Admin académico → Seguridad A/B → Producción → Raspberry → Piloto`
 
 Cada nueva sesión debe empezar leyendo este archivo y actualizarlo al finalizar cada bloque relevante.
