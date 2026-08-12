@@ -1,45 +1,149 @@
-import { useMemo, useState } from 'react'
+import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import DashboardShell from '../../components/DashboardShell'
+import { useAuth } from '../../features/auth/AuthProvider'
+import {
+  createAdminStudent,
+  listAdminClasses,
+  listAdminEnrollments,
+  listAdminUsers,
+  updateAdminUser,
+  type AdminEnrollmentRecord,
+} from '../../services/pocketbase/adminAcademic'
+import type { AppUser } from '../../services/pocketbase/types'
+import type { ClassRecord } from '../../services/pocketbase/studentPortal'
 import { adminNav } from './adminNav'
 
-type Student = {
-  id: number
+type StudentView = {
+  user: AppUser
   initials: string
   name: string
   email: string
   level: string
   program: string
+  group: string
   teacher: string
   status: 'Activo' | 'Pausado'
   nextClass: string
-  files: number
-  storage: string
 }
 
-const students: Student[] = [
-  { id: 1, initials: 'EM', name: 'Emma Martín', email: 'emma@example.com', level: 'B1', program: 'Teens', teacher: 'Laura', status: 'Activo', nextClass: 'Jue · 18:00', files: 18, storage: '124 MB' },
-  { id: 2, initials: 'DL', name: 'Daniel López', email: 'daniel@example.com', level: 'A2', program: 'Kids', teacher: 'Marta', status: 'Activo', nextClass: 'Vie · 17:00', files: 12, storage: '86 MB' },
-  { id: 3, initials: 'CR', name: 'Carla Ruiz', email: 'carla@example.com', level: 'B2', program: 'Exámenes', teacher: 'Laura', status: 'Activo', nextClass: 'Vie · 19:00', files: 31, storage: '310 MB' },
-  { id: 4, initials: 'JM', name: 'Javier Molina', email: 'javier@example.com', level: 'A1', program: 'Adultos', teacher: 'Álvaro', status: 'Pausado', nextClass: 'Sin programar', files: 7, storage: '42 MB' },
-  { id: 5, initials: 'AS', name: 'Ana Sánchez', email: 'ana@example.com', level: 'C1', program: 'Exámenes', teacher: 'Laura', status: 'Activo', nextClass: 'Lun · 18:30', files: 26, storage: '228 MB' },
-]
+const demoUsers = [
+  { id: 'demo-1', name: 'Emma', surname: 'Martín', email: 'emma@example.com', phone: '', role: 'STUDENT', status: 'ACTIVE', collectionId: '', collectionName: 'users', created: '', updated: '', expand: {} },
+  { id: 'demo-2', name: 'Daniel', surname: 'López', email: 'daniel@example.com', phone: '', role: 'STUDENT', status: 'ACTIVE', collectionId: '', collectionName: 'users', created: '', updated: '', expand: {} },
+] as AppUser[]
+
+function formatNextClass(value?: string): string {
+  if (!value) return 'Sin programar'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return 'Sin programar'
+  return new Intl.DateTimeFormat('es-ES', { weekday: 'short', hour: '2-digit', minute: '2-digit' }).format(date)
+}
+
+function initials(user: AppUser): string {
+  return `${user.name?.charAt(0) || ''}${user.surname?.charAt(0) || ''}`.toUpperCase() || 'AL'
+}
 
 export default function AdminStudentsPage() {
+  const { isDemoMode } = useAuth()
+  const [users, setUsers] = useState<AppUser[]>(isDemoMode ? demoUsers : [])
+  const [teachers, setTeachers] = useState<AppUser[]>([])
+  const [enrollments, setEnrollments] = useState<AdminEnrollmentRecord[]>([])
+  const [classes, setClasses] = useState<ClassRecord[]>([])
   const [query, setQuery] = useState('')
-  const [status, setStatus] = useState<'Todos' | Student['status']>('Todos')
-  const [selectedId, setSelectedId] = useState(students[0].id)
+  const [status, setStatus] = useState<'Todos' | StudentView['status']>('Todos')
+  const [selectedId, setSelectedId] = useState<string | null>(isDemoMode ? demoUsers[0].id : null)
+  const [showCreate, setShowCreate] = useState(false)
+  const [loading, setLoading] = useState(!isDemoMode)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [message, setMessage] = useState<string | null>(null)
+  const [name, setName] = useState('')
+  const [surname, setSurname] = useState('')
+  const [email, setEmail] = useState('')
+  const [phone, setPhone] = useState('')
+  const [password, setPassword] = useState('')
+
+  useEffect(() => {
+    if (isDemoMode) return
+    let mounted = true
+    setLoading(true)
+    Promise.all([listAdminUsers('STUDENT'), listAdminUsers('TEACHER'), listAdminEnrollments(), listAdminClasses()])
+      .then(([studentUsers, teacherUsers, enrollmentRecords, classRecords]) => {
+        if (!mounted) return
+        setUsers(studentUsers)
+        setTeachers(teacherUsers)
+        setEnrollments(enrollmentRecords)
+        setClasses(classRecords)
+        if (studentUsers[0]) setSelectedId(studentUsers[0].id)
+      })
+      .catch(() => { if (mounted) setError('No se han podido cargar los alumnos de PocketBase.') })
+      .finally(() => { if (mounted) setLoading(false) })
+    return () => { mounted = false }
+  }, [isDemoMode])
+
+  const studentViews = useMemo<StudentView[]>(() => users.map((user) => {
+    const activeEnrollment = enrollments.find((item) => item.student === user.id && item.status === 'ACTIVE')
+    const group = activeEnrollment?.expand?.group
+    const course = group?.expand?.course
+    const teacher = teachers.find((item) => item.id === group?.teacher)
+    const next = classes
+      .filter((item) => item.group === group?.id && item.status === 'SCHEDULED' && new Date(item.starts_at).getTime() >= Date.now())
+      .sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime())[0]
+    return {
+      user,
+      initials: initials(user),
+      name: [user.name, user.surname].filter(Boolean).join(' ') || user.email,
+      email: user.email,
+      level: course?.level || '—',
+      program: course?.title || 'Sin curso',
+      group: group?.name || 'Sin grupo',
+      teacher: teacher ? [teacher.name, teacher.surname].filter(Boolean).join(' ') : 'Sin profesor',
+      status: user.status === 'ACTIVE' ? 'Activo' : 'Pausado',
+      nextClass: formatNextClass(next?.starts_at),
+    }
+  }), [classes, enrollments, teachers, users])
 
   const filteredStudents = useMemo(() => {
     const normalized = query.trim().toLowerCase()
-    return students.filter((student) => {
-      const matchesText = !normalized || [student.name, student.email, student.level, student.program, student.teacher]
+    return studentViews.filter((student) => {
+      const matchesText = !normalized || [student.name, student.email, student.level, student.program, student.teacher, student.group]
         .some((value) => value.toLowerCase().includes(normalized))
       const matchesStatus = status === 'Todos' || student.status === status
       return matchesText && matchesStatus
     })
-  }, [query, status])
+  }, [query, status, studentViews])
 
-  const selected = students.find((student) => student.id === selectedId) ?? students[0]
+  const selected = studentViews.find((student) => student.user.id === selectedId) || studentViews[0] || null
+  const activeCount = studentViews.filter((student) => student.status === 'Activo').length
+  const enrolledCount = new Set(enrollments.filter((item) => item.status === 'ACTIVE').map((item) => item.student)).size
+
+  async function handleCreate(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setError(null); setMessage(null)
+    if (isDemoMode) { setMessage('El alta real estará disponible con PocketBase conectado.'); return }
+    setSaving(true)
+    try {
+      const created = await createAdminStudent({ email, password, name, surname, phone })
+      setUsers((current) => [...current, created.user].sort((a, b) => `${a.name} ${a.surname}`.localeCompare(`${b.name} ${b.surname}`, 'es')))
+      setSelectedId(created.user.id)
+      setName(''); setSurname(''); setEmail(''); setPhone(''); setPassword('')
+      setShowCreate(false)
+      setMessage('Alumno creado correctamente. Ya puede iniciar sesión con su contraseña inicial.')
+    } catch (creationError) {
+      setError(creationError instanceof Error ? creationError.message : 'No se ha podido crear el alumno.')
+    } finally { setSaving(false) }
+  }
+
+  async function toggleSelectedStatus() {
+    if (!selected) return
+    setError(null); setMessage(null)
+    if (isDemoMode) { setMessage('El cambio de estado requiere PocketBase conectado.'); return }
+    try {
+      const nextStatus = selected.user.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'
+      const updated = await updateAdminUser(selected.user, { status: nextStatus })
+      setUsers((current) => current.map((item) => item.id === updated.id ? updated : item))
+      setMessage(nextStatus === 'ACTIVE' ? 'Alumno activado.' : 'Alumno desactivado.')
+    } catch { setError('No se ha podido cambiar el estado del alumno.') }
+  }
 
   return (
     <DashboardShell role="Administrador" name="Admin" nav={[...adminNav]}>
@@ -48,77 +152,75 @@ export default function AdminStudentsPage() {
           <div>
             <span className="eyebrow">PLATAFORMA · ALUMNOS</span>
             <h2>Alumnos y espacio privado</h2>
-            <p>Desde aquí se gestionarán perfiles, nivel, profesor, clases y el almacenamiento privado de cada alumno.</p>
+            <p>Usuarios reales, matrícula académica y acceso privado gestionados desde PocketBase.</p>
           </div>
-          <button className="button button-primary" type="button">+ Nuevo alumno</button>
+          <button className="button button-primary" type="button" onClick={() => setShowCreate((value) => !value)}>{showCreate ? 'Cerrar alta' : '+ Nuevo alumno'}</button>
         </header>
 
+        {loading && <div className="cms-notice">Cargando alumnos…</div>}
+        {message && <div className="cms-notice success-notice">{message}</div>}
+        {error && <div className="cms-notice auth-error">{error}</div>}
+
+        {showCreate && <section className="panel admin-inline-create">
+          <div className="panel-heading"><div><span className="eyebrow">ALTA</span><h3>Nuevo alumno</h3></div><span className="status info">Cuenta + perfil</span></div>
+          <form onSubmit={handleCreate} className="admin-create-grid">
+            <div><label>Nombre</label><input value={name} onChange={(e) => setName(e.target.value)} required /></div>
+            <div><label>Apellidos</label><input value={surname} onChange={(e) => setSurname(e.target.value)} required /></div>
+            <div><label>Email</label><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></div>
+            <div><label>Teléfono</label><input value={phone} onChange={(e) => setPhone(e.target.value)} /></div>
+            <div><label>Contraseña inicial</label><input type="password" minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} required /></div>
+            <div className="admin-create-action"><button className="button button-primary" type="submit" disabled={saving}>{saving ? 'Creando…' : 'Crear alumno'}</button></div>
+          </form>
+        </section>}
+
         <section className="metric-grid student-metrics">
-          <article><span>Alumnos activos</span><strong>36</strong><small>3 altas este mes</small></article>
-          <article><span>Exámenes</span><strong>9</strong><small>B1 · B2 · C1</small></article>
-          <article><span>Tareas pendientes</span><strong>14</strong><small>Entre todos los alumnos</small></article>
-          <article><span>Almacenamiento</span><strong>1.4 GB</strong><small>Valor de demostración</small></article>
+          <article><span>Alumnos</span><strong>{studentViews.length}</strong><small>Total registrado</small></article>
+          <article><span>Activos</span><strong>{activeCount}</strong><small>Cuentas habilitadas</small></article>
+          <article><span>Matriculados</span><strong>{enrolledCount}</strong><small>Con matrícula activa</small></article>
+          <article><span>Sin grupo</span><strong>{Math.max(0, studentViews.length - enrolledCount)}</strong><small>Pendientes de matrícula</small></article>
         </section>
 
         <div className="students-admin-layout">
           <section className="panel students-list-panel">
             <div className="students-toolbar">
-              <label className="student-search">
-                <span>Buscar alumno</span>
-                <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Nombre, nivel, profesor..." />
-              </label>
+              <label className="student-search"><span>Buscar alumno</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Nombre, nivel, profesor..." /></label>
               <div className="filter-pills">
-                {(['Todos', 'Activo', 'Pausado'] as const).map((option) => (
-                  <button key={option} className={status === option ? 'active' : ''} type="button" onClick={() => setStatus(option)}>{option}</button>
-                ))}
+                {(['Todos', 'Activo', 'Pausado'] as const).map((option) => <button key={option} className={status === option ? 'active' : ''} type="button" onClick={() => setStatus(option)}>{option}</button>)}
               </div>
             </div>
 
             <div className="students-table" role="table" aria-label="Listado de alumnos">
-              <div className="students-table-row students-table-header" role="row">
-                <span>Alumno</span><span>Programa</span><span>Profesor</span><span>Próxima clase</span><span>Estado</span>
-              </div>
+              <div className="students-table-row students-table-header" role="row"><span>Alumno</span><span>Programa</span><span>Profesor</span><span>Próxima clase</span><span>Estado</span></div>
               {filteredStudents.map((student) => (
-                <button className={`students-table-row ${selected.id === student.id ? 'selected' : ''}`} role="row" type="button" key={student.id} onClick={() => setSelectedId(student.id)}>
+                <button className={`students-table-row ${selected?.user.id === student.user.id ? 'selected' : ''}`} role="row" type="button" key={student.user.id} onClick={() => setSelectedId(student.user.id)}>
                   <span className="student-identity"><b>{student.initials}</b><span><strong>{student.name}</strong><small>{student.email}</small></span></span>
                   <span><strong>{student.level}</strong><small>{student.program}</small></span>
-                  <span>{student.teacher}</span>
-                  <span>{student.nextClass}</span>
+                  <span>{student.teacher}</span><span>{student.nextClass}</span>
                   <span><i className={`student-status ${student.status === 'Activo' ? 'active' : 'paused'}`}>{student.status}</i></span>
                 </button>
               ))}
+              {!loading && filteredStudents.length === 0 && <p className="muted">No hay alumnos que coincidan con el filtro.</p>}
             </div>
           </section>
 
           <aside className="panel student-detail-panel">
-            <div className="student-detail-heading">
-              <span className="student-avatar-large">{selected.initials}</span>
-              <div><span className="eyebrow">FICHA DEL ALUMNO</span><h3>{selected.name}</h3><p>{selected.email}</p></div>
-            </div>
-
-            <div className="student-detail-tags">
-              <span>{selected.level}</span><span>{selected.program}</span><span>{selected.teacher}</span>
-            </div>
-
-            <div className="student-detail-grid">
-              <div><span>Próxima clase</span><strong>{selected.nextClass}</strong></div>
-              <div><span>Archivos</span><strong>{selected.files}</strong></div>
-              <div><span>Espacio usado</span><strong>{selected.storage}</strong></div>
-              <div><span>Estado</span><strong>{selected.status}</strong></div>
-            </div>
-
-            <div className="student-private-space">
-              <div className="panel-heading"><div><span className="eyebrow">ESPACIO PRIVADO</span><h3>Carpetas del alumno</h3></div><span className="status success">Aislado</span></div>
-              <button type="button"><span>📁</span><div><strong>Material del profesor</strong><small>8 archivos</small></div><b>→</b></button>
-              <button type="button"><span>📝</span><div><strong>Mis entregas</strong><small>5 archivos</small></div><b>→</b></button>
-              <button type="button"><span>🎧</span><div><strong>Listening</strong><small>3 audios</small></div><b>→</b></button>
-              <button type="button"><span>📚</span><div><strong>Documentos</strong><small>2 archivos</small></div><b>→</b></button>
-            </div>
-
-            <div className="student-detail-actions">
-              <button className="button button-primary" type="button">Abrir perfil</button>
-              <button className="button button-ghost" type="button">Subir material</button>
-            </div>
+            {!selected ? <div className="student-empty-detail"><span>ALUMNOS</span><h3>Sin alumnos</h3><p>Crea el primer alumno para empezar la gestión académica.</p></div> : <>
+              <div className="student-detail-heading"><span className="student-avatar-large">{selected.initials}</span><div><span className="eyebrow">FICHA DEL ALUMNO</span><h3>{selected.name}</h3><p>{selected.email}</p></div></div>
+              <div className="student-detail-tags"><span>{selected.level}</span><span>{selected.program}</span><span>{selected.group}</span></div>
+              <div className="student-detail-grid">
+                <div><span>Próxima clase</span><strong>{selected.nextClass}</strong></div>
+                <div><span>Profesor</span><strong>{selected.teacher}</strong></div>
+                <div><span>Grupo</span><strong>{selected.group}</strong></div>
+                <div><span>Estado</span><strong>{selected.status}</strong></div>
+              </div>
+              <div className="student-private-space">
+                <div className="panel-heading"><div><span className="eyebrow">ESPACIO PRIVADO</span><h3>Aislamiento activo</h3></div><span className="status success">Protegido</span></div>
+                <p className="muted">Los archivos del alumno permanecen en `student_files` y solo se sirven mediante las reglas de acceso y tokens protegidos de PocketBase.</p>
+              </div>
+              <div className="student-detail-actions">
+                <button className="button button-primary" type="button" onClick={() => void toggleSelectedStatus()}>{selected.user.status === 'ACTIVE' ? 'Desactivar alumno' : 'Activar alumno'}</button>
+              </div>
+            </>}
           </aside>
         </div>
       </div>
