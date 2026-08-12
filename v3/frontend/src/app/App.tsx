@@ -5,6 +5,7 @@ import BlogPage from '../pages/public/BlogPage'
 import ProgramsPage from '../pages/public/ProgramsPage'
 import PricingPage from '../pages/public/PricingPage'
 import TeachersPage from '../pages/public/TeachersPage'
+import AboutPage from '../pages/public/AboutPage'
 import ContactPage from '../pages/public/ContactPage'
 import LoginPage from '../pages/auth/LoginPage'
 import StudentDashboard from '../pages/student/StudentDashboard'
@@ -21,6 +22,7 @@ import TeacherAssignmentsPage from '../pages/teacher/TeacherAssignmentsPage'
 import TeacherCorrectionsPage from '../pages/teacher/TeacherCorrectionsPage'
 import AdminDashboard from '../pages/admin/AdminDashboard'
 import AdminSiteEditor from '../pages/admin/AdminSiteEditor'
+import AdminAboutEditor from '../pages/admin/AdminAboutEditor'
 import AdminMediaLibrary from '../pages/admin/AdminMediaLibrary'
 import AdminBlogManager from '../pages/admin/AdminBlogManager'
 import AdminStudentsPage from '../pages/admin/AdminStudentsPage'
@@ -38,6 +40,7 @@ export default function App() {
       <Route path="/programas" element={<ProgramsPage />} />
       <Route path="/tarifas" element={<PricingPage />} />
       <Route path="/profesores" element={<TeachersPage />} />
+      <Route path="/sobre-nosotros" element={<AboutPage />} />
       <Route path="/blog" element={<BlogPage />} />
       <Route path="/contacto" element={<ContactPage />} />
       <Route path="/acceso" element={<LoginPage />} />
@@ -58,6 +61,7 @@ export default function App() {
 
       <Route path="/admin" element={<RequireRole allow={['ADMIN']}><AdminDashboard /></RequireRole>} />
       <Route path="/admin/web" element={<RequireRole allow={['ADMIN']}><AdminSiteEditor /></RequireRole>} />
+      <Route path="/admin/web/sobre-nosotros" element={<RequireRole allow={['ADMIN']}><AdminAboutEditor /></RequireRole>} />
       <Route path="/admin/blog" element={<RequireRole allow={['ADMIN']}><AdminBlogManager /></RequireRole>} />
       <Route path="/admin/multimedia" element={<RequireRole allow={['ADMIN']}><AdminMediaLibrary /></RequireRole>} />
       <Route path="/admin/alumnos" element={<RequireRole allow={['ADMIN']}><AdminStudentsPage /></RequireRole>} />
