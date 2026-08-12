@@ -51,6 +51,8 @@ migrate((app) => {
       { type: 'text', name: 'guardian_phone', max: 30 },
       { type: 'editor', name: 'notes_private', maxSize: 10000 },
       { type: 'bool', name: 'active' },
+      { type: 'autodate', name: 'created', onCreate: true },
+      { type: 'autodate', name: 'updated', onCreate: true, onUpdate: true },
     ],
     indexes: [
       'CREATE UNIQUE INDEX idx_student_profiles_user ON student_profiles (user)',
@@ -80,6 +82,8 @@ migrate((app) => {
       },
       { type: 'bool', name: 'public_profile' },
       { type: 'bool', name: 'active' },
+      { type: 'autodate', name: 'created', onCreate: true },
+      { type: 'autodate', name: 'updated', onCreate: true, onUpdate: true },
     ],
     indexes: [
       'CREATE UNIQUE INDEX idx_teacher_profiles_user ON teacher_profiles (user)',
@@ -110,6 +114,8 @@ migrate((app) => {
       },
       { type: 'select', name: 'status', required: true, maxSelect: 1, values: ['DRAFT', 'ACTIVE', 'ARCHIVED'] },
       { type: 'bool', name: 'public_visible' },
+      { type: 'autodate', name: 'created', onCreate: true },
+      { type: 'autodate', name: 'updated', onCreate: true, onUpdate: true },
     ],
     indexes: [
       'CREATE UNIQUE INDEX idx_courses_slug ON courses (slug)',
