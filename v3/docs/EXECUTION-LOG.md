@@ -11,7 +11,7 @@ Este documento es la fuente de verdad del desarrollo de la V3. Cada fase debe de
 - Backend: PocketBase `0.39.9`.
 - Frontend: React + TypeScript + Vite.
 - Producción prevista: Raspberry Pi 4 + SSD + backup externo.
-- Fase actual: `4.2 · Portada pública conectada a PocketBase`.
+- Fase actual: `5 · Autenticación y portales privados`.
 
 ## Convención de estados
 
@@ -35,9 +35,6 @@ Crear una V3 limpia dentro del repositorio existente sin romper la web antigua.
 
 ### Validación
 Estructura versionada en GitHub y PR independiente contra `main`.
-
-### Resultado
-Base preparada para crecer sin mezclar la web antigua con la plataforma nueva.
 
 ---
 
@@ -125,10 +122,10 @@ GitHub Actions descarga PocketBase `0.39.9`, ejecuta `migrate up` en una base te
 
 ---
 
-## FASE 4 · Conexión real CMS ↔ PocketBase — 🟡 EN CURSO
+## FASE 4 · Conexión real CMS ↔ PocketBase — ✅ COMPLETADA
 
 ### Objetivo
-Conectar las interfaces existentes a PocketBase sin perder el modo demo.
+Conectar las interfaces CMS existentes a PocketBase sin perder el modo demo.
 
 ### FASE 4.1 · Capa de servicios CMS — ✅ COMPLETADA
 - Tipos seguros para contenido de portada.
@@ -138,48 +135,84 @@ Conectar las interfaces existentes a PocketBase sin perder el modo demo.
 - Generación de URLs de archivos mediante PocketBase.
 - Fallback local de contenido para `VITE_APP_MODE=demo`.
 
-#### Validación 4.1
-GitHub Actions `V3 Frontend CI` completado correctamente tras incorporar la capa de servicios.
+### FASE 4.2 · Portada pública — ✅ COMPLETADA
+- Lee `site_pages.key = home` en modo `connected`.
+- Mantiene contenido local seguro en modo demo.
+- La Home continúa operativa si PocketBase no responde.
+- Los errores internos no se muestran al visitante.
 
-### FASE 4.2 · Portada pública — 🟡 EN CURSO
-- Leer `site_pages.key = home` cuando `VITE_APP_MODE=connected`.
-- Mantener datos locales como fallback en demo.
-- Mantener la web disponible si PocketBase no responde.
-- No exponer errores internos al visitante.
+### FASE 4.3 · Editor de portada — ✅ COMPLETADA
+- Carga el contenido actual desde PocketBase.
+- `Guardar y publicar` actualiza `site_pages` con estado `PUBLISHED`.
+- `Guardar borrador` actualiza el registro con estado `DRAFT`.
+- Mantiene vista previa antes de publicar.
+- Solo queda accesible a rol `ADMIN` en modo conectado.
 
-### FASE 4.3 · Editor de portada — ⏳ PENDIENTE
-- Cargar contenido actual desde PocketBase.
-- Guardar cambios reales como ADMIN.
-- Mantener preview local antes de guardar.
+### FASE 4.4 · Multimedia — ✅ COMPLETADA
+- Biblioteca real desde `media_library`.
+- Subida de imágenes a PocketBase.
+- Borrado desde administración.
+- Filtros por uso y búsqueda.
+- Selección de imagen existente desde el editor de portada.
+- Subida directa desde el editor de portada a Multimedia.
+- El identificador del recurso queda guardado en el JSON de `site_pages`.
+- La portada pública resuelve ese `mediaId` y muestra la imagen real.
+- Los archivos privados de alumnos siguen separados en `student_files`.
 
-### FASE 4.4 · Multimedia — ⏳ PENDIENTE
-- Listar archivos reales.
-- Subir imagen real.
-- Eliminar/editar metadatos con permisos ADMIN.
-- Seleccionar recursos desde el CMS.
+### FASE 4.5 · Blog — ✅ COMPLETADA
+- Blog público lee únicamente artículos `PUBLISHED`.
+- Administración lista contenidos reales.
+- Crear artículo.
+- Guardar borrador.
+- Publicar.
+- Editar.
+- Eliminar.
+- Categorías reales desde PocketBase.
+- Imagen de portada almacenada en `blog_posts.cover_image`.
+- La web pública muestra esa portada cuando existe.
 
-### FASE 4.5 · Blog — ⏳ PENDIENTE
-- Leer artículos publicados en web pública.
-- CRUD real de artículos desde ADMIN.
-- Borrador/publicación y fechas.
-- Portada y categoría.
+### Migración 4 · categorías iniciales de blog — ✅ COMPLETADA
+- `Speaking`
+- `Vocabulary`
+- `Grammar`
+- `Exams`
+- `Kids`
+- `Academia`
 
-### Criterio de cierre de Fase 4
-La portada, biblioteca y blog deben funcionar contra una instancia real de PocketBase sin cambiar la interfaz diseñada.
+### Validación final de Fase 4
+- `V3 Frontend CI`: ✅ success.
+- `V3 PocketBase CI`: ✅ success.
+- Migraciones aplicadas y rollback probado contra PocketBase `0.39.9`.
+
+### Resultado
+El CMS ya tiene un camino completo `ADMIN → PocketBase → web pública` para portada, imágenes y blog.
 
 ---
 
-## FASE 5 · Autenticación y portales privados — ⏳ PENDIENTE
+## FASE 5 · Autenticación y portales privados — 🟡 EN CURSO
 
 ### Objetivo
 Activar login real y proteger rutas por rol.
 
-- Login conectado.
-- Redirect por rol.
-- Guard de rutas ADMIN/TEACHER/STUDENT.
-- Refresh de sesión.
-- Logout.
-- Validación de cuentas inactivas/suspendidas.
+### FASE 5.1 · Login y sesión — 🟡 EN CURSO
+- Revisar formulario real de login.
+- Autenticación con `users.authWithPassword`.
+- Mensajes de error seguros.
+- Restauración/refresco de sesión.
+- Cuenta `ACTIVE` obligatoria.
+
+### FASE 5.2 · Redirección y guards — ⏳ PENDIENTE
+- Redirect automático según `ADMIN`, `TEACHER`, `STUDENT`.
+- Validar `RequireRole` en modo conectado.
+- Mantener vistas demo durante desarrollo.
+
+### FASE 5.3 · Logout y sesión UI — ⏳ PENDIENTE
+- Logout real.
+- Estado de usuario actual en cabecera.
+- Evitar nombre/rol ficticio en modo conectado.
+
+### Criterio de cierre de Fase 5
+Un usuario real debe poder iniciar sesión, llegar únicamente a su portal, mantener/refrescar la sesión y cerrarla sin poder acceder a rutas de otro rol.
 
 ---
 
