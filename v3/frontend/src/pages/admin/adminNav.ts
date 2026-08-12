@@ -1,6 +1,7 @@
 export const adminNav = [
   { label: 'Dashboard', to: '/admin' },
   { label: 'Página web', to: '/admin/web' },
+  { label: 'Sobre nosotros', to: '/admin/web/sobre-nosotros' },
   { label: 'Blog', to: '/admin/blog' },
   { label: 'Multimedia', to: '/admin/multimedia' },
   { label: 'Alumnos', to: '/admin/alumnos' },
