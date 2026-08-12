@@ -23,6 +23,8 @@ import AdminStudentsPage from '../pages/admin/AdminStudentsPage'
 import AdminTeachersPage from '../pages/admin/AdminTeachersPage'
 import AdminCoursesPage from '../pages/admin/AdminCoursesPage'
 import AdminClassesPage from '../pages/admin/AdminClassesPage'
+import AdminPricingPage from '../pages/admin/AdminPricingPage'
+import AdminSettingsPage from '../pages/admin/AdminSettingsPage'
 
 export default function App() {
   return (
@@ -53,6 +55,8 @@ export default function App() {
       <Route path="/admin/profesores" element={<RequireRole allow={['ADMIN']}><AdminTeachersPage /></RequireRole>} />
       <Route path="/admin/cursos" element={<RequireRole allow={['ADMIN']}><AdminCoursesPage /></RequireRole>} />
       <Route path="/admin/clases" element={<RequireRole allow={['ADMIN']}><AdminClassesPage /></RequireRole>} />
+      <Route path="/admin/tarifas" element={<RequireRole allow={['ADMIN']}><AdminPricingPage /></RequireRole>} />
+      <Route path="/admin/configuracion" element={<RequireRole allow={['ADMIN']}><AdminSettingsPage /></RequireRole>} />
 
       <Route path="/alumno/*" element={<Navigate to="/alumno" replace />} />
       <Route path="/profesor/*" element={<Navigate to="/profesor" replace />} />
