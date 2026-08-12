@@ -9,6 +9,7 @@ import AboutPage from '../pages/public/AboutPage'
 import ContactPage from '../pages/public/ContactPage'
 import NotFoundPage from '../pages/public/NotFoundPage'
 import LoginPage from '../pages/auth/LoginPage'
+import AccountProfilePage from '../pages/account/AccountProfilePage'
 import StudentDashboard from '../pages/student/StudentDashboard'
 import StudentFilesPage from '../pages/student/StudentFilesPage'
 import StudentMaterialPage from '../pages/student/StudentMaterialPage'
@@ -53,6 +54,7 @@ export default function App() {
       <Route path="/alumno/tareas" element={<RequireRole allow={['STUDENT']}><StudentAssignmentsPage /></RequireRole>} />
       <Route path="/alumno/archivos" element={<RequireRole allow={['STUDENT']}><StudentFilesPage /></RequireRole>} />
       <Route path="/alumno/avisos" element={<RequireRole allow={['STUDENT']}><StudentNotificationsPage /></RequireRole>} />
+      <Route path="/alumno/perfil" element={<RequireRole allow={['STUDENT']}><AccountProfilePage portal="STUDENT" /></RequireRole>} />
 
       <Route path="/profesor" element={<RequireRole allow={['TEACHER']}><TeacherDashboard /></RequireRole>} />
       <Route path="/profesor/alumnos" element={<RequireRole allow={['TEACHER']}><TeacherStudentsPage /></RequireRole>} />
@@ -60,6 +62,7 @@ export default function App() {
       <Route path="/profesor/material" element={<RequireRole allow={['TEACHER']}><TeacherMaterialPage /></RequireRole>} />
       <Route path="/profesor/tareas" element={<RequireRole allow={['TEACHER']}><TeacherAssignmentsPage /></RequireRole>} />
       <Route path="/profesor/correcciones" element={<RequireRole allow={['TEACHER']}><TeacherCorrectionsPage /></RequireRole>} />
+      <Route path="/profesor/perfil" element={<RequireRole allow={['TEACHER']}><AccountProfilePage portal="TEACHER" /></RequireRole>} />
 
       <Route path="/admin" element={<RequireRole allow={['ADMIN']}><AdminDashboard /></RequireRole>} />
       <Route path="/admin/web" element={<RequireRole allow={['ADMIN']}><AdminSiteEditor /></RequireRole>} />
