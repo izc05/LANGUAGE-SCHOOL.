@@ -14,10 +14,13 @@ import type {
 export type TeacherProfileRecord = RecordModel & {
   user: string
   bio: string
-  specialties: string
+  specialties: string[] | string
   public_photo: string
   public_profile: boolean
   active: boolean
+  display_name: string
+  headline: string
+  sort_order: number
 }
 
 export type TeacherStudentRecord = RecordModel & {
@@ -91,27 +94,16 @@ export async function listMyTeacherGroups(): Promise<TeacherGroupRecord[]> {
 export async function listMyTeacherEnrollments(): Promise<TeacherEnrollmentRecord[]> {
   const user = requireTeacher()
   return pb.collection(collections.enrollments).getFullList<TeacherEnrollmentRecord>({
-    filter: `group.teacher = "${quote(user.id)}" && status = "ACTIVE"`,
-    sort: 'group.name,student.name',
+    filter: `group.teacher = "${quote(user.id)}"`,
+    sort: '-joined_at',
     expand: 'student,group,group.course',
   })
 }
 
-export async function listMyTeacherUpcomingClasses(limit = 50): Promise<ClassRecord[]> {
-  const user = requireTeacher()
-  const now = new Date().toISOString()
-  const result = await pb.collection(collections.classes).getList<ClassRecord>(1, limit, {
-    filter: `teacher = "${quote(user.id)}" && status = "SCHEDULED" && starts_at >= "${quote(now)}"`,
-    sort: 'starts_at',
-    expand: 'group,group.course',
-  })
-  return result.items
-}
-
-export async function listMyTeacherRecentClasses(limit = 100): Promise<ClassRecord[]> {
+export async function listMyTeacherClasses(limit = 100): Promise<ClassRecord[]> {
   const user = requireTeacher()
   const result = await pb.collection(collections.classes).getList<ClassRecord>(1, limit, {
-    filter: `teacher = "${quote(user.id)}" && status = "COMPLETED"`,
+    filter: `teacher = "${quote(user.id)}"`,
     sort: '-starts_at',
     expand: 'group,group.course',
   })
@@ -123,42 +115,9 @@ export async function listMyTeacherMaterials(limit = 100): Promise<MaterialRecor
   const result = await pb.collection(collections.materials).getList<MaterialRecord>(1, limit, {
     filter: `teacher = "${quote(user.id)}"`,
     sort: '-created',
+    expand: 'course,group,student',
   })
   return result.items
-}
-
-export async function createTeacherMaterial(input: {
-  title: string
-  description?: string
-  file: File
-  target: TeacherTarget
-  published?: boolean
-}): Promise<MaterialRecord> {
-  const teacher = requireTeacher()
-  const data = new FormData()
-  data.set('title', input.title.trim() || input.file.name)
-  data.set('description', input.description?.trim() || '')
-  data.set('file', input.file)
-  data.set('teacher', teacher.id)
-  data.set('visibility', input.target.type)
-  data.set('published', input.published === false ? 'false' : 'true')
-
-  if (input.target.type === 'GROUP') data.set('group', input.target.id)
-  else data.set('student', input.target.id)
-
-  return pb.collection(collections.materials).create<MaterialRecord>(data)
-}
-
-export async function deleteTeacherMaterial(record: MaterialRecord): Promise<boolean> {
-  const teacher = requireTeacher()
-  if (record.teacher !== teacher.id) throw new Error('No puedes eliminar material de otro profesor.')
-  return pb.collection(collections.materials).delete(record.id)
-}
-
-export function getTeacherMaterialDownloadUrl(record: MaterialRecord): Promise<string> {
-  const teacher = requireTeacher()
-  if (record.teacher !== teacher.id) return Promise.reject(new Error('No puedes abrir material de otro profesor.'))
-  return protectedFileUrl(record, record.file)
 }
 
 export async function listMyTeacherAssignments(limit = 100): Promise<AssignmentRecord[]> {
@@ -166,99 +125,25 @@ export async function listMyTeacherAssignments(limit = 100): Promise<AssignmentR
   const result = await pb.collection(collections.assignments).getList<AssignmentRecord>(1, limit, {
     filter: `teacher = "${quote(user.id)}"`,
     sort: '-created',
+    expand: 'group,student',
   })
   return result.items
 }
 
-export async function createTeacherAssignment(input: {
-  title: string
-  description?: string
-  target: TeacherTarget
-  dueAt?: string
-  attachment?: File
-  status?: 'DRAFT' | 'PUBLISHED'
-}): Promise<AssignmentRecord> {
-  const teacher = requireTeacher()
-  const data = new FormData()
-  data.set('title', input.title.trim())
-  data.set('description', input.description?.trim() || '')
-  data.set('teacher', teacher.id)
-  data.set('status', input.status || 'PUBLISHED')
-  if (input.dueAt) data.set('due_at', input.dueAt)
-  if (input.attachment) data.set('attachment', input.attachment)
-
-  if (input.target.type === 'GROUP') data.set('group', input.target.id)
-  else data.set('student', input.target.id)
-
-  return pb.collection(collections.assignments).create<AssignmentRecord>(data)
-}
-
-export async function updateTeacherAssignmentStatus(record: AssignmentRecord, status: AssignmentRecord['status']): Promise<AssignmentRecord> {
-  const teacher = requireTeacher()
-  if (record.teacher !== teacher.id) throw new Error('No puedes modificar tareas de otro profesor.')
-  return pb.collection(collections.assignments).update<AssignmentRecord>(record.id, { status })
-}
-
-export async function deleteTeacherAssignment(record: AssignmentRecord): Promise<boolean> {
-  const teacher = requireTeacher()
-  if (record.teacher !== teacher.id) throw new Error('No puedes eliminar tareas de otro profesor.')
-  return pb.collection(collections.assignments).delete(record.id)
-}
-
-export function getTeacherAssignmentAttachmentUrl(record: AssignmentRecord): Promise<string> {
-  const teacher = requireTeacher()
-  if (record.teacher !== teacher.id) return Promise.reject(new Error('No puedes abrir tareas de otro profesor.'))
-  return protectedFileUrl(record, record.attachment)
-}
-
 export async function listMyTeacherSubmissions(limit = 100): Promise<SubmissionRecord[]> {
-  requireTeacher()
+  const user = requireTeacher()
   const result = await pb.collection(collections.assignmentSubmissions).getList<SubmissionRecord>(1, limit, {
+    filter: `assignment.teacher = "${quote(user.id)}"`,
     sort: '-submitted_at',
     expand: 'assignment,student',
   })
   return result.items
 }
 
-export async function reviewTeacherSubmission(record: SubmissionRecord, input: {
-  feedback: string
-  grade?: string
-  status: 'REVIEWED' | 'RETURNED'
-}): Promise<SubmissionRecord> {
-  requireTeacher()
-  return pb.collection(collections.assignmentSubmissions).update<SubmissionRecord>(record.id, {
-    teacher_feedback: input.feedback.trim(),
-    grade_text: input.grade?.trim() || '',
-    status: input.status,
-  })
-}
-
-export function getTeacherSubmissionFileUrl(record: SubmissionRecord): Promise<string> {
-  requireTeacher()
+export async function getTeacherMaterialDownloadUrl(record: MaterialRecord): Promise<string> {
   return protectedFileUrl(record, record.file)
 }
 
-export async function getTeacherDashboardSnapshot() {
-  requireTeacher()
-  const [profile, groups, enrollments, upcomingClasses, recentClasses, materials, assignments, submissions] = await Promise.all([
-    getMyTeacherProfile(),
-    listMyTeacherGroups(),
-    listMyTeacherEnrollments(),
-    listMyTeacherUpcomingClasses(30),
-    listMyTeacherRecentClasses(50),
-    listMyTeacherMaterials(12),
-    listMyTeacherAssignments(30),
-    listMyTeacherSubmissions(50),
-  ])
-
-  return {
-    profile,
-    groups,
-    enrollments,
-    upcomingClasses,
-    recentClasses,
-    materials,
-    assignments,
-    submissions,
-  }
+export async function getTeacherSubmissionDownloadUrl(record: SubmissionRecord): Promise<string> {
+  return protectedFileUrl(record, record.file)
 }
