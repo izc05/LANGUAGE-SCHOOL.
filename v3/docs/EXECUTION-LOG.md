@@ -11,7 +11,7 @@ Este documento es la fuente de verdad del desarrollo de la V3. Cada fase debe de
 - Backend: PocketBase `0.39.9`.
 - Frontend: React + TypeScript + Vite.
 - Producción prevista: Raspberry Pi 4 + SSD + backup externo.
-- Fase actual: `5 · Autenticación y portales privados`.
+- Fase actual: `6.1 · Backend académico del alumno`.
 
 ## Convención de estados
 
@@ -189,42 +189,94 @@ El CMS ya tiene un camino completo `ADMIN → PocketBase → web pública` para 
 
 ---
 
-## FASE 5 · Autenticación y portales privados — 🟡 EN CURSO
+## FASE 5 · Autenticación y portales privados — ✅ COMPLETADA
 
 ### Objetivo
 Activar login real y proteger rutas por rol.
 
-### FASE 5.1 · Login y sesión — 🟡 EN CURSO
-- Revisar formulario real de login.
+### FASE 5.1 · Login y sesión — ✅ COMPLETADA
+- Formulario real en modo `connected`.
 - Autenticación con `users.authWithPassword`.
 - Mensajes de error seguros.
-- Restauración/refresco de sesión.
-- Cuenta `ACTIVE` obligatoria.
+- Restauración/refresco de sesión al arrancar la SPA.
+- Cuenta `ACTIVE` obligatoria tanto en login como al refrescar un token existente.
+- Una cuenta `INACTIVE` o `SUSPENDED` pierde acceso aunque conserve una sesión anterior.
 
-### FASE 5.2 · Redirección y guards — ⏳ PENDIENTE
-- Redirect automático según `ADMIN`, `TEACHER`, `STUDENT`.
-- Validar `RequireRole` en modo conectado.
-- Mantener vistas demo durante desarrollo.
+### FASE 5.2 · Redirección y guards — ✅ COMPLETADA
+- `ADMIN` → `/admin`.
+- `TEACHER` → `/profesor`.
+- `STUDENT` → `/alumno`.
+- `RequireRole` protege las rutas en modo conectado.
+- Un usuario autenticado que intenta abrir un portal de otro rol vuelve a su portal permitido.
+- Modo demo conserva las vistas de desarrollo mientras no exista la Raspberry.
 
-### FASE 5.3 · Logout y sesión UI — ⏳ PENDIENTE
-- Logout real.
-- Estado de usuario actual en cabecera.
-- Evitar nombre/rol ficticio en modo conectado.
+### FASE 5.3 · Logout y sesión UI — ✅ COMPLETADA
+- Logout real mediante limpieza de `authStore`.
+- Cabecera privada usa nombre, apellido y rol de la sesión real en modo conectado.
+- Se eliminan nombres ficticios de la sesión conectada.
+- Botón `Cerrar sesión` devuelve a `/acceso`.
 
-### Criterio de cierre de Fase 5
-Un usuario real debe poder iniciar sesión, llegar únicamente a su portal, mantener/refrescar la sesión y cerrarla sin poder acceder a rutas de otro rol.
+### Validación final de Fase 5
+- `V3 Frontend CI`: ✅ success.
+- `V3 PocketBase CI`: ✅ success.
+
+### Resultado
+La aplicación ya tiene el flujo técnico completo `LOGIN → SESIÓN → GUARD POR ROL → PORTAL → LOGOUT` preparado para una instancia real de PocketBase.
 
 ---
 
-## FASE 6 · Alumno real — ⏳ PENDIENTE
+## FASE 6 · Alumno real — 🟡 EN CURSO
 
+### Objetivo
+Sustituir progresivamente los datos ficticios del portal de alumno por datos autorizados de PocketBase.
+
+### FASE 6.1 · Backend académico del alumno — 🟡 EN CURSO
+- Permitir al alumno leer únicamente sus grupos y cursos matriculados.
+- Mantener aislamiento total entre alumnos.
+- Crear `attendance`.
+- Crear `materials`.
+- Crear `assignments`.
+- Crear `assignment_submissions`.
+- Crear `notifications`.
+- Proteger los archivos académicos con reglas PocketBase.
+- Validar migración y rollback en CI.
+
+### FASE 6.2 · Capa de servicios del alumno — ⏳ PENDIENTE
 - Perfil propio.
-- Matrículas.
+- Matrículas/grupos.
 - Próximas clases.
 - Material.
 - Archivos privados.
 - Tareas y entregas.
 - Notificaciones.
+
+### FASE 6.3 · Dashboard alumno real — ⏳ PENDIENTE
+- Próxima clase real.
+- Contadores de clases/tareas/material/archivos.
+- Material reciente.
+- Trabajo pendiente.
+- Estados vacíos y errores seguros.
+
+### FASE 6.4 · Mis archivos — ⏳ PENDIENTE
+- Listar archivos propios.
+- Subir archivo protegido.
+- Descargar archivo protegido.
+- Archivar/eliminar según reglas.
+- Nunca aceptar un `student` distinto al usuario autenticado.
+
+### FASE 6.5 · Material, tareas y entregas — ⏳ PENDIENTE
+- Material autorizado por grupo/alumno.
+- Tareas directas o de grupo.
+- Entrega del alumno.
+- Estado de corrección.
+
+### FASE 6.6 · Validación de seguridad — 🔒 PARCIALMENTE BLOQUEADA HASTA INSTANCIA REAL
+- CI valida sintaxis y migraciones.
+- Las pruebas completas con usuarios reales `A/B` se ejecutarán al disponer de una instancia PocketBase accesible.
+- Debe demostrarse que Alumno A no puede leer registros ni archivos de Alumno B.
+
+### Criterio de cierre de Fase 6
+Un `STUDENT` autenticado debe ver únicamente su perfil, matrículas, clases, material, tareas, entregas, avisos y archivos; ningún identificador conocido debe permitir acceder a datos de otro alumno.
 
 ---
 
