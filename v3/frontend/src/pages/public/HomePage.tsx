@@ -1,5 +1,11 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import SiteShell from '../../components/SiteShell'
+import {
+  demoHomeContent,
+  getPublishedHomeContent,
+  type HomePageContent,
+} from '../../services/pocketbase/siteContent'
 
 const programs = [
   { tag: '6–12 años', title: 'Kids', text: 'Una base sólida con vocabulario, comprensión, juegos guiados y speaking progresivo.' },
@@ -16,19 +22,38 @@ const steps = [
 ]
 
 export default function HomePage() {
+  const [homeContent, setHomeContent] = useState<HomePageContent>(demoHomeContent)
+
+  useEffect(() => {
+    let mounted = true
+
+    getPublishedHomeContent()
+      .then((content) => {
+        if (mounted) setHomeContent(content)
+      })
+      .catch(() => {
+        // La web pública nunca queda inutilizada si PocketBase no responde.
+        // Conservamos el contenido local seguro y evitamos mostrar detalles internos al visitante.
+      })
+
+    return () => {
+      mounted = false
+    }
+  }, [])
+
+  const hero = homeContent.hero
+
   return (
     <SiteShell>
       <section className="hero-v3">
         <div className="container hero-grid-v3">
           <div className="hero-copy">
-            <span className="eyebrow">ACADEMIA DE INGLÉS · JÓDAR</span>
-            <h1>Tu inglés no necesita más teoría. Necesita <em>confianza.</em></h1>
-            <p className="hero-lead">
-              Clases cercanas, objetivos claros y una plataforma propia para que cada alumno tenga sus recursos, tareas y seguimiento siempre disponibles.
-            </p>
+            <span className="eyebrow">{hero.eyebrow}</span>
+            <h1>{hero.title}</h1>
+            <p className="hero-lead">{hero.subtitle}</p>
             <div className="hero-actions">
-              <a className="button button-primary" href="#programas">Descubrir programas</a>
-              <Link className="button button-ghost" to="/acceso">Entrar a mi espacio</Link>
+              <a className="button button-primary" href="#programas">{hero.primaryCta}</a>
+              <Link className="button button-ghost" to="/acceso">{hero.secondaryCta}</Link>
             </div>
             <div className="trust-row">
               <span>Grupos reducidos</span><span>Seguimiento personal</span><span>Recursos privados</span>
