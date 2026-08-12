@@ -5,6 +5,7 @@ import App from './app/App'
 import './styles/global.css'
 import './styles/admin-cms.css'
 import './styles/admin-students.css'
+import './styles/admin-academy.css'
 
 const root = document.getElementById('root')
 
