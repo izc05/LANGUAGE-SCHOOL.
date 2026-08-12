@@ -1,4 +1,4 @@
-import { type FormEvent, useState } from 'react'
+import { type FormEvent, useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { useAuth } from '../../features/auth/AuthProvider'
 import { getLoginErrorMessage } from '../../services/pocketbase/auth'
@@ -12,11 +12,17 @@ function routeForRole(role: UserRole): string {
 
 export default function LoginPage() {
   const navigate = useNavigate()
-  const { login, isDemoMode } = useAuth()
+  const { login, isDemoMode, ready, user, isAuthenticated } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!isDemoMode && ready && isAuthenticated && user) {
+      navigate(routeForRole(user.role), { replace: true })
+    }
+  }, [isAuthenticated, isDemoMode, navigate, ready, user])
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -26,8 +32,8 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      const user = await login(email, password)
-      navigate(routeForRole(user.role), { replace: true })
+      const authenticatedUser = await login(email, password)
+      navigate(routeForRole(authenticatedUser.role), { replace: true })
     } catch (loginError) {
       setError(getLoginErrorMessage(loginError))
     } finally {
@@ -79,7 +85,7 @@ export default function LoginPage() {
               placeholder="nombre@email.com"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              disabled={isDemoMode || submitting}
+              disabled={isDemoMode || submitting || !ready}
               required
             />
             <label htmlFor="password">Contraseña</label>
@@ -90,11 +96,11 @@ export default function LoginPage() {
               placeholder="••••••••"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              disabled={isDemoMode || submitting}
+              disabled={isDemoMode || submitting || !ready}
               required
             />
-            <button className="button button-primary button-full" type="submit" disabled={isDemoMode || submitting}>
-              {submitting ? 'Entrando…' : 'Entrar'}
+            <button className="button button-primary button-full" type="submit" disabled={isDemoMode || submitting || !ready}>
+              {!ready && !isDemoMode ? 'Comprobando sesión…' : submitting ? 'Entrando…' : 'Entrar'}
             </button>
           </form>
 
