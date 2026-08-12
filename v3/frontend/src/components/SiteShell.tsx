@@ -1,5 +1,5 @@
 import { type ReactNode, useEffect, useState } from 'react'
-import { Link, NavLink } from 'react-router'
+import { Link, NavLink, useLocation } from 'react-router'
 import { demoSiteSettings } from '../services/pocketbase/siteManagement'
 import { getPublicSettings, type PublicSettings } from '../services/pocketbase/publicAcademy'
 
@@ -7,8 +7,65 @@ type SiteShellProps = {
   children: ReactNode
 }
 
+type PageMeta = {
+  title: string
+  description: string
+}
+
+const publicMeta: Record<string, PageMeta> = {
+  '/': {
+    title: 'Language School · Inglés con confianza',
+    description: 'Academia de idiomas con clases presenciales y online, programas por objetivos y espacio privado para cada alumno.',
+  },
+  '/programas': {
+    title: 'Programas · Language School',
+    description: 'Programas de idiomas para niños, adolescentes, adultos y preparación de exámenes.',
+  },
+  '/profesores': {
+    title: 'Profesores · Language School',
+    description: 'Conoce al equipo docente y su enfoque para acompañar el aprendizaje de idiomas.',
+  },
+  '/sobre-nosotros': {
+    title: 'Sobre nosotros · Language School',
+    description: 'Conoce la metodología, los valores y la forma de acompañar a los alumnos en Language School.',
+  },
+  '/tarifas': {
+    title: 'Tarifas · Language School',
+    description: 'Consulta los planes y tarifas publicados por Language School.',
+  },
+  '/blog': {
+    title: 'Blog · Language School',
+    description: 'Consejos, gramática, vocabulario, listening, exámenes y recursos para seguir mejorando tu inglés.',
+  },
+  '/contacto': {
+    title: 'Contacto · Language School',
+    description: 'Contacta con Language School y cuéntanos qué quieres conseguir con tu inglés.',
+  },
+}
+
+function applyPageMeta(pathname: string) {
+  const meta = publicMeta[pathname] ?? {
+    title: 'Página no encontrada · Language School',
+    description: 'La página solicitada no está disponible. Vuelve a Language School para seguir navegando.',
+  }
+
+  document.title = meta.title
+  let description = document.querySelector<HTMLMetaElement>('meta[name="description"]')
+  if (!description) {
+    description = document.createElement('meta')
+    description.name = 'description'
+    document.head.appendChild(description)
+  }
+  description.content = meta.description
+}
+
 export default function SiteShell({ children }: SiteShellProps) {
+  const location = useLocation()
   const [settings, setSettings] = useState<PublicSettings>({ ...demoSiteSettings, logoUrl: '' })
+
+  useEffect(() => {
+    applyPageMeta(location.pathname)
+  }, [location.pathname])
 
   useEffect(() => {
     let mounted = true
