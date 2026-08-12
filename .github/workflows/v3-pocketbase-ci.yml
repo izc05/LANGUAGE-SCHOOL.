@@ -14,6 +14,8 @@ on:
 jobs:
   migrations:
     runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
 
     steps:
       - name: Checkout
@@ -22,8 +24,11 @@ jobs:
       - name: Download PocketBase 0.39.9
         run: |
           mkdir -p "$RUNNER_TEMP/pocketbase"
-          curl -fsSL "https://github.com/pocketbase/pocketbase/releases/download/v0.39.9/pocketbase_0.39.9_linux_amd64.zip" -o "$RUNNER_TEMP/pocketbase/pocketbase.zip"
-          unzip -q "$RUNNER_TEMP/pocketbase/pocketbase.zip" -d "$RUNNER_TEMP/pocketbase"
+          gh release download v0.39.9 \
+            --repo pocketbase/pocketbase \
+            --pattern 'pocketbase_0.39.9_linux_amd64.zip' \
+            --dir "$RUNNER_TEMP/pocketbase"
+          unzip -q "$RUNNER_TEMP/pocketbase/pocketbase_0.39.9_linux_amd64.zip" -d "$RUNNER_TEMP/pocketbase"
           chmod +x "$RUNNER_TEMP/pocketbase/pocketbase"
 
       - name: Apply V3 migrations to temporary database
