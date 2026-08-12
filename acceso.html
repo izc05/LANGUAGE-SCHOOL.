@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Área de alumnos · Language School</title>
+  <meta name="description" content="Acceso privado de alumnos de Language School."/>
+  <link rel="stylesheet" href="assets/style.css"/>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔐</text></svg>">
+</head>
+<body>
+<header>
+  <div class="wrap topbar">
+    <a class="logo" href="index.html" aria-label="Language School">
+      <svg viewBox="0 0 520 180" xmlns="http://www.w3.org/2000/svg" role="img">
+        <defs>
+          <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#D4AF37"/><stop offset="1" stop-color="#B87333"/></linearGradient>
+          <filter id="shadow"><feDropShadow dx="2" dy="4" stdDeviation="3" flood-color="#3E2723" flood-opacity="0.3"/></filter>
+        </defs>
+        <g transform="translate(10,10)" filter="url(#shadow)">
+          <circle cx="70" cy="70" r="52" fill="none" stroke="url(#g)" stroke-width="10"/>
+          <path d="M24 70c16-18 76-18 92 0" fill="none" stroke="#B87333" stroke-width="6" opacity=".9"/>
+          <path d="M24 70c16 18 76 18 92 0" fill="none" stroke="#B87333" stroke-width="6" opacity=".55"/>
+          <path d="M70 18c-18 16-18 76 0 104" fill="none" stroke="#B87333" stroke-width="6" opacity=".7"/>
+          <path d="M70 18c18 16 18 76 0 104" fill="none" stroke="#B87333" stroke-width="6" opacity=".35"/>
+          <path d="M98 32l26-10-10 26-9-7-21 7 14-16z" fill="url(#g)"/>
+          <path d="M110 24c18 18 26 40 24 62" fill="none" stroke="#B87333" stroke-width="5" stroke-linecap="round" opacity=".55"/>
+        </g>
+        <g transform="translate(160,30)">
+          <text x="0" y="40" font-family="Georgia, serif" font-size="34" letter-spacing="6" fill="#3E2723">LANGUAGE</text>
+          <text x="0" y="115" font-family="Palatino, Georgia, serif" font-size="92" fill="url(#g)" style="font-weight:700;">School</text>
+        </g>
+      </svg>
+    </a>
+    <nav>
+      <a href="index.html" data-page="index.html">Inicio</a>
+      <a href="academia.html" data-page="academia.html">Academia</a>
+      <a href="precios.html" data-page="precios.html">Precios</a>
+      <a href="contacto.html" data-page="contacto.html">Contacto</a>
+      <a class="btn primary" href="contacto.html"><span>Clase de prueba</span></a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="auth-shell card reveal">
+      <span class="badge"><span class="dot"></span> Zona privada</span>
+      <h1>Área de alumnos</h1>
+      <p class="sub">Desde aquí cada alumno tendrá acceso únicamente a sus clases, materiales, tareas y archivos personales.</p>
+
+      <form id="student-login">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" autocomplete="email" placeholder="alumno@email.com" required/>
+
+        <label for="password">Contraseña</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" placeholder="••••••••" required/>
+
+        <div class="ctaRow" style="margin-top:1.5rem;">
+          <button class="btn primary" type="submit"><span>Entrar</span></button>
+          <a class="btn" href="contacto.html"><span>Necesito ayuda</span></a>
+        </div>
+        <div id="login-status" class="portal-note" hidden></div>
+      </form>
+    </div>
+  </section>
+
+  <section>
+    <div class="sectionTitle reveal">
+      <h2>Tu espacio privado</h2>
+      <p class="hint">Esta será la base del portal que conectaremos con la Raspberry Pi.</p>
+    </div>
+    <div class="grid3">
+      <div class="feature reveal"><div class="icon">📚</div><h3>Material</h3><p>PDF, apuntes, audios y recursos compartidos por el profesor.</p></div>
+      <div class="feature reveal"><div class="icon">📝</div><h3>Tareas</h3><p>Entrega de ejercicios y seguimiento de trabajos pendientes o corregidos.</p></div>
+      <div class="feature reveal"><div class="icon">📅</div><h3>Clases</h3><p>Próximas sesiones, historial y avisos relacionados con cada alumno.</p></div>
+      <div class="feature reveal"><div class="icon">📁</div><h3>Mis archivos</h3><p>Espacio privado de almacenamiento, separado del resto de alumnos.</p></div>
+      <div class="feature reveal"><div class="icon">🎧</div><h3>Listening</h3><p>Audios y recursos de comprensión adaptados al nivel del alumno.</p></div>
+      <div class="feature reveal"><div class="icon">💬</div><h3>Mensajes</h3><p>Comunicaciones y avisos entre profesor, alumno y administración.</p></div>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <div class="card" style="text-align:center; border-color:var(--vintage-gold);">
+      <h2>Privacidad desde el diseño</h2>
+      <p class="sub">Cuando activemos el servidor, los archivos no se compartirán como carpetas públicas: cada usuario tendrá permisos propios y solo verá la información que le corresponde.</p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap" style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; align-items:center;">
+    <div><span>© <span id="y"></span> Language School</span></div>
+    <div style="display:flex; gap:20px; flex-wrap:wrap;"><a href="index.html">Inicio</a><a href="blog.html">Blog</a><a href="contacto.html">Contacto</a></div>
+  </div>
+</footer>
+<script src="assets/app.js"></script>
+<script>
+  document.getElementById('y').textContent = new Date().getFullYear();
+  document.getElementById('student-login').addEventListener('submit', function (event) {
+    event.preventDefault();
+    const status = document.getElementById('login-status');
+    status.hidden = false;
+    status.textContent = 'El diseño del acceso ya está preparado. El inicio de sesión real se activará cuando conectemos el backend y la base de datos del servidor.';
+  });
+</script>
+</body>
+</html>
