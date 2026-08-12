@@ -14,6 +14,8 @@ migrate((app) => {
       { type: 'text', name: 'slug', required: true, max: 120, pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$' },
       { type: 'text', name: 'description', max: 600 },
       { type: 'bool', name: 'active' },
+      { type: 'autodate', name: 'created', onCreate: true },
+      { type: 'autodate', name: 'updated', onCreate: true, onUpdate: true },
     ],
     indexes: [
       'CREATE UNIQUE INDEX idx_blog_categories_slug ON blog_categories (slug)',
@@ -48,6 +50,8 @@ migrate((app) => {
       { type: 'date', name: 'published_at' },
       { type: 'text', name: 'seo_title', max: 70 },
       { type: 'text', name: 'seo_description', max: 180 },
+      { type: 'autodate', name: 'created', onCreate: true },
+      { type: 'autodate', name: 'updated', onCreate: true, onUpdate: true },
     ],
     indexes: [
       'CREATE UNIQUE INDEX idx_blog_posts_slug ON blog_posts (slug)',
@@ -79,6 +83,8 @@ migrate((app) => {
       { type: 'select', name: 'media_type', required: true, maxSelect: 1, values: ['IMAGE', 'DOCUMENT'] },
       { type: 'select', name: 'usage', required: true, maxSelect: 1, values: ['WEBSITE', 'BLOG', 'INTERNAL'] },
       { type: 'relation', name: 'uploaded_by', required: true, maxSelect: 1, collectionId: users.id, cascadeDelete: false },
+      { type: 'autodate', name: 'created', onCreate: true },
+      { type: 'autodate', name: 'updated', onCreate: true, onUpdate: true },
     ],
     indexes: [
       'CREATE INDEX idx_media_library_usage_created ON media_library (usage, created)',
@@ -99,6 +105,8 @@ migrate((app) => {
       { type: 'text', name: 'title', required: true, max: 180 },
       { type: 'json', name: 'content', required: true, maxSize: 120000 },
       { type: 'select', name: 'status', required: true, maxSelect: 1, values: ['DRAFT', 'PUBLISHED', 'ARCHIVED'] },
+      { type: 'autodate', name: 'created', onCreate: true },
+      { type: 'autodate', name: 'updated', onCreate: true, onUpdate: true },
     ],
     indexes: [
       'CREATE UNIQUE INDEX idx_site_pages_key ON site_pages (`key`)',
@@ -123,6 +131,8 @@ migrate((app) => {
       { type: 'number', name: 'sort_order', min: 0, max: 9999, onlyInt: true },
       { type: 'bool', name: 'active' },
       { type: 'bool', name: 'featured' },
+      { type: 'autodate', name: 'created', onCreate: true },
+      { type: 'autodate', name: 'updated', onCreate: true, onUpdate: true },
     ],
     indexes: [
       'CREATE INDEX idx_pricing_plans_active_sort ON pricing_plans (active, sort_order)',
@@ -153,6 +163,8 @@ migrate((app) => {
       { type: 'text', name: 'address', max: 500 },
       { type: 'json', name: 'social_links', maxSize: 10000 },
       { type: 'json', name: 'legal_texts', maxSize: 40000 },
+      { type: 'autodate', name: 'created', onCreate: true },
+      { type: 'autodate', name: 'updated', onCreate: true, onUpdate: true },
     ],
   })
   app.save(siteSettings)
@@ -172,6 +184,8 @@ migrate((app) => {
       { type: 'text', name: 'interest', max: 160 },
       { type: 'text', name: 'message', required: true, max: 4000 },
       { type: 'select', name: 'status', required: true, maxSelect: 1, values: ['NEW', 'CONTACTED', 'CLOSED'] },
+      { type: 'autodate', name: 'created', onCreate: true },
+      { type: 'autodate', name: 'updated', onCreate: true, onUpdate: true },
     ],
     indexes: [
       'CREATE INDEX idx_contact_requests_status_created ON contact_requests (status, created)',
