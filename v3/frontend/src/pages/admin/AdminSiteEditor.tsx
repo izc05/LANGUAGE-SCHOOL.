@@ -1,30 +1,114 @@
-import { type ChangeEvent, type FormEvent, useState } from 'react'
+import { type ChangeEvent, type FormEvent, useEffect, useState } from 'react'
 import DashboardShell from '../../components/DashboardShell'
+import { isDemoMode } from '../../config/environment'
+import {
+  demoHomeContent,
+  getEditableHomeContent,
+  saveHomeContent,
+  type HomePageContent,
+} from '../../services/pocketbase/siteContent'
 import { adminNav } from './adminNav'
 
 export default function AdminSiteEditor() {
-  const [heroTitle, setHeroTitle] = useState('Inglés que te acompaña dentro y fuera del aula.')
-  const [heroSubtitle, setHeroSubtitle] = useState(
-    'Clases cercanas, objetivos claros y un espacio privado para continuar aprendiendo entre sesiones.',
-  )
-  const [primaryCta, setPrimaryCta] = useState('Reservar clase de prueba')
-  const [secondaryCta, setSecondaryCta] = useState('Ver programas')
+  const [heroEyebrow, setHeroEyebrow] = useState(demoHomeContent.hero.eyebrow)
+  const [heroTitle, setHeroTitle] = useState(demoHomeContent.hero.title)
+  const [heroSubtitle, setHeroSubtitle] = useState(demoHomeContent.hero.subtitle)
+  const [primaryCta, setPrimaryCta] = useState(demoHomeContent.hero.primaryCta)
+  const [secondaryCta, setSecondaryCta] = useState(demoHomeContent.hero.secondaryCta)
   const [imageName, setImageName] = useState('hero-academy.jpg')
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
+  const [loading, setLoading] = useState(!isDemoMode)
+  const [saving, setSaving] = useState(false)
+  const [notice, setNotice] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let mounted = true
+
+    getEditableHomeContent()
+      .then(({ content, status }) => {
+        if (!mounted) return
+        setHeroEyebrow(content.hero.eyebrow)
+        setHeroTitle(content.hero.title)
+        setHeroSubtitle(content.hero.subtitle)
+        setPrimaryCta(content.hero.primaryCta)
+        setSecondaryCta(content.hero.secondaryCta)
+        setSaved(status === 'PUBLISHED')
+        setNotice(isDemoMode ? 'Modo demo: los cambios todavía no salen del navegador.' : `Contenido cargado · ${status}`)
+      })
+      .catch(() => {
+        if (!mounted) return
+        setError('No se ha podido cargar el contenido de PocketBase. No se ha sobrescrito ningún dato.')
+      })
+      .finally(() => {
+        if (mounted) setLoading(false)
+      })
+
+    return () => {
+      mounted = false
+      if (previewUrl) URL.revokeObjectURL(previewUrl)
+    }
+  }, [])
+
+  function markDirty() {
+    setSaved(false)
+    setNotice(null)
+    setError(null)
+  }
 
   function handleImage(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
     if (!file) return
 
+    if (previewUrl) URL.revokeObjectURL(previewUrl)
     setImageName(file.name)
     setPreviewUrl(URL.createObjectURL(file))
-    setSaved(false)
+    markDirty()
+    setNotice('Imagen preparada localmente. La subida real se activará en la Fase 4.4 · Multimedia.')
+  }
+
+  function buildContent(): HomePageContent {
+    return {
+      hero: {
+        eyebrow: heroEyebrow.trim() || demoHomeContent.hero.eyebrow,
+        title: heroTitle.trim() || demoHomeContent.hero.title,
+        subtitle: heroSubtitle.trim() || demoHomeContent.hero.subtitle,
+        primaryCta: primaryCta.trim() || demoHomeContent.hero.primaryCta,
+        secondaryCta: secondaryCta.trim() || demoHomeContent.hero.secondaryCta,
+      },
+    }
+  }
+
+  async function persist(publish: boolean) {
+    setError(null)
+    setNotice(null)
+
+    if (isDemoMode) {
+      setSaved(publish)
+      setNotice(
+        publish
+          ? 'Modo demo: publicación simulada. PocketBase se utilizará automáticamente en modo connected.'
+          : 'Modo demo: borrador simulado localmente.',
+      )
+      return
+    }
+
+    setSaving(true)
+    try {
+      await saveHomeContent(buildContent(), publish)
+      setSaved(publish)
+      setNotice(publish ? 'Portada publicada correctamente en PocketBase.' : 'Borrador guardado correctamente en PocketBase.')
+    } catch {
+      setError('No se han podido guardar los cambios. Revisa la conexión y que la cuenta tenga rol ADMIN.')
+    } finally {
+      setSaving(false)
+    }
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    setSaved(true)
+    void persist(true)
   }
 
   return (
@@ -35,39 +119,48 @@ export default function AdminSiteEditor() {
             <span className="eyebrow">CMS · PÁGINA WEB</span>
             <h2>Editar portada</h2>
             <p>
-              Esta interfaz ya representa el flujo final del administrador. Al conectar PocketBase, guardar actualizará la
-              colección de contenido y la imagen se almacenará en el servidor.
+              El editor trabaja en modo demo durante el desarrollo y guarda en la colección `site_pages` cuando la aplicación
+              está conectada a PocketBase.
             </p>
           </div>
           <a className="button button-ghost" href="/" target="_blank" rel="noreferrer">Vista pública ↗</a>
         </header>
 
+        {loading && <div className="cms-notice">Cargando contenido de PocketBase…</div>}
+        {notice && <div className="cms-notice success-notice">{notice}</div>}
+        {error && <div className="cms-notice">{error}</div>}
+
         <div className="cms-editor-grid">
           <form className="panel cms-form" onSubmit={handleSubmit}>
             <div className="panel-heading">
               <div><span className="eyebrow">HERO</span><h3>Mensaje principal</h3></div>
-              <span className={`status ${saved ? 'success' : 'info'}`}>{saved ? 'Cambios guardados' : 'Borrador local'}</span>
+              <span className={`status ${saved ? 'success' : 'info'}`}>{saved ? 'Publicado' : 'Cambios sin publicar'}</span>
             </div>
 
             <label className="field-stack">
+              <span>Etiqueta superior</span>
+              <input value={heroEyebrow} onChange={(event) => { setHeroEyebrow(event.target.value); markDirty() }} />
+            </label>
+
+            <label className="field-stack">
               <span>Título principal</span>
-              <textarea value={heroTitle} onChange={(event) => { setHeroTitle(event.target.value); setSaved(false) }} rows={3} />
+              <textarea value={heroTitle} onChange={(event) => { setHeroTitle(event.target.value); markDirty() }} rows={3} />
               <small>{heroTitle.length}/110 caracteres recomendados</small>
             </label>
 
             <label className="field-stack">
               <span>Texto de presentación</span>
-              <textarea value={heroSubtitle} onChange={(event) => { setHeroSubtitle(event.target.value); setSaved(false) }} rows={4} />
+              <textarea value={heroSubtitle} onChange={(event) => { setHeroSubtitle(event.target.value); markDirty() }} rows={4} />
             </label>
 
             <div className="field-grid-two">
               <label className="field-stack">
                 <span>Botón principal</span>
-                <input value={primaryCta} onChange={(event) => { setPrimaryCta(event.target.value); setSaved(false) }} />
+                <input value={primaryCta} onChange={(event) => { setPrimaryCta(event.target.value); markDirty() }} />
               </label>
               <label className="field-stack">
                 <span>Botón secundario</span>
-                <input value={secondaryCta} onChange={(event) => { setSecondaryCta(event.target.value); setSaved(false) }} />
+                <input value={secondaryCta} onChange={(event) => { setSecondaryCta(event.target.value); markDirty() }} />
               </label>
             </div>
 
@@ -76,14 +169,18 @@ export default function AdminSiteEditor() {
               <label className="upload-dropzone">
                 <input type="file" accept="image/png,image/jpeg,image/webp" onChange={handleImage} />
                 <strong>Cambiar imagen</strong>
-                <small>JPG, PNG o WebP · después se guardará en PocketBase</small>
+                <small>JPG, PNG o WebP · integración real en Fase 4.4</small>
               </label>
-              <div className="selected-file"><span>IMG</span><div><strong>{imageName}</strong><small>Imagen seleccionada para la portada</small></div></div>
+              <div className="selected-file"><span>IMG</span><div><strong>{imageName}</strong><small>Imagen seleccionada para la vista previa</small></div></div>
             </div>
 
             <div className="cms-form-actions">
-              <button className="button button-primary" type="submit">Guardar cambios</button>
-              <button className="button button-ghost" type="button" onClick={() => setSaved(false)}>Guardar borrador</button>
+              <button className="button button-primary" type="submit" disabled={saving || loading}>
+                {saving ? 'Guardando…' : 'Guardar y publicar'}
+              </button>
+              <button className="button button-ghost" type="button" disabled={saving || loading} onClick={() => void persist(false)}>
+                Guardar borrador
+              </button>
             </div>
           </form>
 
@@ -91,7 +188,7 @@ export default function AdminSiteEditor() {
             <div className="preview-browser-bar"><i /><i /><i /><span>Vista previa de portada</span></div>
             <div className="cms-hero-preview">
               <div className="cms-hero-preview-copy">
-                <span className="eyebrow">LANGUAGE SCHOOL</span>
+                <span className="eyebrow">{heroEyebrow || 'LANGUAGE SCHOOL'}</span>
                 <h1>{heroTitle || 'Título de portada'}</h1>
                 <p>{heroSubtitle || 'Texto de presentación de la academia.'}</p>
                 <div className="hero-actions">
