@@ -1,67 +1,170 @@
+import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import DashboardShell from '../../components/DashboardShell'
+import { useAuth } from '../../features/auth/AuthProvider'
+import {
+  createAdminTeacher,
+  listAdminClasses,
+  listAdminEnrollments,
+  listAdminGroups,
+  listAdminUsers,
+  updateAdminUser,
+  type AdminEnrollmentRecord,
+  type AdminGroupRecord,
+} from '../../services/pocketbase/adminAcademic'
+import type { AppUser } from '../../services/pocketbase/types'
+import type { ClassRecord } from '../../services/pocketbase/studentPortal'
 import { adminNav } from './adminNav'
 
-const teachers = [
-  { initials: 'LG', name: 'Laura García', specialty: 'Exámenes · B1–C1', students: 18, classes: 12, availability: 'L–V tardes', status: 'Activa' },
-  { initials: 'MS', name: 'Marta Sánchez', specialty: 'Kids · Teens', students: 11, classes: 9, availability: 'L–J tardes', status: 'Activa' },
-  { initials: 'AR', name: 'Álvaro Ruiz', specialty: 'Adultos · Speaking', students: 7, classes: 6, availability: 'M–V mañanas', status: 'Activo' },
-]
+type TeacherView = {
+  user: AppUser
+  initials: string
+  name: string
+  courses: string[]
+  groups: AdminGroupRecord[]
+  students: number
+  classes: number
+  status: 'Activo' | 'Pausado'
+}
+
+const demoTeachers = [
+  { id: 'demo-t1', name: 'Laura', surname: 'García', email: 'laura@example.com', phone: '', role: 'TEACHER', status: 'ACTIVE', collectionId: '', collectionName: 'users', created: '', updated: '', expand: {} },
+  { id: 'demo-t2', name: 'Marta', surname: 'Sánchez', email: 'marta@example.com', phone: '', role: 'TEACHER', status: 'ACTIVE', collectionId: '', collectionName: 'users', created: '', updated: '', expand: {} },
+] as AppUser[]
+
+function initials(user: AppUser): string {
+  return `${user.name?.charAt(0) || ''}${user.surname?.charAt(0) || ''}`.toUpperCase() || 'PR'
+}
 
 export default function AdminTeachersPage() {
+  const { isDemoMode } = useAuth()
+  const [teachers, setTeachers] = useState<AppUser[]>(isDemoMode ? demoTeachers : [])
+  const [groups, setGroups] = useState<AdminGroupRecord[]>([])
+  const [enrollments, setEnrollments] = useState<AdminEnrollmentRecord[]>([])
+  const [classes, setClasses] = useState<ClassRecord[]>([])
+  const [showCreate, setShowCreate] = useState(false)
+  const [loading, setLoading] = useState(!isDemoMode)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [message, setMessage] = useState<string | null>(null)
+  const [name, setName] = useState('')
+  const [surname, setSurname] = useState('')
+  const [email, setEmail] = useState('')
+  const [phone, setPhone] = useState('')
+  const [password, setPassword] = useState('')
+  const [specialties, setSpecialties] = useState('')
+
+  useEffect(() => {
+    if (isDemoMode) return
+    let mounted = true
+    setLoading(true)
+    Promise.all([listAdminUsers('TEACHER'), listAdminGroups(), listAdminEnrollments(), listAdminClasses()])
+      .then(([teacherUsers, groupRecords, enrollmentRecords, classRecords]) => {
+        if (!mounted) return
+        setTeachers(teacherUsers)
+        setGroups(groupRecords)
+        setEnrollments(enrollmentRecords)
+        setClasses(classRecords)
+      })
+      .catch(() => { if (mounted) setError('No se ha podido cargar el equipo docente.') })
+      .finally(() => { if (mounted) setLoading(false) })
+    return () => { mounted = false }
+  }, [isDemoMode])
+
+  const views = useMemo<TeacherView[]>(() => teachers.map((teacher) => {
+    const teacherGroups = groups.filter((group) => group.teacher === teacher.id && group.status === 'ACTIVE')
+    const groupIds = new Set(teacherGroups.map((group) => group.id))
+    const studentIds = new Set(enrollments.filter((item) => item.status === 'ACTIVE' && groupIds.has(item.group)).map((item) => item.student))
+    const teacherClasses = classes.filter((item) => item.teacher === teacher.id)
+    const courseNames = [...new Set(teacherGroups.map((group) => group.expand?.course?.title).filter((value): value is string => Boolean(value)))]
+    return {
+      user: teacher,
+      initials: initials(teacher),
+      name: [teacher.name, teacher.surname].filter(Boolean).join(' ') || teacher.email,
+      courses: courseNames,
+      groups: teacherGroups,
+      students: studentIds.size,
+      classes: teacherClasses.length,
+      status: teacher.status === 'ACTIVE' ? 'Activo' : 'Pausado',
+    }
+  }), [classes, enrollments, groups, teachers])
+
+  const activeCount = views.filter((item) => item.status === 'Activo').length
+  const assignedStudents = new Set(enrollments.filter((item) => item.status === 'ACTIVE').map((item) => item.student)).size
+
+  async function handleCreate(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setError(null); setMessage(null)
+    if (isDemoMode) { setMessage('El alta real estará disponible con PocketBase conectado.'); return }
+    setSaving(true)
+    try {
+      const specialtyList = specialties.split(',').map((value) => value.trim()).filter(Boolean)
+      const created = await createAdminTeacher({ email, password, name, surname, phone, specialties: specialtyList, publicProfile: true })
+      setTeachers((current) => [...current, created.user].sort((a, b) => `${a.name} ${a.surname}`.localeCompare(`${b.name} ${b.surname}`, 'es')))
+      setName(''); setSurname(''); setEmail(''); setPhone(''); setPassword(''); setSpecialties('')
+      setShowCreate(false)
+      setMessage('Profesor creado correctamente. Ya puede iniciar sesión con su contraseña inicial.')
+    } catch (creationError) {
+      setError(creationError instanceof Error ? creationError.message : 'No se ha podido crear el profesor.')
+    } finally { setSaving(false) }
+  }
+
+  async function toggleTeacher(record: TeacherView) {
+    setError(null); setMessage(null)
+    if (isDemoMode) { setMessage('El cambio de estado requiere PocketBase conectado.'); return }
+    try {
+      const nextStatus = record.user.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'
+      const updated = await updateAdminUser(record.user, { status: nextStatus })
+      setTeachers((current) => current.map((item) => item.id === updated.id ? updated : item))
+      setMessage(nextStatus === 'ACTIVE' ? 'Profesor activado.' : 'Profesor desactivado.')
+    } catch { setError('No se ha podido cambiar el estado del profesor.') }
+  }
+
   return (
     <DashboardShell role="Administrador" name="Admin" nav={[...adminNav]}>
       <div className="dashboard-content cms-page">
         <header className="cms-page-heading">
-          <div>
-            <span className="eyebrow">PLATAFORMA · PROFESORES</span>
-            <h2>Equipo docente</h2>
-            <p>Control de profesores, especialidades, alumnos asignados, carga semanal y disponibilidad.</p>
-          </div>
-          <button className="button button-primary" type="button">+ Nuevo profesor</button>
+          <div><span className="eyebrow">PLATAFORMA · PROFESORES</span><h2>Equipo docente</h2><p>Profesores reales, grupos asignados, alumnos relacionados y carga docente desde PocketBase.</p></div>
+          <button className="button button-primary" type="button" onClick={() => setShowCreate((value) => !value)}>{showCreate ? 'Cerrar alta' : '+ Nuevo profesor'}</button>
         </header>
 
+        {loading && <div className="cms-notice">Cargando profesores…</div>}
+        {message && <div className="cms-notice success-notice">{message}</div>}
+        {error && <div className="cms-notice auth-error">{error}</div>}
+
+        {showCreate && <section className="panel admin-inline-create">
+          <div className="panel-heading"><div><span className="eyebrow">ALTA</span><h3>Nuevo profesor</h3></div><span className="status info">Cuenta + perfil</span></div>
+          <form onSubmit={handleCreate} className="admin-create-grid">
+            <div><label>Nombre</label><input value={name} onChange={(e) => setName(e.target.value)} required /></div>
+            <div><label>Apellidos</label><input value={surname} onChange={(e) => setSurname(e.target.value)} required /></div>
+            <div><label>Email</label><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></div>
+            <div><label>Teléfono</label><input value={phone} onChange={(e) => setPhone(e.target.value)} /></div>
+            <div><label>Especialidades</label><input value={specialties} onChange={(e) => setSpecialties(e.target.value)} placeholder="Kids, B2, Speaking" /></div>
+            <div><label>Contraseña inicial</label><input type="password" minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} required /></div>
+            <div className="admin-create-action"><button className="button button-primary" type="submit" disabled={saving}>{saving ? 'Creando…' : 'Crear profesor'}</button></div>
+          </form>
+        </section>}
+
         <section className="metric-grid">
-          <article><span>Profesores activos</span><strong>3</strong><small>Equipo actual</small></article>
-          <article><span>Clases esta semana</span><strong>27</strong><small>Individuales y grupos</small></article>
-          <article><span>Alumnos asignados</span><strong>36</strong><small>Todos con profesor</small></article>
-          <article><span>Horas disponibles</span><strong>14 h</strong><small>Huecos de demostración</small></article>
+          <article><span>Profesores</span><strong>{views.length}</strong><small>Total registrado</small></article>
+          <article><span>Activos</span><strong>{activeCount}</strong><small>Cuentas habilitadas</small></article>
+          <article><span>Alumnos asignados</span><strong>{assignedStudents}</strong><small>Matrículas activas</small></article>
+          <article><span>Grupos activos</span><strong>{groups.filter((item) => item.status === 'ACTIVE').length}</strong><small>Con profesor asignado</small></article>
         </section>
 
         <section className="teacher-admin-grid">
-          {teachers.map((teacher) => (
-            <article className="panel teacher-admin-card" key={teacher.name}>
+          {views.map((teacher) => (
+            <article className="panel teacher-admin-card" key={teacher.user.id}>
               <div className="teacher-card-heading">
                 <span className="teacher-avatar">{teacher.initials}</span>
-                <div><span className="eyebrow">PROFESOR</span><h3>{teacher.name}</h3><p>{teacher.specialty}</p></div>
-                <span className="status success">{teacher.status}</span>
+                <div><span className="eyebrow">PROFESOR</span><h3>{teacher.name}</h3><p>{teacher.courses.length ? teacher.courses.join(' · ') : 'Sin grupos asignados'}</p></div>
+                <span className={`status ${teacher.status === 'Activo' ? 'success' : 'warning'}`}>{teacher.status}</span>
               </div>
-
-              <div className="teacher-card-metrics">
-                <div><span>Alumnos</span><strong>{teacher.students}</strong></div>
-                <div><span>Clases/semana</span><strong>{teacher.classes}</strong></div>
-              </div>
-
-              <div className="teacher-availability">
-                <span>Disponibilidad</span>
-                <strong>{teacher.availability}</strong>
-              </div>
-
-              <div className="teacher-card-actions">
-                <button type="button">Ver agenda</button>
-                <button type="button">Alumnos</button>
-                <button type="button">Editar</button>
-              </div>
+              <div className="teacher-card-metrics"><div><span>Alumnos</span><strong>{teacher.students}</strong></div><div><span>Clases</span><strong>{teacher.classes}</strong></div></div>
+              <div className="teacher-availability"><span>Grupos activos</span><strong>{teacher.groups.length ? teacher.groups.map((group) => group.name).join(' · ') : 'Sin asignar'}</strong></div>
+              <div className="teacher-card-actions"><button type="button" onClick={() => void toggleTeacher(teacher)}>{teacher.user.status === 'ACTIVE' ? 'Desactivar' : 'Activar'}</button></div>
             </article>
           ))}
-        </section>
-
-        <section className="panel teacher-load-panel">
-          <div className="panel-heading"><div><span className="eyebrow">CARGA DOCENTE</span><h3>Distribución semanal</h3></div><span className="status info">Demo</span></div>
-          <div className="teacher-load-list">
-            <div><span>Laura García</span><div><i style={{ width: '78%' }} /></div><strong>12 / 16 h</strong></div>
-            <div><span>Marta Sánchez</span><div><i style={{ width: '61%' }} /></div><strong>9 / 15 h</strong></div>
-            <div><span>Álvaro Ruiz</span><div><i style={{ width: '45%' }} /></div><strong>6 / 14 h</strong></div>
-          </div>
+          {!loading && views.length === 0 && <article className="panel"><p className="muted">Todavía no hay profesores registrados.</p></article>}
         </section>
       </div>
     </DashboardShell>
