@@ -8,10 +8,8 @@ export type LoginCredentials = {
   password: string
 }
 
-export async function loginWithPassword({ email, password }: LoginCredentials): Promise<AppUser> {
-  const normalizedEmail = email.trim().toLowerCase()
-  const result = await pb.collection(collections.users).authWithPassword(normalizedEmail, password)
-  const user = asAppUser(result.record)
+function validateAuthenticatedUser(record: unknown): AppUser {
+  const user = asAppUser(record as Parameters<typeof asAppUser>[0])
 
   if (!user) {
     pb.authStore.clear()
@@ -26,12 +24,18 @@ export async function loginWithPassword({ email, password }: LoginCredentials): 
   return user
 }
 
+export async function loginWithPassword({ email, password }: LoginCredentials): Promise<AppUser> {
+  const normalizedEmail = email.trim().toLowerCase()
+  const result = await pb.collection(collections.users).authWithPassword(normalizedEmail, password)
+  return validateAuthenticatedUser(result.record)
+}
+
 export async function refreshAuthentication(): Promise<AppUser | null> {
   if (!pb.authStore.isValid) return null
 
   try {
     const result = await pb.collection(collections.users).authRefresh()
-    return asAppUser(result.record)
+    return validateAuthenticatedUser(result.record)
   } catch {
     pb.authStore.clear()
     return null
@@ -43,7 +47,8 @@ export function logout(): void {
 }
 
 export function getCurrentUser(): AppUser | null {
-  return asAppUser(pb.authStore.record)
+  const user = asAppUser(pb.authStore.record)
+  return user?.status === 'ACTIVE' ? user : null
 }
 
 export function getLoginErrorMessage(error: unknown): string {
