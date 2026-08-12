@@ -54,5 +54,30 @@
 .student-empty-detail h3,.student-empty-detail p { margin: 0; }
 .student-empty-detail p { color: var(--muted); max-width: 420px; }
 
-@media (max-width: 980px) { .teacher-authoring-grid,.teacher-corrections-grid,.teacher-students-grid { grid-template-columns: 1fr; } }
-@media (max-width: 700px) { .teacher-page-heading { flex-direction: column; align-items: flex-start; } .teacher-record-list article,.teacher-student-files article { grid-template-columns: auto 1fr; } .teacher-record-actions,.teacher-student-files button { grid-column: 1 / -1; justify-content: flex-start; } .teacher-correction-list button { grid-template-columns: auto 1fr; } .teacher-correction-list em { grid-column: 2; justify-self: start; } .teacher-student-profile { grid-template-columns: auto 1fr; } .teacher-student-profile > .status { grid-column: 2; justify-self: start; } }
+.teacher-class-workspace { display: grid; grid-template-columns: minmax(300px,.72fr) minmax(0,1.28fr); gap: 20px; align-items: start; }
+.teacher-class-create,.teacher-class-agenda,.teacher-attendance-panel { display: grid; gap: 18px; }
+.teacher-class-create form { display: grid; gap: 13px; }
+.teacher-date-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.teacher-date-grid > div { display: grid; gap: 7px; }
+.teacher-class-list { display: grid; }
+.teacher-class-list button { width: 100%; display: grid; grid-template-columns: minmax(125px,.42fr) minmax(0,1fr) auto; gap: 12px; align-items: center; padding: 14px 0; border: 0; border-bottom: 1px solid var(--line); background: transparent; color: var(--ink); text-align: left; }
+.teacher-class-list button.active { margin-inline: -8px; width: calc(100% + 16px); padding-inline: 8px; border-radius: 12px; background: #f3f6f2; }
+.teacher-class-list time { color: var(--sage-dark); font-size: .76rem; font-weight: 800; text-transform: capitalize; }
+.teacher-class-list button > span { min-width: 0; display: grid; gap: 4px; }
+.teacher-class-list small { color: var(--muted); }
+.teacher-class-list b { color: var(--muted); font-weight: 500; }
+.teacher-class-detail-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
+.teacher-class-detail-heading h3 { margin: 5px 0; }
+.teacher-class-detail-heading p { margin: 0; color: var(--muted); }
+.teacher-class-status-actions { display: flex; gap: 7px; flex-wrap: wrap; justify-content: flex-end; }
+.teacher-class-status-actions button,.teacher-attendance-actions button { min-height: 34px; padding: 0 10px; border: 1px solid var(--line); border-radius: 9px; background: #fff; color: var(--ink-soft); font-size: .72rem; font-weight: 700; }
+.teacher-attendance-list { display: grid; }
+.teacher-attendance-list article { display: grid; grid-template-columns: auto minmax(0,1fr) auto; gap: 13px; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.teacher-attendance-list article:last-child { border-bottom: 0; }
+.teacher-attendance-list article > div:nth-child(2) { min-width: 0; display: grid; gap: 4px; }
+.teacher-attendance-list small { color: var(--muted); }
+.teacher-attendance-actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.teacher-attendance-actions button.active { border-color: var(--sage-dark); background: #edf4ee; color: var(--sage-dark); }
+
+@media (max-width: 980px) { .teacher-authoring-grid,.teacher-corrections-grid,.teacher-students-grid,.teacher-class-workspace { grid-template-columns: 1fr; } }
+@media (max-width: 700px) { .teacher-page-heading { flex-direction: column; align-items: flex-start; } .teacher-record-list article,.teacher-student-files article,.teacher-attendance-list article { grid-template-columns: auto 1fr; } .teacher-record-actions,.teacher-student-files button,.teacher-attendance-actions { grid-column: 1 / -1; justify-content: flex-start; } .teacher-correction-list button { grid-template-columns: auto 1fr; } .teacher-correction-list em { grid-column: 2; justify-self: start; } .teacher-student-profile { grid-template-columns: auto 1fr; } .teacher-student-profile > .status { grid-column: 2; justify-self: start; } .teacher-date-grid { grid-template-columns: 1fr; } .teacher-class-detail-heading { flex-direction: column; } .teacher-class-status-actions { justify-content: flex-start; } .teacher-class-list button { grid-template-columns: 1fr auto; } .teacher-class-list time { grid-column: 1 / -1; } }
