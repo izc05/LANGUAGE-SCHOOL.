@@ -10,7 +10,7 @@ Este archivo es la **fuente de verdad** del desarrollo. Cada bloque se marca por
 - Frontend: React + TypeScript + Vite
 - Backend: PocketBase `0.39.9`
 - Producción prevista: Raspberry Pi 4 + SSD + disco externo de backup
-- Frente activo: **FASE 8.4 · Calendario y asistencia ADMIN**
+- Frente activo: **FASE 8.5 · Validación del flujo ADMIN**
 - Validaciones bloqueadas por servidor físico: **6.7 y 7.6**
 
 ### Estados
@@ -144,17 +144,26 @@ Validación:
 - Frontend CI ✅
 - PocketBase CI ✅
 
-### 8.4 Calendario y asistencia ADMIN — 🟡 EN CURSO
-Objetivo:
-- clases globales reales.
-- filtros por profesor y grupo.
-- programar clase desde ADMIN.
-- actualizar estado de clase.
-- seleccionar clase y revisar alumnos del grupo.
-- registrar/corregir asistencia.
+### 8.4 Calendario y asistencia ADMIN — ✅ COMPLETADA
 
-### 8.5 Validación ADMIN — ⏳ PENDIENTE
-Flujo completo: alta → grupo → matrícula → clase → asistencia.
+`/admin/clases`
+- clases globales reales.
+- calendario semanal de 7 días.
+- navegación semana anterior/hoy/siguiente.
+- filtros por profesor y grupo.
+- programación de clase con profesor derivado del grupo.
+- métricas de semana, hoy, pendientes y horas docentes.
+- seleccionar clase.
+- completar/cancelar/reabrir.
+- alumnos con matrícula `ACTIVE` del grupo.
+- registrar/corregir asistencia Presente/Ausente/Justificada.
+
+Validación:
+- Frontend CI ✅
+- PocketBase CI ✅
+
+### 8.5 Validación ADMIN — 🟡 EN CURSO
+Objetivo: comprobar el flujo completo `alta alumno/profesor → curso → grupo → matrícula → clase → asistencia` antes de llegar a la Raspberry.
 
 ---
 
