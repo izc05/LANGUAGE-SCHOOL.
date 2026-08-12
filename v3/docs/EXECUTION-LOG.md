@@ -11,8 +11,8 @@ Este archivo es la **fuente de verdad** del desarrollo. Cada bloque se marca por
 - Frontend: React + TypeScript + Vite
 - Backend objetivo: PocketBase `0.39.9`
 - Producción: Raspberry Pi 4 + SSD + disco externo de backup
-- Frente activo: **FASE 7.4 · Alumnos y archivos autorizados para profesor**
-- Validaciones bloqueadas por servidor físico: **6.7 y 7.5**
+- Frente activo: **FASE 7.5 · Clases y asistencia del profesor**
+- Validaciones bloqueadas por servidor físico: **6.7 y 7.6**
 
 ### Estados
 - ✅ COMPLETADA = implementada y validada en CI.
@@ -350,24 +350,39 @@ PocketBase CI ✅
 - V3 Frontend CI ✅
 - V3 PocketBase CI ✅
 
-### 7.4 Alumnos y archivos autorizados — 🟡 EN CURSO
+### 7.4 Alumnos y archivos autorizados — ✅ COMPLETADA
 
-Siguiente bloque:
-- `/profesor/alumnos`
-- lista solo alumnos matriculados en grupos propios
-- ficha de alumno
-- grupos y datos académicos autorizados
-- ampliar `student_files.view/listRule` para TEACHER **solo lectura** si existe matrícula `ACTIVE` en grupo propio
-- descargar archivo protegido del alumno mediante token temporal
-- profesor NO podrá editar, archivar ni borrar el archivo privado del alumno
+Migración 8 · `1786564500_allow_teacher_student_file_read.js`
+- `student_files.listRule` y `viewRule` permiten TEACHER únicamente si el alumno mantiene matrícula `ACTIVE` en un grupo del profesor autenticado.
+- no se abren `create`, `update` ni `delete` al profesor.
+- los archivos continúan protegidos y la descarga usa token temporal.
 
-### 7.5 Clases del profesor — ⏳ PENDIENTE
+`teacherStudents.ts`
+- verifica ámbito del alumno antes de cargar perfil/archivos.
+- conocer un `studentId` no basta si no existe relación activa.
 
-`/profesor/clases`
+`/profesor/alumnos`
+- listado único de alumnos autorizados.
+- búsqueda.
+- grupos activos.
+- ficha académica autorizada.
+- archivos privados en solo lectura/descarga.
+- navegación protegida mediante `RequireRole(['TEACHER'])`.
+
+Validación:
+- V3 Frontend CI ✅
+- V3 PocketBase CI ✅
+
+### 7.5 Clases y asistencia del profesor — 🟡 EN CURSO
+
+Objetivo `/profesor/clases`:
 - agenda propia
-- crear clase solo en grupo propio
+- crear clase únicamente en grupo propio
+- editar estado de clase propia
 - completar/cancelar
-- asistencia de alumnos del grupo
+- listar alumnos activos del grupo
+- registrar/actualizar asistencia de esos alumnos
+- impedir asistencia de alumno que no pertenezca al grupo
 
 ### 7.6 Validación seguridad profesor — 🔒 BLOQUEADA HASTA INSTANCIA REAL
 
@@ -375,6 +390,7 @@ Debe demostrar:
 - Profesor A no puede ver grupo/alumno de Profesor B.
 - Profesor A no puede descargar archivo de alumno sin relación activa.
 - Profesor solo puede crear contenido dentro de su ámbito.
+- Profesor no puede registrar asistencia para alumno fuera del grupo de la clase.
 
 ---
 
