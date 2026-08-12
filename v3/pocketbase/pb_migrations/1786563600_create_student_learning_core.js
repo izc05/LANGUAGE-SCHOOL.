@@ -19,7 +19,7 @@ migrate((app) => {
     name: 'attendance',
     listRule: '@request.auth.role = "ADMIN" || student = @request.auth.id || class.teacher = @request.auth.id',
     viewRule: '@request.auth.role = "ADMIN" || student = @request.auth.id || class.teacher = @request.auth.id',
-    createRule: '@request.auth.role = "ADMIN" || (@request.auth.role = "TEACHER" && @request.body.class.teacher = @request.auth.id)',
+    createRule: '@request.auth.role = "ADMIN" || (@request.auth.role = "TEACHER" && class.teacher = @request.auth.id)',
     updateRule: '@request.auth.role = "ADMIN" || class.teacher = @request.auth.id',
     deleteRule: '@request.auth.role = "ADMIN"',
     fields: [
@@ -40,7 +40,7 @@ migrate((app) => {
     name: 'materials',
     listRule: '@request.auth.role = "ADMIN" || teacher = @request.auth.id || (published = true && @request.auth.role = "STUDENT" && (student = @request.auth.id || group.enrollments_via_group.student ?= @request.auth.id || course.groups_via_course.enrollments_via_group.student ?= @request.auth.id))',
     viewRule: '@request.auth.role = "ADMIN" || teacher = @request.auth.id || (published = true && @request.auth.role = "STUDENT" && (student = @request.auth.id || group.enrollments_via_group.student ?= @request.auth.id || course.groups_via_course.enrollments_via_group.student ?= @request.auth.id))',
-    createRule: '@request.auth.role = "ADMIN" || (@request.auth.role = "TEACHER" && @request.body.teacher = @request.auth.id)',
+    createRule: '@request.auth.role = "ADMIN" || (@request.auth.role = "TEACHER" && teacher = @request.auth.id)',
     updateRule: '@request.auth.role = "ADMIN" || teacher = @request.auth.id',
     deleteRule: '@request.auth.role = "ADMIN" || teacher = @request.auth.id',
     fields: [
@@ -84,7 +84,7 @@ migrate((app) => {
     name: 'assignments',
     listRule: '@request.auth.role = "ADMIN" || teacher = @request.auth.id || (@request.auth.role = "STUDENT" && status != "DRAFT" && (student = @request.auth.id || group.enrollments_via_group.student ?= @request.auth.id))',
     viewRule: '@request.auth.role = "ADMIN" || teacher = @request.auth.id || (@request.auth.role = "STUDENT" && status != "DRAFT" && (student = @request.auth.id || group.enrollments_via_group.student ?= @request.auth.id))',
-    createRule: '@request.auth.role = "ADMIN" || (@request.auth.role = "TEACHER" && @request.body.teacher = @request.auth.id)',
+    createRule: '@request.auth.role = "ADMIN" || (@request.auth.role = "TEACHER" && teacher = @request.auth.id)',
     updateRule: '@request.auth.role = "ADMIN" || teacher = @request.auth.id',
     deleteRule: '@request.auth.role = "ADMIN" || teacher = @request.auth.id',
     fields: [
@@ -125,10 +125,7 @@ migrate((app) => {
     name: 'assignment_submissions',
     listRule: '@request.auth.role = "ADMIN" || student = @request.auth.id || assignment.teacher = @request.auth.id',
     viewRule: '@request.auth.role = "ADMIN" || student = @request.auth.id || assignment.teacher = @request.auth.id',
-    // Student creation remains deliberately narrow: the student must own the
-    // submission and the referenced assignment must be visible to that token.
-    // PocketBase will hide inaccessible assignment records via its rules.
-    createRule: '@request.auth.role = "ADMIN" || (@request.auth.role = "STUDENT" && @request.body.student = @request.auth.id)',
+    createRule: '@request.auth.role = "ADMIN" || (@request.auth.role = "STUDENT" && student = @request.auth.id && (assignment.student = @request.auth.id || assignment.group.enrollments_via_group.student ?= @request.auth.id))',
     updateRule: '@request.auth.role = "ADMIN" || assignment.teacher = @request.auth.id || (student = @request.auth.id && status = "SUBMITTED" && @request.body.student:changed = false && @request.body.assignment:changed = false && @request.body.teacher_feedback:changed = false && @request.body.grade_text:changed = false && @request.body.status:changed = false)',
     deleteRule: '@request.auth.role = "ADMIN" || (student = @request.auth.id && status = "SUBMITTED")',
     fields: [
