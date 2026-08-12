@@ -10,7 +10,7 @@ Este archivo es la **fuente de verdad** del desarrollo. Cada bloque se marca por
 - Frontend: React + TypeScript + Vite
 - Backend: PocketBase `0.39.9`
 - Producción prevista: Raspberry Pi 4 + SSD + disco externo de backup
-- Frente activo: **FASE 9.1B.4 · Completar web pública (Profesores + Sobre nosotros + endurecimiento visual)**
+- Frente activo: **FASE 9.1B.5 · Bandeja ADMIN de solicitudes de contacto**
 - Hardware: **FASE 9.2 sigue pendiente**, pero no bloquea la preproducción en GitHub.
 
 ### Estados
@@ -46,6 +46,8 @@ Este archivo es la **fuente de verdad** del desarrollo. Cada bloque se marca por
 7. `1786564200_tighten_teacher_authoring_scope.js`
 8. `1786564500_allow_teacher_student_file_read.js`
 9. `1786564800_tighten_teacher_attendance_scope.js`
+10. `1786565100_expand_public_teacher_profile.js`
+11. `1786565400_seed_about_page.js`
 
 ### Revalidación de fundación
 - La migración 1 personaliza la colección `users` incorporada por PocketBase.
@@ -117,11 +119,11 @@ Preparado en `v3/infrastructure/`:
 ### 9.1B Preproducción en GitHub — 🟡 EN CURSO
 
 #### 9.1B.1 Auditoría ADMIN — ✅ COMPLETADA
-Se detectaron dos enlaces de menú sin ruta real:
+Se detectaron y corrigieron enlaces sin ruta real:
 - `/admin/tarifas`
 - `/admin/configuracion`
 
-Se implementó:
+Implementado:
 - `siteManagement.ts`.
 - `/admin/tarifas`: CRUD de `pricing_plans`, activar/ocultar/destacar/eliminar.
 - `/admin/configuracion`: nombre academia, logo, dirección, email, teléfono, WhatsApp y redes.
@@ -129,7 +131,7 @@ Se implementó:
 - Frontend CI ✅
 
 #### 9.1B.2 E2E de navegador — ✅ COMPLETADA
-Se añadió `v3/e2e/` con **Playwright 1.62.1** y workflow `V3 E2E CI`.
+Se añadió `v3/e2e/` con Playwright y workflow `V3 E2E CI`.
 
 El pipeline ejecuta:
 1. PocketBase 0.39.9 temporal desde cero.
@@ -138,17 +140,15 @@ El pipeline ejecuta:
 4. frontend compilado con `VITE_APP_MODE=connected`.
 5. Chromium real.
 6. login y redirección por rol.
-7. navegación ADMIN.
-8. navegación TEACHER.
-9. navegación STUDENT.
-10. rechazo de rutas de otros roles.
-11. logout.
-12. comprobación móvil sin scroll horizontal.
+7. navegación ADMIN/TEACHER/STUDENT.
+8. rechazo de rutas de otros roles.
+9. logout.
+10. comprobaciones responsive.
 
 Resultado: V3 E2E CI ✅
 
 #### 9.1B.3 Web pública Programas/Tarifas/Contacto — ✅ COMPLETADA
-Nuevas rutas:
+Rutas:
 - `/programas`
 - `/tarifas`
 - `/contacto`
@@ -157,30 +157,81 @@ Implementado:
 - `publicAcademy.ts`.
 - Programas leen cursos `ACTIVE + public_visible` de PocketBase.
 - Tarifas leen solo planes `active` de PocketBase.
-- Los datos demo **no aparecen en modo connected si la colección real está vacía**.
+- datos demo no aparecen en modo connected si la colección real está vacía.
 - Contacto crea `contact_requests` con estado `NEW`.
 - `SiteShell` lee `site_settings` para nombre, logo, dirección, email, teléfono e Instagram.
-- El logo que se suba desde ADMIN puede mostrarse automáticamente en header/footer.
-- navegación pública actualizada.
+- el logo subido desde ADMIN puede mostrarse automáticamente en header/footer.
 - estados vacíos seguros.
 
-Validación E2E real:
-- curso público leído desde PocketBase ✅
-- tarifa pública leída desde PocketBase ✅
+Validación E2E:
+- curso público desde PocketBase ✅
+- tarifa pública desde PocketBase ✅
 - formulario de contacto crea solicitud ✅
-- ADMIN/TEACHER/STUDENT siguen funcionando ✅
-- prueba móvil ✅
+- roles privados siguen funcionando ✅
+
+#### 9.1B.4 Web pública completa y endurecimiento — ✅ COMPLETADA
+
+##### 9.1B.4.1 Profesores públicos — ✅
+Migración 10 `1786565100_expand_public_teacher_profile.js` añade al perfil docente:
+- `display_name`
+- `headline`
+- `sort_order`
+
+Implementado:
+- `teacherProfiles.ts`.
+- `/profesores`.
+- `/admin/profesores/publicos`.
+- nombre público, titular, bio, especialidades, orden, foto y visibilidad gestionables por ADMIN.
+- la web pública **no expande `users`** para mostrar profesores.
+- email/teléfono privados permanecen fuera del payload público.
+
+E2E demuestra:
+- profesor público visible ✅
+- email privado ausente de `/profesores` ✅
+- editor ADMIN accesible ✅
+
+##### 9.1B.4.2 Sobre nosotros — ✅
+Migración 11 `1786565400_seed_about_page.js` crea `site_pages/about` editable.
+
+Implementado:
+- `/sobre-nosotros`.
+- `/admin/web/sobre-nosotros`.
+- cabecera, introducción, historia, valores y cierre editables.
+- publicar o guardar borrador.
+- navegación pública y ADMIN integradas.
+
+Validación:
+- PocketBase CI ✅
+- Frontend CI ✅
+- Chromium E2E ✅
+
+##### 9.1B.4.3 SEO básico + 404 + responsive — ✅
+Implementado:
+- `NotFoundPage.tsx` y 404 real para URLs públicas desconocidas.
+- las rutas privadas desconocidas siguen regresando a su dashboard de rol.
+- `title` y `meta description` específicos para Inicio, Programas, Profesores, Sobre nosotros, Tarifas, Blog y Contacto.
+- título/description propios para 404.
+- cabecera pública adaptada al menú completo.
+- en tablet/móvil la navegación pasa a segunda fila desplazable internamente.
+- corrección de la regla antigua que ocultaba `.main-nav` bajo 720 px.
+
+E2E demuestra:
+- URL desconocida no redirige silenciosamente a Inicio ✅
+- SEO por ruta ✅
+- navegación pública visible a 390 px y 768 px ✅
+- sin scroll horizontal de página ✅
 - Frontend CI ✅
 - PocketBase CI ✅
 - V3 E2E CI ✅
 
-#### 9.1B.4 Profesores + Sobre nosotros + endurecimiento visual — 🟡 EN CURSO
-Objetivo siguiente:
-- perfil público de profesor sin exponer email/teléfono privado.
-- página `/profesores`.
-- página `/sobre-nosotros` editable.
-- completar navegación pública.
-- revisar 404/errores y SEO básico.
+#### 9.1B.5 Solicitudes de contacto ADMIN — 🟡 EN CURSO
+Objetivo:
+- bandeja `/admin/contactos`.
+- filtro por `NEW`, `CONTACTED`, `CLOSED`.
+- detalle de nombre, email, teléfono, interés, mensaje y fecha.
+- transición de estado sin borrar histórico.
+- contador de solicitudes nuevas en Dashboard.
+- E2E `visitante envía → ADMIN la ve → marca CONTACTED/CLOSED`.
 
 ### 9.2 Raspberry + SSD — 🔒 PENDIENTE DE HARDWARE
 1. instalar sistema ARM64 en SSD;
