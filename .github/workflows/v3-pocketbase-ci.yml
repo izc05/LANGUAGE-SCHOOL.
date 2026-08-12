@@ -1,0 +1,40 @@
+name: V3 PocketBase CI
+
+on:
+  pull_request:
+    paths:
+      - 'v3/pocketbase/**'
+      - '.github/workflows/v3-pocketbase-ci.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'v3/pocketbase/**'
+
+jobs:
+  migrations:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download PocketBase 0.39.9
+        run: |
+          mkdir -p "$RUNNER_TEMP/pocketbase"
+          curl -fsSL "https://github.com/pocketbase/pocketbase/releases/download/v0.39.9/pocketbase_0.39.9_linux_amd64.zip" -o "$RUNNER_TEMP/pocketbase/pocketbase.zip"
+          unzip -q "$RUNNER_TEMP/pocketbase/pocketbase.zip" -d "$RUNNER_TEMP/pocketbase"
+          chmod +x "$RUNNER_TEMP/pocketbase/pocketbase"
+
+      - name: Apply V3 migrations to temporary database
+        run: |
+          mkdir -p "$RUNNER_TEMP/language-school-pb-data"
+          "$RUNNER_TEMP/pocketbase/pocketbase" migrate up \
+            --dir="$RUNNER_TEMP/language-school-pb-data" \
+            --migrationsDir="$GITHUB_WORKSPACE/v3/pocketbase/pb_migrations"
+
+      - name: Roll back latest migration
+        run: |
+          "$RUNNER_TEMP/pocketbase/pocketbase" migrate down 1 \
+            --dir="$RUNNER_TEMP/language-school-pb-data" \
+            --migrationsDir="$GITHUB_WORKSPACE/v3/pocketbase/pb_migrations"
