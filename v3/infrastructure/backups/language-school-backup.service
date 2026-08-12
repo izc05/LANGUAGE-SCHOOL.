@@ -1,0 +1,13 @@
+[Unit]
+Description=Language School PocketBase backup
+RequiresMountsFor=/mnt/language-school-backup
+After=language-school-pocketbase.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=-/etc/language-school/production.env
+ExecStart=/usr/local/sbin/language-school-backup
+UMask=0077
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
