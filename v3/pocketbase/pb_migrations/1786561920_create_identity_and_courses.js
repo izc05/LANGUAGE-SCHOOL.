@@ -1,36 +1,39 @@
 migrate((app) => {
-  const users = new Collection({
-    type: 'auth',
-    name: 'users',
-    listRule: '@request.auth.id != "" && (id = @request.auth.id || @request.auth.role = "ADMIN")',
-    viewRule: '@request.auth.id != "" && (id = @request.auth.id || @request.auth.role = "ADMIN")',
-    createRule: '@request.auth.role = "ADMIN"',
-    updateRule: '@request.auth.role = "ADMIN" || (id = @request.auth.id && @request.body.role:changed = false && @request.body.status:changed = false)',
-    deleteRule: '@request.auth.role = "ADMIN" && id != @request.auth.id',
-    authRule: 'status = "ACTIVE"',
-    manageRule: '@request.auth.role = "ADMIN"',
-    fields: [
-      { type: 'text', name: 'name', required: true, max: 100 },
-      { type: 'text', name: 'surname', required: true, max: 120 },
-      { type: 'select', name: 'role', required: true, maxSelect: 1, values: ['ADMIN', 'TEACHER', 'STUDENT'] },
-      { type: 'select', name: 'status', required: true, maxSelect: 1, values: ['ACTIVE', 'INACTIVE', 'SUSPENDED'] },
-      {
-        type: 'file',
-        name: 'avatar',
-        maxSelect: 1,
-        maxSize: 5242880,
-        mimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
-        thumbs: ['100x100', '300x300'],
-      },
-      { type: 'text', name: 'phone', max: 30 },
-    ],
-    passwordAuth: {
-      enabled: true,
-      identityFields: ['email'],
-    },
-    otp: { enabled: false },
-    oauth2: { enabled: false },
-  })
+  // PocketBase ships with an initial `users` auth collection.
+  // Language School owns only its customization; never create/delete the
+  // builtin collection itself.
+  const users = app.findCollectionByNameOrId('users')
+
+  users.listRule = '@request.auth.id != "" && (id = @request.auth.id || @request.auth.role = "ADMIN")'
+  users.viewRule = users.listRule
+  users.createRule = '@request.auth.role = "ADMIN"'
+  users.updateRule = '@request.auth.role = "ADMIN" || (id = @request.auth.id && @request.body.role:changed = false && @request.body.status:changed = false)'
+  users.deleteRule = '@request.auth.role = "ADMIN" && id != @request.auth.id'
+  users.authRule = 'status = "ACTIVE"'
+  users.manageRule = '@request.auth.role = "ADMIN"'
+
+  users.passwordAuth.enabled = true
+  users.passwordAuth.identityFields = ['email']
+  users.otp.enabled = false
+  users.oauth2.enabled = false
+
+  // FieldsList.add replaces an existing field by name when present and adds
+  // it otherwise. This keeps the migration compatible with PocketBase's
+  // preconfigured name/avatar fields while adding our application fields.
+  users.fields.add(
+    new TextField({ name: 'name', required: true, max: 100 }),
+    new TextField({ name: 'surname', required: true, max: 120 }),
+    new SelectField({ name: 'role', required: true, maxSelect: 1, values: ['ADMIN', 'TEACHER', 'STUDENT'] }),
+    new SelectField({ name: 'status', required: true, maxSelect: 1, values: ['ACTIVE', 'INACTIVE', 'SUSPENDED'] }),
+    new FileField({
+      name: 'avatar',
+      maxSelect: 1,
+      maxSize: 5242880,
+      mimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
+      thumbs: ['100x100', '300x300'],
+    }),
+    new TextField({ name: 'phone', max: 30 }),
+  )
   app.save(users)
 
   const studentProfiles = new Collection({
@@ -115,12 +118,41 @@ migrate((app) => {
   })
   app.save(courses)
 }, (app) => {
-  for (const name of ['courses', 'teacher_profiles', 'student_profiles', 'users']) {
+  for (const name of ['courses', 'teacher_profiles', 'student_profiles']) {
     try {
       const collection = app.findCollectionByNameOrId(name)
       app.delete(collection)
     } catch {
-      // Allows safe rollback if a previous collection was already absent.
+      // Safe rollback when a dependent collection is already absent.
     }
   }
+
+  // Restore the builtin users collection instead of deleting it.
+  const users = app.findCollectionByNameOrId('users')
+  users.listRule = 'id = @request.auth.id'
+  users.viewRule = 'id = @request.auth.id'
+  users.createRule = ''
+  users.updateRule = 'id = @request.auth.id'
+  users.deleteRule = 'id = @request.auth.id'
+  users.authRule = ''
+  users.manageRule = null
+  users.passwordAuth.enabled = true
+  users.passwordAuth.identityFields = ['email']
+  users.otp.enabled = false
+  users.oauth2.enabled = false
+
+  users.fields.removeByName('surname')
+  users.fields.removeByName('role')
+  users.fields.removeByName('status')
+  users.fields.removeByName('phone')
+  users.fields.add(
+    new TextField({ name: 'name' }),
+    new FileField({
+      name: 'avatar',
+      maxSelect: 1,
+      maxSize: 5242880,
+      mimeTypes: ['image/jpeg', 'image/png', 'image/svg+xml', 'image/gif', 'image/webp'],
+    }),
+  )
+  app.save(users)
 })
