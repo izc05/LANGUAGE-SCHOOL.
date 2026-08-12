@@ -46,7 +46,8 @@
 
 .public-course-grid,
 .public-pricing-grid,
-.public-teacher-grid {
+.public-teacher-grid,
+.about-values-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1.25rem;
@@ -54,7 +55,8 @@
 
 .public-course-card,
 .public-pricing-card,
-.public-teacher-card {
+.public-teacher-card,
+.about-value-card {
   position: relative;
   display: grid;
   gap: 0.85rem;
@@ -67,13 +69,15 @@
 
 .public-course-card h2,
 .public-pricing-card h2,
-.public-teacher-card h2 {
+.public-teacher-card h2,
+.about-value-card h3 {
   margin: 0;
 }
 
 .public-course-card p,
 .public-pricing-card p,
-.public-teacher-card p {
+.public-teacher-card p,
+.about-value-card p {
   margin: 0;
   color: var(--text-muted, #68717a);
 }
@@ -111,6 +115,49 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.45rem;
+}
+
+.about-hero {
+  background:
+    radial-gradient(circle at 18% 20%, rgba(184, 37, 124, 0.11), transparent 24rem),
+    radial-gradient(circle at 82% 70%, rgba(34, 71, 95, 0.08), transparent 24rem),
+    linear-gradient(180deg, #fff 0%, #fbf8f5 100%);
+}
+
+.about-story-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: clamp(2rem, 6vw, 5rem);
+  align-items: start;
+}
+
+.about-story-heading {
+  position: sticky;
+  top: 7rem;
+}
+
+.about-story-heading h2 {
+  margin: 0.65rem 0 0;
+}
+
+.about-story-copy {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.about-story-copy p {
+  margin: 0;
+  font-size: 1.08rem;
+  line-height: 1.85;
+  color: var(--text-muted, #68717a);
+}
+
+.about-values-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.about-value-card .program-number {
+  color: rgba(184, 37, 124, 0.65);
 }
 
 .public-pricing-card.featured {
@@ -188,12 +235,26 @@
   align-items: center;
 }
 
+.public-cta-panel p {
+  margin-bottom: 0;
+  color: var(--text-muted, #68717a);
+}
+
 @media (max-width: 900px) {
   .public-course-grid,
   .public-pricing-grid,
   .public-teacher-grid,
-  .public-contact-grid {
+  .public-contact-grid,
+  .about-story-grid {
     grid-template-columns: 1fr;
+  }
+
+  .about-values-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .about-story-heading {
+    position: static;
   }
 }
 
