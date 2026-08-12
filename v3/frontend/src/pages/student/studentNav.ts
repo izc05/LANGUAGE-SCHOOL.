@@ -5,4 +5,5 @@ export const studentNav = [
   { label: 'Tareas', to: '/alumno/tareas' },
   { label: 'Mis archivos', to: '/alumno/archivos' },
   { label: 'Avisos', to: '/alumno/avisos' },
+  { label: 'Mi perfil', to: '/alumno/perfil' },
 ] as const
