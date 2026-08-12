@@ -36,6 +36,7 @@ export default function SiteShell({ children }: SiteShellProps) {
             <NavLink to="/">Inicio</NavLink>
             <NavLink to="/programas">Programas</NavLink>
             <NavLink to="/profesores">Profesores</NavLink>
+            <NavLink to="/sobre-nosotros">Sobre nosotros</NavLink>
             <NavLink to="/tarifas">Tarifas</NavLink>
             <NavLink to="/blog">Blog</NavLink>
             <NavLink to="/contacto">Contacto</NavLink>
@@ -64,6 +65,7 @@ export default function SiteShell({ children }: SiteShellProps) {
             <strong>Academia</strong>
             <Link to="/programas">Programas</Link>
             <Link to="/profesores">Profesores</Link>
+            <Link to="/sobre-nosotros">Sobre nosotros</Link>
             <Link to="/tarifas">Tarifas</Link>
             <Link to="/blog">Blog</Link>
             <Link to="/acceso">Acceso</Link>
