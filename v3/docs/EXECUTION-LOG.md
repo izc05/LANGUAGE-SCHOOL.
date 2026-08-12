@@ -10,8 +10,8 @@ Este archivo es la **fuente de verdad** del desarrollo. Cada bloque se marca por
 - Frontend: React + TypeScript + Vite
 - Backend: PocketBase `0.39.9`
 - Producción prevista: Raspberry Pi 4 + SSD + disco externo de backup
-- Frente activo: **FASE 9.1 · Preparación reproducible de producción**
-- Ejecución física FASE 9: pendiente de Raspberry/SSD, pero el paquete de despliegue puede prepararse ya en GitHub.
+- Frente activo: **FASE 9.2 · Raspberry Pi 4 + SSD**
+- Bloqueo actual: ejecución física pendiente de disponer de la Raspberry/SSD delante.
 
 ### Estados
 - ✅ COMPLETADA = implementada y validada.
@@ -142,36 +142,88 @@ Resultado:
 
 ---
 
-## FASE 9 · Raspberry Pi 4 y producción — 🟡 PREPARACIÓN EN CURSO / EJECUCIÓN FÍSICA PENDIENTE
+## FASE 9 · Raspberry Pi 4 y producción — 🟡 EN CURSO
 
-### 9.1 Paquete reproducible de producción — 🟡 EN CURSO
-Preparar en repositorio:
-- estructura de directorios de producción.
-- variables `.env.example` sin secretos.
-- instalación PocketBase ARM64 fijada a versión.
-- servicio `systemd`.
-- build/deploy frontend.
-- reverse proxy/local binding.
-- scripts de migración y health-check.
-- backup y restore.
-- checklist de despliegue.
+### 9.1 Paquete reproducible de producción — ✅ COMPLETADA Y VALIDADA
+
+Arquitectura fijada:
+`Internet → Cloudflare Tunnel → 127.0.0.1:8080 Nginx → React + /api/* → 127.0.0.1:8090 PocketBase`.
+
+Paquete creado en `v3/infrastructure/`:
+
+#### Configuración
+- `.env.example` sin secretos.
+- `PUBLIC_ORIGIN` para compilar frontend conectado.
+- PocketBase 0.39.9 ARM64 fijado.
+- SHA-256 oficial fijado y comprobado en CI.
+
+#### Raspberry/PocketBase
+- `raspberry-pi/prepare-production-env.sh`.
+- `raspberry-pi/install-pocketbase.sh`.
+- `raspberry-pi/language-school-pocketbase.service` endurecido con systemd.
+- `raspberry-pi/migrate.sh` con detección explícita de errores de migración.
+- `raspberry-pi/bootstrap-admin.sh` interactivo: superuser local + primer ADMIN de aplicación, sin guardar contraseñas.
+- `raspberry-pi/deploy-frontend.sh`.
+- `raspberry-pi/health-check.sh`.
+
+#### Reverse proxy
+- `reverse-proxy/language-school.nginx.conf`.
+- `reverse-proxy/install-nginx.sh`.
+- Nginx escucha solo en `127.0.0.1:8080`.
+- PocketBase escucha solo en `127.0.0.1:8090`.
+- Solo `/api/*` se reenvía a PocketBase; `/_/` no se publica.
+
+#### Cloudflare
+- `cloudflare/README.md`.
+- `cloudflare/config.yml.example` sin credenciales.
+- origen fijado a `http://127.0.0.1:8080`.
+- catch-all final `http_status:404`.
+
+#### Backup/restore
+- `backups/backup.sh`: aborta si el disco configurado no es un mountpoint real, detiene PocketBase, crea tar consistente, SHA-256, retención y reinicia servicio.
+- `backups/restore.sh`: exige checksum, conserva estado previo y hace rollback automático si PocketBase no vuelve sano.
+- `backups/install-backup.sh`.
+- `backups/language-school-backup.service`.
+- `backups/language-school-backup.timer`: diario 03:30 con retraso aleatorio máximo de 15 min.
+
+#### Documentación
+- `infrastructure/README.md`: runbook exacto de instalación y actualización.
+- `infrastructure/PRODUCTION-CHECKLIST.md`: verificación física antes de sustituir la web anterior.
+
+#### V3 Infrastructure CI
+Nuevo workflow `.github/workflows/v3-infrastructure-ci.yml` valida:
+- sintaxis de todos los scripts Bash.
+- ausencia de claves tipo password/token/secret en `.env.example`.
+- descarga y SHA-256 real del ZIP ARM64 oficial de PocketBase 0.39.9.
+- sintaxis Nginx mediante `nginx -t`.
+- catch-all de Cloudflare.
+- calendario systemd del backup.
+
+Validación conjunta al cierre de 9.1:
+- V3 Infrastructure CI ✅
+- V3 PocketBase CI ✅
+- V3 Frontend CI ✅
 
 ### 9.2 Raspberry + SSD — 🔒 PENDIENTE DE HARDWARE
-- instalar sistema 64-bit.
-- boot desde SSD.
-- usuario/SSH.
-- aplicar paquete 9.1.
+Siguiente ejecución física:
+1. instalar sistema ARM64 en SSD;
+2. confirmar boot desde SSD;
+3. configurar usuario, SSH, hostname y red;
+4. clonar/actualizar repositorio;
+5. aplicar el paquete 9.1 siguiendo `infrastructure/README.md` y `PRODUCTION-CHECKLIST.md`.
 
-### 9.3 HTTPS / acceso exterior — ⏳ PENDIENTE
-- Cloudflare Tunnel o proxy equivalente.
-- dominio/subdominio.
-- frontend y API sin exponer base de datos.
+### 9.3 HTTPS / acceso exterior — ⏳ PENDIENTE DE 9.2
+- crear/conectar Cloudflare Tunnel.
+- dominio/subdominio definitivo.
+- validar HTTPS y `/api/health` exterior.
+- confirmar que `/_/` no está publicado.
 
-### 9.4 Backup/restore físico — ⏳ PENDIENTE
-- disco externo.
-- backup automático.
-- retención.
-- prueba de restauración real.
+### 9.4 Backup/restore físico — ⏳ PENDIENTE DE 9.2
+- montar disco externo por UUID.
+- primera copia manual.
+- habilitar timer.
+- prueba real de ausencia del disco.
+- prueba real de restauración.
 
 ## FASE 10 · Piloto y endurecimiento — ⏳ PENDIENTE
 - 2–3 alumnos.
