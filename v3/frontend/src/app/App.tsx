@@ -4,6 +4,7 @@ import HomePage from '../pages/public/HomePage'
 import BlogPage from '../pages/public/BlogPage'
 import ProgramsPage from '../pages/public/ProgramsPage'
 import PricingPage from '../pages/public/PricingPage'
+import TeachersPage from '../pages/public/TeachersPage'
 import ContactPage from '../pages/public/ContactPage'
 import LoginPage from '../pages/auth/LoginPage'
 import StudentDashboard from '../pages/student/StudentDashboard'
@@ -35,6 +36,7 @@ export default function App() {
       <Route path="/" element={<HomePage />} />
       <Route path="/programas" element={<ProgramsPage />} />
       <Route path="/tarifas" element={<PricingPage />} />
+      <Route path="/profesores" element={<TeachersPage />} />
       <Route path="/blog" element={<BlogPage />} />
       <Route path="/contacto" element={<ContactPage />} />
       <Route path="/acceso" element={<LoginPage />} />
