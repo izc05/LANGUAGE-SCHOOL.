@@ -15,6 +15,7 @@ import './styles/account-profile.css'
 import './styles/auth-session.css'
 import './styles/student-portal.css'
 import './styles/teacher-portal.css'
+import './styles/accessibility.css'
 
 const root = document.getElementById('root')
 
