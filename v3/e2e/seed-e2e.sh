@@ -56,4 +56,7 @@ GROUP_ID="$(jq -r '.id' <<<"$GROUP")"
 create_record 'enrollments' "$ADMIN_TOKEN" "$(jq -nc --arg student "$STUDENT_ID" --arg group "$GROUP_ID" '{student:$student,group:$group,status:"ACTIVE",joined_at:"2026-08-12 10:00:00.000Z"}')" >/dev/null
 create_record 'classes' "$ADMIN_TOKEN" "$(jq -nc --arg group "$GROUP_ID" --arg teacher "$TEACHER_ID" '{group:$group,teacher:$teacher,starts_at:"2026-08-13 18:00:00.000Z",ends_at:"2026-08-13 19:00:00.000Z",topic:"E2E Speaking class",description:"Browser test",status:"SCHEDULED"}')" >/dev/null
 
+echo 'E2E seed: publishing a real pricing plan'
+create_record 'pricing_plans' "$ADMIN_TOKEN" '{"name":"E2E Monthly","description":"Tarifa publicada por la prueba de navegador.","price":45,"billing_text":"al mes","features":["Clases","Material","Seguimiento"],"sort_order":10,"active":true,"featured":true}' >/dev/null
+
 echo "E2E seed complete: admin=$ADMIN_ID teacher=$TEACHER_ID student=$STUDENT_ID group=$GROUP_ID"
