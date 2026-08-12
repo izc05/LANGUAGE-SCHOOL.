@@ -10,7 +10,7 @@ Este archivo es la **fuente de verdad** del desarrollo. Cada bloque se marca por
 - Frontend: React + TypeScript + Vite
 - Backend: PocketBase `0.39.9`
 - Producción prevista: Raspberry Pi 4 + SSD + disco externo de backup
-- Frente activo: **FASE 9.1B.5 · Bandeja ADMIN de solicitudes de contacto**
+- Frente activo: **FASE 9.1B.8 · UX, accesibilidad y estados de interacción**
 - Hardware: **FASE 9.2 sigue pendiente**, pero no bloquea la preproducción en GitHub.
 
 ### Estados
@@ -100,138 +100,106 @@ Este archivo es la **fuente de verdad** del desarrollo. Cada bloque se marca por
 ## FASE 9 · Producción y preproducción — 🟡 EN CURSO
 
 ### 9.1 Paquete reproducible de producción — ✅ COMPLETADA Y VALIDADA
-
 Arquitectura:
 `Internet → Cloudflare Tunnel → 127.0.0.1:8080 Nginx → React + /api/* → 127.0.0.1:8090 PocketBase`.
 
-Preparado en `v3/infrastructure/`:
-- PocketBase 0.39.9 ARM64 fijado y checksum oficial validado.
-- servicio `systemd` endurecido.
-- migraciones, bootstrap ADMIN, deploy frontend y health-check.
-- Nginx localhost-only.
-- Cloudflare Tunnel hacia Nginx, nunca PocketBase directo.
-- backup con comprobación de mountpoint, checksum y retención.
-- restore con rollback automático si PocketBase no vuelve sano.
-- timer nocturno.
-- runbook y checklist de producción.
-- V3 Infrastructure CI ✅
+Preparado:
+- PocketBase ARM64 fijado y checksum validado.
+- systemd, migraciones, bootstrap ADMIN, frontend y health-check.
+- Nginx/PocketBase solo localhost.
+- Cloudflare hacia Nginx.
+- backup/restore con checksum, mountpoint, retención y rollback.
+- timer, runbook, checklist y V3 Infrastructure CI ✅
 
 ### 9.1B Preproducción en GitHub — 🟡 EN CURSO
 
-#### 9.1B.1 Auditoría ADMIN — ✅ COMPLETADA
-Se detectaron y corrigieron enlaces sin ruta real:
-- `/admin/tarifas`
-- `/admin/configuracion`
+#### 9.1B.1 Auditoría ADMIN — ✅
+- `/admin/tarifas` real.
+- `/admin/configuracion` real.
+- logo, datos de contacto, redes y tarifas gestionables desde PocketBase.
 
-Implementado:
-- `siteManagement.ts`.
-- `/admin/tarifas`: CRUD de `pricing_plans`, activar/ocultar/destacar/eliminar.
-- `/admin/configuracion`: nombre academia, logo, dirección, email, teléfono, WhatsApp y redes.
-- modo demo preservado.
-- Frontend CI ✅
+#### 9.1B.2 E2E conectado — ✅
+`V3 E2E CI` levanta PocketBase real temporal + frontend connected + Chromium.
+- login y redirección ADMIN/TEACHER/STUDENT.
+- navegación y rechazo de rutas por rol.
+- logout y responsive.
 
-#### 9.1B.2 E2E de navegador — ✅ COMPLETADA
-Se añadió `v3/e2e/` con Playwright y workflow `V3 E2E CI`.
+#### 9.1B.3 Programas / Tarifas / Contacto — ✅
+- `/programas` desde cursos públicos reales.
+- `/tarifas` desde planes activos reales.
+- `/contacto` crea `contact_requests` en PocketBase.
+- `SiteShell` consume `site_settings` para marca/logo/contacto.
+- demo no se mezcla con producción connected.
 
-El pipeline ejecuta:
-1. PocketBase 0.39.9 temporal desde cero.
-2. migraciones reales.
-3. usuarios E2E ADMIN / TEACHER / STUDENT.
-4. frontend compilado con `VITE_APP_MODE=connected`.
-5. Chromium real.
-6. login y redirección por rol.
-7. navegación ADMIN/TEACHER/STUDENT.
-8. rechazo de rutas de otros roles.
-9. logout.
-10. comprobaciones responsive.
-
-Resultado: V3 E2E CI ✅
-
-#### 9.1B.3 Web pública Programas/Tarifas/Contacto — ✅ COMPLETADA
-Rutas:
-- `/programas`
-- `/tarifas`
-- `/contacto`
-
-Implementado:
-- `publicAcademy.ts`.
-- Programas leen cursos `ACTIVE + public_visible` de PocketBase.
-- Tarifas leen solo planes `active` de PocketBase.
-- datos demo no aparecen en modo connected si la colección real está vacía.
-- Contacto crea `contact_requests` con estado `NEW`.
-- `SiteShell` lee `site_settings` para nombre, logo, dirección, email, teléfono e Instagram.
-- el logo subido desde ADMIN puede mostrarse automáticamente en header/footer.
-- estados vacíos seguros.
-
-Validación E2E:
-- curso público desde PocketBase ✅
-- tarifa pública desde PocketBase ✅
-- formulario de contacto crea solicitud ✅
-- roles privados siguen funcionando ✅
-
-#### 9.1B.4 Web pública completa y endurecimiento — ✅ COMPLETADA
-
-##### 9.1B.4.1 Profesores públicos — ✅
-Migración 10 `1786565100_expand_public_teacher_profile.js` añade al perfil docente:
-- `display_name`
-- `headline`
-- `sort_order`
-
-Implementado:
-- `teacherProfiles.ts`.
-- `/profesores`.
+#### 9.1B.4 Web pública completa y endurecimiento — ✅
+- `/profesores` con perfiles públicos separados de cuentas privadas.
 - `/admin/profesores/publicos`.
-- nombre público, titular, bio, especialidades, orden, foto y visibilidad gestionables por ADMIN.
-- la web pública **no expande `users`** para mostrar profesores.
-- email/teléfono privados permanecen fuera del payload público.
-
-E2E demuestra:
-- profesor público visible ✅
-- email privado ausente de `/profesores` ✅
-- editor ADMIN accesible ✅
-
-##### 9.1B.4.2 Sobre nosotros — ✅
-Migración 11 `1786565400_seed_about_page.js` crea `site_pages/about` editable.
-
-Implementado:
-- `/sobre-nosotros`.
-- `/admin/web/sobre-nosotros`.
-- cabecera, introducción, historia, valores y cierre editables.
-- publicar o guardar borrador.
-- navegación pública y ADMIN integradas.
-
-Validación:
+- email/teléfono del profesor no salen en la web pública.
+- `/sobre-nosotros` y `/admin/web/sobre-nosotros` editables desde `site_pages`.
+- SEO básico por ruta.
+- 404 público real.
+- cabecera responsive a 390 px y 768 px sin desbordamiento.
 - PocketBase CI ✅
 - Frontend CI ✅
-- Chromium E2E ✅
+- E2E Chromium ✅
 
-##### 9.1B.4.3 SEO básico + 404 + responsive — ✅
+#### 9.1B.5 Solicitudes de contacto ADMIN — ✅ COMPLETADA
 Implementado:
-- `NotFoundPage.tsx` y 404 real para URLs públicas desconocidas.
-- las rutas privadas desconocidas siguen regresando a su dashboard de rol.
-- `title` y `meta description` específicos para Inicio, Programas, Profesores, Sobre nosotros, Tarifas, Blog y Contacto.
-- título/description propios para 404.
-- cabecera pública adaptada al menú completo.
-- en tablet/móvil la navegación pasa a segunda fila desplazable internamente.
-- corrección de la regla antigua que ocultaba `.main-nav` bajo 720 px.
+- `contactRequests.ts`.
+- `/admin/contactos`.
+- filtros `ALL / NEW / CONTACTED / CLOSED`.
+- nombre, email, teléfono, interés, mensaje y fecha.
+- transiciones de estado sin borrar el histórico.
+- contador real de nuevas solicitudes.
 
-E2E demuestra:
-- URL desconocida no redirige silenciosamente a Inicio ✅
-- SEO por ruta ✅
-- navegación pública visible a 390 px y 768 px ✅
-- sin scroll horizontal de página ✅
+E2E real:
+`visitante → formulario → PocketBase → ADMIN → Contactos → CONTACTED → CLOSED` ✅
+
+#### 9.1B.6 Dashboard ADMIN real — ✅ COMPLETADA
+- `adminDashboard.ts`.
+- alumnos activos reales.
+- profesores activos reales.
+- artículos y borradores reales.
+- archivos privados activos reales.
+- solicitudes nuevas reales.
+- últimos artículos reales.
+- eliminadas las cifras operativas hardcodeadas en modo connected.
 - Frontend CI ✅
 - PocketBase CI ✅
-- V3 E2E CI ✅
+- E2E ✅
 
-#### 9.1B.5 Solicitudes de contacto ADMIN — 🟡 EN CURSO
+#### 9.1B.7 Mi perfil STUDENT / TEACHER — ✅ COMPLETADA
+Rutas:
+- `/alumno/perfil`
+- `/profesor/perfil`
+
+Implementado:
+- `userProfile.ts`.
+- `AccountProfilePage.tsx` compartida.
+- nombre, apellidos, teléfono y avatar editables por el propio usuario.
+- email de solo lectura.
+- `role` y `status` no forman parte del payload de autoedición.
+- sesión sincronizada tras guardar.
+- navegación `Mi perfil` en Alumno y Profesor.
+
+E2E real:
+- Alumno cambia teléfono y guarda ✅
+- recarga y el dato persiste ✅
+- email continúa protegido ✅
+- acceso a `/admin` sigue rechazado ✅
+- Profesor dispone de perfil propio ✅
+- Frontend CI ✅
+- PocketBase CI ✅
+- E2E Chromium ✅
+
+#### 9.1B.8 UX, accesibilidad y estados de interacción — 🟡 EN CURSO
 Objetivo:
-- bandeja `/admin/contactos`.
-- filtro por `NEW`, `CONTACTED`, `CLOSED`.
-- detalle de nombre, email, teléfono, interés, mensaje y fecha.
-- transición de estado sin borrar histórico.
-- contador de solicitudes nuevas en Dashboard.
-- E2E `visitante envía → ADMIN la ve → marca CONTACTED/CLOSED`.
+- salto directo al contenido principal.
+- foco de teclado visible.
+- navegación por teclado comprobada en web y portales.
+- anuncios accesibles para estados/errores principales.
+- comprobar etiquetas y landmarks esenciales.
+- E2E específico de teclado y accesibilidad estructural.
 
 ### 9.2 Raspberry + SSD — 🔒 PENDIENTE DE HARDWARE
 1. instalar sistema ARM64 en SSD;
@@ -258,13 +226,13 @@ Objetivo:
 - pruebas funcionales finales.
 - backups/restauración.
 - móvil.
-- accesibilidad.
+- accesibilidad final.
 - errores/logs.
 - piloto controlado.
 
 ---
 
 ## Dirección del proyecto
-`Estructura → Frontend → CMS → PocketBase → Login → Alumno → Profesor → Admin → Seguridad A/B → Producción preparada → Preproducción web/E2E → Raspberry → Piloto`
+`Estructura → Frontend → CMS → PocketBase → Login → Alumno → Profesor → Admin → Seguridad A/B → Producción preparada → Preproducción/E2E → Raspberry → Piloto`
 
 Cada sesión debe empezar leyendo este archivo y actualizarlo al finalizar cada bloque relevante.
