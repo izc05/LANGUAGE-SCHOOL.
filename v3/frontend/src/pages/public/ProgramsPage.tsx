@@ -1,16 +1,17 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import SiteShell from '../../components/SiteShell'
+import { isDemoMode } from '../../config/environment'
 import { demoPublicCourses, listPublicCourses, type PublicCourseRecord } from '../../services/pocketbase/publicAcademy'
 
 export default function ProgramsPage() {
-  const [courses, setCourses] = useState<PublicCourseRecord[]>(demoPublicCourses)
-  const [loading, setLoading] = useState(true)
+  const [courses, setCourses] = useState<PublicCourseRecord[]>(isDemoMode ? demoPublicCourses : [])
+  const [loading, setLoading] = useState(!isDemoMode)
 
   useEffect(() => {
     let mounted = true
     listPublicCourses()
-      .then((records) => { if (mounted && records.length > 0) setCourses(records) })
+      .then((records) => { if (mounted) setCourses(records) })
       .catch(() => undefined)
       .finally(() => { if (mounted) setLoading(false) })
     return () => { mounted = false }
@@ -29,6 +30,7 @@ export default function ProgramsPage() {
       <section className="section section-soft">
         <div className="container">
           {loading && <div className="public-inline-note">Actualizando programas…</div>}
+          {!loading && courses.length === 0 && <div className="public-empty-state">Todavía no hay programas publicados. Escríbenos y te orientamos personalmente.</div>}
           <div className="public-course-grid">
             {courses.map((course, index) => (
               <article className="public-course-card" key={course.id}>
