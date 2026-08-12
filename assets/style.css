@@ -1,0 +1,40 @@
+@import url("../style.css");
+
+/* Extensiones de la plataforma: blog y acceso privado */
+.blog-meta {
+  display: flex;
+  gap: .75rem;
+  flex-wrap: wrap;
+  margin: 1rem 0;
+  color: var(--vintage-brown);
+  font-size: .95rem;
+}
+
+.portal-note {
+  margin-top: 1.5rem;
+  padding: 1rem 1.25rem;
+  border-left: 4px solid var(--vintage-gold);
+  background: rgba(212, 175, 55, .10);
+  color: var(--vintage-dark);
+}
+
+.auth-shell {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.auth-shell form {
+  margin-top: 2rem;
+}
+
+.auth-shell input {
+  width: 100%;
+}
+
+.blog-card .icon {
+  margin-bottom: 1rem;
+}
+
+.blog-card p {
+  margin-bottom: 1.25rem;
+}
