@@ -8,6 +8,7 @@ import AdminDashboard from '../pages/admin/AdminDashboard'
 import AdminSiteEditor from '../pages/admin/AdminSiteEditor'
 import AdminMediaLibrary from '../pages/admin/AdminMediaLibrary'
 import AdminBlogManager from '../pages/admin/AdminBlogManager'
+import AdminStudentsPage from '../pages/admin/AdminStudentsPage'
 
 export default function App() {
   return (
@@ -21,6 +22,7 @@ export default function App() {
       <Route path="/admin/web" element={<AdminSiteEditor />} />
       <Route path="/admin/blog" element={<AdminBlogManager />} />
       <Route path="/admin/multimedia" element={<AdminMediaLibrary />} />
+      <Route path="/admin/alumnos" element={<AdminStudentsPage />} />
       <Route path="/admin/*" element={<Navigate to="/admin" replace />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
