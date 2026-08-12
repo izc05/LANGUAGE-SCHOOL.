@@ -33,7 +33,7 @@ test('web pública y login cargan en modo conectado', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Entrar' })).toBeEnabled()
 })
 
-test('programas, profesores y tarifas públicas consumen PocketBase real', async ({ page }) => {
+test('programas, profesores, sobre nosotros y tarifas consumen PocketBase real', async ({ page }) => {
   await page.goto('/programas')
   await expect(page.getByRole('heading', { name: 'Encuentra el inglés que encaja contigo.' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'E2E English B1' })).toBeVisible()
@@ -43,6 +43,10 @@ test('programas, profesores y tarifas públicas consumen PocketBase real', async
   await expect(page.getByRole('heading', { name: 'E2E Public Teacher' })).toBeVisible()
   await expect(page.getByText('English Teacher · B1 & Speaking')).toBeVisible()
   await expect(page.getByText('e2e-teacher@example.com')).toHaveCount(0)
+
+  await page.goto('/sobre-nosotros')
+  await expect(page.getByRole('heading', { name: 'Una academia cercana para aprender y usar el idioma con confianza.' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Aprender no debería sentirse como memorizar por memorizar.' })).toBeVisible()
 
   await page.goto('/tarifas')
   await expect(page.getByRole('heading', { name: 'Precios claros, sin letra pequeña.' })).toBeVisible()
@@ -79,6 +83,10 @@ test('ADMIN navega por el CMS completo', async ({ page }) => {
   await expect(page).toHaveURL(/\/admin\/profesores\/publicos$/)
   await expect(page.getByRole('heading', { name: 'Perfiles públicos del equipo' })).toBeVisible()
   await expect(page.locator('input[value="E2E Public Teacher"]')).toBeVisible()
+
+  await nav.getByRole('link', { name: 'Sobre nosotros' }).click()
+  await expect(page).toHaveURL(/\/admin\/web\/sobre-nosotros$/)
+  await expect(page.getByRole('heading', { name: 'Historia, enfoque y valores' })).toBeVisible()
 
   await nav.getByRole('link', { name: 'Tarifas' }).click()
   await expect(page).toHaveURL(/\/admin\/tarifas$/)
