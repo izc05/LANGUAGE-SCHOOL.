@@ -2,6 +2,12 @@ import { type ChangeEvent, type FormEvent, useEffect, useState } from 'react'
 import DashboardShell from '../../components/DashboardShell'
 import { isDemoMode } from '../../config/environment'
 import {
+  createMedia,
+  getMediaUrl,
+  listMedia,
+  type MediaRecord,
+} from '../../services/pocketbase/media'
+import {
   demoHomeContent,
   getEditableHomeContent,
   saveHomeContent,
@@ -9,47 +15,70 @@ import {
 } from '../../services/pocketbase/siteContent'
 import { adminNav } from './adminNav'
 
+function releaseObjectUrl(value: string | null) {
+  if (value?.startsWith('blob:')) URL.revokeObjectURL(value)
+}
+
 export default function AdminSiteEditor() {
   const [heroEyebrow, setHeroEyebrow] = useState(demoHomeContent.hero.eyebrow)
   const [heroTitle, setHeroTitle] = useState(demoHomeContent.hero.title)
   const [heroSubtitle, setHeroSubtitle] = useState(demoHomeContent.hero.subtitle)
   const [primaryCta, setPrimaryCta] = useState(demoHomeContent.hero.primaryCta)
   const [secondaryCta, setSecondaryCta] = useState(demoHomeContent.hero.secondaryCta)
-  const [imageName, setImageName] = useState('hero-academy.jpg')
+  const [heroMediaId, setHeroMediaId] = useState(demoHomeContent.hero.mediaId)
+  const [mediaOptions, setMediaOptions] = useState<MediaRecord[]>([])
+  const [imageName, setImageName] = useState('Sin imagen seleccionada')
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
   const [loading, setLoading] = useState(!isDemoMode)
   const [saving, setSaving] = useState(false)
+  const [uploadingImage, setUploadingImage] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     let mounted = true
 
-    getEditableHomeContent()
-      .then(({ content, status }) => {
+    async function loadEditor() {
+      try {
+        const [{ content, status }, media] = await Promise.all([
+          getEditableHomeContent(),
+          isDemoMode ? Promise.resolve<MediaRecord[]>([]) : listMedia('WEBSITE'),
+        ])
+
         if (!mounted) return
+
         setHeroEyebrow(content.hero.eyebrow)
         setHeroTitle(content.hero.title)
         setHeroSubtitle(content.hero.subtitle)
         setPrimaryCta(content.hero.primaryCta)
         setSecondaryCta(content.hero.secondaryCta)
+        setHeroMediaId(content.hero.mediaId)
+        setMediaOptions(media)
         setSaved(status === 'PUBLISHED')
+
+        const selectedMedia = media.find((item) => item.id === content.hero.mediaId)
+        if (selectedMedia) {
+          setImageName(selectedMedia.title || selectedMedia.file)
+          setPreviewUrl(getMediaUrl(selectedMedia, '800x600'))
+        }
+
         setNotice(isDemoMode ? 'Modo demo: los cambios todavía no salen del navegador.' : `Contenido cargado · ${status}`)
-      })
-      .catch(() => {
-        if (!mounted) return
-        setError('No se ha podido cargar el contenido de PocketBase. No se ha sobrescrito ningún dato.')
-      })
-      .finally(() => {
+      } catch {
+        if (mounted) setError('No se ha podido cargar el contenido de PocketBase. No se ha sobrescrito ningún dato.')
+      } finally {
         if (mounted) setLoading(false)
-      })
+      }
+    }
+
+    void loadEditor()
 
     return () => {
       mounted = false
-      if (previewUrl) URL.revokeObjectURL(previewUrl)
     }
   }, [])
+
+  useEffect(() => () => releaseObjectUrl(previewUrl), [previewUrl])
 
   function markDirty() {
     setSaved(false)
@@ -57,15 +86,58 @@ export default function AdminSiteEditor() {
     setError(null)
   }
 
-  function handleImage(event: ChangeEvent<HTMLInputElement>) {
+  async function handleImage(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
     if (!file) return
 
-    if (previewUrl) URL.revokeObjectURL(previewUrl)
-    setImageName(file.name)
-    setPreviewUrl(URL.createObjectURL(file))
     markDirty()
-    setNotice('Imagen preparada localmente. La subida real se activará en la Fase 4.4 · Multimedia.')
+    releaseObjectUrl(previewUrl)
+
+    if (isDemoMode) {
+      setHeroMediaId('')
+      setImageName(file.name)
+      setPreviewUrl(URL.createObjectURL(file))
+      setNotice('Modo demo: imagen preparada únicamente para la vista previa.')
+      event.target.value = ''
+      return
+    }
+
+    setUploadingImage(true)
+    try {
+      const record = await createMedia({
+        title: file.name,
+        file,
+        altText: file.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' '),
+        usage: 'WEBSITE',
+        mediaType: 'IMAGE',
+      })
+      setMediaOptions((current) => [record, ...current])
+      setHeroMediaId(record.id)
+      setImageName(record.title || record.file)
+      setPreviewUrl(getMediaUrl(record, '800x600'))
+      setNotice('Imagen subida a Multimedia y seleccionada para la portada. Publica los cambios para activarla.')
+    } catch {
+      setError('No se ha podido subir la imagen a PocketBase.')
+    } finally {
+      setUploadingImage(false)
+      event.target.value = ''
+    }
+  }
+
+  function selectExistingMedia(id: string) {
+    markDirty()
+    setHeroMediaId(id)
+
+    if (!id) {
+      setImageName('Sin imagen seleccionada')
+      setPreviewUrl(null)
+      return
+    }
+
+    const record = mediaOptions.find((item) => item.id === id)
+    if (!record) return
+    setImageName(record.title || record.file)
+    setPreviewUrl(getMediaUrl(record, '800x600'))
   }
 
   function buildContent(): HomePageContent {
@@ -76,6 +148,7 @@ export default function AdminSiteEditor() {
         subtitle: heroSubtitle.trim() || demoHomeContent.hero.subtitle,
         primaryCta: primaryCta.trim() || demoHomeContent.hero.primaryCta,
         secondaryCta: secondaryCta.trim() || demoHomeContent.hero.secondaryCta,
+        mediaId: heroMediaId,
       },
     }
   }
@@ -119,7 +192,7 @@ export default function AdminSiteEditor() {
             <span className="eyebrow">CMS · PÁGINA WEB</span>
             <h2>Editar portada</h2>
             <p>
-              El editor trabaja en modo demo durante el desarrollo y guarda en la colección `site_pages` cuando la aplicación
+              El editor trabaja en modo demo durante el desarrollo y guarda en `site_pages` y `media_library` cuando la aplicación
               está conectada a PocketBase.
             </p>
           </div>
@@ -167,18 +240,31 @@ export default function AdminSiteEditor() {
             <div className="field-stack">
               <span>Imagen principal</span>
               <label className="upload-dropzone">
-                <input type="file" accept="image/png,image/jpeg,image/webp" onChange={handleImage} />
-                <strong>Cambiar imagen</strong>
-                <small>JPG, PNG o WebP · integración real en Fase 4.4</small>
+                <input type="file" accept="image/png,image/jpeg,image/webp" onChange={handleImage} disabled={uploadingImage} />
+                <strong>{uploadingImage ? 'Subiendo imagen…' : 'Subir nueva imagen'}</strong>
+                <small>JPG, PNG o WebP · se guarda en Multimedia</small>
               </label>
-              <div className="selected-file"><span>IMG</span><div><strong>{imageName}</strong><small>Imagen seleccionada para la vista previa</small></div></div>
+
+              {!isDemoMode && mediaOptions.length > 0 && (
+                <label className="field-stack">
+                  <span>O elegir una imagen existente</span>
+                  <select value={heroMediaId} onChange={(event) => selectExistingMedia(event.target.value)}>
+                    <option value="">Sin imagen</option>
+                    {mediaOptions.map((item) => (
+                      <option key={item.id} value={item.id}>{item.title || item.file}</option>
+                    ))}
+                  </select>
+                </label>
+              )}
+
+              <div className="selected-file"><span>IMG</span><div><strong>{imageName}</strong><small>{heroMediaId ? 'Vinculada a la portada' : 'Vista previa local o sin vincular'}</small></div></div>
             </div>
 
             <div className="cms-form-actions">
-              <button className="button button-primary" type="submit" disabled={saving || loading}>
+              <button className="button button-primary" type="submit" disabled={saving || loading || uploadingImage}>
                 {saving ? 'Guardando…' : 'Guardar y publicar'}
               </button>
-              <button className="button button-ghost" type="button" disabled={saving || loading} onClick={() => void persist(false)}>
+              <button className="button button-ghost" type="button" disabled={saving || loading || uploadingImage} onClick={() => void persist(false)}>
                 Guardar borrador
               </button>
             </div>
@@ -197,7 +283,7 @@ export default function AdminSiteEditor() {
                 </div>
               </div>
               <div className="cms-image-preview" style={previewUrl ? { backgroundImage: `url(${previewUrl})` } : undefined}>
-                {!previewUrl && <div><span>IMAGEN</span><strong>{imageName}</strong><small>Vista previa pendiente de imagen real</small></div>}
+                {!previewUrl && <div><span>IMAGEN</span><strong>{imageName}</strong><small>Sube o selecciona una imagen de Multimedia</small></div>}
               </div>
             </div>
           </aside>
