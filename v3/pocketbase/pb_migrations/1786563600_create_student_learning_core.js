@@ -27,6 +27,8 @@ migrate((app) => {
       { type: 'relation', name: 'student', required: true, maxSelect: 1, collectionId: users.id, cascadeDelete: true },
       { type: 'select', name: 'status', required: true, maxSelect: 1, values: ['PRESENT', 'ABSENT', 'JUSTIFIED'] },
       { type: 'text', name: 'notes', max: 1000 },
+      { type: 'autodate', name: 'created', onCreate: true },
+      { type: 'autodate', name: 'updated', onCreate: true, onUpdate: true },
     ],
     indexes: [
       'CREATE UNIQUE INDEX idx_attendance_class_student ON attendance (`class`, student)',
@@ -70,6 +72,8 @@ migrate((app) => {
       { type: 'relation', name: 'student', maxSelect: 1, collectionId: users.id, cascadeDelete: true },
       { type: 'select', name: 'visibility', required: true, maxSelect: 1, values: ['COURSE', 'GROUP', 'STUDENT'] },
       { type: 'bool', name: 'published' },
+      { type: 'autodate', name: 'created', onCreate: true },
+      { type: 'autodate', name: 'updated', onCreate: true, onUpdate: true },
     ],
     indexes: [
       'CREATE INDEX idx_materials_student_created ON materials (student, created)',
@@ -111,6 +115,8 @@ migrate((app) => {
       },
       { type: 'date', name: 'due_at' },
       { type: 'select', name: 'status', required: true, maxSelect: 1, values: ['DRAFT', 'PUBLISHED', 'CLOSED'] },
+      { type: 'autodate', name: 'created', onCreate: true },
+      { type: 'autodate', name: 'updated', onCreate: true, onUpdate: true },
     ],
     indexes: [
       'CREATE INDEX idx_assignments_group_due ON assignments (`group`, due_at)',
@@ -153,6 +159,8 @@ migrate((app) => {
       { type: 'editor', name: 'teacher_feedback', maxSize: 30000 },
       { type: 'text', name: 'grade_text', max: 80 },
       { type: 'select', name: 'status', required: true, maxSelect: 1, values: ['SUBMITTED', 'REVIEWED', 'RETURNED'] },
+      { type: 'autodate', name: 'created', onCreate: true },
+      { type: 'autodate', name: 'updated', onCreate: true, onUpdate: true },
     ],
     indexes: [
       'CREATE UNIQUE INDEX idx_submissions_assignment_student ON assignment_submissions (assignment, student)',
@@ -176,6 +184,8 @@ migrate((app) => {
       { type: 'select', name: 'type', required: true, maxSelect: 1, values: ['GENERAL', 'CLASS', 'MATERIAL', 'ASSIGNMENT', 'SYSTEM'] },
       { type: 'date', name: 'read_at' },
       { type: 'relation', name: 'created_by', required: true, maxSelect: 1, collectionId: users.id, cascadeDelete: false },
+      { type: 'autodate', name: 'created', onCreate: true },
+      { type: 'autodate', name: 'updated', onCreate: true, onUpdate: true },
     ],
     indexes: [
       'CREATE INDEX idx_notifications_recipient_read ON notifications (recipient, read_at)',
