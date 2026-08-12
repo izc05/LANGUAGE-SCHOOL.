@@ -104,6 +104,63 @@
   background: rgba(245, 242, 238, 0.72);
 }
 
+.public-teacher-admin-grid {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.public-teacher-admin-card {
+  display: grid;
+  gap: 1.1rem;
+}
+
+.public-teacher-admin-heading {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr) auto;
+  gap: 0.9rem;
+  align-items: center;
+}
+
+.public-teacher-admin-heading h3 {
+  margin: 0.15rem 0 0.15rem;
+}
+
+.public-teacher-admin-heading small {
+  color: var(--text-muted, #6b7280);
+}
+
+.public-teacher-admin-avatar {
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 16px;
+  background: rgba(184, 37, 124, 0.1);
+  color: #982062;
+  font-weight: 800;
+}
+
+.public-teacher-admin-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.teacher-public-fields .span-two {
+  grid-column: 1 / -1;
+}
+
+.teacher-public-check {
+  padding-top: 1.35rem;
+}
+
+.teacher-public-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+
 @media (max-width: 980px) {
   .admin-settings-grid {
     grid-template-columns: 1fr;
@@ -118,7 +175,17 @@
     flex-direction: column;
   }
 
-  .check-field {
+  .check-field,
+  .teacher-public-check {
     padding-top: 0;
+  }
+
+  .public-teacher-admin-heading {
+    grid-template-columns: 52px minmax(0, 1fr);
+  }
+
+  .public-teacher-admin-heading > .status {
+    grid-column: 1 / -1;
+    justify-self: start;
   }
 }
