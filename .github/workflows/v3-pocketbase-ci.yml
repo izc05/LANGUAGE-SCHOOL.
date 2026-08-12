@@ -38,9 +38,18 @@ jobs:
       - name: Apply V3 migrations to temporary database
         run: |
           mkdir -p "$RUNNER_TEMP/language-school-pb-data"
-          "$RUNNER_TEMP/pocketbase/pocketbase" migrate up \
+          set +e
+          MIGRATION_OUTPUT=$("$RUNNER_TEMP/pocketbase/pocketbase" migrate up \
             --dir="$RUNNER_TEMP/language-school-pb-data" \
-            --migrationsDir="$GITHUB_WORKSPACE/v3/pocketbase/pb_migrations"
+            --migrationsDir="$GITHUB_WORKSPACE/v3/pocketbase/pb_migrations" 2>&1)
+          MIGRATION_EXIT=$?
+          set -e
+          printf '%s\n' "$MIGRATION_OUTPUT"
+
+          if [ "$MIGRATION_EXIT" -ne 0 ] || printf '%s\n' "$MIGRATION_OUTPUT" | grep -Eqi '(^|[[:space:]])Error:|failed to apply migration'; then
+            echo 'PocketBase migration step reported an error.' >&2
+            exit 1
+          fi
 
       - name: Create temporary CI superuser
         run: |
@@ -83,6 +92,15 @@ jobs:
       - name: Roll back latest migration
         if: success()
         run: |
-          "$RUNNER_TEMP/pocketbase/pocketbase" migrate down 1 \
+          set +e
+          ROLLBACK_OUTPUT=$("$RUNNER_TEMP/pocketbase/pocketbase" migrate down 1 \
             --dir="$RUNNER_TEMP/language-school-pb-data" \
-            --migrationsDir="$GITHUB_WORKSPACE/v3/pocketbase/pb_migrations"
+            --migrationsDir="$GITHUB_WORKSPACE/v3/pocketbase/pb_migrations" 2>&1)
+          ROLLBACK_EXIT=$?
+          set -e
+          printf '%s\n' "$ROLLBACK_OUTPUT"
+
+          if [ "$ROLLBACK_EXIT" -ne 0 ] || printf '%s\n' "$ROLLBACK_OUTPUT" | grep -Eqi '(^|[[:space:]])Error:|failed to revert migration|failed to apply migration'; then
+            echo 'PocketBase rollback step reported an error.' >&2
+            exit 1
+          fi
