@@ -1,0 +1,32 @@
+.session-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.session-logout {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink-soft);
+  font-size: .78rem;
+  font-weight: 700;
+}
+
+.session-logout:hover {
+  background: #f4f6f3;
+  border-color: #c5cec8;
+}
+
+@media (max-width: 720px) {
+  .session-actions {
+    align-items: flex-end;
+    flex-direction: column;
+  }
+
+  .session-logout {
+    min-height: 36px;
+  }
+}
