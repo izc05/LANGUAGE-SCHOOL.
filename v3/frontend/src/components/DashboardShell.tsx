@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react'
-import { Link, NavLink } from 'react-router'
+import { Link, NavLink, useNavigate } from 'react-router'
+import { useAuth } from '../features/auth/AuthProvider'
+import type { UserRole } from '../services/pocketbase/types'
 
 type NavItem = string | { label: string; to: string }
 
@@ -10,16 +12,35 @@ type DashboardShellProps = {
   children: ReactNode
 }
 
+function roleLabel(role: UserRole): DashboardShellProps['role'] {
+  if (role === 'ADMIN') return 'Administrador'
+  if (role === 'TEACHER') return 'Profesor'
+  return 'Alumno'
+}
+
 export default function DashboardShell({ role, name, nav, children }: DashboardShellProps) {
+  const navigate = useNavigate()
+  const { user, isDemoMode, logout } = useAuth()
+
+  const effectiveRole = !isDemoMode && user ? roleLabel(user.role) : role
+  const effectiveName = !isDemoMode && user
+    ? [user.name, user.surname].filter(Boolean).join(' ').trim() || user.email
+    : name
+
+  function handleLogout() {
+    logout()
+    navigate('/acceso', { replace: true })
+  }
+
   return (
     <div className="dashboard-shell">
       <aside className="dashboard-sidebar">
         <Link className="brand dashboard-brand" to="/">
           <span className="brand-mark">LS</span>
-          <span><strong>Language School</strong><small>{role}</small></span>
+          <span><strong>Language School</strong><small>{effectiveRole}</small></span>
         </Link>
 
-        <nav className="dashboard-nav" aria-label={`Menú de ${role}`}>
+        <nav className="dashboard-nav" aria-label={`Menú de ${effectiveRole}`}>
           {nav.map((item, index) => {
             if (typeof item === 'string') {
               return (
@@ -44,19 +65,24 @@ export default function DashboardShell({ role, name, nav, children }: DashboardS
 
         <div className="sidebar-footer">
           <Link to="/">Volver a la web</Link>
-          <small>Vista de desarrollo · PocketBase pendiente</small>
+          <small>{isDemoMode ? 'Vista de desarrollo · modo demo' : 'Sesión protegida por PocketBase'}</small>
         </div>
       </aside>
 
       <section className="dashboard-main">
         <header className="dashboard-topbar">
           <div>
-            <span className="eyebrow">{role}</span>
-            <h1>Hola, {name}</h1>
+            <span className="eyebrow">{effectiveRole}</span>
+            <h1>Hola, {effectiveName}</h1>
           </div>
-          <div className="user-chip">
-            <span>{name.charAt(0)}</span>
-            <div><strong>{name}</strong><small>{role}</small></div>
+          <div className="session-actions">
+            <div className="user-chip">
+              <span>{effectiveName.charAt(0).toUpperCase()}</span>
+              <div><strong>{effectiveName}</strong><small>{effectiveRole}</small></div>
+            </div>
+            {!isDemoMode && (
+              <button className="session-logout" type="button" onClick={handleLogout}>Cerrar sesión</button>
+            )}
           </div>
         </header>
         {children}
