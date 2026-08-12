@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { type ChangeEvent, useEffect, useMemo, useState } from 'react'
 import DashboardShell from '../../components/DashboardShell'
 import { isDemoMode } from '../../config/environment'
 import {
@@ -66,6 +66,8 @@ export default function AdminBlogManager() {
   const [category, setCategory] = useState('')
   const [summary, setSummary] = useState('')
   const [content, setContent] = useState('')
+  const [coverImage, setCoverImage] = useState<File | null>(null)
+  const [coverImageName, setCoverImageName] = useState('Sin imagen nueva')
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(!isDemoMode)
@@ -111,6 +113,8 @@ export default function AdminBlogManager() {
     setTitle('')
     setSummary('')
     setContent('')
+    setCoverImage(null)
+    setCoverImageName('Sin imagen nueva')
     setCategory(categories[0]?.id || '')
   }
 
@@ -122,6 +126,14 @@ export default function AdminBlogManager() {
     setSummary(post.record?.excerpt || '')
     setContent(post.record?.content || '')
     setCategory(post.record?.category || categories.find((item) => item.name === post.category)?.id || categories[0]?.id || '')
+    setCoverImage(null)
+    setCoverImageName(post.record?.cover_image ? `Actual: ${post.record.cover_image}` : 'Sin imagen actual')
+  }
+
+  function handleCoverImage(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0] || null
+    setCoverImage(file)
+    setCoverImageName(file?.name || 'Sin imagen nueva')
   }
 
   async function savePost(status: BlogStatus) {
@@ -158,6 +170,7 @@ export default function AdminBlogManager() {
         excerpt: summary,
         content,
         category: category || undefined,
+        coverImage: coverImage || undefined,
         status,
       }
 
@@ -261,10 +274,11 @@ export default function AdminBlogManager() {
                   {categories.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
                 </select>
               </label>
-              <div className="field-stack">
+              <label className="field-stack">
                 <span>Imagen de portada</span>
-                <a className="input-like-button" href="/admin/multimedia">Abrir biblioteca Multimedia</a>
-              </div>
+                <input type="file" accept="image/png,image/jpeg,image/webp" onChange={handleCoverImage} />
+                <small>{coverImageName}</small>
+              </label>
             </div>
 
             <label className="field-stack">
