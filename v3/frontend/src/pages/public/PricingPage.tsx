@@ -1,16 +1,17 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import SiteShell from '../../components/SiteShell'
+import { isDemoMode } from '../../config/environment'
 import { demoPublicPricing, listPublicPricing, type PublicPricingRecord } from '../../services/pocketbase/publicAcademy'
 
 export default function PricingPage() {
-  const [plans, setPlans] = useState<PublicPricingRecord[]>(demoPublicPricing)
-  const [loading, setLoading] = useState(true)
+  const [plans, setPlans] = useState<PublicPricingRecord[]>(isDemoMode ? demoPublicPricing : [])
+  const [loading, setLoading] = useState(!isDemoMode)
 
   useEffect(() => {
     let mounted = true
     listPublicPricing()
-      .then((records) => { if (mounted && records.length > 0) setPlans(records) })
+      .then((records) => { if (mounted) setPlans(records) })
       .catch(() => undefined)
       .finally(() => { if (mounted) setLoading(false) })
     return () => { mounted = false }
@@ -29,6 +30,7 @@ export default function PricingPage() {
       <section className="section section-soft">
         <div className="container">
           {loading && <div className="public-inline-note">Actualizando tarifas…</div>}
+          {!loading && plans.length === 0 && <div className="public-empty-state">Todavía no hay tarifas publicadas. Contacta con la academia para recibir información actualizada.</div>}
           <div className="public-pricing-grid">
             {plans.map((plan) => (
               <article className={`public-pricing-card ${plan.featured ? 'featured' : ''}`} key={plan.id}>
@@ -41,7 +43,7 @@ export default function PricingPage() {
               </article>
             ))}
           </div>
-          <p className="public-disclaimer">Las condiciones finales de cada curso se confirman antes de formalizar la matrícula.</p>
+          {plans.length > 0 && <p className="public-disclaimer">Las condiciones finales de cada curso se confirman antes de formalizar la matrícula.</p>}
         </div>
       </section>
     </SiteShell>
