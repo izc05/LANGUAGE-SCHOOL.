@@ -39,10 +39,10 @@ ADMIN_ID="$(jq -r '.id' <<<"$ADMIN")"
 ADMIN_AUTH="$(authenticate 'users' "$ADMIN_EMAIL" "$ADMIN_PASSWORD")"
 ADMIN_TOKEN="$(jq -r '.token' <<<"$ADMIN_AUTH")"
 
-echo 'E2E seed: creating teacher and student'
+echo 'E2E seed: creating teacher and safe public teacher profile'
 TEACHER="$(create_record 'users' "$ADMIN_TOKEN" "$(jq -nc --arg email "$TEACHER_EMAIL" --arg password "$TEACHER_PASSWORD" '{email:$email,password:$password,passwordConfirm:$password,name:"E2E",surname:"Teacher",role:"TEACHER",status:"ACTIVE",phone:""}')")"
 TEACHER_ID="$(jq -r '.id' <<<"$TEACHER")"
-create_record 'teacher_profiles' "$ADMIN_TOKEN" "$(jq -nc --arg user "$TEACHER_ID" '{user:$user,bio:"E2E teacher",specialties:["B1"],public_profile:false,active:true}')" >/dev/null
+create_record 'teacher_profiles' "$ADMIN_TOKEN" "$(jq -nc --arg user "$TEACHER_ID" '{user:$user,bio:"Perfil público creado para la prueba real de navegador.",specialties:["B1","Speaking"],public_profile:true,active:true,display_name:"E2E Public Teacher",headline:"English Teacher · B1 & Speaking",sort_order:10}')" >/dev/null
 
 STUDENT="$(create_record 'users' "$ADMIN_TOKEN" "$(jq -nc --arg email "$STUDENT_EMAIL" --arg password "$STUDENT_PASSWORD" '{email:$email,password:$password,passwordConfirm:$password,name:"E2E",surname:"Student",role:"STUDENT",status:"ACTIVE",phone:""}')")"
 STUDENT_ID="$(jq -r '.id' <<<"$STUDENT")"
