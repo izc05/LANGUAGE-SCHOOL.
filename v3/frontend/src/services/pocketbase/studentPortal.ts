@@ -225,7 +225,7 @@ export async function deleteMyFile(record: StudentFileRecord): Promise<boolean> 
 async function getProtectedFileUrl(record: RecordModel, filename: string, download = false): Promise<string> {
   if (!filename) return ''
   const token = await pb.files.getToken()
-  return pb.files.getURL(record, filename, { token, ...(download ? { download: 1 } : {}) })
+  return pb.files.getURL(record, filename, { token, ...(download ? { download: true } : {}) })
 }
 
 export function getMyFileDownloadUrl(record: StudentFileRecord): Promise<string> {
