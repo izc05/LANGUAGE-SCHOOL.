@@ -28,6 +28,7 @@ import AdminAboutEditor from '../pages/admin/AdminAboutEditor'
 import AdminMediaLibrary from '../pages/admin/AdminMediaLibrary'
 import AdminBlogManager from '../pages/admin/AdminBlogManager'
 import AdminContactsPage from '../pages/admin/AdminContactsPage'
+import AdminNotificationsPage from '../pages/admin/AdminNotificationsPage'
 import AdminStudentsPage from '../pages/admin/AdminStudentsPage'
 import AdminTeachersPage from '../pages/admin/AdminTeachersPage'
 import AdminTeacherPublicProfilesPage from '../pages/admin/AdminTeacherPublicProfilesPage'
@@ -70,6 +71,7 @@ export default function App() {
       <Route path="/admin/blog" element={<RequireRole allow={['ADMIN']}><AdminBlogManager /></RequireRole>} />
       <Route path="/admin/multimedia" element={<RequireRole allow={['ADMIN']}><AdminMediaLibrary /></RequireRole>} />
       <Route path="/admin/contactos" element={<RequireRole allow={['ADMIN']}><AdminContactsPage /></RequireRole>} />
+      <Route path="/admin/avisos" element={<RequireRole allow={['ADMIN']}><AdminNotificationsPage /></RequireRole>} />
       <Route path="/admin/alumnos" element={<RequireRole allow={['ADMIN']}><AdminStudentsPage /></RequireRole>} />
       <Route path="/admin/profesores" element={<RequireRole allow={['ADMIN']}><AdminTeachersPage /></RequireRole>} />
       <Route path="/admin/profesores/publicos" element={<RequireRole allow={['ADMIN']}><AdminTeacherPublicProfilesPage /></RequireRole>} />
