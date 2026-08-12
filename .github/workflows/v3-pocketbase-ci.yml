@@ -10,12 +10,16 @@ on:
       - main
     paths:
       - 'v3/pocketbase/**'
+      - '.github/workflows/v3-pocketbase-ci.yml'
 
 jobs:
   migrations:
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ github.token }}
+      PB_SUPERUSER_EMAIL: ci-superuser@example.com
+      PB_SUPERUSER_PASSWORD: CiSuperuserPass123!
+      PB_URL: http://127.0.0.1:8090
 
     steps:
       - name: Checkout
@@ -38,7 +42,46 @@ jobs:
             --dir="$RUNNER_TEMP/language-school-pb-data" \
             --migrationsDir="$GITHUB_WORKSPACE/v3/pocketbase/pb_migrations"
 
+      - name: Create temporary CI superuser
+        run: |
+          "$RUNNER_TEMP/pocketbase/pocketbase" superuser create \
+            "$PB_SUPERUSER_EMAIL" "$PB_SUPERUSER_PASSWORD" \
+            --dir="$RUNNER_TEMP/language-school-pb-data"
+
+      - name: Start temporary PocketBase server
+        run: |
+          nohup "$RUNNER_TEMP/pocketbase/pocketbase" serve \
+            --http=127.0.0.1:8090 \
+            --dir="$RUNNER_TEMP/language-school-pb-data" \
+            --migrationsDir="$GITHUB_WORKSPACE/v3/pocketbase/pb_migrations" \
+            >"$RUNNER_TEMP/pocketbase-server.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/pocketbase-server.pid"
+
+          for attempt in {1..30}; do
+            if curl -fsS "$PB_URL/api/health" >/dev/null; then
+              echo 'PocketBase is ready.'
+              exit 0
+            fi
+            sleep 1
+          done
+
+          echo 'PocketBase failed to start.' >&2
+          cat "$RUNNER_TEMP/pocketbase-server.log" >&2
+          exit 1
+
+      - name: Run ADMIN academic flow smoke test
+        run: bash "$GITHUB_WORKSPACE/v3/pocketbase/ci/admin-flow-smoke.sh"
+
+      - name: Stop temporary PocketBase server
+        if: always()
+        run: |
+          if [ -f "$RUNNER_TEMP/pocketbase-server.pid" ]; then
+            kill "$(cat "$RUNNER_TEMP/pocketbase-server.pid")" 2>/dev/null || true
+            wait "$(cat "$RUNNER_TEMP/pocketbase-server.pid")" 2>/dev/null || true
+          fi
+
       - name: Roll back latest migration
+        if: success()
         run: |
           "$RUNNER_TEMP/pocketbase/pocketbase" migrate down 1 \
             --dir="$RUNNER_TEMP/language-school-pb-data" \
