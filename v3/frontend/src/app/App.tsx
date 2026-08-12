@@ -2,6 +2,9 @@ import { Navigate, Route, Routes } from 'react-router'
 import RequireRole from '../features/auth/RequireRole'
 import HomePage from '../pages/public/HomePage'
 import BlogPage from '../pages/public/BlogPage'
+import ProgramsPage from '../pages/public/ProgramsPage'
+import PricingPage from '../pages/public/PricingPage'
+import ContactPage from '../pages/public/ContactPage'
 import LoginPage from '../pages/auth/LoginPage'
 import StudentDashboard from '../pages/student/StudentDashboard'
 import StudentFilesPage from '../pages/student/StudentFilesPage'
@@ -30,7 +33,10 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
+      <Route path="/programas" element={<ProgramsPage />} />
+      <Route path="/tarifas" element={<PricingPage />} />
       <Route path="/blog" element={<BlogPage />} />
+      <Route path="/contacto" element={<ContactPage />} />
       <Route path="/acceso" element={<LoginPage />} />
 
       <Route path="/alumno" element={<RequireRole allow={['STUDENT']}><StudentDashboard /></RequireRole>} />
