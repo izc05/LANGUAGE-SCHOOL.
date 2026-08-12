@@ -10,6 +10,7 @@ import StudentAssignmentsPage from '../pages/student/StudentAssignmentsPage'
 import StudentClassesPage from '../pages/student/StudentClassesPage'
 import StudentNotificationsPage from '../pages/student/StudentNotificationsPage'
 import TeacherDashboard from '../pages/teacher/TeacherDashboard'
+import TeacherStudentsPage from '../pages/teacher/TeacherStudentsPage'
 import TeacherMaterialPage from '../pages/teacher/TeacherMaterialPage'
 import TeacherAssignmentsPage from '../pages/teacher/TeacherAssignmentsPage'
 import TeacherCorrectionsPage from '../pages/teacher/TeacherCorrectionsPage'
@@ -37,6 +38,7 @@ export default function App() {
       <Route path="/alumno/avisos" element={<RequireRole allow={['STUDENT']}><StudentNotificationsPage /></RequireRole>} />
 
       <Route path="/profesor" element={<RequireRole allow={['TEACHER']}><TeacherDashboard /></RequireRole>} />
+      <Route path="/profesor/alumnos" element={<RequireRole allow={['TEACHER']}><TeacherStudentsPage /></RequireRole>} />
       <Route path="/profesor/material" element={<RequireRole allow={['TEACHER']}><TeacherMaterialPage /></RequireRole>} />
       <Route path="/profesor/tareas" element={<RequireRole allow={['TEACHER']}><TeacherAssignmentsPage /></RequireRole>} />
       <Route path="/profesor/correcciones" element={<RequireRole allow={['TEACHER']}><TeacherCorrectionsPage /></RequireRole>} />
