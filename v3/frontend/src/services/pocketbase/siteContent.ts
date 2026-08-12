@@ -9,6 +9,7 @@ export type HomeHeroContent = {
   subtitle: string
   primaryCta: string
   secondaryCta: string
+  mediaId: string
 }
 
 export type HomePageContent = {
@@ -30,6 +31,7 @@ export const demoHomeContent: HomePageContent = {
       'Clases cercanas, objetivos claros y una plataforma propia para que cada alumno tenga sus recursos, tareas y seguimiento siempre disponibles.',
     primaryCta: 'Descubrir programas',
     secondaryCta: 'Entrar a mi espacio',
+    mediaId: '',
   },
 }
 
@@ -56,6 +58,7 @@ export function normalizeHomeContent(value: unknown): HomePageContent {
         isString(hero.secondaryCta) && hero.secondaryCta.trim()
           ? hero.secondaryCta
           : demoHomeContent.hero.secondaryCta,
+      mediaId: isString(hero.mediaId) ? hero.mediaId.trim() : '',
     },
   }
 }
