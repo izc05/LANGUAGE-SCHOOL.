@@ -1,0 +1,158 @@
+.contacts-admin-page {
+  display: grid;
+  gap: 1.2rem;
+}
+
+.contact-filter-bar {
+  display: flex;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.contact-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 42px;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid rgba(28, 43, 58, 0.1);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.8);
+  color: inherit;
+  cursor: pointer;
+}
+
+.contact-filter strong {
+  min-width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(28, 43, 58, 0.08);
+  font-size: 0.78rem;
+}
+
+.contact-filter.active {
+  border-color: rgba(184, 37, 124, 0.3);
+  background: rgba(184, 37, 124, 0.08);
+  color: #8c1d5d;
+}
+
+.contact-request-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.contact-request-card {
+  display: grid;
+  gap: 1rem;
+  padding: 1.2rem;
+  border-left: 4px solid transparent;
+}
+
+.contact-request-card.status-new {
+  border-left-color: #c27816;
+}
+
+.contact-request-card.status-contacted {
+  border-left-color: #2563eb;
+}
+
+.contact-request-card.status-closed {
+  border-left-color: #18864b;
+  opacity: 0.9;
+}
+
+.contact-request-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.contact-request-head h3 {
+  margin: 0.25rem 0 0.2rem;
+}
+
+.contact-request-head small {
+  color: var(--text-muted, #68717a);
+}
+
+.contact-request-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.contact-request-status.new {
+  background: #fff3d9;
+  color: #8a5700;
+}
+
+.contact-request-status.contacted {
+  background: #e7f0ff;
+  color: #194f9b;
+}
+
+.contact-request-status.closed {
+  background: #e4f6ec;
+  color: #12673a;
+}
+
+.contact-request-channels {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.contact-request-channels a,
+.contact-request-channels > div {
+  display: grid;
+  gap: 0.22rem;
+  padding: 0.8rem 0.9rem;
+  border-radius: 14px;
+  background: rgba(245, 242, 238, 0.62);
+}
+
+.contact-request-channels span,
+.contact-request-message > span {
+  color: var(--text-muted, #68717a);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.contact-request-message {
+  padding: 1rem;
+  border: 1px solid rgba(28, 43, 58, 0.08);
+  border-radius: 16px;
+}
+
+.contact-request-message p {
+  margin: 0.45rem 0 0;
+  white-space: pre-wrap;
+  line-height: 1.65;
+}
+
+.contact-request-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+@media (max-width: 700px) {
+  .contact-request-head {
+    flex-direction: column;
+  }
+
+  .contact-request-channels {
+    grid-template-columns: 1fr;
+  }
+}
