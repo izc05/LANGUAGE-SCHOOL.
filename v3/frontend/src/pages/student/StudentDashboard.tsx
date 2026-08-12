@@ -11,6 +11,7 @@ import {
   type StudentFileRecord,
   type SubmissionRecord,
 } from '../../services/pocketbase/studentPortal'
+import { studentNav } from './studentNav'
 
 type Snapshot = Awaited<ReturnType<typeof getStudentDashboardSnapshot>>
 
@@ -39,7 +40,7 @@ function extensionLabel(filename: string): string {
 
 function DemoStudentDashboard() {
   return (
-    <DashboardShell role="Alumno" name="Emma" nav={['Resumen', 'Mis clases', 'Material', 'Tareas', 'Mis archivos', 'Listening', 'Avisos']}>
+    <DashboardShell role="Alumno" name="Emma" nav={[...studentNav]}>
       <div className="dashboard-content">
         <section className="dashboard-hero-card">
           <div><span className="eyebrow eyebrow-light">PRÓXIMA CLASE</span><h2>Thursday · 18:00</h2><p>Unit 04 · Travel & experiences · B1</p></div>
@@ -151,7 +152,7 @@ function ConnectedStudentDashboard() {
   const classesThisMonth = (snapshot?.recentClasses || []).filter((item: ClassRecord) => new Date(item.starts_at) >= monthStart).length
 
   return (
-    <DashboardShell role="Alumno" name="Alumno" nav={['Resumen', 'Mis clases', 'Material', 'Tareas', 'Mis archivos', 'Listening', 'Avisos']}>
+    <DashboardShell role="Alumno" name="Alumno" nav={[...studentNav]}>
       <div className="dashboard-content">
         {loading && <div className="cms-notice">Cargando tu espacio privado…</div>}
         {error && <div className="cms-notice auth-error">{error}</div>}
