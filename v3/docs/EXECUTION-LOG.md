@@ -11,6 +11,7 @@ Este documento es la fuente de verdad del desarrollo de la V3. Cada fase debe de
 - Backend: PocketBase `0.39.9`.
 - Frontend: React + TypeScript + Vite.
 - Producción prevista: Raspberry Pi 4 + SSD + backup externo.
+- Fase actual: `4.2 · Portada pública conectada a PocketBase`.
 
 ## Convención de estados
 
@@ -129,17 +130,22 @@ GitHub Actions descarga PocketBase `0.39.9`, ejecuta `migrate up` en una base te
 ### Objetivo
 Conectar las interfaces existentes a PocketBase sin perder el modo demo.
 
-### FASE 4.1 · Capa de servicios CMS — 🟡 EN CURSO
-- Crear tipos de contenido de portada.
-- Crear servicio `site_pages`.
-- Crear servicio `media_library`.
-- Crear servicio `blog_posts`.
-- Generar URLs de archivos mediante PocketBase.
+### FASE 4.1 · Capa de servicios CMS — ✅ COMPLETADA
+- Tipos seguros para contenido de portada.
+- Servicio `site_pages` con lectura y guardado de la Home.
+- Servicio `media_library` con listado, subida, edición, borrado y URL de archivos.
+- Servicio `blog_posts` con listado público/admin, categorías, crear, editar y borrar.
+- Generación de URLs de archivos mediante PocketBase.
+- Fallback local de contenido para `VITE_APP_MODE=demo`.
 
-### FASE 4.2 · Portada pública — ⏳ PENDIENTE
+#### Validación 4.1
+GitHub Actions `V3 Frontend CI` completado correctamente tras incorporar la capa de servicios.
+
+### FASE 4.2 · Portada pública — 🟡 EN CURSO
 - Leer `site_pages.key = home` cuando `VITE_APP_MODE=connected`.
 - Mantener datos locales como fallback en demo.
-- Mostrar estado seguro si PocketBase no responde.
+- Mantener la web disponible si PocketBase no responde.
+- No exponer errores internos al visitante.
 
 ### FASE 4.3 · Editor de portada — ⏳ PENDIENTE
 - Cargar contenido actual desde PocketBase.
