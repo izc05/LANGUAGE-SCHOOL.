@@ -1,10 +1,12 @@
 import type { ReactNode } from 'react'
-import { Link } from 'react-router'
+import { Link, NavLink } from 'react-router'
+
+type NavItem = string | { label: string; to: string }
 
 type DashboardShellProps = {
   role: 'Alumno' | 'Profesor' | 'Administrador'
   name: string
-  nav: string[]
+  nav: readonly NavItem[]
   children: ReactNode
 }
 
@@ -18,11 +20,26 @@ export default function DashboardShell({ role, name, nav, children }: DashboardS
         </Link>
 
         <nav className="dashboard-nav" aria-label={`Menú de ${role}`}>
-          {nav.map((item, index) => (
-            <button className={index === 0 ? 'active' : ''} type="button" key={item}>
-              <span className="nav-dot" /> {item}
-            </button>
-          ))}
+          {nav.map((item, index) => {
+            if (typeof item === 'string') {
+              return (
+                <button className={index === 0 ? 'active' : ''} type="button" key={item}>
+                  <span className="nav-dot" /> {item}
+                </button>
+              )
+            }
+
+            return (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.to === '/admin'}
+                className={({ isActive }) => isActive ? 'active' : undefined}
+              >
+                <span className="nav-dot" /> {item.label}
+              </NavLink>
+            )
+          })}
         </nav>
 
         <div className="sidebar-footer">
