@@ -18,6 +18,8 @@ migrate((app) => {
       { type: 'text', name: 'schedule_text', max: 250 },
       { type: 'number', name: 'capacity', required: true, min: 1, max: 100, onlyInt: true },
       { type: 'select', name: 'status', required: true, maxSelect: 1, values: ['ACTIVE', 'PAUSED', 'FINISHED', 'CANCELLED'] },
+      { type: 'autodate', name: 'created', onCreate: true },
+      { type: 'autodate', name: 'updated', onCreate: true, onUpdate: true },
     ],
     indexes: [
       'CREATE INDEX idx_groups_course_status ON groups (course, status)',
@@ -40,6 +42,8 @@ migrate((app) => {
       { type: 'select', name: 'status', required: true, maxSelect: 1, values: ['ACTIVE', 'PAUSED', 'FINISHED', 'CANCELLED'] },
       { type: 'date', name: 'joined_at', required: true },
       { type: 'date', name: 'ended_at' },
+      { type: 'autodate', name: 'created', onCreate: true },
+      { type: 'autodate', name: 'updated', onCreate: true, onUpdate: true },
     ],
     indexes: [
       'CREATE UNIQUE INDEX idx_enrollments_student_group ON enrollments (student, `group`)',
@@ -64,6 +68,8 @@ migrate((app) => {
       { type: 'text', name: 'topic', required: true, max: 220 },
       { type: 'editor', name: 'description', maxSize: 20000 },
       { type: 'select', name: 'status', required: true, maxSelect: 1, values: ['SCHEDULED', 'COMPLETED', 'CANCELLED'] },
+      { type: 'autodate', name: 'created', onCreate: true },
+      { type: 'autodate', name: 'updated', onCreate: true, onUpdate: true },
     ],
     indexes: [
       'CREATE INDEX idx_classes_group_start ON classes (`group`, starts_at)',
@@ -106,6 +112,8 @@ migrate((app) => {
       { type: 'select', name: 'category', required: true, maxSelect: 1, values: ['MATERIAL', 'HOMEWORK', 'AUDIO', 'DOCUMENT', 'OTHER'] },
       { type: 'text', name: 'description', max: 1000 },
       { type: 'select', name: 'status', required: true, maxSelect: 1, values: ['ACTIVE', 'ARCHIVED'] },
+      { type: 'autodate', name: 'created', onCreate: true },
+      { type: 'autodate', name: 'updated', onCreate: true, onUpdate: true },
     ],
     indexes: [
       'CREATE INDEX idx_student_files_student_created ON student_files (student, created)',
