@@ -1,4 +1,4 @@
-import { type FormEvent, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import DashboardShell from '../../components/DashboardShell'
 import { adminNav } from './adminNav'
 
@@ -29,8 +29,7 @@ export default function AdminBlogManager() {
     drafts: posts.filter((post) => post.state === 'Borrador').length,
   }), [posts])
 
-  function createPost(event: FormEvent<HTMLFormElement>, state: Post['state']) {
-    event.preventDefault()
+  function createPost(state: Post['state']) {
     if (!title.trim()) {
       setMessage('Escribe al menos un título antes de guardar.')
       return
@@ -88,7 +87,7 @@ export default function AdminBlogManager() {
             </div>
           </section>
 
-          <form className="panel blog-editor-panel" onSubmit={(event) => createPost(event, 'Borrador')}>
+          <form className="panel blog-editor-panel" onSubmit={(event) => { event.preventDefault(); createPost('Borrador') }}>
             <div className="panel-heading"><div><span className="eyebrow">EDITOR</span><h3>Nuevo artículo</h3></div><span className="status info">Demo</span></div>
 
             {message && <div className="cms-notice">{message}</div>}
@@ -129,10 +128,7 @@ export default function AdminBlogManager() {
 
             <div className="cms-form-actions">
               <button className="button button-ghost" type="submit">Guardar borrador</button>
-              <button className="button button-primary" type="button" onClick={(event) => {
-                const form = event.currentTarget.form
-                if (form) createPost({ preventDefault: () => undefined } as FormEvent<HTMLFormElement>, 'Publicado')
-              }}>Publicar</button>
+              <button className="button button-primary" type="button" onClick={() => createPost('Publicado')}>Publicar</button>
             </div>
           </form>
         </div>
