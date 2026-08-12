@@ -33,10 +33,16 @@ test('web pública y login cargan en modo conectado', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Entrar' })).toBeEnabled()
 })
 
-test('programas y tarifas públicas consumen PocketBase real', async ({ page }) => {
+test('programas, profesores y tarifas públicas consumen PocketBase real', async ({ page }) => {
   await page.goto('/programas')
   await expect(page.getByRole('heading', { name: 'Encuentra el inglés que encaja contigo.' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'E2E English B1' })).toBeVisible()
+
+  await page.goto('/profesores')
+  await expect(page.getByRole('heading', { name: 'Aprender mejor empieza por sentirse acompañado.' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'E2E Public Teacher' })).toBeVisible()
+  await expect(page.getByText('English Teacher · B1 & Speaking')).toBeVisible()
+  await expect(page.getByText('e2e-teacher@example.com')).toHaveCount(0)
 
   await page.goto('/tarifas')
   await expect(page.getByRole('heading', { name: 'Precios claros, sin letra pequeña.' })).toBeVisible()
@@ -68,9 +74,16 @@ test('ADMIN navega por el CMS completo', async ({ page }) => {
 
   await nav.getByRole('link', { name: 'Alumnos' }).click()
   await expect(page).toHaveURL(/\/admin\/alumnos$/)
+
+  await nav.getByRole('link', { name: 'Profesores web' }).click()
+  await expect(page).toHaveURL(/\/admin\/profesores\/publicos$/)
+  await expect(page.getByRole('heading', { name: 'Perfiles públicos del equipo' })).toBeVisible()
+  await expect(page.getByDisplayValue('E2E Public Teacher')).toBeVisible()
+
   await nav.getByRole('link', { name: 'Tarifas' }).click()
   await expect(page).toHaveURL(/\/admin\/tarifas$/)
   await expect(page.getByRole('heading', { name: 'Planes y precios' })).toBeVisible()
+
   await nav.getByRole('link', { name: 'Configuración' }).click()
   await expect(page).toHaveURL(/\/admin\/configuracion$/)
   await expect(page.getByRole('heading', { name: 'Identidad y contacto' })).toBeVisible()
