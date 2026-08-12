@@ -37,7 +37,7 @@ function isString(value: unknown): value is string {
   return typeof value === 'string'
 }
 
-function normalizeHomeContent(value: unknown): HomePageContent {
+export function normalizeHomeContent(value: unknown): HomePageContent {
   if (!value || typeof value !== 'object') return demoHomeContent
 
   const rawHero = (value as { hero?: unknown }).hero
@@ -79,6 +79,21 @@ export async function getPublishedHomeContent(): Promise<HomePageContent> {
     .getFirstListItem<SitePageRecord>('key = "home" && status = "PUBLISHED"')
 
   return normalizeHomeContent(page.content)
+}
+
+export async function getEditableHomeContent(): Promise<{
+  content: HomePageContent
+  status: SitePageRecord['status']
+}> {
+  if (isDemoMode) {
+    return { content: demoHomeContent, status: 'DRAFT' }
+  }
+
+  const page = await getSitePage('home')
+  return {
+    content: normalizeHomeContent(page.content),
+    status: page.status,
+  }
 }
 
 export async function saveHomeContent(content: HomePageContent, publish = true): Promise<SitePageRecord> {
