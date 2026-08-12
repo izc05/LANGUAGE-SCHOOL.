@@ -1,0 +1,130 @@
+import { useEffect, useMemo, useState } from 'react'
+import DashboardShell from '../../components/DashboardShell'
+import { useAuth } from '../../features/auth/AuthProvider'
+import {
+  listMyAttendance,
+  listMyRecentClasses,
+  listMyUpcomingClasses,
+  type AttendanceRecord,
+  type ClassRecord,
+} from '../../services/pocketbase/studentPortal'
+import { studentNav } from './studentNav'
+
+type ClassView = {
+  id: string
+  startsAt: string
+  endsAt: string
+  topic: string
+  groupName: string
+  courseTitle: string
+  status: 'SCHEDULED' | 'COMPLETED' | 'CANCELLED'
+}
+
+const demoUpcoming: ClassView[] = [
+  { id: 'demo-u1', startsAt: '2026-08-13T18:00:00+02:00', endsAt: '2026-08-13T19:00:00+02:00', topic: 'Travel & experiences', groupName: 'B1 Evening', courseTitle: 'Adult English B1', status: 'SCHEDULED' },
+  { id: 'demo-u2', startsAt: '2026-08-18T18:00:00+02:00', endsAt: '2026-08-18T19:00:00+02:00', topic: 'Airport situations', groupName: 'B1 Evening', courseTitle: 'Adult English B1', status: 'SCHEDULED' },
+]
+
+const demoRecent: ClassView[] = [
+  { id: 'demo-r1', startsAt: '2026-08-11T18:00:00+02:00', endsAt: '2026-08-11T19:00:00+02:00', topic: 'Past experiences', groupName: 'B1 Evening', courseTitle: 'Adult English B1', status: 'COMPLETED' },
+  { id: 'demo-r2', startsAt: '2026-08-06T18:00:00+02:00', endsAt: '2026-08-06T19:00:00+02:00', topic: 'Travel vocabulary', groupName: 'B1 Evening', courseTitle: 'Adult English B1', status: 'COMPLETED' },
+]
+
+function toView(record: ClassRecord): ClassView {
+  return {
+    id: record.id,
+    startsAt: record.starts_at,
+    endsAt: record.ends_at,
+    topic: record.topic || 'Clase de inglés',
+    groupName: record.expand?.group?.name || 'Tu grupo',
+    courseTitle: record.expand?.group?.expand?.course?.title || record.expand?.group?.expand?.course?.level || 'Language School',
+    status: record.status,
+  }
+}
+
+function formatDate(value: string): string {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return 'Fecha pendiente'
+  return new Intl.DateTimeFormat('es-ES', { weekday: 'long', day: '2-digit', month: 'long' }).format(date)
+}
+
+function formatTime(value: string): string {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return '--:--'
+  return new Intl.DateTimeFormat('es-ES', { hour: '2-digit', minute: '2-digit' }).format(date)
+}
+
+export default function StudentClassesPage() {
+  const { isDemoMode } = useAuth()
+  const [upcoming, setUpcoming] = useState<ClassView[]>(isDemoMode ? demoUpcoming : [])
+  const [recent, setRecent] = useState<ClassView[]>(isDemoMode ? demoRecent : [])
+  const [attendance, setAttendance] = useState<AttendanceRecord[]>([])
+  const [loading, setLoading] = useState(!isDemoMode)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (isDemoMode) return
+    let mounted = true
+    Promise.all([listMyUpcomingClasses(50), listMyRecentClasses(100), listMyAttendance(100)])
+      .then(([upcomingRecords, recentRecords, attendanceRecords]) => {
+        if (!mounted) return
+        setUpcoming(upcomingRecords.map(toView))
+        setRecent(recentRecords.map(toView))
+        setAttendance(attendanceRecords)
+      })
+      .catch(() => {
+        if (mounted) setError('No se ha podido cargar tu historial de clases.')
+      })
+      .finally(() => {
+        if (mounted) setLoading(false)
+      })
+    return () => { mounted = false }
+  }, [isDemoMode])
+
+  const attendanceMap = useMemo(() => new Map(attendance.map((item) => [item.class, item.status])), [attendance])
+
+  return (
+    <DashboardShell role="Alumno" name="Alumno" nav={[...studentNav]}>
+      <div className="dashboard-content student-files-page">
+        <header className="student-page-heading">
+          <div><span className="eyebrow">CALENDARIO</span><h2>Mis clases</h2><p>Próximas sesiones y un histórico sencillo de las clases ya realizadas.</p></div>
+          <div className="private-space-badge"><strong>{upcoming.length}</strong><span>próximas clases</span></div>
+        </header>
+
+        {loading && <div className="cms-notice">Cargando clases…</div>}
+        {error && <div className="cms-notice auth-error">{error}</div>}
+
+        <section className="panel student-class-section">
+          <div className="panel-heading"><div><span className="eyebrow">PRÓXIMAS</span><h3>Tu agenda</h3></div></div>
+          <div className="student-class-list">
+            {upcoming.map((item) => (
+              <article key={item.id}>
+                <div className="student-class-date"><strong>{formatDate(item.startsAt)}</strong><span>{formatTime(item.startsAt)} – {formatTime(item.endsAt)}</span></div>
+                <div><h4>{item.topic}</h4><p>{item.courseTitle} · {item.groupName}</p></div>
+                <span className="status info">Programada</span>
+              </article>
+            ))}
+            {!loading && upcoming.length === 0 && <p className="muted">No tienes próximas clases programadas.</p>}
+          </div>
+        </section>
+
+        <section className="panel student-class-section">
+          <div className="panel-heading"><div><span className="eyebrow">HISTORIAL</span><h3>Clases realizadas</h3></div></div>
+          <div className="student-class-list">
+            {recent.map((item) => {
+              const attendanceStatus = attendanceMap.get(item.id)
+              return (
+                <article key={item.id}>
+                  <div className="student-class-date"><strong>{formatDate(item.startsAt)}</strong><span>{formatTime(item.startsAt)} – {formatTime(item.endsAt)}</span></div>
+                  <div><h4>{item.topic}</h4><p>{item.courseTitle} · {item.groupName}</p></div>
+                  <span className={`status ${attendanceStatus === 'ABSENT' ? 'warning' : 'success'}`}>{attendanceStatus === 'ABSENT' ? 'Ausente' : attendanceStatus === 'JUSTIFIED' ? 'Justificada' : attendanceStatus === 'PRESENT' ? 'Asistió' : 'Realizada'}</span>
+                </article>
+              )
+            })}
+            {!loading && recent.length === 0 && <p className="muted">Todavía no hay clases realizadas.</p>}
+          </div>
+        </section>
+      </div>
+    </DashboardShell>
+  )
+}
