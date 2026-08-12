@@ -240,6 +240,65 @@
   color: var(--text-muted, #68717a);
 }
 
+.public-not-found {
+  min-height: 68vh;
+  display: grid;
+  align-items: center;
+  padding: 5rem 0;
+  background:
+    radial-gradient(circle at 75% 30%, rgba(184, 37, 124, 0.1), transparent 24rem),
+    linear-gradient(180deg, #fff, #f6f2ec);
+}
+
+.public-not-found-inner {
+  max-width: 720px;
+}
+
+.not-found-code {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(4rem, 12vw, 8rem);
+  line-height: 0.9;
+  color: rgba(184, 37, 124, 0.2);
+}
+
+.public-not-found h1 {
+  margin: 0.65rem 0 1rem;
+  font-size: clamp(2.6rem, 6vw, 4.8rem);
+}
+
+.public-not-found p {
+  max-width: 620px;
+  color: var(--text-muted, #68717a);
+  line-height: 1.75;
+}
+
+@media (max-width: 1120px) {
+  .header-inner {
+    height: auto;
+    min-height: 82px;
+    flex-wrap: wrap;
+    gap: 12px 18px;
+    padding: 12px 0 10px;
+  }
+
+  .main-nav {
+    order: 3;
+    width: 100%;
+    gap: 18px;
+    overflow-x: auto;
+    padding: 2px 0 8px;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .main-nav a {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+}
+
 @media (max-width: 900px) {
   .public-course-grid,
   .public-pricing-grid,
@@ -274,5 +333,21 @@
 
   .public-teacher-photo {
     width: min(100%, 220px);
+  }
+}
+
+@media (max-width: 520px) {
+  .header-inner > .button {
+    min-height: 38px;
+    padding: 0 13px;
+    font-size: 0.78rem;
+  }
+
+  .brand strong {
+    font-size: 1rem;
+  }
+
+  .brand small {
+    display: none;
   }
 }
