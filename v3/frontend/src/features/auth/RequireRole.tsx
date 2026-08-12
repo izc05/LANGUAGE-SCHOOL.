@@ -17,12 +17,10 @@ function routeForRole(role: UserRole): string {
 export default function RequireRole({ allow, children }: RequireRoleProps) {
   const { ready, user, isAuthenticated, isDemoMode } = useAuth()
 
-  // Demo mode intentionally keeps all preview routes visible while the
-  // Raspberry/PocketBase instance is not available yet.
   if (isDemoMode) return <>{children}</>
 
   if (!ready) {
-    return <div className="auth-loading">Comprobando acceso…</div>
+    return <div className="auth-loading" role="status" aria-live="polite">Comprobando acceso…</div>
   }
 
   if (!isAuthenticated || !user) {
