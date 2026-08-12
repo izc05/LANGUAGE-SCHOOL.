@@ -47,7 +47,10 @@
 }
 
 .admin-group-actions button,
-.admin-enrollment-actions button {
+.admin-enrollment-actions button,
+.admin-class-status-actions button,
+.admin-attendance-actions button,
+.admin-calendar-filters button {
   min-height: 34px;
   padding: 0 10px;
   border: 1px solid var(--line);
@@ -59,7 +62,10 @@
 }
 
 .admin-group-actions button:hover,
-.admin-enrollment-actions button:hover {
+.admin-enrollment-actions button:hover,
+.admin-class-status-actions button:hover,
+.admin-attendance-actions button:hover,
+.admin-calendar-filters button:hover {
   background: #f4f7f4;
 }
 
@@ -97,17 +103,134 @@
   justify-content: flex-end;
 }
 
+.admin-calendar-filters {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(180px, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.admin-calendar-filters > div {
+  display: grid;
+  gap: 7px;
+}
+
+.admin-real-calendar .week-calendar {
+  grid-template-columns: repeat(7, minmax(145px, 1fr));
+  overflow-x: auto;
+}
+
+.admin-real-calendar .calendar-day {
+  min-height: 330px;
+}
+
+.admin-real-calendar .calendar-class.selected {
+  box-shadow: inset 0 0 0 2px var(--sage-dark);
+  background: #edf4ee;
+}
+
+.admin-calendar-empty {
+  display: grid;
+  place-items: center;
+  min-height: 72px;
+  color: var(--muted);
+  font-size: .7rem;
+}
+
+.admin-class-attendance {
+  display: grid;
+  gap: 18px;
+}
+
+.admin-class-detail-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.admin-class-detail-heading h3 {
+  margin: 5px 0;
+}
+
+.admin-class-detail-heading p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.admin-class-status-actions {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.admin-attendance-list {
+  display: grid;
+}
+
+.admin-attendance-list article {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 13px;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.admin-attendance-list article:last-child {
+  border-bottom: 0;
+}
+
+.admin-attendance-list article > div:nth-child(2) {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.admin-attendance-list small {
+  color: var(--muted);
+}
+
+.admin-attendance-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.admin-attendance-actions button.active {
+  border-color: var(--sage-dark);
+  background: #edf4ee;
+  color: var(--sage-dark);
+}
+
 @media (max-width: 800px) {
   .admin-academic-header-actions {
     justify-content: flex-start;
   }
 
-  .admin-enrollment-list article {
+  .admin-enrollment-list article,
+  .admin-attendance-list article {
     grid-template-columns: auto 1fr;
   }
 
-  .admin-enrollment-actions {
+  .admin-enrollment-actions,
+  .admin-attendance-actions {
     grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+
+  .admin-calendar-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-class-detail-heading {
+    flex-direction: column;
+  }
+
+  .admin-class-status-actions {
     justify-content: flex-start;
   }
 }
