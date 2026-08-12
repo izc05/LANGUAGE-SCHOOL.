@@ -4,6 +4,7 @@ export const adminNav = [
   { label: 'Sobre nosotros', to: '/admin/web/sobre-nosotros' },
   { label: 'Blog', to: '/admin/blog' },
   { label: 'Multimedia', to: '/admin/multimedia' },
+  { label: 'Contactos', to: '/admin/contactos' },
   { label: 'Alumnos', to: '/admin/alumnos' },
   { label: 'Profesores', to: '/admin/profesores' },
   { label: 'Profesores web', to: '/admin/profesores/publicos' },
