@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router'
+import RequireRole from '../features/auth/RequireRole'
 import HomePage from '../pages/public/HomePage'
 import BlogPage from '../pages/public/BlogPage'
 import LoginPage from '../pages/auth/LoginPage'
@@ -19,16 +20,19 @@ export default function App() {
       <Route path="/" element={<HomePage />} />
       <Route path="/blog" element={<BlogPage />} />
       <Route path="/acceso" element={<LoginPage />} />
-      <Route path="/alumno" element={<StudentDashboard />} />
-      <Route path="/profesor" element={<TeacherDashboard />} />
-      <Route path="/admin" element={<AdminDashboard />} />
-      <Route path="/admin/web" element={<AdminSiteEditor />} />
-      <Route path="/admin/blog" element={<AdminBlogManager />} />
-      <Route path="/admin/multimedia" element={<AdminMediaLibrary />} />
-      <Route path="/admin/alumnos" element={<AdminStudentsPage />} />
-      <Route path="/admin/profesores" element={<AdminTeachersPage />} />
-      <Route path="/admin/cursos" element={<AdminCoursesPage />} />
-      <Route path="/admin/clases" element={<AdminClassesPage />} />
+
+      <Route path="/alumno" element={<RequireRole allow={['STUDENT']}><StudentDashboard /></RequireRole>} />
+      <Route path="/profesor" element={<RequireRole allow={['TEACHER']}><TeacherDashboard /></RequireRole>} />
+
+      <Route path="/admin" element={<RequireRole allow={['ADMIN']}><AdminDashboard /></RequireRole>} />
+      <Route path="/admin/web" element={<RequireRole allow={['ADMIN']}><AdminSiteEditor /></RequireRole>} />
+      <Route path="/admin/blog" element={<RequireRole allow={['ADMIN']}><AdminBlogManager /></RequireRole>} />
+      <Route path="/admin/multimedia" element={<RequireRole allow={['ADMIN']}><AdminMediaLibrary /></RequireRole>} />
+      <Route path="/admin/alumnos" element={<RequireRole allow={['ADMIN']}><AdminStudentsPage /></RequireRole>} />
+      <Route path="/admin/profesores" element={<RequireRole allow={['ADMIN']}><AdminTeachersPage /></RequireRole>} />
+      <Route path="/admin/cursos" element={<RequireRole allow={['ADMIN']}><AdminCoursesPage /></RequireRole>} />
+      <Route path="/admin/clases" element={<RequireRole allow={['ADMIN']}><AdminClassesPage /></RequireRole>} />
+
       <Route path="/admin/*" element={<Navigate to="/admin" replace />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
