@@ -11,12 +11,13 @@ Este documento es la fuente de verdad del desarrollo de la V3. Cada fase debe de
 - Backend: PocketBase `0.39.9`.
 - Frontend: React + TypeScript + Vite.
 - Producción prevista: Raspberry Pi 4 + SSD + backup externo.
-- Fase actual: `6.5 · Material, tareas y entregas del alumno`.
+- Frente activo: `7.1 · Backend y servicios del profesor`.
+- Bloqueo conocido: `6.7 · prueba A/B con usuarios reales`, pendiente de instancia PocketBase real.
 
 ## Convención de estados
 
 - ✅ COMPLETADA: implementada y validada.
-- 🟡 EN CURSO: desarrollo activo.
+- 🟡 EN CURSO: desarrollo activo o con una validación pendiente.
 - ⏳ PENDIENTE: definida, todavía no iniciada.
 - 🔒 BLOQUEADA: depende de hardware, dominio, credenciales o decisión externa.
 
@@ -100,7 +101,7 @@ Interfaz ADMIN para Web, Multimedia, Blog, Alumnos, Profesores, Cursos y Clases/
 
 ---
 
-## FASE 6 · Alumno real — 🟡 EN CURSO
+## FASE 6 · Alumno real — 🟡 IMPLEMENTACIÓN COMPLETA / VALIDACIÓN REAL PENDIENTE
 
 ### Objetivo
 Sustituir los datos ficticios del portal de alumno por datos autorizados de PocketBase sin permitir acceso cruzado entre alumnos.
@@ -110,175 +111,199 @@ Sustituir los datos ficticios del portal de alumno por datos autorizados de Pock
 #### Migración 5
 `1786563600_create_student_learning_core.js`
 
-#### Cambios en reglas existentes
-- `groups`: un `STUDENT` solo puede leer grupos alcanzables mediante su matrícula `ACTIVE`.
-- `courses`: un `STUDENT` puede leer su curso aunque no sea público si llega a él mediante una matrícula `ACTIVE`.
-- ADMIN y TEACHER conservan su ámbito anterior.
-
-#### Colecciones nuevas
-- `attendance`
-- `materials`
-- `assignments`
-- `assignment_submissions`
-- `notifications`
-
-#### Seguridad
-- Materiales y adjuntos académicos son archivos protegidos.
-- Tareas `DRAFT` no son visibles para alumnos.
-- Entregas pertenecen al alumno autenticado.
-- Un alumno no puede alterar `teacher_feedback` ni `grade_text`.
-- Avisos solo son legibles por su destinatario o ADMIN.
-- Las reglas de escritura de profesor y alumno están vinculadas a relaciones del registro, no a IDs confiados solo por la UI.
+#### Cambios y colecciones
+- `groups`: alumno solo ve grupos de matrículas `ACTIVE`.
+- `courses`: alumno matriculado puede ver su curso aunque no sea público.
+- `attendance`.
+- `materials` con archivo protegido.
+- `assignments` con adjunto protegido y `DRAFT` oculto al alumno.
+- `assignment_submissions` con archivo protegido, feedback y calificación protegidos contra edición del alumno.
+- `notifications` limitadas al destinatario.
 
 #### Validación
 - PocketBase `migrate up`: ✅ success.
-- Rollback última migración: ✅ success.
+- Rollback: ✅ success.
 
 ### FASE 6.2 · Capa de servicios del alumno — ✅ COMPLETADA
 
-Archivo central: `frontend/src/services/pocketbase/studentPortal.ts`.
+`frontend/src/services/pocketbase/studentPortal.ts`
 
-Funciones implementadas:
+Incluye:
 - perfil propio
 - matrículas/grupos/curso
-- próximas clases
-- clases recientes
+- clases próximas/recientes
 - asistencia
-- archivos privados
-- subida/archivado/borrado de archivo propio
-- URL protegida de descarga con token temporal
-- material autorizado
-- tareas
-- entregas
-- avisos y marcar como leído
-- snapshot del dashboard
+- archivos propios
+- material
+- tareas y entregas
+- avisos
+- snapshot de dashboard
+- tokens temporales para archivos protegidos
 
-Principio aplicado: las operaciones propias no reciben un `studentId` arbitrario; obtienen siempre el alumno desde la sesión autenticada.
-
-#### Validación
-`V3 Frontend CI`: ✅ success tras corregir el tipo `download` del SDK de PocketBase.
+Las operaciones propias derivan siempre el alumno desde la sesión, no desde un `studentId` arbitrario entregado por la pantalla.
 
 ### FASE 6.3 · Dashboard alumno real — ✅ COMPLETADA
 
-En modo `connected`, `/alumno` muestra:
-- próxima clase real
-- nivel derivado de la matrícula/curso
-- clases recientes y próximas
+`/alumno`
+- próxima clase
+- nivel actual
+- clases recientes/próximas
 - tareas pendientes/entregadas
 - material autorizado
 - archivos propios
-- avisos nuevos/leídos
-- estados vacíos y mensaje seguro de error
-
-En `demo` se conserva el dashboard ficticio para revisión visual sin servidor.
-
-#### Validación
-`V3 Frontend CI`: ✅ success.
+- avisos
+- estados vacíos y errores seguros
+- modo demo conservado
 
 ### FASE 6.4 · Mis archivos — ✅ COMPLETADA
 
-Ruta: `/alumno/archivos`.
-
-Implementado:
-- navegación real del portal mediante `studentNav`
-- listado de archivos propios
-- filtro/buscador
+`/alumno/archivos`
+- navegación real del portal
+- listado y búsqueda
 - subida PDF/Word/audio/imagen
-- límite cliente de 20 MB alineado con PocketBase
-- categoría y descripción
+- límite 20 MB
+- categoría/descripcion
 - archivado
-- descarga mediante token temporal para archivo protegido
-- ruta protegida con `RequireRole(['STUDENT'])`
-- modo demo sin enviar archivos a ningún servidor
+- descarga protegida mediante token temporal
+- `RequireRole(['STUDENT'])`
+- demo sin persistencia
 
-El servidor sigue siendo la autoridad: conocer un ID o URL no sustituye la `viewRule` de PocketBase.
+### FASE 6.5 · Material, tareas y entregas — ✅ COMPLETADA
 
-#### Validación
-`V3 Frontend CI`: ✅ success.
+`/alumno/material`
+- material autorizado por alumno/grupo/curso
+- filtros y búsqueda
+- descarga protegida
 
-### FASE 6.5 · Material, tareas y entregas — 🟡 EN CURSO
+`/alumno/tareas`
+- tareas pendientes, entregadas y corregidas
+- adjunto protegido de la actividad
+- entrega mediante texto y/o archivo
+- máximo 20 MB
+- índice único evita entrega duplicada del mismo alumno para la misma tarea
+- visualización de feedback y calificación
+- acceso protegido al archivo entregado
 
-Siguiente bloque:
-- `/alumno/material`
-- descarga protegida de material autorizado
-- `/alumno/tareas`
-- distinguir pendiente/entregada/corregida
-- entrega con texto y/o archivo
-- impedir segunda entrega duplicada por índice único
-- mostrar feedback/calificación cuando exista
+### FASE 6.6 · Clases y avisos — ✅ COMPLETADA
 
-### FASE 6.6 · Clases y avisos — ⏳ PENDIENTE
-- `/alumno/clases`
-- calendario/listado de próximas y realizadas
-- `/alumno/avisos`
-- lectura y marcado como leído
+`/alumno/clases`
+- próximas clases
+- historial
+- grupo/curso
+- horario
+- estado de asistencia cuando existe
 
-### FASE 6.7 · Validación de seguridad — 🔒 PARCIALMENTE BLOQUEADA HASTA INSTANCIA REAL
-- CI valida sintaxis y migraciones.
-- Con instancia real se crearán Alumno A y Alumno B.
-- Debe demostrarse que A no puede leer registros, expansiones ni archivos de B.
-- También se validará que un profesor sin relación académica no accede al alumno.
+`/alumno/avisos`
+- todos / sin leer
+- tipos de aviso
+- fecha
+- marcado como leído
+- solo avisos del destinatario autenticado
 
-### Criterio de cierre de Fase 6
-Un `STUDENT` autenticado debe ver únicamente su perfil, matrículas, clases, material, tareas, entregas, avisos y archivos; ningún identificador conocido debe permitir acceder a datos de otro alumno.
+### Validación de implementación Fase 6
+- `V3 Frontend CI`: ✅ success.
+- `V3 PocketBase CI`: ✅ success.
+- Todas las rutas de `studentNav` ya tienen pantalla real o demo funcional.
+
+### FASE 6.7 · Validación A/B de seguridad — 🔒 BLOQUEADA HASTA INSTANCIA REAL
+
+Pendiente crear usuarios reales:
+- Alumno A.
+- Alumno B.
+- Profesor relacionado con A.
+- Profesor no relacionado con A.
+
+Debe demostrarse:
+- A no puede leer perfil, matrícula, clases, tareas, avisos o archivos de B.
+- conocer un ID de B no concede acceso.
+- un token de archivo protegido solo descarga recursos cuya `viewRule` autoriza.
+- profesor sin relación académica no accede al alumno.
+
+### Criterio de cierre final de Fase 6
+La implementación está terminada. Fase 6 se marcará totalmente ✅ cuando pase la prueba real A/B.
 
 ---
 
-## FASE 7 · Profesor real — ⏳ PENDIENTE
+## FASE 7 · Profesor real — 🟡 EN CURSO
 
-- Grupos asignados.
-- Alumnos autorizados.
-- Clases.
-- Material.
-- Tareas.
-- Correcciones.
-- Acceso a archivos únicamente por relación académica verificada.
+### FASE 7.1 · Backend y servicios del profesor — 🟡 EN CURSO
+- revisar reglas existentes desde el punto de vista TEACHER
+- restringir acceso a alumnos mediante grupos propios
+- servicio central del profesor
+- grupos propios
+- alumnos matriculados en grupos propios
+- clases propias
+- material propio
+- tareas propias
+- entregas de sus tareas
+
+### FASE 7.2 · Dashboard profesor — ⏳ PENDIENTE
+- agenda
+- alumnos/grupos
+- tareas pendientes de corregir
+- material reciente
+
+### FASE 7.3 · Gestión de material y tareas — ⏳ PENDIENTE
+- publicar material a curso/grupo/alumno autorizado
+- crear tarea
+- revisar entrega
+- feedback/calificación
+
+### FASE 7.4 · Alumnos y archivos autorizados — ⏳ PENDIENTE
+- ver alumnos solo de grupos propios
+- acceso a archivos del alumno únicamente por relación académica verificada
+
+### FASE 7.5 · Validación seguridad profesor — 🔒 PENDIENTE DE INSTANCIA REAL
+- profesor A no puede consultar grupos/alumnos de profesor B
+- acceso a archivos solo si existe relación válida
 
 ---
 
 ## FASE 8 · Administración académica real — ⏳ PENDIENTE
 
-- Alta/baja de alumnos y profesores.
-- Cursos y grupos.
-- Matrículas.
-- Calendario.
-- Asistencia.
-- Estados e histórico.
+- alta/baja de alumnos y profesores
+- cursos y grupos
+- matrículas
+- calendario
+- asistencia
+- estados e histórico
 
 ---
 
 ## FASE 9 · Raspberry Pi 4 y producción — 🔒 BLOQUEADA POR HARDWARE
 
-- Preparar SSD.
-- Instalar sistema 64-bit.
-- Instalar PocketBase ARM64.
-- Servicio persistente.
-- Aplicar migraciones.
-- Crear superuser local.
-- Crear primer usuario `ADMIN`.
-- Desplegar frontend.
-- HTTPS / Cloudflare.
-- Backup automático al segundo disco.
-- Prueba de restauración.
+- preparar SSD
+- sistema 64-bit
+- PocketBase ARM64
+- servicio persistente
+- migraciones
+- superuser local
+- primer usuario `ADMIN`
+- frontend
+- HTTPS / Cloudflare
+- backup externo automático
+- prueba de restauración
 
 ---
 
 ## FASE 10 · Piloto y endurecimiento — ⏳ PENDIENTE
 
-- 2–3 alumnos de prueba.
-- Pruebas A/B de aislamiento.
-- Prueba de relación profesor/alumno.
-- Límites de archivo.
-- Backups/restauración.
-- Responsive móvil.
-- Accesibilidad básica.
-- Registro de errores.
-- Prueba pública controlada.
+- 2–3 alumnos de prueba
+- pruebas A/B de aislamiento
+- relación profesor/alumno
+- límites de archivo
+- backups/restauración
+- responsive móvil
+- accesibilidad básica
+- registro de errores
+- prueba pública controlada
 
 ---
 
 ## Dirección del proyecto
 
 `Estructura → Frontend → CMS visual → PocketBase → CMS real → Login → Alumno → Profesor → Admin académico → Raspberry → Piloto`
+
+Cuando una fase de validación esté bloqueada únicamente por hardware, puede avanzarse en la implementación de la fase siguiente sin declarar cerrada la validación pendiente.
 
 Cada nueva sesión debe comenzar leyendo este archivo y actualizarlo al terminar un bloque relevante.
