@@ -1,17 +1,25 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import DashboardShell from '../../components/DashboardShell'
-import { countNewContactRequests } from '../../services/pocketbase/contactRequests'
+import { getAdminDashboardMetrics, type AdminDashboardMetrics } from '../../services/pocketbase/adminDashboard'
 import { adminNav } from './adminNav'
 
+function formatUpdated(value: string): string {
+  if (!value) return 'sin fecha'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+  return new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: 'short' }).format(date)
+}
+
 export default function AdminDashboard() {
-  const [newContacts, setNewContacts] = useState<number | null>(null)
+  const [metrics, setMetrics] = useState<AdminDashboardMetrics | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     let mounted = true
-    countNewContactRequests()
-      .then((count) => { if (mounted) setNewContacts(count) })
-      .catch(() => { if (mounted) setNewContacts(null) })
+    getAdminDashboardMetrics()
+      .then((snapshot) => { if (mounted) setMetrics(snapshot) })
+      .catch(() => { if (mounted) setError('No se han podido actualizar las métricas del Dashboard.') })
     return () => { mounted = false }
   }, [])
 
@@ -22,17 +30,19 @@ export default function AdminDashboard() {
           <div>
             <span className="eyebrow">CONTROL DE LA ACADEMIA</span>
             <h2>Gestiona la web y la plataforma sin tocar GitHub.</h2>
-            <p>La V3 conecta contenido público, academia y solicitudes con PocketBase desde un único panel.</p>
+            <p>La V3 conecta contenido público, academia, alumnos y solicitudes con PocketBase desde un único panel.</p>
           </div>
           <Link className="button button-primary" to="/admin/contactos">Ver solicitudes</Link>
         </div>
 
+        {error && <div className="cms-notice auth-error" role="alert">{error}</div>}
+
         <section className="metric-grid">
-          <article><span>Solicitudes nuevas</span><strong>{newContacts ?? '—'}</strong><small><Link to="/admin/contactos">Abrir bandeja →</Link></small></article>
-          <article><span>Alumnos activos</span><strong>36</strong><small>Demo visual · se sustituirá por métrica real</small></article>
-          <article><span>Profesores</span><strong>3</strong><small>Demo visual · se sustituirá por métrica real</small></article>
-          <article><span>Artículos</span><strong>12</strong><small>Demo visual · se sustituirá por métrica real</small></article>
-          <article><span>Archivos</span><strong>284</strong><small>Demo visual · SSD pendiente</small></article>
+          <article><span>Solicitudes nuevas</span><strong>{metrics?.newContacts ?? '—'}</strong><small><Link to="/admin/contactos">Abrir bandeja →</Link></small></article>
+          <article><span>Alumnos activos</span><strong>{metrics?.activeStudents ?? '—'}</strong><small>Usuarios STUDENT activos</small></article>
+          <article><span>Profesores activos</span><strong>{metrics?.activeTeachers ?? '—'}</strong><small>Usuarios TEACHER activos</small></article>
+          <article><span>Artículos</span><strong>{metrics?.blogPosts ?? '—'}</strong><small>{metrics ? `${metrics.blogDrafts} borradores` : 'Actualizando…'}</small></article>
+          <article><span>Archivos alumnos</span><strong>{metrics?.activeStudentFiles ?? '—'}</strong><small>Archivos privados activos</small></article>
         </section>
 
         <div className="admin-action-grid">
@@ -70,10 +80,23 @@ export default function AdminDashboard() {
           </section>
 
           <section className="panel">
-            <div className="panel-heading"><div><span className="eyebrow">CONTACTO</span><h3>Seguimiento comercial</h3></div><Link to="/admin/contactos">Ver todas</Link></div>
+            <div className="panel-heading"><div><span className="eyebrow">BLOG</span><h3>Últimos contenidos</h3></div><Link to="/admin/blog">Gestionar</Link></div>
             <div className="content-list">
-              <div><span className="content-state draft">Nuevas</span><div><strong>{newContacts ?? '—'} pendientes de revisar</strong><small>Mensajes recibidos desde el formulario público</small></div></div>
-              <div><span className="content-state published">Flujo</span><div><strong>NEW → CONTACTED → CLOSED</strong><small>Sin eliminar el histórico de la solicitud</small></div></div>
+              {metrics?.recentPosts.map((post) => (
+                <div key={post.id}>
+                  <span className={`content-state ${post.status === 'PUBLISHED' ? 'published' : 'draft'}`}>{post.status === 'PUBLISHED' ? 'Publicado' : post.status === 'DRAFT' ? 'Borrador' : 'Archivado'}</span>
+                  <div>
+                    <strong>{post.title}</strong>
+                    <small>{post.expand?.category?.name || 'Blog'} · {formatUpdated(post.updated)}</small>
+                  </div>
+                </div>
+              ))}
+              {metrics && metrics.recentPosts.length === 0 && (
+                <div><span className="content-state draft">Vacío</span><div><strong>Todavía no hay artículos</strong><small>Crea el primero desde Blog.</small></div></div>
+              )}
+              {!metrics && !error && (
+                <div><span className="content-state draft">...</span><div><strong>Actualizando Dashboard</strong><small>Consultando PocketBase.</small></div></div>
+              )}
             </div>
           </section>
         </div>
