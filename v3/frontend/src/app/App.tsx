@@ -7,6 +7,8 @@ import StudentDashboard from '../pages/student/StudentDashboard'
 import StudentFilesPage from '../pages/student/StudentFilesPage'
 import StudentMaterialPage from '../pages/student/StudentMaterialPage'
 import StudentAssignmentsPage from '../pages/student/StudentAssignmentsPage'
+import StudentClassesPage from '../pages/student/StudentClassesPage'
+import StudentNotificationsPage from '../pages/student/StudentNotificationsPage'
 import TeacherDashboard from '../pages/teacher/TeacherDashboard'
 import AdminDashboard from '../pages/admin/AdminDashboard'
 import AdminSiteEditor from '../pages/admin/AdminSiteEditor'
@@ -25,9 +27,11 @@ export default function App() {
       <Route path="/acceso" element={<LoginPage />} />
 
       <Route path="/alumno" element={<RequireRole allow={['STUDENT']}><StudentDashboard /></RequireRole>} />
+      <Route path="/alumno/clases" element={<RequireRole allow={['STUDENT']}><StudentClassesPage /></RequireRole>} />
       <Route path="/alumno/material" element={<RequireRole allow={['STUDENT']}><StudentMaterialPage /></RequireRole>} />
       <Route path="/alumno/tareas" element={<RequireRole allow={['STUDENT']}><StudentAssignmentsPage /></RequireRole>} />
       <Route path="/alumno/archivos" element={<RequireRole allow={['STUDENT']}><StudentFilesPage /></RequireRole>} />
+      <Route path="/alumno/avisos" element={<RequireRole allow={['STUDENT']}><StudentNotificationsPage /></RequireRole>} />
       <Route path="/profesor" element={<RequireRole allow={['TEACHER']}><TeacherDashboard /></RequireRole>} />
 
       <Route path="/admin" element={<RequireRole allow={['ADMIN']}><AdminDashboard /></RequireRole>} />
