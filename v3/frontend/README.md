@@ -1,72 +1,73 @@
-# Frontend · Language School V3
+# Language School V3 · Frontend
 
-La V3 se construirá como una única aplicación web moderna con áreas públicas y privadas claramente separadas.
+Aplicación web V3 de Language School. Está separada de la web HTML antigua mientras se desarrolla y valida.
 
-## Estructura prevista
+## Estado actual
 
-```text
-frontend/
-├── public/
-│   ├── images/
-│   ├── icons/
-│   └── fonts/
-└── src/
-    ├── app/
-    │   ├── App.tsx
-    │   ├── providers/
-    │   └── config/
-    ├── routes/
-    │   ├── public.routes.tsx
-    │   ├── student.routes.tsx
-    │   ├── teacher.routes.tsx
-    │   └── admin.routes.tsx
-    ├── layouts/
-    │   ├── PublicLayout.tsx
-    │   ├── StudentLayout.tsx
-    │   ├── TeacherLayout.tsx
-    │   └── AdminLayout.tsx
-    ├── pages/
-    │   ├── public/
-    │   ├── student/
-    │   ├── teacher/
-    │   └── admin/
-    ├── features/
-    │   ├── auth/
-    │   ├── site-content/
-    │   ├── blog/
-    │   ├── media/
-    │   ├── students/
-    │   ├── teachers/
-    │   ├── courses/
-    │   ├── classes/
-    │   ├── assignments/
-    │   ├── files/
-    │   └── notifications/
-    ├── components/
-    │   ├── ui/
-    │   ├── navigation/
-    │   ├── forms/
-    │   └── feedback/
-    ├── services/
-    │   └── pocketbase/
-    │       ├── client.ts
-    │       ├── auth.ts
-    │       └── files.ts
-    ├── hooks/
-    ├── types/
-    ├── utils/
-    └── styles/
+La fundación ya es una aplicación React + TypeScript + Vite con rutas reales y diseño responsive.
+
+Rutas disponibles:
+
+- `/` · web pública / portada
+- `/blog` · blog público
+- `/acceso` · acceso a la plataforma
+- `/alumno` · dashboard de alumno (demo)
+- `/profesor` · dashboard de profesor (demo)
+- `/admin` · dashboard de administración (demo)
+
+Las áreas privadas son todavía vistas de desarrollo. No existe autenticación real hasta conectar PocketBase.
+
+## Arranque local
+
+Desde esta carpeta:
+
+```bash
+npm install
+npm run dev
 ```
 
-## Criterios
+Producción:
 
-- No mezclar lógica de administración con componentes públicos.
-- Las páginas coordinan; la lógica de negocio vive en `features`.
-- La conexión con PocketBase se centraliza en `services/pocketbase`.
-- Los componentes genéricos viven en `components`.
-- Los tipos compartidos viven en `types`.
-- Las rutas privadas comprobarán sesión y rol, pero esto complementa —no sustituye— las reglas de PocketBase.
+```bash
+npm run build
+npm run preview
+```
 
-## Diseño
+## Organización
 
-La identidad visual de la V3 se definirá después de dejar cerrados estructura, navegación y permisos. Evitaremos acoplar el modelo de datos al diseño visual.
+```text
+src/
+├── app/
+│   └── App.tsx
+├── components/
+│   ├── SiteShell.tsx
+│   └── DashboardShell.tsx
+├── features/
+├── pages/
+│   ├── public/
+│   ├── auth/
+│   ├── student/
+│   ├── teacher/
+│   └── admin/
+├── services/
+│   └── pocketbase/
+└── styles/
+    └── global.css
+```
+
+## Principios
+
+1. La web pública y los portales privados comparten una única aplicación y sistema visual.
+2. Los datos de demostración se sustituirán por repositorios/servicios PocketBase, no por llamadas directas repartidas por los componentes.
+3. Las reglas de privacidad se implementarán en PocketBase, además de ocultar opciones en la interfaz.
+4. El administrador podrá gestionar contenido, blog, multimedia, cursos y usuarios sin editar GitHub.
+5. Los archivos privados de alumnos nunca se incluirán en el repositorio.
+
+## Próxima fase
+
+- crear componentes reutilizables del CMS;
+- construir editor de portada;
+- construir biblioteca multimedia;
+- construir gestión de artículos del blog;
+- preparar cliente PocketBase y contratos TypeScript;
+- añadir autenticación real cuando el backend esté disponible.
