@@ -48,7 +48,7 @@ function datetimeLocal(offsetMinutes: number): string {
   return shifted.toISOString().slice(0, 16)
 }
 
-function userName(user?: AppUser): string {
+function userName(user?: AppUser | null): string {
   if (!user) return 'Sin profesor'
   return [user.name, user.surname].filter(Boolean).join(' ') || user.email
 }
