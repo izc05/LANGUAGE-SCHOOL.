@@ -34,6 +34,7 @@ export default function DashboardShell({ role, name, nav, children }: DashboardS
 
   return (
     <div className="dashboard-shell">
+      <a className="skip-link" href="#main-content">Saltar al contenido</a>
       <aside className="dashboard-sidebar">
         <Link className="brand dashboard-brand" to="/">
           <span className="brand-mark">LS</span>
@@ -69,7 +70,7 @@ export default function DashboardShell({ role, name, nav, children }: DashboardS
         </div>
       </aside>
 
-      <section className="dashboard-main">
+      <section className="dashboard-main" id="main-content" tabIndex={-1}>
         <header className="dashboard-topbar">
           <div>
             <span className="eyebrow">{effectiveRole}</span>
