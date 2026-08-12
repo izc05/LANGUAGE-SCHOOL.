@@ -10,6 +10,9 @@ import StudentAssignmentsPage from '../pages/student/StudentAssignmentsPage'
 import StudentClassesPage from '../pages/student/StudentClassesPage'
 import StudentNotificationsPage from '../pages/student/StudentNotificationsPage'
 import TeacherDashboard from '../pages/teacher/TeacherDashboard'
+import TeacherMaterialPage from '../pages/teacher/TeacherMaterialPage'
+import TeacherAssignmentsPage from '../pages/teacher/TeacherAssignmentsPage'
+import TeacherCorrectionsPage from '../pages/teacher/TeacherCorrectionsPage'
 import AdminDashboard from '../pages/admin/AdminDashboard'
 import AdminSiteEditor from '../pages/admin/AdminSiteEditor'
 import AdminMediaLibrary from '../pages/admin/AdminMediaLibrary'
@@ -32,7 +35,11 @@ export default function App() {
       <Route path="/alumno/tareas" element={<RequireRole allow={['STUDENT']}><StudentAssignmentsPage /></RequireRole>} />
       <Route path="/alumno/archivos" element={<RequireRole allow={['STUDENT']}><StudentFilesPage /></RequireRole>} />
       <Route path="/alumno/avisos" element={<RequireRole allow={['STUDENT']}><StudentNotificationsPage /></RequireRole>} />
+
       <Route path="/profesor" element={<RequireRole allow={['TEACHER']}><TeacherDashboard /></RequireRole>} />
+      <Route path="/profesor/material" element={<RequireRole allow={['TEACHER']}><TeacherMaterialPage /></RequireRole>} />
+      <Route path="/profesor/tareas" element={<RequireRole allow={['TEACHER']}><TeacherAssignmentsPage /></RequireRole>} />
+      <Route path="/profesor/correcciones" element={<RequireRole allow={['TEACHER']}><TeacherCorrectionsPage /></RequireRole>} />
 
       <Route path="/admin" element={<RequireRole allow={['ADMIN']}><AdminDashboard /></RequireRole>} />
       <Route path="/admin/web" element={<RequireRole allow={['ADMIN']}><AdminSiteEditor /></RequireRole>} />
@@ -44,6 +51,7 @@ export default function App() {
       <Route path="/admin/clases" element={<RequireRole allow={['ADMIN']}><AdminClassesPage /></RequireRole>} />
 
       <Route path="/alumno/*" element={<Navigate to="/alumno" replace />} />
+      <Route path="/profesor/*" element={<Navigate to="/profesor" replace />} />
       <Route path="/admin/*" element={<Navigate to="/admin" replace />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
