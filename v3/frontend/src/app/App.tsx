@@ -7,6 +7,7 @@ import PricingPage from '../pages/public/PricingPage'
 import TeachersPage from '../pages/public/TeachersPage'
 import AboutPage from '../pages/public/AboutPage'
 import ContactPage from '../pages/public/ContactPage'
+import NotFoundPage from '../pages/public/NotFoundPage'
 import LoginPage from '../pages/auth/LoginPage'
 import StudentDashboard from '../pages/student/StudentDashboard'
 import StudentFilesPage from '../pages/student/StudentFilesPage'
@@ -75,7 +76,7 @@ export default function App() {
       <Route path="/alumno/*" element={<Navigate to="/alumno" replace />} />
       <Route path="/profesor/*" element={<Navigate to="/profesor" replace />} />
       <Route path="/admin/*" element={<Navigate to="/admin" replace />} />
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   )
 }
