@@ -1,6 +1,5 @@
 [Unit]
 Description=Language School PocketBase backup
-RequiresMountsFor=/mnt/language-school-backup
 After=language-school-pocketbase.service
 
 [Service]
