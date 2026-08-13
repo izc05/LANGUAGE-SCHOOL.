@@ -1,5 +1,6 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import DashboardShell from '../../components/DashboardShell'
+import PortalEmptyState from '../../components/PortalEmptyState'
 import { useAuth } from '../../features/auth/AuthProvider'
 import type { AttendanceRecord, ClassRecord } from '../../services/pocketbase/studentPortal'
 import {
@@ -104,7 +105,7 @@ export default function TeacherClassesPage() {
           .sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime())[0] || classRecords[0]
         if (next) setSelectedId(next.id)
       })
-      .catch(() => { if (mounted) setError('No se ha podido cargar la agenda del profesor.') })
+      .catch(() => { if (mounted) setError('No se ha podido cargar tu agenda. Inténtalo de nuevo en unos segundos.') })
       .finally(() => { if (mounted) setLoading(false) })
     return () => { mounted = false }
   }, [isDemoMode])
@@ -122,48 +123,63 @@ export default function TeacherClassesPage() {
         setEnrollments(studentRecords)
         setAttendanceRecords(attendanceRecords)
       })
-      .catch(() => { if (mounted) setError('No se ha podido cargar la asistencia de esta clase.') })
+      .catch(() => { if (mounted) setError('No se ha podido cargar la asistencia de esta clase. Inténtalo de nuevo.') })
       .finally(() => { if (mounted) setDetailLoading(false) })
     return () => { mounted = false }
   }, [isDemoMode, selectedClass?.id])
 
   const orderedClasses = useMemo(() => [...classes].sort((a, b) => new Date(b.starts_at).getTime() - new Date(a.starts_at).getTime()), [classes])
   const attendanceByStudent = useMemo(() => new Map(attendance.map((item) => [item.student, item])), [attendance])
+  const noGroups = !loading && groups.length === 0
 
   async function handleCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    setError(null); setMessage(null)
-    if (!groupId || !topic.trim()) { setError('Selecciona grupo y escribe el tema de la clase.'); return }
-    if (isDemoMode) { setMessage('En modo demo no se guardan nuevas clases.'); return }
+    setError(null)
+    setMessage(null)
+    if (!groupId || !topic.trim()) {
+      setError(noGroups ? 'Todavía no tienes grupos asignados en los que programar una clase.' : 'Selecciona un grupo y escribe el tema de la clase.')
+      return
+    }
+    if (isDemoMode) {
+      setMessage('Clase preparada en la demostración. No se ha guardado ningún cambio real.')
+      return
+    }
     setSaving(true)
     try {
       const record = await createTeacherClass({ groupId, startsAt, endsAt, topic, description })
       setClasses((current) => [record, ...current])
       setSelectedId(record.id)
-      setTopic(''); setDescription('')
+      setTopic('')
+      setDescription('')
       setMessage('Clase creada correctamente.')
     } catch (creationError) {
-      setError(creationError instanceof Error ? creationError.message : 'No se ha podido crear la clase.')
-    } finally { setSaving(false) }
+      setError(creationError instanceof Error ? creationError.message : 'No se ha podido crear la clase. Comprueba el grupo y el horario y vuelve a intentarlo.')
+    } finally {
+      setSaving(false)
+    }
   }
 
   async function changeClassStatus(record: ClassRecord, status: ClassRecord['status']) {
-    setError(null); setMessage(null)
+    setError(null)
+    setMessage(null)
     if (isDemoMode) {
       setClasses((current) => current.map((item) => item.id === record.id ? { ...item, status } : item))
-      setMessage(`Clase marcada como ${statusLabel(status).toLowerCase()} en demo.`)
+      setMessage(`Clase marcada como ${statusLabel(status).toLowerCase()} en la demostración.`)
       return
     }
     try {
       const updated = await updateTeacherClassStatus(record, status)
       setClasses((current) => current.map((item) => item.id === updated.id ? updated : item))
       setMessage(`Clase marcada como ${statusLabel(status).toLowerCase()}.`)
-    } catch { setError('No se ha podido cambiar el estado de la clase.') }
+    } catch {
+      setError('No se ha podido cambiar el estado de la clase.')
+    }
   }
 
   async function registerAttendance(studentId: string, status: AttendanceRecord['status']) {
     if (!selectedClass) return
-    setError(null); setMessage(null)
+    setError(null)
+    setMessage(null)
     if (isDemoMode) {
       const existing = attendanceByStudent.get(studentId)
       const next: AttendanceRecord = existing
@@ -184,32 +200,33 @@ export default function TeacherClassesPage() {
     <DashboardShell role="Profesor" name="Profesor" nav={[...teacherNav]}>
       <div className="dashboard-content teacher-portal-page">
         <header className="teacher-page-heading">
-          <div><span className="eyebrow">AGENDA DOCENTE</span><h2>Clases y asistencia</h2><p>Programa clases únicamente en tus grupos y registra la asistencia de los alumnos con matrícula activa.</p></div>
+          <div><span className="eyebrow">AGENDA DOCENTE</span><h2>Clases y asistencia</h2><p>Programa clases en tus grupos y registra la asistencia de los alumnos con matrícula activa.</p></div>
           <div className="private-space-badge"><strong>{classes.length}</strong><span>clases registradas</span></div>
         </header>
 
-        {loading && <div className="cms-notice">Cargando agenda…</div>}
-        {message && <div className="cms-notice success-notice">{message}</div>}
-        {error && <div className="cms-notice auth-error">{error}</div>}
+        {loading && <div className="cms-notice" role="status">Cargando agenda…</div>}
+        {message && <div className="cms-notice success-notice" role="status">{message}</div>}
+        {error && <div className="cms-notice auth-error" role="alert">{error}</div>}
 
         <div className="teacher-class-workspace">
           <section className="panel teacher-class-create">
             <div className="panel-heading"><div><span className="eyebrow">NUEVA CLASE</span><h3>Programar</h3></div></div>
+            {noGroups && <PortalEmptyState compact title="Sin grupos asignados" description="Cuando Administración te asigne un grupo activo podrás programar clases desde aquí." />}
             <form onSubmit={handleCreate}>
               <label>Grupo</label>
-              <select value={groupId} onChange={(e) => setGroupId(e.target.value)} required>
-                <option value="">Selecciona grupo</option>
+              <select value={groupId} onChange={(e) => setGroupId(e.target.value)} required disabled={noGroups}>
+                <option value="">{noGroups ? 'Sin grupos disponibles' : 'Selecciona grupo'}</option>
                 {groups.map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}
               </select>
               <label>Tema</label>
-              <input value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="Ej. Travel & experiences" required />
+              <input value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="Ej. Travel & experiences" required disabled={noGroups} />
               <label>Descripción</label>
-              <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} placeholder="Objetivos, material o notas de la sesión" />
+              <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} placeholder="Objetivos, material o notas de la sesión" disabled={noGroups} />
               <div className="teacher-date-grid">
-                <div><label>Inicio</label><input type="datetime-local" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} required /></div>
-                <div><label>Fin</label><input type="datetime-local" value={endsAt} onChange={(e) => setEndsAt(e.target.value)} required /></div>
+                <div><label>Inicio</label><input type="datetime-local" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} required disabled={noGroups} /></div>
+                <div><label>Fin</label><input type="datetime-local" value={endsAt} onChange={(e) => setEndsAt(e.target.value)} required disabled={noGroups} /></div>
               </div>
-              <button className="button button-primary button-full" type="submit" disabled={saving || groups.length === 0}>{saving ? 'Guardando…' : 'Crear clase'}</button>
+              <button className="button button-primary button-full" type="submit" disabled={saving || noGroups}>{saving ? 'Guardando…' : 'Crear clase'}</button>
             </form>
           </section>
 
@@ -223,13 +240,18 @@ export default function TeacherClassesPage() {
                   <b>→</b>
                 </button>
               ))}
-              {!loading && orderedClasses.length === 0 && <p className="muted">Todavía no hay clases programadas.</p>}
+              {!loading && orderedClasses.length === 0 && <PortalEmptyState compact title="Todavía no hay clases programadas" description={noGroups ? 'Primero necesitas un grupo asignado por Administración.' : 'Crea tu primera clase desde el formulario y aparecerá aquí.'} />}
             </div>
           </section>
         </div>
 
         <section className="panel teacher-attendance-panel">
-          {!selectedClass ? <div className="student-empty-detail"><span>ASISTENCIA</span><h3>Selecciona una clase</h3><p>Cuando selecciones una clase aparecerán únicamente los alumnos con matrícula activa en su grupo.</p></div> : <>
+          {!selectedClass ? (
+            <PortalEmptyState
+              title={classes.length === 0 ? 'Sin clases para registrar asistencia' : 'Selecciona una clase'}
+              description={classes.length === 0 ? 'Cuando programes una clase podrás registrar aquí la asistencia de sus alumnos.' : 'Al seleccionar una clase aparecerán los alumnos con matrícula activa en su grupo.'}
+            />
+          ) : <>
             <div className="teacher-class-detail-heading">
               <div><span className="eyebrow">CLASE SELECCIONADA</span><h3>{selectedClass.topic}</h3><p>{selectedClass.expand?.group?.name || 'Grupo'} · {formatDateTime(selectedClass.starts_at)} · {statusLabel(selectedClass.status)}</p></div>
               <div className="teacher-class-status-actions">
@@ -239,14 +261,14 @@ export default function TeacherClassesPage() {
               </div>
             </div>
 
-            {detailLoading ? <p className="muted">Cargando alumnos y asistencia…</p> : <div className="teacher-attendance-list">
+            {detailLoading ? <div className="cms-notice" role="status">Cargando alumnos y asistencia…</div> : <div className="teacher-attendance-list">
               {enrollments.map((enrollment) => {
                 const student = enrollment.expand?.student
                 const current = attendanceByStudent.get(enrollment.student)
                 const name = student ? [student.name, student.surname].filter(Boolean).join(' ') : 'Alumno'
                 return <article key={enrollment.id}>
                   <span className="avatar-mini">{name.charAt(0).toUpperCase()}</span>
-                  <div><strong>{name}</strong><small>{student?.email || 'Alumno autorizado'} · {attendanceLabel(current?.status)}</small></div>
+                  <div><strong>{name}</strong><small>{student?.email || 'Alumno asignado'} · {attendanceLabel(current?.status)}</small></div>
                   <div className="teacher-attendance-actions">
                     <button className={current?.status === 'PRESENT' ? 'active' : ''} type="button" onClick={() => void registerAttendance(enrollment.student, 'PRESENT')}>Presente</button>
                     <button className={current?.status === 'ABSENT' ? 'active' : ''} type="button" onClick={() => void registerAttendance(enrollment.student, 'ABSENT')}>Ausente</button>
@@ -254,7 +276,7 @@ export default function TeacherClassesPage() {
                   </div>
                 </article>
               })}
-              {enrollments.length === 0 && <p className="muted">No hay alumnos con matrícula activa en este grupo.</p>}
+              {enrollments.length === 0 && <PortalEmptyState compact title="Sin alumnos activos en este grupo" description="La asistencia se habilitará cuando el grupo tenga alumnos con matrícula activa." />}
             </div>}
           </>}
         </section>
