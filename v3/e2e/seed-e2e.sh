@@ -20,6 +20,11 @@ post_json() {
   fi
 }
 
+patch_json() {
+  local url="$1" token="$2" body="$3"
+  curl -fsS -X PATCH "$url" -H 'Content-Type: application/json' -H "Authorization: $token" --data "$body"
+}
+
 authenticate() {
   post_json "$PB_URL/api/collections/$1/auth-with-password" '' \
     "$(jq -nc --arg identity "$2" --arg password "$3" '{identity:$identity,password:$password}')"
@@ -38,6 +43,11 @@ ADMIN="$(create_record 'users' "$SUPER_TOKEN" "$(jq -nc --arg email "$ADMIN_EMAI
 ADMIN_ID="$(jq -r '.id' <<<"$ADMIN")"
 ADMIN_AUTH="$(authenticate 'users' "$ADMIN_EMAIL" "$ADMIN_PASSWORD")"
 ADMIN_TOKEN="$(jq -r '.token' <<<"$ADMIN_AUTH")"
+
+echo 'E2E seed: setting academy public identity'
+SITE_SETTINGS="$(curl -fsS "$PB_URL/api/collections/site_settings/records?perPage=1" -H "Authorization: $ADMIN_TOKEN")"
+SITE_SETTINGS_ID="$(jq -r '.items[0].id' <<<"$SITE_SETTINGS")"
+patch_json "$PB_URL/api/collections/site_settings/records/$SITE_SETTINGS_ID" "$ADMIN_TOKEN" '{"academy_name":"E2E Language Academy","phone":"","email":"","whatsapp":"","address":"Test Academy Address","social_links":{},"legal_texts":{}}' >/dev/null
 
 echo 'E2E seed: creating teacher and safe public teacher profile'
 TEACHER="$(create_record 'users' "$ADMIN_TOKEN" "$(jq -nc --arg email "$TEACHER_EMAIL" --arg password "$TEACHER_PASSWORD" '{email:$email,password:$password,passwordConfirm:$password,name:"E2E",surname:"Teacher",role:"TEACHER",status:"ACTIVE",phone:""}')")"
