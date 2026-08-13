@@ -46,6 +46,7 @@ export default function TeacherAssignmentsPage() {
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [pendingRemoval, setPendingRemoval] = useState<AssignmentRecord | null>(null)
 
   const targets = useMemo<TargetOption[]>(() => {
     const groupTargets = groups.map((group) => ({ key: `GROUP:${group.id}`, type: 'GROUP' as const, id: group.id, label: `Grupo · ${group.name}` }))
@@ -166,7 +167,7 @@ export default function TeacherAssignmentsPage() {
   }
 
   async function remove(record: AssignmentRecord) {
-    if (!window.confirm(`¿Eliminar "${record.title}"?`)) return
+    setPendingRemoval(null)
     if (isDemoMode) {
       setAssignments((current) => current.filter((item) => item.id !== record.id))
       return
@@ -204,7 +205,7 @@ export default function TeacherAssignmentsPage() {
           <section className="panel teacher-record-list">
             <div className="panel-heading"><div><span className="eyebrow">MIS TAREAS</span><h3>{assignments.length} actividades</h3></div></div>
             <div>
-              {assignments.map((record) => <article key={record.id}><span className="teacher-record-icon">T</span><div><strong>{record.title}</strong><small>{statusLabel(record.status)} · {formatDue(record.due_at)}</small></div><div className="teacher-record-actions">{record.attachment && <button type="button" onClick={() => void openAttachment(record)}>Adjunto</button>}<button type="button" onClick={() => void toggleClosed(record)}>{record.status === 'CLOSED' ? 'Reabrir' : 'Cerrar'}</button><button type="button" onClick={() => void remove(record)}>Eliminar</button></div></article>)}
+              {assignments.map((record) => <article key={record.id}><span className="teacher-record-icon">T</span><div><strong>{record.title}</strong><small>{statusLabel(record.status)} · {formatDue(record.due_at)}</small></div><div className="teacher-record-actions">{record.attachment && <button type="button" onClick={() => void openAttachment(record)}>Adjunto</button>}<button type="button" onClick={() => void toggleClosed(record)}>{record.status === 'CLOSED' ? 'Reabrir' : 'Cerrar'}</button>{pendingRemoval?.id === record.id ? <><button type="button" onClick={() => setPendingRemoval(null)}>Cancelar</button><button type="button" className="button-danger" onClick={() => void remove(record)}>Confirmar eliminación</button></> : <button type="button" onClick={() => setPendingRemoval(record)}>Eliminar</button>}</div></article>)}
               {!loading && assignments.length === 0 && <PortalEmptyState compact title="Todavía no has creado tareas" description="Las actividades que prepares aparecerán aquí con su estado y fecha límite." />}
             </div>
           </section>
