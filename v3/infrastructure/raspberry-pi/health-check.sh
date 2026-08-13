@@ -2,12 +2,17 @@
 set -euo pipefail
 
 PRODUCTION_ENV="${PRODUCTION_ENV:-/etc/language-school/production.env}"
-if [[ ! -f "$PRODUCTION_ENV" ]]; then
-  echo "Production environment file not found: $PRODUCTION_ENV" >&2
+if [[ -r "$PRODUCTION_ENV" ]]; then
+  # shellcheck disable=SC1090
+  source "$PRODUCTION_ENV"
+elif command -v sudo >/dev/null && sudo test -r "$PRODUCTION_ENV"; then
+  # production.env is intentionally root-owned; read it without relaxing its permissions.
+  # shellcheck disable=SC1090
+  source <(sudo cat -- "$PRODUCTION_ENV")
+else
+  echo "Production environment file not found or unreadable: $PRODUCTION_ENV" >&2
   exit 1
 fi
-# shellcheck disable=SC1090
-source "$PRODUCTION_ENV"
 
 : "${PB_URL:?PB_URL is required in $PRODUCTION_ENV}"
 : "${PROXY_URL:?PROXY_URL is required in $PRODUCTION_ENV}"

@@ -7,9 +7,13 @@ FRONTEND_SOURCE="${FRONTEND_SOURCE:-$V3_DIR/frontend}"
 FRONTEND_TARGET="${FRONTEND_TARGET:-/opt/language-school/frontend}"
 PRODUCTION_ENV="${PRODUCTION_ENV:-/etc/language-school/production.env}"
 
-if [[ -f "$PRODUCTION_ENV" ]]; then
+if [[ -r "$PRODUCTION_ENV" ]]; then
   # shellcheck disable=SC1090
   source "$PRODUCTION_ENV"
+elif command -v sudo >/dev/null && sudo test -r "$PRODUCTION_ENV"; then
+  # production.env is intentionally root-owned; read it without relaxing its permissions.
+  # shellcheck disable=SC1090
+  source <(sudo cat -- "$PRODUCTION_ENV")
 fi
 
 PUBLIC_ORIGIN="${PUBLIC_ORIGIN:-}"
