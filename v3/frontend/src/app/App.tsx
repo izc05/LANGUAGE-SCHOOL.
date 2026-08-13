@@ -36,6 +36,7 @@ import AdminCoursesPage from '../pages/admin/AdminCoursesPage'
 import AdminClassesPage from '../pages/admin/AdminClassesPage'
 import AdminPricingPage from '../pages/admin/AdminPricingPage'
 import AdminSettingsPage from '../pages/admin/AdminSettingsPage'
+import AdminSystemStatusPage from '../pages/admin/AdminSystemStatusPage'
 
 export default function App() {
   return (
@@ -79,6 +80,7 @@ export default function App() {
       <Route path="/admin/clases" element={<RequireRole allow={['ADMIN']}><AdminClassesPage /></RequireRole>} />
       <Route path="/admin/tarifas" element={<RequireRole allow={['ADMIN']}><AdminPricingPage /></RequireRole>} />
       <Route path="/admin/configuracion" element={<RequireRole allow={['ADMIN']}><AdminSettingsPage /></RequireRole>} />
+      <Route path="/admin/sistema" element={<RequireRole allow={['ADMIN']}><AdminSystemStatusPage /></RequireRole>} />
 
       <Route path="/alumno/*" element={<Navigate to="/alumno" replace />} />
       <Route path="/profesor/*" element={<Navigate to="/profesor" replace />} />
