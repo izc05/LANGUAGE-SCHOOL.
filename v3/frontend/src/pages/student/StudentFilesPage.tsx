@@ -143,14 +143,10 @@ export default function StudentFilesPage() {
       return
     }
 
-    const downloadTarget = `student-file-download-${record.id}`
-    const downloadTab = window.open('about:blank', downloadTarget)
     try {
       const url = await getMyFileDownloadUrl(record)
-      if (downloadTab) window.open(url, downloadTarget)
-      else window.location.assign(url)
+      window.location.assign(url)
     } catch {
-      downloadTab?.close()
       setError('No se ha podido preparar la descarga. Inténtalo de nuevo.')
     }
   }
