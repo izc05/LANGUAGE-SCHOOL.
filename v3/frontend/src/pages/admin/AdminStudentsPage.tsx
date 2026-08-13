@@ -1,5 +1,6 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import DashboardShell from '../../components/DashboardShell'
+import PortalEmptyState from '../../components/PortalEmptyState'
 import { useAuth } from '../../features/auth/AuthProvider'
 import {
   createAdminStudent,
@@ -75,7 +76,7 @@ export default function AdminStudentsPage() {
         setClasses(classRecords)
         if (studentUsers[0]) setSelectedId(studentUsers[0].id)
       })
-      .catch(() => { if (mounted) setError('No se han podido cargar los alumnos de PocketBase.') })
+      .catch(() => { if (mounted) setError('No se han podido cargar los alumnos. Inténtalo de nuevo en unos segundos.') })
       .finally(() => { if (mounted) setLoading(false) })
     return () => { mounted = false }
   }, [isDemoMode])
@@ -118,31 +119,49 @@ export default function AdminStudentsPage() {
 
   async function handleCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    setError(null); setMessage(null)
-    if (isDemoMode) { setMessage('El alta real estará disponible con PocketBase conectado.'); return }
+    setError(null)
+    setMessage(null)
+    if (isDemoMode) {
+      setMessage('Alta preparada en la demostración. No se ha creado ninguna cuenta real.')
+      return
+    }
     setSaving(true)
     try {
       const created = await createAdminStudent({ email, password, name, surname, phone })
       setUsers((current) => [...current, created.user].sort((a, b) => `${a.name} ${a.surname}`.localeCompare(`${b.name} ${b.surname}`, 'es')))
       setSelectedId(created.user.id)
-      setName(''); setSurname(''); setEmail(''); setPhone(''); setPassword('')
+      setName('')
+      setSurname('')
+      setEmail('')
+      setPhone('')
+      setPassword('')
       setShowCreate(false)
       setMessage('Alumno creado correctamente. Ya puede iniciar sesión con su contraseña inicial.')
     } catch (creationError) {
       setError(creationError instanceof Error ? creationError.message : 'No se ha podido crear el alumno.')
-    } finally { setSaving(false) }
+    } finally {
+      setSaving(false)
+    }
   }
 
   async function toggleSelectedStatus() {
     if (!selected) return
-    setError(null); setMessage(null)
-    if (isDemoMode) { setMessage('El cambio de estado requiere PocketBase conectado.'); return }
+    setError(null)
+    setMessage(null)
+    const nextStatus = selected.user.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'
+    const actionLabel = nextStatus === 'ACTIVE' ? 'activar' : 'desactivar'
+    if (!window.confirm(`¿Quieres ${actionLabel} la cuenta de ${selected.name}?`)) return
+    if (isDemoMode) {
+      setMessage(`Cambio a ${nextStatus === 'ACTIVE' ? 'activo' : 'inactivo'} preparado en la demostración.`)
+      return
+    }
     try {
-      const nextStatus = selected.user.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'
       const updated = await updateAdminUser(selected.user, { status: nextStatus })
       setUsers((current) => current.map((item) => item.id === updated.id ? updated : item))
       setMessage(nextStatus === 'ACTIVE' ? 'Alumno activado.' : 'Alumno desactivado.')
-    } catch { setError('No se ha podido cambiar el estado del alumno.') }
+    } catch {
+      setError('No se ha podido cambiar el estado del alumno.')
+    }
   }
 
   return (
@@ -152,23 +171,23 @@ export default function AdminStudentsPage() {
           <div>
             <span className="eyebrow">PLATAFORMA · ALUMNOS</span>
             <h2>Alumnos y espacio privado</h2>
-            <p>Usuarios reales, matrícula académica y acceso privado gestionados desde PocketBase.</p>
+            <p>Gestiona cuentas de alumno, estado de acceso, matrícula, grupo, profesor y próxima clase desde un único lugar.</p>
           </div>
           <button className="button button-primary" type="button" onClick={() => setShowCreate((value) => !value)}>{showCreate ? 'Cerrar alta' : '+ Nuevo alumno'}</button>
         </header>
 
-        {loading && <div className="cms-notice">Cargando alumnos…</div>}
-        {message && <div className="cms-notice success-notice">{message}</div>}
-        {error && <div className="cms-notice auth-error">{error}</div>}
+        {loading && <div className="cms-notice" role="status">Cargando alumnos…</div>}
+        {message && <div className="cms-notice success-notice" role="status">{message}</div>}
+        {error && <div className="cms-notice auth-error" role="alert">{error}</div>}
 
         {showCreate && <section className="panel admin-inline-create">
           <div className="panel-heading"><div><span className="eyebrow">ALTA</span><h3>Nuevo alumno</h3></div><span className="status info">Cuenta + perfil</span></div>
           <form onSubmit={handleCreate} className="admin-create-grid">
             <div><label>Nombre</label><input value={name} onChange={(e) => setName(e.target.value)} required /></div>
             <div><label>Apellidos</label><input value={surname} onChange={(e) => setSurname(e.target.value)} required /></div>
-            <div><label>Email</label><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></div>
-            <div><label>Teléfono</label><input value={phone} onChange={(e) => setPhone(e.target.value)} /></div>
-            <div><label>Contraseña inicial</label><input type="password" minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} required /></div>
+            <div><label>Email</label><input type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></div>
+            <div><label>Teléfono</label><input type="tel" autoComplete="tel" value={phone} onChange={(e) => setPhone(e.target.value)} /></div>
+            <div><label>Contraseña inicial</label><input type="password" autoComplete="new-password" minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} required /></div>
             <div className="admin-create-action"><button className="button button-primary" type="submit" disabled={saving}>{saving ? 'Creando…' : 'Crear alumno'}</button></div>
           </form>
         </section>}
@@ -199,12 +218,12 @@ export default function AdminStudentsPage() {
                   <span><i className={`student-status ${student.status === 'Activo' ? 'active' : 'paused'}`}>{student.status}</i></span>
                 </button>
               ))}
-              {!loading && filteredStudents.length === 0 && <p className="muted">No hay alumnos que coincidan con el filtro.</p>}
+              {!loading && filteredStudents.length === 0 && <PortalEmptyState compact title={query.trim() || status !== 'Todos' ? 'No hay alumnos con estos filtros' : 'Todavía no hay alumnos'} description={query.trim() || status !== 'Todos' ? 'Prueba con otra búsqueda o selecciona Todos.' : 'Crea el primer alumno para empezar a organizar matrículas y clases.'} />}
             </div>
           </section>
 
           <aside className="panel student-detail-panel">
-            {!selected ? <div className="student-empty-detail"><span>ALUMNOS</span><h3>Sin alumnos</h3><p>Crea el primer alumno para empezar la gestión académica.</p></div> : <>
+            {!selected ? <PortalEmptyState title="Sin alumnos" description="Crea el primer alumno para empezar la gestión académica." /> : <>
               <div className="student-detail-heading"><span className="student-avatar-large">{selected.initials}</span><div><span className="eyebrow">FICHA DEL ALUMNO</span><h3>{selected.name}</h3><p>{selected.email}</p></div></div>
               <div className="student-detail-tags"><span>{selected.level}</span><span>{selected.program}</span><span>{selected.group}</span></div>
               <div className="student-detail-grid">
@@ -214,8 +233,8 @@ export default function AdminStudentsPage() {
                 <div><span>Estado</span><strong>{selected.status}</strong></div>
               </div>
               <div className="student-private-space">
-                <div className="panel-heading"><div><span className="eyebrow">ESPACIO PRIVADO</span><h3>Aislamiento activo</h3></div><span className="status success">Protegido</span></div>
-                <p className="muted">Los archivos del alumno permanecen en `student_files` y solo se sirven mediante las reglas de acceso y tokens protegidos de PocketBase.</p>
+                <div className="panel-heading"><div><span className="eyebrow">ESPACIO PRIVADO</span><h3>Acceso protegido</h3></div><span className="status success">Protegido</span></div>
+                <p className="muted">Los archivos y recursos privados del alumno solo son accesibles para su cuenta y para el personal autorizado según su relación académica.</p>
               </div>
               <div className="student-detail-actions">
                 <button className="button button-primary" type="button" onClick={() => void toggleSelectedStatus()}>{selected.user.status === 'ACTIVE' ? 'Desactivar alumno' : 'Activar alumno'}</button>
