@@ -1,5 +1,6 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import DashboardShell from '../../components/DashboardShell'
+import PortalEmptyState from '../../components/PortalEmptyState'
 import { useAuth } from '../../features/auth/AuthProvider'
 import {
   createAdminTeacher,
@@ -65,7 +66,7 @@ export default function AdminTeachersPage() {
         setEnrollments(enrollmentRecords)
         setClasses(classRecords)
       })
-      .catch(() => { if (mounted) setError('No se ha podido cargar el equipo docente.') })
+      .catch(() => { if (mounted) setError('No se ha podido cargar el equipo docente. Inténtalo de nuevo en unos segundos.') })
       .finally(() => { if (mounted) setLoading(false) })
     return () => { mounted = false }
   }, [isDemoMode])
@@ -93,53 +94,72 @@ export default function AdminTeachersPage() {
 
   async function handleCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    setError(null); setMessage(null)
-    if (isDemoMode) { setMessage('El alta real estará disponible con PocketBase conectado.'); return }
+    setError(null)
+    setMessage(null)
+    if (isDemoMode) {
+      setMessage('Alta preparada en la demostración. No se ha creado ninguna cuenta real.')
+      return
+    }
     setSaving(true)
     try {
       const specialtyList = specialties.split(',').map((value) => value.trim()).filter(Boolean)
       const created = await createAdminTeacher({ email, password, name, surname, phone, specialties: specialtyList, publicProfile: true })
       setTeachers((current) => [...current, created.user].sort((a, b) => `${a.name} ${a.surname}`.localeCompare(`${b.name} ${b.surname}`, 'es')))
-      setName(''); setSurname(''); setEmail(''); setPhone(''); setPassword(''); setSpecialties('')
+      setName('')
+      setSurname('')
+      setEmail('')
+      setPhone('')
+      setPassword('')
+      setSpecialties('')
       setShowCreate(false)
       setMessage('Profesor creado correctamente. Ya puede iniciar sesión con su contraseña inicial.')
     } catch (creationError) {
       setError(creationError instanceof Error ? creationError.message : 'No se ha podido crear el profesor.')
-    } finally { setSaving(false) }
+    } finally {
+      setSaving(false)
+    }
   }
 
   async function toggleTeacher(record: TeacherView) {
-    setError(null); setMessage(null)
-    if (isDemoMode) { setMessage('El cambio de estado requiere PocketBase conectado.'); return }
+    setError(null)
+    setMessage(null)
+    const nextStatus = record.user.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'
+    const actionLabel = nextStatus === 'ACTIVE' ? 'activar' : 'desactivar'
+    if (!window.confirm(`¿Quieres ${actionLabel} la cuenta de ${record.name}?`)) return
+    if (isDemoMode) {
+      setMessage(`Cambio a ${nextStatus === 'ACTIVE' ? 'activo' : 'inactivo'} preparado en la demostración.`)
+      return
+    }
     try {
-      const nextStatus = record.user.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'
       const updated = await updateAdminUser(record.user, { status: nextStatus })
       setTeachers((current) => current.map((item) => item.id === updated.id ? updated : item))
       setMessage(nextStatus === 'ACTIVE' ? 'Profesor activado.' : 'Profesor desactivado.')
-    } catch { setError('No se ha podido cambiar el estado del profesor.') }
+    } catch {
+      setError('No se ha podido cambiar el estado del profesor.')
+    }
   }
 
   return (
     <DashboardShell role="Administrador" name="Admin" nav={[...adminNav]}>
       <div className="dashboard-content cms-page">
         <header className="cms-page-heading">
-          <div><span className="eyebrow">PLATAFORMA · PROFESORES</span><h2>Equipo docente</h2><p>Profesores reales, grupos asignados, alumnos relacionados y carga docente desde PocketBase.</p></div>
+          <div><span className="eyebrow">PLATAFORMA · PROFESORES</span><h2>Equipo docente</h2><p>Gestiona profesores, grupos asignados, alumnos relacionados y carga docente desde un único lugar.</p></div>
           <button className="button button-primary" type="button" onClick={() => setShowCreate((value) => !value)}>{showCreate ? 'Cerrar alta' : '+ Nuevo profesor'}</button>
         </header>
 
-        {loading && <div className="cms-notice">Cargando profesores…</div>}
-        {message && <div className="cms-notice success-notice">{message}</div>}
-        {error && <div className="cms-notice auth-error">{error}</div>}
+        {loading && <div className="cms-notice" role="status">Cargando profesores…</div>}
+        {message && <div className="cms-notice success-notice" role="status">{message}</div>}
+        {error && <div className="cms-notice auth-error" role="alert">{error}</div>}
 
         {showCreate && <section className="panel admin-inline-create">
           <div className="panel-heading"><div><span className="eyebrow">ALTA</span><h3>Nuevo profesor</h3></div><span className="status info">Cuenta + perfil</span></div>
           <form onSubmit={handleCreate} className="admin-create-grid">
             <div><label>Nombre</label><input value={name} onChange={(e) => setName(e.target.value)} required /></div>
             <div><label>Apellidos</label><input value={surname} onChange={(e) => setSurname(e.target.value)} required /></div>
-            <div><label>Email</label><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></div>
-            <div><label>Teléfono</label><input value={phone} onChange={(e) => setPhone(e.target.value)} /></div>
+            <div><label>Email</label><input type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></div>
+            <div><label>Teléfono</label><input type="tel" autoComplete="tel" value={phone} onChange={(e) => setPhone(e.target.value)} /></div>
             <div><label>Especialidades</label><input value={specialties} onChange={(e) => setSpecialties(e.target.value)} placeholder="Kids, B2, Speaking" /></div>
-            <div><label>Contraseña inicial</label><input type="password" minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} required /></div>
+            <div><label>Contraseña inicial</label><input type="password" autoComplete="new-password" minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} required /></div>
             <div className="admin-create-action"><button className="button button-primary" type="submit" disabled={saving}>{saving ? 'Creando…' : 'Crear profesor'}</button></div>
           </form>
         </section>}
@@ -164,7 +184,7 @@ export default function AdminTeachersPage() {
               <div className="teacher-card-actions"><button type="button" onClick={() => void toggleTeacher(teacher)}>{teacher.user.status === 'ACTIVE' ? 'Desactivar' : 'Activar'}</button></div>
             </article>
           ))}
-          {!loading && views.length === 0 && <article className="panel"><p className="muted">Todavía no hay profesores registrados.</p></article>}
+          {!loading && views.length === 0 && <PortalEmptyState title="Todavía no hay profesores registrados" description="Crea el primer profesor para asignarle grupos, alumnos y clases." />}
         </section>
       </div>
     </DashboardShell>
