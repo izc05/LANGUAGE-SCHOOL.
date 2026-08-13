@@ -72,7 +72,7 @@ export default function AdminMediaLibrary() {
         if (mounted) setItems(records.map(recordToItem))
       })
       .catch(() => {
-        if (mounted) setError('No se ha podido cargar la biblioteca multimedia de PocketBase.')
+        if (mounted) setError('No se ha podido cargar la biblioteca multimedia. Inténtalo de nuevo.')
       })
       .finally(() => {
         if (mounted) setLoading(false)
@@ -112,7 +112,7 @@ export default function AdminMediaLibrary() {
         mediaType: 'IMAGE',
       })
       setItems((current) => [recordToItem(record), ...current])
-      setLastUpload(`${file.name} · guardado en PocketBase`)
+      setLastUpload(`${file.name} · guardado correctamente`)
     } catch {
       setError('No se ha podido subir la imagen. Revisa conexión, formato y permisos ADMIN.')
     } finally {
@@ -135,7 +135,7 @@ export default function AdminMediaLibrary() {
     try {
       await deleteMedia(item.id)
       setItems((current) => current.filter((candidate) => candidate.id !== item.id))
-      setLastUpload(`${item.name} · eliminado de PocketBase`)
+      setLastUpload(`${item.name} · eliminado correctamente`)
     } catch {
       setError('No se ha podido eliminar la imagen. Puede estar en uso o faltar permisos.')
     }
@@ -165,7 +165,7 @@ export default function AdminMediaLibrary() {
           </label>
         </header>
 
-        {loading && <div className="cms-notice">Cargando biblioteca desde PocketBase…</div>}
+        {loading && <div className="cms-notice">Cargando biblioteca multimedia…</div>}
         {lastUpload && <div className="cms-notice success-notice"><strong>Multimedia:</strong> {lastUpload}</div>}
         {error && <div className="cms-notice">{error}</div>}
 
@@ -208,13 +208,13 @@ export default function AdminMediaLibrary() {
         <section className="panel storage-panel">
           <div>
             <span className="eyebrow">ALMACENAMIENTO</span>
-            <h3>{isDemoMode ? 'Preparado para el SSD de la Raspberry Pi' : 'Biblioteca conectada a PocketBase'}</h3>
-            <p>Las imágenes públicas están separadas de los archivos privados de alumnos. `student_files` mantiene sus propias reglas y almacenamiento protegido.</p>
+            <h3>{isDemoMode ? 'Biblioteca de demostración' : 'Biblioteca lista para usar'}</h3>
+            <p>Las imágenes públicas se gestionan por separado de los archivos privados del alumnado.</p>
           </div>
           <div className="storage-meter">
             <div><span>{isDemoMode ? 'Demo de capacidad' : 'Archivos cargados'}</span><strong>{items.length}</strong></div>
             <div className="progress-line"><span style={{ width: `${Math.min(100, items.length * 2)}%` }} /></div>
-            <small>El uso real de disco se medirá en el servidor de la Raspberry.</small>
+            <small>El espacio ocupado se actualizará según los archivos guardados.</small>
           </div>
         </section>
       </div>
