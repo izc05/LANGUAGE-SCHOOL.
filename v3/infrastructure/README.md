@@ -1,6 +1,6 @@
 # Language School V3 · Infraestructura de producción
 
-Este directorio contiene el paquete reproducible para desplegar la V3 en una Raspberry Pi 4 ARM64 sin exponer PocketBase directamente a Internet.
+Este directorio contiene el paquete reproducible para desplegar la V3 en Linux amd64 o ARM64 sin exponer PocketBase directamente a Internet. El mismo flujo sirve para el mini PC de preproducción y para la futura Raspberry Pi 4.
 
 ## Arquitectura objetivo
 
@@ -25,9 +25,9 @@ PocketBase escucha exclusivamente en `127.0.0.1:8090`. Nginx escucha exclusivame
 ## Versiones y decisiones fijadas
 
 - PocketBase: `0.39.9`.
-- Raspberry: sistema Linux ARM64.
-- Asset PocketBase: `pocketbase_0.39.9_linux_arm64.zip`.
-- SHA-256 fijado en `.env.example` e `install-pocketbase.sh`.
+- Hosts: Linux `x86_64`/`amd64` y `aarch64`/`arm64`.
+- Assets PocketBase: `linux_amd64` o `linux_arm64`, seleccionados automáticamente con `uname -m`.
+- SHA-256 oficial e independiente para cada arquitectura, fijado en `.env.example` e `install-pocketbase.sh`.
 - Usuario de servicio: `languageschool`.
 - Frontend: `VITE_APP_MODE=connected`.
 - `VITE_POCKETBASE_URL` se compila con el mismo `PUBLIC_ORIGIN` HTTPS de la web.
@@ -63,10 +63,10 @@ infrastructure/
 
 Antes del despliegue físico:
 
-- Linux ARM64.
+- Linux amd64 o ARM64.
 - SSD principal correctamente montado/arrancable.
 - `curl`, `unzip`, `sha256sum`, `jq`, `rsync` y `systemd`.
-- Node.js/npm compatible con el frontend para compilar en la Raspberry, o un `dist/` precompilado preparado externamente.
+- Node.js `20.19+` o `22.12+` y npm para compilar el frontend, o un `dist/` precompilado preparado externamente.
 - Nginx se puede instalar con `reverse-proxy/install-nginx.sh`.
 - Disco externo montado antes de habilitar backup automático.
 
@@ -83,13 +83,13 @@ sudo nano /etc/language-school/production.env
 
 Ajustar al menos `PUBLIC_ORIGIN`. El archivo real de producción no se guarda en GitHub.
 
-### 2. Instalar PocketBase ARM64
+### 2. Instalar PocketBase para la arquitectura del host
 
 ```bash
 sudo bash v3/infrastructure/raspberry-pi/install-pocketbase.sh
 ```
 
-El instalador verifica arquitectura y SHA-256, crea usuario/directorios, copia migraciones y registra el servicio. No inicia todavía PocketBase.
+El instalador detecta `x86_64`/`amd64` o `aarch64`/`arm64`, verifica el SHA-256 correspondiente, crea usuario/directorios, copia migraciones y registra el servicio. No inicia todavía PocketBase.
 
 ### 3. Aplicar migraciones
 
@@ -113,7 +113,7 @@ Las contraseñas se piden de forma interactiva y no se escriben en archivos del 
 sudo bash v3/infrastructure/reverse-proxy/install-nginx.sh
 ```
 
-Nginx queda en `127.0.0.1:8080` y PocketBase continúa en `127.0.0.1:8090`.
+Nginx y PocketBase usan `PROXY_URL` y `PB_URL` de `/etc/language-school/production.env`. El instalador solo añade el sitio de Language School, valida la configuración global y recarga Nginx sin reemplazar otros sitios.
 
 ### 6. Compilar y desplegar frontend
 

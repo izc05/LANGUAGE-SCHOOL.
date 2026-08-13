@@ -27,10 +27,10 @@ jobs:
         with:
           node-version: '22'
           cache: 'npm'
-          cache-dependency-path: v3/frontend/package.json
+          cache-dependency-path: v3/frontend/package-lock.json
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Build V3 frontend
         run: npm run build

@@ -30,6 +30,21 @@ for command in node npm rsync; do
   }
 done
 
+NODE_VERSION="$(node --version)"
+NODE_VERSION="${NODE_VERSION#v}"
+IFS='.' read -r NODE_MAJOR NODE_MINOR _ <<< "$NODE_VERSION"
+if ! {
+  (( NODE_MAJOR == 20 && NODE_MINOR >= 19 )) ||
+  (( NODE_MAJOR == 22 && NODE_MINOR >= 12 )) ||
+  (( NODE_MAJOR > 22 ));
+}; then
+  echo "Node.js $NODE_VERSION is not supported by Vite 8." >&2
+  echo 'Install Node.js 20.19+ or 22.12+ before deploying the frontend.' >&2
+  exit 1
+fi
+
+echo "Node.js $NODE_VERSION satisfies the Vite 8 runtime requirement."
+
 if [[ ! -f "$FRONTEND_SOURCE/package.json" ]]; then
   echo "Frontend source not found: $FRONTEND_SOURCE" >&2
   exit 1

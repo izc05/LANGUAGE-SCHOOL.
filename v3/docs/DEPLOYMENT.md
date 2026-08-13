@@ -8,7 +8,13 @@
 - PocketBase local o de pruebas.
 - Datos exclusivamente de demostración.
 
-### Producción
+### Preproducción
+
+- Mini PC Linux amd64.
+- Nginx y PocketBase limitados a loopback.
+- Datos persistentes fuera del checkout.
+
+### Producción futura
 
 - Raspberry Pi 4.
 - SSD principal para sistema, aplicación y datos activos.
@@ -25,7 +31,7 @@ GitHub
   └── código V3 + migraciones
             │
             ▼
-      Raspberry Pi 4
+   Linux amd64 / ARM64
             │
      ┌──────┴──────┐
      │             │

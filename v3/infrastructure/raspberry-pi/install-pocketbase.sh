@@ -1,9 +1,20 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+PRODUCTION_ENV="${PRODUCTION_ENV:-/etc/language-school/production.env}"
+
+if [[ ! -f "$PRODUCTION_ENV" ]]; then
+  echo "Production environment file not found: $PRODUCTION_ENV" >&2
+  echo 'Run prepare-production-env.sh and configure it before installing PocketBase.' >&2
+  exit 1
+fi
+
+# shellcheck disable=SC1090
+source "$PRODUCTION_ENV"
+
 PB_VERSION="${PB_VERSION:-0.39.9}"
-PB_ARCHIVE="pocketbase_${PB_VERSION}_linux_arm64.zip"
-PB_SHA256="${PB_SHA256:-fd4138f29182288cbe6e9982e9f29b11df5f8e689c4f6a8f6cdf7aadd29d95a1}"
+PB_SHA256_AMD64="${PB_SHA256_AMD64:-4c5a1aced62ebf658bfbcfeaa944c4bfa88b173dd9d598d3cab55ea63587b36b}"
+PB_SHA256_ARM64="${PB_SHA256_ARM64:-fd4138f29182288cbe6e9982e9f29b11df5f8e689c4f6a8f6cdf7aadd29d95a1}"
 SERVICE_USER="${SERVICE_USER:-languageschool}"
 SERVICE_GROUP="${SERVICE_GROUP:-languageschool}"
 APP_ROOT="${APP_ROOT:-/opt/language-school}"
@@ -16,16 +27,30 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 V3_DIR="$(cd -- "$SCRIPT_DIR/../.." && pwd)"
 MIGRATIONS_SOURCE="$V3_DIR/pocketbase/pb_migrations"
 SERVICE_SOURCE="$SCRIPT_DIR/language-school-pocketbase.service"
+START_SOURCE="$SCRIPT_DIR/start-pocketbase.sh"
 
 if [[ "${EUID}" -ne 0 ]]; then
   echo 'Run this script as root (sudo).' >&2
   exit 1
 fi
 
-if [[ "$(uname -m)" != 'aarch64' && "$(uname -m)" != 'arm64' ]]; then
-  echo "Unsupported architecture: $(uname -m). Expected a 64-bit ARM system." >&2
-  exit 1
-fi
+HOST_ARCH="$(uname -m)"
+case "$HOST_ARCH" in
+  x86_64|amd64)
+    PB_RELEASE_ARCH='amd64'
+    PB_SHA256="$PB_SHA256_AMD64"
+    ;;
+  aarch64|arm64)
+    PB_RELEASE_ARCH='arm64'
+    PB_SHA256="$PB_SHA256_ARM64"
+    ;;
+  *)
+    echo "Unsupported architecture: $HOST_ARCH. Expected x86_64/amd64 or aarch64/arm64." >&2
+    exit 1
+    ;;
+esac
+
+PB_ARCHIVE="pocketbase_${PB_VERSION}_linux_${PB_RELEASE_ARCH}.zip"
 
 if [[ ! -d "$MIGRATIONS_SOURCE" ]]; then
   echo "Migrations directory not found: $MIGRATIONS_SOURCE" >&2
@@ -34,6 +59,11 @@ fi
 
 if [[ ! -f "$SERVICE_SOURCE" ]]; then
   echo "Systemd template not found: $SERVICE_SOURCE" >&2
+  exit 1
+fi
+
+if [[ ! -f "$START_SOURCE" ]]; then
+  echo "PocketBase start wrapper not found: $START_SOURCE" >&2
   exit 1
 fi
 
@@ -64,7 +94,8 @@ TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TMP_DIR"' EXIT
 
 DOWNLOAD_URL="https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}/${PB_ARCHIVE}"
-echo "Downloading PocketBase ${PB_VERSION} ARM64..."
+echo "Detected host architecture: $HOST_ARCH -> linux_${PB_RELEASE_ARCH}"
+echo "Downloading PocketBase ${PB_VERSION} linux_${PB_RELEASE_ARCH}..."
 curl --fail --location --retry 3 --output "$TMP_DIR/$PB_ARCHIVE" "$DOWNLOAD_URL"
 
 echo "${PB_SHA256}  $TMP_DIR/$PB_ARCHIVE" | sha256sum --check --status || {
@@ -75,6 +106,7 @@ echo "${PB_SHA256}  $TMP_DIR/$PB_ARCHIVE" | sha256sum --check --status || {
 echo 'Checksum verified.'
 unzip -q "$TMP_DIR/$PB_ARCHIVE" -d "$TMP_DIR/pocketbase"
 install -m 0755 -o root -g root "$TMP_DIR/pocketbase/pocketbase" "$PB_DIR/pocketbase"
+install -m 0755 -o root -g root "$START_SOURCE" "$PB_DIR/start-pocketbase.sh"
 
 rm -rf "$PB_DIR/pb_migrations"/*
 cp -a "$MIGRATIONS_SOURCE"/. "$PB_DIR/pb_migrations/"
@@ -90,4 +122,4 @@ echo
 printf 'PocketBase %s installed at %s\n' "$PB_VERSION" "$PB_DIR"
 printf 'Runtime data: %s\n' "$PB_DATA"
 echo 'Service enabled but not started by this installer.'
-echo 'Next: run bootstrap-admin.sh, then health-check.sh.'
+echo 'Next: run migrate.sh, then bootstrap-admin.sh and health-check.sh.'

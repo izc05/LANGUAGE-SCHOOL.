@@ -32,6 +32,22 @@ jobs:
             bash -n "$script"
           done
 
+      - name: Validate PocketBase loopback start wrapper
+        run: |
+          OUTPUT=$(PB_URL=http://127.0.0.1:8090 \
+            PB_BIN=/usr/bin/echo \
+            PB_DATA=/tmp/pb_data \
+            PB_MIGRATIONS=/tmp/pb_migrations \
+            bash v3/infrastructure/raspberry-pi/start-pocketbase.sh)
+          printf '%s' "$OUTPUT" | grep -q -- '--http=127.0.0.1:8090'
+
+          if PB_URL=http://0.0.0.0:8090 \
+            PB_BIN=/usr/bin/echo \
+            bash v3/infrastructure/raspberry-pi/start-pocketbase.sh; then
+            echo 'PocketBase start wrapper accepted a non-loopback origin.' >&2
+            exit 1
+          fi
+
       - name: Reject secret-like environment keys
         run: |
           ENV_FILE='v3/infrastructure/.env.example'
@@ -41,22 +57,32 @@ jobs:
             exit 1
           fi
 
-      - name: Verify pinned PocketBase ARM64 artifact checksum
+      - name: Verify pinned PocketBase Linux artifact checksums
         run: |
-          ARCHIVE='pocketbase_0.39.9_linux_arm64.zip'
-          EXPECTED='fd4138f29182288cbe6e9982e9f29b11df5f8e689c4f6a8f6cdf7aadd29d95a1'
-          curl --fail --location --retry 3 \
-            --output "$RUNNER_TEMP/$ARCHIVE" \
-            "https://github.com/pocketbase/pocketbase/releases/download/v0.39.9/$ARCHIVE"
-          echo "$EXPECTED  $RUNNER_TEMP/$ARCHIVE" | sha256sum --check
+          source v3/infrastructure/.env.example
+          for ARCH in amd64 arm64; do
+            if [ "$ARCH" = 'amd64' ]; then
+              EXPECTED="$PB_SHA256_AMD64"
+            else
+              EXPECTED="$PB_SHA256_ARM64"
+            fi
+            ARCHIVE="pocketbase_${PB_VERSION}_linux_${ARCH}.zip"
+            curl --fail --location --retry 3 \
+              --output "$RUNNER_TEMP/$ARCHIVE" \
+              "https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}/$ARCHIVE"
+            echo "$EXPECTED  $RUNNER_TEMP/$ARCHIVE" | sha256sum --check
+          done
 
       - name: Validate Nginx configuration
         run: |
           sudo apt-get update -qq
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y nginx
           sudo install -d -m 0755 /opt/language-school/frontend
-          sudo cp v3/infrastructure/reverse-proxy/language-school.nginx.conf /etc/nginx/conf.d/language-school.conf
-          sudo rm -f /etc/nginx/sites-enabled/default
+          sed \
+            -e 's|__PROXY_LISTEN__|127.0.0.1:8080|g' \
+            -e 's|__PB_URL__|http://127.0.0.1:8090|g' \
+            v3/infrastructure/reverse-proxy/language-school.nginx.conf \
+            | sudo tee /etc/nginx/conf.d/language-school.conf >/dev/null
           sudo nginx -t
 
       - name: Validate Cloudflare ingress catch-all

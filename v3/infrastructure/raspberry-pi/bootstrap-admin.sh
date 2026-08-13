@@ -1,9 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+PRODUCTION_ENV="${PRODUCTION_ENV:-/etc/language-school/production.env}"
+if [[ ! -f "$PRODUCTION_ENV" ]]; then
+  echo "Production environment file not found: $PRODUCTION_ENV" >&2
+  exit 1
+fi
+# shellcheck disable=SC1090
+source "$PRODUCTION_ENV"
+
 PB_BIN="${PB_BIN:-/opt/language-school/pocketbase/pocketbase}"
 PB_DATA="${PB_DATA:-/var/lib/language-school/pb_data}"
-PB_URL="${PB_URL:-http://127.0.0.1:8090}"
+: "${PB_URL:?PB_URL is required in $PRODUCTION_ENV}"
 SERVICE="${SERVICE:-language-school-pocketbase.service}"
 
 if [[ "${EUID}" -ne 0 ]]; then

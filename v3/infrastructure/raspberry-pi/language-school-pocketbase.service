@@ -9,7 +9,8 @@ Type=simple
 User=languageschool
 Group=languageschool
 WorkingDirectory=/opt/language-school/pocketbase
-ExecStart=/opt/language-school/pocketbase/pocketbase serve --http=127.0.0.1:8090 --dir=/var/lib/language-school/pb_data --migrationsDir=/opt/language-school/pocketbase/pb_migrations
+EnvironmentFile=/etc/language-school/production.env
+ExecStart=/opt/language-school/pocketbase/start-pocketbase.sh
 Restart=on-failure
 RestartSec=5s
 TimeoutStopSec=30s
