@@ -1,6 +1,7 @@
 import { type FormEvent, useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { useAuth } from '../../features/auth/AuthProvider'
+import { useAcademyBrand } from '../../hooks/useAcademyBrand'
 import { getLoginErrorMessage } from '../../services/pocketbase/auth'
 import type { UserRole } from '../../services/pocketbase/types'
 
@@ -12,6 +13,7 @@ function routeForRole(role: UserRole): string {
 
 export default function LoginPage() {
   const navigate = useNavigate()
+  const { academyName, logoUrl, initials } = useAcademyBrand()
   const { login, isDemoMode, ready, user, isAuthenticated } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -44,9 +46,11 @@ export default function LoginPage() {
   return (
     <div className="auth-page">
       <section className="auth-brand-panel">
-        <Link className="brand brand-light" to="/">
-          <span className="brand-mark">LS</span>
-          <span><strong>Language School</strong><small>English with confidence</small></span>
+        <Link className="brand brand-light" to="/" aria-label={`${academyName} - Inicio`}>
+          {logoUrl
+            ? <img className="brand-logo-image" src={logoUrl} alt="" />
+            : <span className="brand-mark">{initials}</span>}
+          <span><strong>{academyName}</strong><small>English with confidence</small></span>
         </Link>
         <div className="auth-brand-copy">
           <span className="eyebrow eyebrow-light">TU ESPACIO</span>
@@ -60,7 +64,7 @@ export default function LoginPage() {
           </div>
         </div>
         <small className="auth-note">
-          {isDemoMode ? 'Modo demo activo · PocketBase todavía no está conectado.' : 'Acceso protegido mediante PocketBase.'}
+          {isDemoMode ? 'Vista de demostración para revisar la plataforma.' : 'Acceso seguro a tu espacio privado.'}
         </small>
       </section>
 
@@ -70,7 +74,7 @@ export default function LoginPage() {
           <h2>Bienvenido de nuevo.</h2>
           <p className="muted">
             {isDemoMode
-              ? 'Mientras llega la Raspberry puedes seguir revisando las vistas de demostración.'
+              ? 'Puedes recorrer las distintas vistas de la plataforma en modo demostración.'
               : 'Introduce tu email y contraseña para acceder a tu espacio.'}
           </p>
 
@@ -115,7 +119,7 @@ export default function LoginPage() {
             </>
           )}
 
-          <Link className="back-link" to="/">← Volver a Language School</Link>
+          <Link className="back-link" to="/">← Volver a {academyName}</Link>
         </div>
       </section>
     </div>
