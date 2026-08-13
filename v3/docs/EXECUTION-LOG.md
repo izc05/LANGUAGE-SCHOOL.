@@ -10,8 +10,9 @@ Este archivo es la **fuente de verdad** del desarrollo. Cada bloque se marca por
 - Frontend: React + TypeScript + Vite
 - Backend: PocketBase `0.39.9`
 - Producción prevista: Raspberry Pi 4 + SSD + disco externo de backup
-- Frente activo: **FASE 9.1B.8 · UX, accesibilidad y estados de interacción**
+- Frente activo: **FASE 9.1B.11 · Preparación de piloto**
 - Hardware: **FASE 9.2 sigue pendiente**, pero no bloquea la preproducción en GitHub.
+- HEAD estable de cierre 9.1B.10: `776640df0da5cb07fcc4fb9c0ea565da533f1259`.
 
 ### Estados
 - ✅ COMPLETADA = implementada y validada.
@@ -113,25 +114,25 @@ Preparado:
 
 ### 9.1B Preproducción en GitHub — 🟡 EN CURSO
 
-#### 9.1B.1 Auditoría ADMIN — ✅
+#### 9.1B.1 Auditoría ADMIN — ✅ COMPLETADA
 - `/admin/tarifas` real.
 - `/admin/configuracion` real.
 - logo, datos de contacto, redes y tarifas gestionables desde PocketBase.
 
-#### 9.1B.2 E2E conectado — ✅
+#### 9.1B.2 E2E conectado — ✅ COMPLETADA
 `V3 E2E CI` levanta PocketBase real temporal + frontend connected + Chromium.
 - login y redirección ADMIN/TEACHER/STUDENT.
 - navegación y rechazo de rutas por rol.
 - logout y responsive.
 
-#### 9.1B.3 Programas / Tarifas / Contacto — ✅
+#### 9.1B.3 Programas / Tarifas / Contacto — ✅ COMPLETADA
 - `/programas` desde cursos públicos reales.
 - `/tarifas` desde planes activos reales.
 - `/contacto` crea `contact_requests` en PocketBase.
 - `SiteShell` consume `site_settings` para marca/logo/contacto.
 - demo no se mezcla con producción connected.
 
-#### 9.1B.4 Web pública completa y endurecimiento — ✅
+#### 9.1B.4 Web pública completa y endurecimiento — ✅ COMPLETADA
 - `/profesores` con perfiles públicos separados de cuentas privadas.
 - `/admin/profesores/publicos`.
 - email/teléfono del profesor no salen en la web pública.
@@ -144,26 +145,21 @@ Preparado:
 - E2E Chromium ✅
 
 #### 9.1B.5 Solicitudes de contacto ADMIN — ✅ COMPLETADA
-Implementado:
 - `contactRequests.ts`.
 - `/admin/contactos`.
 - filtros `ALL / NEW / CONTACTED / CLOSED`.
-- nombre, email, teléfono, interés, mensaje y fecha.
-- transiciones de estado sin borrar el histórico.
+- transiciones de estado sin borrar histórico.
 - contador real de nuevas solicitudes.
-
-E2E real:
-`visitante → formulario → PocketBase → ADMIN → Contactos → CONTACTED → CLOSED` ✅
+- E2E `visitante → formulario → PocketBase → ADMIN → CONTACTED → CLOSED` ✅
 
 #### 9.1B.6 Dashboard ADMIN real — ✅ COMPLETADA
-- `adminDashboard.ts`.
 - alumnos activos reales.
 - profesores activos reales.
 - artículos y borradores reales.
 - archivos privados activos reales.
 - solicitudes nuevas reales.
 - últimos artículos reales.
-- eliminadas las cifras operativas hardcodeadas en modo connected.
+- eliminadas cifras operativas hardcodeadas en connected.
 - Frontend CI ✅
 - PocketBase CI ✅
 - E2E ✅
@@ -178,28 +174,61 @@ Implementado:
 - `AccountProfilePage.tsx` compartida.
 - nombre, apellidos, teléfono y avatar editables por el propio usuario.
 - email de solo lectura.
-- `role` y `status` no forman parte del payload de autoedición.
+- `role` y `status` fuera del payload de autoedición.
 - sesión sincronizada tras guardar.
-- navegación `Mi perfil` en Alumno y Profesor.
 
-E2E real:
-- Alumno cambia teléfono y guarda ✅
-- recarga y el dato persiste ✅
+E2E:
+- Alumno cambia teléfono, guarda y persiste tras recarga ✅
 - email continúa protegido ✅
 - acceso a `/admin` sigue rechazado ✅
 - Profesor dispone de perfil propio ✅
-- Frontend CI ✅
-- PocketBase CI ✅
-- E2E Chromium ✅
 
-#### 9.1B.8 UX, accesibilidad y estados de interacción — 🟡 EN CURSO
-Objetivo:
-- salto directo al contenido principal.
-- foco de teclado visible.
-- navegación por teclado comprobada en web y portales.
-- anuncios accesibles para estados/errores principales.
-- comprobar etiquetas y landmarks esenciales.
-- E2E específico de teclado y accesibilidad estructural.
+#### 9.1B.8 UX y accesibilidad estructural — ✅ COMPLETADA
+- skip-link `Saltar al contenido` en web y portales.
+- `#main-content` enfocable.
+- foco visible de teclado.
+- landmarks principales.
+- etiquetas esenciales de formularios.
+- `prefers-reduced-motion`.
+- E2E real con Tab + Enter ✅
+
+#### 9.1B.9 Centro de avisos ADMIN — ✅ COMPLETADA
+- `adminNotifications.ts`.
+- `/admin/avisos`.
+- destinatario individual o todos los alumnos activos.
+- tipos GENERAL / CLASS / MATERIAL / ASSIGNMENT / SYSTEM.
+- histórico y estado leído/sin leer.
+- E2E real `ADMIN → enviar aviso → STUDENT → Avisos` ✅
+
+#### 9.1B.10 Resiliencia, errores y diagnóstico — ✅ COMPLETADA
+Implementado:
+- `health.ts` para `/api/health` con timeout.
+- `useBackendHealth.ts`.
+- `BackendStatusBanner.tsx`.
+- `AppErrorBoundary.tsx` integrado en el root.
+- `error-states.css`.
+- aviso de caída de PocketBase en web pública y portales.
+- botón `Reintentar`.
+- `/admin/sistema` con health-check, latencia, modo y origen API sin credenciales.
+- menú ADMIN largo con scroll interno para que todos los módulos sean alcanzables.
+- smoke runtime de rutas públicas, ADMIN, TEACHER y STUDENT.
+
+Validación de cierre sobre `776640df0da5cb07fcc4fb9c0ea565da533f1259`:
+- V3 Frontend CI #270 ✅
+- V3 PocketBase CI #235 ✅
+- V3 Infrastructure CI #115 ✅
+- V3 E2E CI #103 ✅
+- Chromium: **26/26 tests** ✅
+
+#### 9.1B.11 Preparación de piloto — 🟡 EN CURSO
+Objetivos iniciales obtenidos de auditoría real:
+1. unificar identidad de academia en web, login y portales mediante `site_settings`;
+2. retirar referencias técnicas visibles a PocketBase/tokens del flujo normal de Alumno/Profesor;
+3. mejorar estados vacíos/carga/error con lenguaje y acciones útiles;
+4. limpiar textos residuales de desarrollo;
+5. revisar formularios y feedback de interacción;
+6. registrar privacidad/legal como bloqueador explícito del piloto público hasta completar textos reales y datos del responsable;
+7. mantener la validación E2E completa después de cada bloque.
 
 ### 9.2 Raspberry + SSD — 🔒 PENDIENTE DE HARDWARE
 1. instalar sistema ARM64 en SSD;
@@ -213,6 +242,7 @@ Objetivo:
 - dominio/subdominio definitivo.
 - HTTPS y `/api/health` exterior.
 - confirmar que `/_/` no está publicado.
+- SMTP/recuperación de contraseña real.
 
 ### 9.4 Backup/restore físico — ⏳ PENDIENTE DE 9.2
 - disco externo por UUID.
