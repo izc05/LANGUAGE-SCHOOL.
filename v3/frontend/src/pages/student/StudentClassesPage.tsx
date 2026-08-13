@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import DashboardShell from '../../components/DashboardShell'
+import PortalEmptyState from '../../components/PortalEmptyState'
 import { useAuth } from '../../features/auth/AuthProvider'
 import {
   listMyAttendance,
@@ -73,7 +74,7 @@ export default function StudentClassesPage() {
         setAttendance(attendanceRecords)
       })
       .catch(() => {
-        if (mounted) setError('No se ha podido cargar tu historial de clases.')
+        if (mounted) setError('No se ha podido cargar tu calendario de clases. Inténtalo de nuevo en unos segundos.')
       })
       .finally(() => {
         if (mounted) setLoading(false)
@@ -91,8 +92,8 @@ export default function StudentClassesPage() {
           <div className="private-space-badge"><strong>{upcoming.length}</strong><span>próximas clases</span></div>
         </header>
 
-        {loading && <div className="cms-notice">Cargando clases…</div>}
-        {error && <div className="cms-notice auth-error">{error}</div>}
+        {loading && <div className="cms-notice" role="status">Cargando clases…</div>}
+        {error && <div className="cms-notice auth-error" role="alert">{error}</div>}
 
         <section className="panel student-class-section">
           <div className="panel-heading"><div><span className="eyebrow">PRÓXIMAS</span><h3>Tu agenda</h3></div></div>
@@ -104,7 +105,14 @@ export default function StudentClassesPage() {
                 <span className="status info">Programada</span>
               </article>
             ))}
-            {!loading && upcoming.length === 0 && <p className="muted">No tienes próximas clases programadas.</p>}
+            {!loading && upcoming.length === 0 && (
+              <PortalEmptyState
+                compact
+                title="No hay próximas clases programadas"
+                description="Cuando la academia programe tu siguiente sesión aparecerá aquí con fecha, horario y tema."
+                action={{ label: 'Revisar material', to: '/alumno/material' }}
+              />
+            )}
           </div>
         </section>
 
@@ -121,7 +129,13 @@ export default function StudentClassesPage() {
                 </article>
               )
             })}
-            {!loading && recent.length === 0 && <p className="muted">Todavía no hay clases realizadas.</p>}
+            {!loading && recent.length === 0 && (
+              <PortalEmptyState
+                compact
+                title="Tu historial empezará con la primera clase"
+                description="Aquí verás las sesiones realizadas y, cuando exista registro, el estado de asistencia."
+              />
+            )}
           </div>
         </section>
       </div>
