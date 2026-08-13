@@ -45,7 +45,7 @@ else
   exit 1
 fi
 
-if ! tar -tzf "$ARCHIVE" | grep -Eq "^${PB_DATA_NAME}/"; then
+if ! tar -tzf "$ARCHIVE" | grep -E "^${PB_DATA_NAME}/" >/dev/null; then
   echo "Archive does not contain expected ${PB_DATA_NAME}/ directory." >&2
   exit 1
 fi
