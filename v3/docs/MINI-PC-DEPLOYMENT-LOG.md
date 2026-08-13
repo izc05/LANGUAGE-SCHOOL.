@@ -81,3 +81,14 @@ Fecha de instalación: 2026-08-13 (Europe/Madrid).
 - Backup y checksum: PASS; la prueba de restauración física continúa pendiente y no se marca como completada.
 - Siguiente bloque: seguir desarrollando sobre el mini PC antes de publicar por dominio; Cloudflare, DNS, HTTPS y SMTP continúan pendientes.
 - Raspberry Pi 4: pendiente; no se marca como instalada.
+
+## FASE 9.2B.6 · Primera clase real de prueba — ✅ COMPLETADA
+
+- Clase programada desde `/admin/clases`: `Conversation Pilot`.
+- Ámbito: `English B1 Pilot` → `B1 Pilot A` → `Laura Prueba Docente` → `Alex Alumno Prueba`.
+- Horario programado: 18/08/2026, 18:00–19:00; estado `SCHEDULED` / Programada.
+- ADMIN: clase, grupo, profesor, horario y lista de asistencia preparada para Alex verificados.
+- PROFESOR: Laura ve la misma sesión y únicamente a Alex como alumno relacionado para asistencia; no se registró asistencia ni se cambió el estado.
+- ALUMNO: Alex ve una única clase próxima y el resumen muestra `Conversation Pilot · B1 Pilot A`.
+- Incidencia corregida: el envío de la programación conservaba el valor inicial de los campos nativos de fecha/hora. El ajuste se publicó en `edfa579` y se validó creando la sesión correcta; el intento con horario erróneo quedó cancelado, sin asistencia.
+- `bash v3/infrastructure/raspberry-pi/health-check.sh`: PASS.

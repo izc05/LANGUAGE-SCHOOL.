@@ -286,3 +286,12 @@ Objetivos iniciales obtenidos de auditoría real:
 `Estructura → Frontend → CMS → PocketBase → Login → Alumno → Profesor → Admin → Seguridad A/B → Producción preparada → Preproducción/E2E → Raspberry → Piloto`
 
 Cada sesión debe empezar leyendo este archivo y actualizarlo al finalizar cada bloque relevante.
+
+### FASE 9.2B.6 · Primera clase real de prueba — ✅ COMPLETADA
+
+- Se creó desde ADMIN la sesión `Conversation Pilot` en `B1 Pilot A`, impartida por Laura Prueba Docente, el 18/08/2026 de 18:00 a 19:00, en estado Programada.
+- Validación ADMIN: grupo, profesora, horario, estado y asistencia preparada para Alex Alumno Prueba.
+- Validación PROFESOR: Laura ve la misma clase y el único alumno activo de su grupo; no se registró asistencia, ni se completó ni canceló la sesión correcta.
+- Validación ALUMNO: Alex ve una única clase próxima en `/alumno/clases` y en el Dashboard: `Conversation Pilot · B1 Pilot A`.
+- Se corrigió el envío de fecha/hora en `edfa579` (`Persist selected class schedule`), se desplegó en modo connected y se comprobó en el mini PC.
+- Health-check de mini PC: PASS.
