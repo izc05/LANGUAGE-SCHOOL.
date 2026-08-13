@@ -106,8 +106,15 @@ export default function TeacherStudentsPage() {
   async function downloadFile(record: StudentFileRecord) {
     setError(null); setMessage(null)
     if (isDemoMode) { setMessage('La descarga real no está disponible en la demostración.'); return }
-    try { window.location.assign(await getAuthorizedStudentFileDownloadUrl(record)) }
-    catch { setError('No se puede descargar este archivo. Comprueba que el alumno siga asignado a uno de tus grupos.') }
+    const downloadTab = window.open('about:blank', '_blank')
+    try {
+      const url = await getAuthorizedStudentFileDownloadUrl(record)
+      if (downloadTab) downloadTab.location.assign(url)
+      else window.location.assign(url)
+    } catch {
+      downloadTab?.close()
+      setError('No se puede descargar este archivo. Comprueba que el alumno siga asignado a uno de tus grupos.')
+    }
   }
 
   return (

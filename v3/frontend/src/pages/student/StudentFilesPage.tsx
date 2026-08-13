@@ -143,10 +143,13 @@ export default function StudentFilesPage() {
       return
     }
 
+    const downloadTab = window.open('about:blank', '_blank')
     try {
       const url = await getMyFileDownloadUrl(record)
-      window.location.assign(url)
+      if (downloadTab) downloadTab.location.assign(url)
+      else window.location.assign(url)
     } catch {
+      downloadTab?.close()
       setError('No se ha podido preparar la descarga. Inténtalo de nuevo.')
     }
   }
