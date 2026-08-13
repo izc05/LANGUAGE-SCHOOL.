@@ -106,10 +106,11 @@ export default function TeacherStudentsPage() {
   async function downloadFile(record: StudentFileRecord) {
     setError(null); setMessage(null)
     if (isDemoMode) { setMessage('La descarga real no está disponible en la demostración.'); return }
-    const downloadTab = window.open('about:blank', '_blank')
+    const downloadTarget = `student-file-download-${record.id}`
+    const downloadTab = window.open('about:blank', downloadTarget)
     try {
       const url = await getAuthorizedStudentFileDownloadUrl(record)
-      if (downloadTab) downloadTab.location.assign(url)
+      if (downloadTab) window.open(url, downloadTarget)
       else window.location.assign(url)
     } catch {
       downloadTab?.close()

@@ -143,10 +143,11 @@ export default function StudentFilesPage() {
       return
     }
 
-    const downloadTab = window.open('about:blank', '_blank')
+    const downloadTarget = `student-file-download-${record.id}`
+    const downloadTab = window.open('about:blank', downloadTarget)
     try {
       const url = await getMyFileDownloadUrl(record)
-      if (downloadTab) downloadTab.location.assign(url)
+      if (downloadTab) window.open(url, downloadTarget)
       else window.location.assign(url)
     } catch {
       downloadTab?.close()
