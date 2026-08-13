@@ -133,7 +133,7 @@ export default function HomePage() {
           <div className="section-heading left">
             <span className="eyebrow">MÉTODO</span>
             <h2>La clase termina. El aprendizaje continúa.</h2>
-            <p>La V3 nace unida a la futura plataforma PocketBase: el trabajo realizado en clase tendrá continuidad en el espacio privado del alumno.</p>
+            <p>El trabajo realizado en clase continúa en el espacio privado del alumno, con materiales, tareas y seguimiento siempre disponibles.</p>
             <Link className="text-link" to="/acceso">Ver cómo será el área privada →</Link>
           </div>
           <div className="steps-list">
@@ -152,7 +152,7 @@ export default function HomePage() {
             <span className="eyebrow eyebrow-light">PLATAFORMA DEL ALUMNO</span>
             <h2>Todo lo importante, en un solo lugar.</h2>
             <p>Material del profesor, archivos propios, tareas, próximas clases, avisos y recursos. Sin carpetas perdidas ni enlaces dispersos.</p>
-            <Link className="button button-light" to="/alumno">Ver demo del alumno</Link>
+            <Link className="button button-light" to="/acceso">Acceder al espacio del alumno</Link>
           </div>
           <div className="platform-features">
             {['Mis clases', 'Archivos privados', 'Tareas y entregas', 'Material de estudio', 'Listening', 'Avisos'].map(item => (

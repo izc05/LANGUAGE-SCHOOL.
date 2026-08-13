@@ -72,7 +72,7 @@ export default function ContactPage() {
             <label className="field-stack"><span>Me interesa</span><input value={interest} onChange={(event) => setInterest(event.target.value)} placeholder="Kids, B1, conversación..." /></label>
             <label className="field-stack"><span>Mensaje</span><textarea rows={6} value={message} onChange={(event) => setMessage(event.target.value)} required /></label>
             <button className="button button-primary" type="submit" disabled={sending}>{sending ? 'Enviando…' : 'Enviar solicitud'}</button>
-            <small className="muted">El aviso de privacidad y el consentimiento definitivo son requisitos pendientes antes de abrir el piloto al público.</small>
+            <small className="muted">Este formulario todavía no está abierto para solicitudes reales.</small>
           </form>
 
           <aside className="panel public-contact-info">
@@ -83,7 +83,7 @@ export default function ContactPage() {
             {settings.phone && <div><strong>Teléfono</strong><a href={`tel:${settings.phone}`}>{settings.phone}</a></div>}
             {settings.whatsapp && <div><strong>WhatsApp</strong><span>{settings.whatsapp}</span></div>}
             {settings.instagram && <div><strong>Instagram</strong><a href={settings.instagram} target="_blank" rel="noreferrer">Abrir Instagram ↗</a></div>}
-            <p>Los datos de contacto se gestionan desde Configuración en el panel de administración.</p>
+            <p>Escríbenos por el canal que prefieras y te responderemos lo antes posible.</p>
           </aside>
         </div>
       </section>

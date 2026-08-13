@@ -23,7 +23,7 @@ export default function PricingPage() {
         <div className="container public-page-hero-inner">
           <span className="eyebrow">TARIFAS</span>
           <h1>Precios claros, sin letra pequeña.</h1>
-          <p>Las tarifas publicadas aquí se gestionan desde el panel ADMIN y se actualizan sin tocar el código.</p>
+          <p>Consulta las opciones disponibles y contacta con la academia para encontrar la que mejor encaja con tu objetivo.</p>
         </div>
       </section>
 

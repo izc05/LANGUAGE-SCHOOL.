@@ -71,7 +71,7 @@ export default function BlogPage() {
         <div className="container narrow">
           <span className="eyebrow">LANGUAGE SCHOOL JOURNAL</span>
           <h1>Ideas para aprender mejor.</h1>
-          <p>Consejos de clase, inglés práctico, preparación de exámenes y recursos publicados desde el CMS de la academia.</p>
+          <p>Consejos de clase, inglés práctico, preparación de exámenes y recursos seleccionados por la academia.</p>
         </div>
       </section>
 
