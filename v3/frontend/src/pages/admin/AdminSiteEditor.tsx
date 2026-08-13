@@ -65,7 +65,7 @@ export default function AdminSiteEditor() {
 
         setNotice(isDemoMode ? 'Modo demo: los cambios todavía no salen del navegador.' : `Contenido cargado · ${status}`)
       } catch {
-        if (mounted) setError('No se ha podido cargar el contenido de PocketBase. No se ha sobrescrito ningún dato.')
+        if (mounted) setError('No se ha podido cargar el contenido de la portada. No se ha sobrescrito ningún dato.')
       } finally {
         if (mounted) setLoading(false)
       }
@@ -117,7 +117,7 @@ export default function AdminSiteEditor() {
       setPreviewUrl(getMediaUrl(record, '800x600'))
       setNotice('Imagen subida a Multimedia y seleccionada para la portada. Publica los cambios para activarla.')
     } catch {
-      setError('No se ha podido subir la imagen a PocketBase.')
+      setError('No se ha podido subir la imagen. Inténtalo de nuevo.')
     } finally {
       setUploadingImage(false)
       event.target.value = ''
@@ -161,7 +161,7 @@ export default function AdminSiteEditor() {
       setSaved(publish)
       setNotice(
         publish
-          ? 'Modo demo: publicación simulada. PocketBase se utilizará automáticamente en modo connected.'
+          ? 'Modo demo: publicación simulada. Los cambios no se mostrarán en la web.'
           : 'Modo demo: borrador simulado localmente.',
       )
       return
@@ -171,7 +171,7 @@ export default function AdminSiteEditor() {
     try {
       await saveHomeContent(buildContent(), publish)
       setSaved(publish)
-      setNotice(publish ? 'Portada publicada correctamente en PocketBase.' : 'Borrador guardado correctamente en PocketBase.')
+      setNotice(publish ? 'Portada publicada correctamente.' : 'Borrador guardado correctamente.')
     } catch {
       setError('No se han podido guardar los cambios. Revisa la conexión y que la cuenta tenga rol ADMIN.')
     } finally {
@@ -192,14 +192,14 @@ export default function AdminSiteEditor() {
             <span className="eyebrow">CMS · PÁGINA WEB</span>
             <h2>Editar portada</h2>
             <p>
-              El editor trabaja en modo demo durante el desarrollo y guarda en `site_pages` y `media_library` cuando la aplicación
-              está conectada a PocketBase.
+              Edita aquí el contenido principal de la portada. Puedes guardar un borrador o publicar los cambios para mostrarlos en
+              la web.
             </p>
           </div>
           <a className="button button-ghost" href="/" target="_blank" rel="noreferrer">Vista pública ↗</a>
         </header>
 
-        {loading && <div className="cms-notice">Cargando contenido de PocketBase…</div>}
+        {loading && <div className="cms-notice">Cargando contenido de la portada…</div>}
         {notice && <div className="cms-notice success-notice">{notice}</div>}
         {error && <div className="cms-notice">{error}</div>}
 
