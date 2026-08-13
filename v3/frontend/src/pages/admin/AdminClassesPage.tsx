@@ -174,6 +174,9 @@ export default function AdminClassesPage() {
     event.preventDefault()
     setError(null)
     setMessage(null)
+    const formData = new FormData(event.currentTarget)
+    const submittedStartsAt = String(formData.get('starts_at') || startsAt)
+    const submittedEndsAt = String(formData.get('ends_at') || endsAt)
     const group = activeGroups.find((record) => record.id === newGroupId)
     if (!group) {
       setError(activeGroups.length === 0 ? 'Necesitas al menos un grupo activo antes de programar una clase.' : 'Selecciona un grupo válido.')
@@ -183,13 +186,17 @@ export default function AdminClassesPage() {
       setError('Escribe el tema de la clase.')
       return
     }
+    if (Number.isNaN(new Date(submittedStartsAt).getTime()) || Number.isNaN(new Date(submittedEndsAt).getTime()) || new Date(submittedEndsAt) <= new Date(submittedStartsAt)) {
+      setError('La fecha final debe ser posterior al inicio.')
+      return
+    }
     if (isDemoMode) {
       setMessage('Clase preparada en la demostración. No se ha guardado ningún cambio real.')
       return
     }
     setSaving(true)
     try {
-      const record = await createAdminClass({ groupId: group.id, teacherId: group.teacher, startsAt, endsAt, topic, description })
+      const record = await createAdminClass({ groupId: group.id, teacherId: group.teacher, startsAt: submittedStartsAt, endsAt: submittedEndsAt, topic, description })
       setClasses((current) => [record, ...current])
       setSelectedClassId(record.id)
       setWeekAnchor(startOfWeek(new Date(record.starts_at)))
@@ -266,8 +273,8 @@ export default function AdminClassesPage() {
           <form className="admin-create-grid" onSubmit={handleCreate}>
             <div><label>Grupo</label><select value={newGroupId} onChange={(e) => setNewGroupId(e.target.value)} required disabled={activeGroups.length === 0}><option value="">{activeGroups.length === 0 ? 'Sin grupos disponibles' : 'Selecciona grupo'}</option>{activeGroups.map((group) => <option key={group.id} value={group.id}>{group.name} · {userName(group.expand?.teacher || teachers.find((teacher) => teacher.id === group.teacher))}</option>)}</select></div>
             <div><label>Tema</label><input value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="Ej. Past perfect · review" required disabled={activeGroups.length === 0} /></div>
-            <div><label>Inicio</label><input type="datetime-local" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} required disabled={activeGroups.length === 0} /></div>
-            <div><label>Fin</label><input type="datetime-local" value={endsAt} onChange={(e) => setEndsAt(e.target.value)} required disabled={activeGroups.length === 0} /></div>
+            <div><label>Inicio</label><input name="starts_at" type="datetime-local" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} required disabled={activeGroups.length === 0} /></div>
+            <div><label>Fin</label><input name="ends_at" type="datetime-local" value={endsAt} onChange={(e) => setEndsAt(e.target.value)} required disabled={activeGroups.length === 0} /></div>
             <div className="admin-create-wide"><label>Descripción</label><textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} disabled={activeGroups.length === 0} /></div>
             <div className="admin-create-action"><button className="button button-primary" type="submit" disabled={saving || activeGroups.length === 0}>{saving ? 'Guardando…' : 'Programar clase'}</button></div>
           </form>
