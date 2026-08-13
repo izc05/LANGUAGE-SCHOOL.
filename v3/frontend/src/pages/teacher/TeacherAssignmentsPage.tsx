@@ -99,6 +99,8 @@ export default function TeacherAssignmentsPage() {
     event.preventDefault()
     setError(null)
     setMessage(null)
+    const formData = new FormData(event.currentTarget)
+    const submittedDueAt = String(formData.get('due_at') || dueAt)
     const target = targets.find((item) => item.key === targetKey)
     if (!target || !title.trim()) {
       setError(targets.length === 0 ? 'Todavía no tienes grupos o alumnos activos a los que asignar una tarea.' : 'Indica un título y selecciona un destino antes de guardar.')
@@ -120,7 +122,7 @@ export default function TeacherAssignmentsPage() {
         title,
         description,
         target: { type: target.type, id: target.id },
-        dueAt: dueAt ? new Date(dueAt).toISOString() : undefined,
+        dueAt: submittedDueAt ? new Date(submittedDueAt).toISOString() : undefined,
         attachment: attachment || undefined,
         status: draft ? 'DRAFT' : 'PUBLISHED',
       })
@@ -194,7 +196,7 @@ export default function TeacherAssignmentsPage() {
             <label className="field-stack"><span>Destino</span><select value={targetKey} onChange={(e) => setTargetKey(e.target.value)} disabled={noTargets}>{noTargets && <option value="">Sin destinos disponibles</option>}{targets.map((target) => <option key={target.key} value={target.key}>{target.label}</option>)}</select></label>
             <label className="field-stack"><span>Título</span><input value={title} onChange={(e) => setTitle(e.target.value)} required disabled={noTargets} /></label>
             <label className="field-stack"><span>Instrucciones</span><textarea rows={5} value={description} onChange={(e) => setDescription(e.target.value)} disabled={noTargets} /></label>
-            <label className="field-stack"><span>Fecha límite</span><input type="datetime-local" value={dueAt} onChange={(e) => setDueAt(e.target.value)} disabled={noTargets} /></label>
+            <label className="field-stack"><span>Fecha límite</span><input name="due_at" type="datetime-local" value={dueAt} onChange={(e) => setDueAt(e.target.value)} disabled={noTargets} /></label>
             <label className="upload-dropzone"><input type="file" accept=".pdf,.doc,.docx,.mp3,.jpg,.jpeg,.png,.webp" onChange={chooseAttachment} disabled={noTargets} /><strong>{attachment?.name || 'Adjunto opcional'}</strong><small>Máximo 20 MB</small></label>
             <label className="teacher-check"><input type="checkbox" checked={draft} onChange={(e) => setDraft(e.target.checked)} disabled={noTargets} /><span>Guardar como borrador</span></label>
             <button className="button button-primary" type="submit" disabled={saving || noTargets}>{saving ? 'Guardando…' : draft ? 'Guardar borrador' : 'Publicar tarea'}</button>
