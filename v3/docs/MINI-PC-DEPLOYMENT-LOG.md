@@ -138,3 +138,18 @@ Fecha de instalación: 2026-08-13 (Europe/Madrid).
 - ESTADO LEÍDO: PASS. Al abrirlo en el listado de Alex, cambió de `Nuevo` a `Leído` y el contador pasó de 1 a 0; persistió tras recargar.
 - PERMISOS: PASS. Alex no puede entrar a `/admin/avisos` (redirección a `/alumno`) ni dispone de edición, creación, destinatario, autor o borrado. Laura no muestra este aviso individual de Alex en su resumen docente.
 - `bash v3/infrastructure/raspberry-pi/health-check.sh`: PASS.
+
+## FASE 9.2B.11 · Asistencia — ✅ COMPLETADA
+
+- CLASE UTILIZADA: `Conversation Pilot` · `B1 Pilot A` · Laura Prueba Docente · 18/08/2026 18:00–19:00.
+- ASISTENCIA FUTURA: PERMITIDA. La interfaz docente habilita la gestión de asistencia aunque la clase permanece en estado Programada y futura; se usó la clase existente, sin alterar fecha ni estado.
+- ALUMNO EN LISTA: PASS. Laura ve únicamente a Alex Alumno Prueba, con matrícula ACTIVE en B1 Pilot A.
+- REGISTRO PRESENT: PASS. Laura marcó `Presente` desde `/profesor/clases`.
+- PERSISTENCIA: PASS. El resultado persiste después de recargar.
+- EDICIÓN: PASS. La asistencia cambió temporalmente `Presente → Ausente → Presente`, confirmada tras cada recarga.
+- SIN DUPLICADOS: PASS. La interfaz conserva una sola fila de Alex y el estado final es `Presente`.
+- ADMIN VE MISMO REGISTRO: PASS. `/admin/clases` muestra Alex Alumno Prueba como `Presente` en Conversation Pilot, sin crear otro registro.
+- ALUMNO VE: NO APLICA. Por ser una clase futura/programada, `/alumno/clases` la muestra como próxima y no expone todavía estado de asistencia.
+- SOLO LECTURA ALUMNO: NO APLICA para asistencia futura; el alumno no dispone de controles de gestión y `/profesor/clases` redirige a `/alumno`.
+- PERMISOS: PASS. Profesor en su ámbito, ADMIN global, estudiante sin acceso docente.
+- `bash v3/infrastructure/raspberry-pi/health-check.sh`: PASS.

@@ -333,3 +333,12 @@ Cada sesión debe empezar leyendo este archivo y actualizarlo al finalizar cada 
 - Alex no puede acceder a `/admin/avisos`: el guard le redirige a `/alumno`. Su interfaz de avisos no contiene controles de edición, creación, autor, destinatario ni borrado.
 - Laura no ve el aviso individual de Alex en su resumen de profesor; el comportamiento confirma que no se trata de un aviso general docente.
 - No fue necesario modificar código ni esquema. Health-check del mini PC: PASS.
+
+### FASE 9.2B.11 · Asistencia — ✅ COMPLETADA
+
+- Laura abrió `Conversation Pilot` en `/profesor/clases`. La sesión es futura (18/08/2026, 18:00–19:00) y está Programada, pero la interfaz permite asistencia anticipada; se documenta como comportamiento real y no se modificó fecha ni estado.
+- La lista docente mostró exactamente a Alex Alumno Prueba por la matrícula ACTIVE de `B1 Pilot A`; Laura registró `Presente`.
+- Persistencia y edición validadas por interfaz: `Presente → Ausente → Presente`, recargando tras cada guardado. Resultado final: Alex `Presente`, una sola fila, sin duplicados.
+- ADMIN consultó la misma Conversation Pilot en `/admin/clases` y vio a Alex Alumno Prueba como `Presente`, sin crear una asistencia adicional.
+- En `/alumno/clases`, Alex ve Conversation Pilot como próxima. La pantalla solo presenta asistencia en el historial de clases realizadas, por lo que la visibilidad de asistencia de esta sesión futura es `NO APLICA`; no se añadió funcionalidad.
+- Seguridad: Alex fue redirigido de `/profesor/clases` a `/alumno` y no dispone de controles de asistencia. Health-check del mini PC: PASS.
