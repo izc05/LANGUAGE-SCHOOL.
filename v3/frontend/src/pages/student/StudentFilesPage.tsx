@@ -55,7 +55,7 @@ export default function StudentFilesPage() {
         if (mounted) setFiles(records)
       })
       .catch(() => {
-        if (mounted) setError('No se ha podido abrir tu carpeta privada.')
+        if (mounted) setError('No se ha podido abrir tu carpeta privada. Inténtalo de nuevo en unos segundos.')
       })
       .finally(() => {
         if (mounted) setLoading(false)
@@ -130,7 +130,7 @@ export default function StudentFilesPage() {
       setDescription('')
       setMessage('Archivo guardado correctamente en tu espacio privado.')
     } catch {
-      setError('No se ha podido subir el archivo. Revisa formato, tamaño y conexión.')
+      setError('No se ha podido subir el archivo. Revisa el formato, el tamaño y vuelve a intentarlo.')
     } finally {
       setUploading(false)
     }
@@ -139,7 +139,7 @@ export default function StudentFilesPage() {
   async function downloadFile(record: StudentFileRecord) {
     setError(null)
     if (isDemoMode) {
-      setMessage('La descarga protegida estará disponible en modo connected.')
+      setMessage('La descarga real no está disponible en la demostración.')
       return
     }
 
@@ -147,7 +147,7 @@ export default function StudentFilesPage() {
       const url = await getMyFileDownloadUrl(record)
       window.open(url, '_blank', 'noopener,noreferrer')
     } catch {
-      setError('No se ha podido generar el enlace protegido de descarga.')
+      setError('No se ha podido preparar la descarga. Inténtalo de nuevo.')
     }
   }
 
@@ -177,14 +177,14 @@ export default function StudentFilesPage() {
           <div>
             <span className="eyebrow">ESPACIO PRIVADO</span>
             <h2>Mis archivos</h2>
-            <p>Documentos, tareas, audios y recursos personales asociados únicamente a tu cuenta.</p>
+            <p>Guarda aquí tus documentos, tareas, audios y recursos personales para tenerlos siempre organizados.</p>
           </div>
-          <div className="private-space-badge"><strong>Privado</strong><span>Acceso por sesión</span></div>
+          <div className="private-space-badge"><strong>Privado</strong><span>Acceso con tu cuenta</span></div>
         </header>
 
-        {loading && <div className="cms-notice">Abriendo tu carpeta privada…</div>}
-        {message && <div className="cms-notice success-notice">{message}</div>}
-        {error && <div className="cms-notice auth-error">{error}</div>}
+        {loading && <div className="cms-notice" role="status">Abriendo tu carpeta privada…</div>}
+        {message && <div className="cms-notice success-notice" role="status">{message}</div>}
+        {error && <div className="cms-notice auth-error" role="alert">{error}</div>}
 
         <div className="student-files-layout">
           <form className="panel student-upload-panel" onSubmit={submitUpload}>
@@ -205,7 +205,7 @@ export default function StudentFilesPage() {
           <section className="panel student-files-list-panel">
             <div className="panel-heading">
               <div><span className="eyebrow">ARCHIVOS</span><h3>{files.length} elementos</h3></div>
-              <input className="student-files-search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar..." />
+              <input className="student-files-search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar..." aria-label="Buscar archivos" />
             </div>
 
             <div className="student-private-file-list">
@@ -223,14 +223,19 @@ export default function StudentFilesPage() {
                   </div>
                 </article>
               ))}
-              {!loading && visibleFiles.length === 0 && <p className="muted">No hay archivos que mostrar.</p>}
+              {!loading && visibleFiles.length === 0 && (
+                <div className="portal-empty-inline">
+                  <strong>{search.trim() ? 'No encontramos coincidencias' : 'Tu carpeta está preparada'}</strong>
+                  <p>{search.trim() ? 'Prueba con otro nombre o categoría.' : 'Cuando subas tu primer archivo aparecerá aquí.'}</p>
+                </div>
+              )}
             </div>
           </section>
         </div>
 
         <section className="panel student-security-note">
-          <span>SEGURIDAD</span>
-          <p>En modo conectado los archivos usan un campo protegido de PocketBase. La descarga requiere un token temporal y la regla de lectura del registro debe autorizar tu sesión.</p>
+          <span>PRIVACIDAD</span>
+          <p>Tus archivos están vinculados a tu cuenta. Solo tú y el personal autorizado de la academia pueden acceder a ellos según sus permisos.</p>
         </section>
       </div>
     </DashboardShell>
