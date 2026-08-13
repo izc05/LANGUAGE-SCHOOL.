@@ -114,3 +114,16 @@ Fecha de instalación: 2026-08-13 (Europe/Madrid).
 - ALUMNO FINAL: Alex visualiza estado `Corregida`, la calificación `8` y el feedback; no aparecen controles para modificar ni reenviar la entrega revisada.
 - CI de `1153465`: Frontend, PocketBase, Infrastructure y E2E PASS.
 - `bash v3/infrastructure/raspberry-pi/health-check.sh`: PASS.
+
+## FASE 9.2B.9 · Archivo privado del alumno — ✅ COMPLETADA
+
+- Archivo ficticio conservado en el espacio privado de Alex: `student-private-pilot.txt`, con título visible `Private Pilot File`.
+- SUBIDA ALUMNO: PASS. Se corrigió la colección y el selector de archivos para admitir texto plano (`text/plain`) mediante la migración `1786649200_allow_plain_text_student_files.js`, publicada en `f73bcf8`.
+- PERSISTENCIA: PASS. Tras recargar, el espacio de Alex muestra exactamente un archivo activo, sin duplicados inesperados.
+- DESCARGA ALUMNO: PASS. Alex confirmó desde el botón normal de la interfaz que el archivo `.txt` se descarga correctamente.
+- VISIBILIDAD PROFESOR: PASS. Laura lo ve únicamente desde la ficha de Alex en `/profesor/alumnos`, debido a su relación activa en `B1 Pilot A`.
+- DESCARGA PROFESOR: PASS. La descarga autorizada contiene `Private student pilot file.` y no se accedió a `pb_data`.
+- SOLO LECTURA PROFESOR: PASS. Laura solo dispone de `Descargar`; no aparecen acciones para sustituir, editar, eliminar, reasignar ni cambiar propietario.
+- PERMISOS: PASS. Alex es redirigido de `/profesor/alumnos` a `/alumno`; conserva en cambio su propio control de archivo (`Archivar`).
+- CI de `e98309c`: Frontend, PocketBase, Infrastructure y E2E PASS.
+- `bash v3/infrastructure/raspberry-pi/health-check.sh`: PASS.

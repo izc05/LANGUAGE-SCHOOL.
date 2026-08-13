@@ -314,3 +314,13 @@ Cada sesión debe empezar leyendo este archivo y actualizarlo al finalizar cada 
 - Laura revisó exactamente esa entrega en `/profesor/correcciones`, registró feedback de prueba y calificación `8`; el registro persistió tras recargar.
 - Validación final de Alex: tarea `Corregida`, nota `8`, feedback visible y sin controles de modificación o reentrega.
 - CI de `1153465`: Frontend PASS, PocketBase PASS, Infrastructure PASS y E2E PASS. Health-check del mini PC: PASS.
+
+### FASE 9.2B.9 · Archivo privado del alumno — ✅ COMPLETADA
+
+- Alex subió desde `/alumno/archivos` el archivo ficticio `student-private-pilot.txt` con el título `Private Pilot File` y descripción de validación; el archivo runtime no se incorpora al repositorio.
+- El fallo inicial se debía a que `student_files` no admitía `text/plain`. Se corrigió mediante la migración `1786649200_allow_plain_text_student_files.js` y la interfaz visible de subida en `f73bcf8`.
+- Tras recargar, Alex ve un único archivo activo, sin duplicados. La descarga por interfaz fue confirmada por Alex y conserva el contenido ficticio esperado.
+- Laura localiza a Alex exclusivamente dentro de `/profesor/alumnos`, donde el archivo aparece como `Solo lectura` y la única acción disponible es descargar.
+- La descarga normal de Laura fue autorizada y se verificó el contenido `Private student pilot file.` sin URL manual ni acceso a `pb_data`.
+- Seguridad básica: el intento de Alex de abrir `/profesor/alumnos` redirige a `/alumno`; la visibilidad docente queda vinculada a la matrícula ACTIVE de `B1 Pilot A`.
+- CI final de `e98309c`: Frontend PASS, PocketBase PASS, Infrastructure PASS y E2E PASS. Health-check del mini PC: PASS.
