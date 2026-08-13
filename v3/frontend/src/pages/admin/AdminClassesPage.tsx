@@ -1,5 +1,6 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import DashboardShell from '../../components/DashboardShell'
+import PortalEmptyState from '../../components/PortalEmptyState'
 import { useAuth } from '../../features/auth/AuthProvider'
 import {
   createAdminClass,
@@ -106,13 +107,14 @@ export default function AdminClassesPage() {
         setGroups(groupRecords)
         setTeachers(teacherRecords)
         setEnrollments(enrollmentRecords)
-        if (groupRecords[0]) setNewGroupId(groupRecords[0].id)
+        const firstActiveGroup = groupRecords.find((group) => group.status === 'ACTIVE')
+        if (firstActiveGroup) setNewGroupId(firstActiveGroup.id)
         const nextClass = [...classRecords]
           .filter((record) => record.status === 'SCHEDULED' && new Date(record.starts_at).getTime() >= Date.now())
           .sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime())[0] || classRecords[0]
         if (nextClass) setSelectedClassId(nextClass.id)
       })
-      .catch(() => { if (mounted) setError('No se ha podido cargar el calendario académico.') })
+      .catch(() => { if (mounted) setError('No se ha podido cargar el calendario académico. Inténtalo de nuevo en unos segundos.') })
       .finally(() => { if (mounted) setLoading(false) })
     return () => { mounted = false }
   }, [isDemoMode])
@@ -130,6 +132,7 @@ export default function AdminClassesPage() {
     return () => { mounted = false }
   }, [isDemoMode, selectedClass?.id])
 
+  const activeGroups = useMemo(() => groups.filter((group) => group.status === 'ACTIVE'), [groups])
   const filteredClasses = useMemo(() => classes.filter((record) => {
     const matchesTeacher = teacherFilter === 'ALL' || record.teacher === teacherFilter
     const matchesGroup = groupFilter === 'ALL' || record.group === groupFilter
@@ -169,40 +172,60 @@ export default function AdminClassesPage() {
 
   async function handleCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    setError(null); setMessage(null)
-    const group = groups.find((record) => record.id === newGroupId)
-    if (!group) { setError('Selecciona un grupo válido.'); return }
-    if (!topic.trim()) { setError('Escribe el tema de la clase.'); return }
-    if (isDemoMode) { setMessage('En modo demo no se guardan nuevas clases.'); return }
+    setError(null)
+    setMessage(null)
+    const group = activeGroups.find((record) => record.id === newGroupId)
+    if (!group) {
+      setError(activeGroups.length === 0 ? 'Necesitas al menos un grupo activo antes de programar una clase.' : 'Selecciona un grupo válido.')
+      return
+    }
+    if (!topic.trim()) {
+      setError('Escribe el tema de la clase.')
+      return
+    }
+    if (isDemoMode) {
+      setMessage('Clase preparada en la demostración. No se ha guardado ningún cambio real.')
+      return
+    }
     setSaving(true)
     try {
       const record = await createAdminClass({ groupId: group.id, teacherId: group.teacher, startsAt, endsAt, topic, description })
       setClasses((current) => [record, ...current])
       setSelectedClassId(record.id)
       setWeekAnchor(startOfWeek(new Date(record.starts_at)))
-      setTopic(''); setDescription(''); setShowCreate(false)
+      setTopic('')
+      setDescription('')
+      setShowCreate(false)
       setMessage('Clase programada correctamente.')
     } catch (creationError) {
       setError(creationError instanceof Error ? creationError.message : 'No se ha podido programar la clase.')
-    } finally { setSaving(false) }
+    } finally {
+      setSaving(false)
+    }
   }
 
   async function changeClassStatus(record: ClassRecord, status: ClassRecord['status']) {
-    setError(null); setMessage(null)
+    setError(null)
+    setMessage(null)
+    if (status === 'CANCELLED' && !window.confirm(`¿Quieres cancelar la clase "${record.topic}"?`)) return
     if (isDemoMode) {
       setClasses((current) => current.map((item) => item.id === record.id ? { ...item, status } : item))
+      setMessage(`Clase marcada como ${classStatusLabel(status).toLowerCase()} en la demostración.`)
       return
     }
     try {
       const updated = await updateAdminClass(record, { status })
       setClasses((current) => current.map((item) => item.id === updated.id ? updated : item))
       setMessage(`Clase marcada como ${classStatusLabel(status).toLowerCase()}.`)
-    } catch { setError('No se ha podido actualizar el estado de la clase.') }
+    } catch {
+      setError('No se ha podido actualizar el estado de la clase.')
+    }
   }
 
   async function setStudentAttendance(studentId: string, status: AttendanceRecord['status']) {
     if (!selectedClass) return
-    setError(null); setMessage(null)
+    setError(null)
+    setMessage(null)
     if (isDemoMode) {
       const existing = attendanceByStudent.get(studentId)
       const next: AttendanceRecord = existing
@@ -214,8 +237,12 @@ export default function AdminClassesPage() {
     try {
       const updated = await upsertAdminAttendance({ classId: selectedClass.id, studentId, status })
       setAttendance((current) => [...current.filter((item) => item.student !== studentId), updated])
-    } catch { setError('No se ha podido actualizar la asistencia.') }
+    } catch {
+      setError('No se ha podido actualizar la asistencia.')
+    }
   }
+
+  const filtersActive = teacherFilter !== 'ALL' || groupFilter !== 'ALL'
 
   return (
     <DashboardShell role="Administrador" name="Admin" nav={[...adminNav]}>
@@ -229,19 +256,20 @@ export default function AdminClassesPage() {
           <button className="button button-primary" type="button" onClick={() => setShowCreate((value) => !value)}>{showCreate ? 'Cerrar formulario' : '+ Programar clase'}</button>
         </header>
 
-        {loading && <div className="cms-notice">Cargando calendario…</div>}
-        {message && <div className="cms-notice success-notice">{message}</div>}
-        {error && <div className="cms-notice auth-error">{error}</div>}
+        {loading && <div className="cms-notice" role="status">Cargando calendario…</div>}
+        {message && <div className="cms-notice success-notice" role="status">{message}</div>}
+        {error && <div className="cms-notice auth-error" role="alert">{error}</div>}
 
         {showCreate && <section className="panel admin-inline-create">
           <div className="panel-heading"><div><span className="eyebrow">NUEVA CLASE</span><h3>Programar sesión</h3></div><span className="status info">Profesor según grupo</span></div>
+          {activeGroups.length === 0 && !loading && <PortalEmptyState compact title="Sin grupos activos" description="Crea o reactiva un grupo antes de programar una clase." />}
           <form className="admin-create-grid" onSubmit={handleCreate}>
-            <div><label>Grupo</label><select value={newGroupId} onChange={(e) => setNewGroupId(e.target.value)} required><option value="">Selecciona grupo</option>{groups.filter((group) => group.status === 'ACTIVE').map((group) => <option key={group.id} value={group.id}>{group.name} · {userName(group.expand?.teacher || teachers.find((teacher) => teacher.id === group.teacher))}</option>)}</select></div>
-            <div><label>Tema</label><input value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="Ej. Past perfect · review" required /></div>
-            <div><label>Inicio</label><input type="datetime-local" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} required /></div>
-            <div><label>Fin</label><input type="datetime-local" value={endsAt} onChange={(e) => setEndsAt(e.target.value)} required /></div>
-            <div className="admin-create-wide"><label>Descripción</label><textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} /></div>
-            <div className="admin-create-action"><button className="button button-primary" type="submit" disabled={saving || groups.length === 0}>{saving ? 'Guardando…' : 'Programar clase'}</button></div>
+            <div><label>Grupo</label><select value={newGroupId} onChange={(e) => setNewGroupId(e.target.value)} required disabled={activeGroups.length === 0}><option value="">{activeGroups.length === 0 ? 'Sin grupos disponibles' : 'Selecciona grupo'}</option>{activeGroups.map((group) => <option key={group.id} value={group.id}>{group.name} · {userName(group.expand?.teacher || teachers.find((teacher) => teacher.id === group.teacher))}</option>)}</select></div>
+            <div><label>Tema</label><input value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="Ej. Past perfect · review" required disabled={activeGroups.length === 0} /></div>
+            <div><label>Inicio</label><input type="datetime-local" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} required disabled={activeGroups.length === 0} /></div>
+            <div><label>Fin</label><input type="datetime-local" value={endsAt} onChange={(e) => setEndsAt(e.target.value)} required disabled={activeGroups.length === 0} /></div>
+            <div className="admin-create-wide"><label>Descripción</label><textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} disabled={activeGroups.length === 0} /></div>
+            <div className="admin-create-action"><button className="button button-primary" type="submit" disabled={saving || activeGroups.length === 0}>{saving ? 'Guardando…' : 'Programar clase'}</button></div>
           </form>
         </section>}
 
@@ -255,7 +283,7 @@ export default function AdminClassesPage() {
         <section className="panel admin-calendar-filters">
           <div><label>Profesor</label><select value={teacherFilter} onChange={(e) => setTeacherFilter(e.target.value)}><option value="ALL">Todos</option>{teachers.map((teacher) => <option key={teacher.id} value={teacher.id}>{userName(teacher)}</option>)}</select></div>
           <div><label>Grupo</label><select value={groupFilter} onChange={(e) => setGroupFilter(e.target.value)}><option value="ALL">Todos</option>{groups.map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}</select></div>
-          <button type="button" onClick={() => { setTeacherFilter('ALL'); setGroupFilter('ALL') }}>Limpiar filtros</button>
+          <button type="button" onClick={() => { setTeacherFilter('ALL'); setGroupFilter('ALL') }} disabled={!filtersActive}>Limpiar filtros</button>
         </section>
 
         <section className="panel calendar-admin-panel admin-real-calendar">
@@ -264,7 +292,7 @@ export default function AdminClassesPage() {
             <div className="calendar-actions"><button type="button" onClick={() => setWeekAnchor(addDays(weekAnchor, -7))}>←</button><button type="button" onClick={() => setWeekAnchor(startOfWeek(new Date()))}>Hoy</button><button type="button" onClick={() => setWeekAnchor(addDays(weekAnchor, 7))}>→</button></div>
           </div>
 
-          <div className="week-calendar">
+          {classes.length === 0 && !loading ? <PortalEmptyState title="Todavía no hay clases programadas" description="Programa la primera sesión para empezar a utilizar el calendario y la asistencia." /> : <div className="week-calendar">
             {weekDays.map((day) => {
               const dayClasses = weekClasses
                 .filter((record) => sameLocalDay(new Date(record.starts_at), day))
@@ -286,11 +314,11 @@ export default function AdminClassesPage() {
                 </div>
               </div>
             })}
-          </div>
+          </div>}
         </section>
 
         <section className="panel admin-class-attendance">
-          {!selectedClass ? <div className="student-empty-detail"><span>ASISTENCIA</span><h3>Selecciona una clase</h3><p>Haz clic en una sesión del calendario para revisar alumnos y asistencia.</p></div> : <>
+          {!selectedClass ? <PortalEmptyState title={classes.length === 0 ? 'Sin clases para revisar' : 'Selecciona una clase'} description={classes.length === 0 ? 'La asistencia se habilitará cuando exista al menos una clase.' : 'Haz clic en una sesión del calendario para revisar alumnos y asistencia.'} /> : <>
             <div className="admin-class-detail-heading">
               <div><span className="eyebrow">CLASE SELECCIONADA</span><h3>{selectedClass.topic}</h3><p>{selectedGroup?.name || 'Grupo'} · {userName(selectedTeacher)} · {formatTime(selectedClass.starts_at)}–{formatTime(selectedClass.ends_at)} · {classStatusLabel(selectedClass.status)}</p></div>
               <div className="admin-class-status-actions">
@@ -300,7 +328,7 @@ export default function AdminClassesPage() {
               </div>
             </div>
 
-            {detailLoading ? <p className="muted">Cargando asistencia…</p> : <div className="admin-attendance-list">
+            {detailLoading ? <div className="cms-notice" role="status">Cargando asistencia…</div> : <div className="admin-attendance-list">
               {classEnrollments.map((enrollment) => {
                 const student = enrollment.expand?.student
                 const current = attendanceByStudent.get(enrollment.student)
@@ -314,7 +342,7 @@ export default function AdminClassesPage() {
                   </div>
                 </article>
               })}
-              {classEnrollments.length === 0 && <p className="muted">No hay alumnos con matrícula activa en el grupo de esta clase.</p>}
+              {classEnrollments.length === 0 && <PortalEmptyState compact title="Sin alumnos activos para esta clase" description="La asistencia aparecerá cuando el grupo tenga matrículas activas." />}
             </div>}
           </>}
         </section>
