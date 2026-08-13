@@ -204,7 +204,12 @@ export default function AdminTeachersPage() {
             <article className="panel teacher-admin-card" key={teacher.user.id}>
               <div className="teacher-card-heading">
                 <span className="teacher-avatar">{teacher.initials}</span>
-                <div><span className="eyebrow">PROFESOR</span><h3>{teacher.name}</h3><p>{teacher.courses.length ? teacher.courses.join(' · ') : 'Sin grupos asignados'}</p></div>
+                <div>
+                  <span className="eyebrow">PROFESOR</span>
+                  <h3>{teacher.name}</h3>
+                  <p className="teacher-card-email">{teacher.user.email}</p>
+                  <p>{teacher.courses.length ? teacher.courses.join(' · ') : 'Sin grupos asignados'}</p>
+                </div>
                 <span className={`status ${teacher.status === 'Activo' ? 'success' : 'warning'}`}>{teacher.status}</span>
               </div>
               <div className="teacher-card-metrics"><div><span>Alumnos</span><strong>{teacher.students}</strong></div><div><span>Clases</span><strong>{teacher.classes}</strong></div></div>
