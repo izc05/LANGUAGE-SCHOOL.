@@ -304,3 +304,13 @@ Cada sesión debe empezar leyendo este archivo y actualizarlo al finalizar cada 
 - El alumno no tiene controles de edición, borrado ni cambio de destino.
 - Se corrigió el flujo de descarga protegida para navegar a la URL autorizada en la misma pestaña, evitando el bloqueo de aperturas asíncronas (`564cf91`, `9377e88`).
 - CI de `9377e88`: Frontend PASS, PocketBase PASS, Infrastructure PASS y E2E PASS. Health-check de mini PC: PASS.
+
+### FASE 9.2B.8 · Tarea → entrega → corrección — ✅ COMPLETADA
+
+- Laura publicó `Pilot Writing Task` para `B1 Pilot A` desde `/profesor/tareas`, con instrucciones ficticias, sin adjunto y fecha límite 20/08/2026 a las 20:00.
+- Se corrigió el tratamiento de la fecha límite nativa en `da7c24a` (`Persist assignment due date`) y la tarea publicada quedó verificada como `Publicada · 20 ago, 20:00`.
+- La eliminación de la tarea de prueba sin fecha se realizó exclusivamente desde el portal de profesor. Se sustituyó la confirmación nativa por confirmación visible de interfaz en `1153465` (`Use in-page assignment deletion confirmation`).
+- Alex realizó una única entrega de texto ficticio desde `/alumno/tareas`; tras recargar, persistía como entregada y sin duplicados.
+- Laura revisó exactamente esa entrega en `/profesor/correcciones`, registró feedback de prueba y calificación `8`; el registro persistió tras recargar.
+- Validación final de Alex: tarea `Corregida`, nota `8`, feedback visible y sin controles de modificación o reentrega.
+- CI de `1153465`: Frontend PASS, PocketBase PASS, Infrastructure PASS y E2E PASS. Health-check del mini PC: PASS.

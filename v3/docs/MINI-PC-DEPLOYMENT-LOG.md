@@ -104,3 +104,13 @@ Fecha de instalación: 2026-08-13 (Europe/Madrid).
 - PERMISOS: PASS. Alex solo dispone de lectura/descarga; no aparecen controles de edición, borrado ni cambio de destino.
 - Incidencia corregida: la apertura asíncrona en una nueva pestaña podía ser bloqueada por el navegador. La descarga autorizada se realiza ahora en la pestaña actual (`564cf91`, `9377e88`); Frontend, PocketBase, Infrastructure y E2E CI PASS.
 - `bash v3/infrastructure/raspberry-pi/health-check.sh`: PASS.
+
+## FASE 9.2B.8 · Tarea → entrega → corrección — ✅ COMPLETADA
+
+- Tarea publicada por Laura desde `/profesor/tareas`: `Pilot Writing Task`, destinada exclusivamente al grupo `B1 Pilot A` y con fecha límite 20/08/2026 a las 20:00.
+- Se corrigió la persistencia de la fecha límite de tareas (`da7c24a`) y se sustituyó la confirmación nativa de borrado por una confirmación visible en la interfaz (`1153465`), evitando bloqueos del navegador durante una operación sensible.
+- ALUMNO: Alex visualiza una única tarea pendiente, entrega una respuesta ficticia sin adjunto y la entrega persiste tras recargar.
+- PROFESOR: Laura recibe una única entrega de Alex, añade feedback, calificación `8` y la marca como revisada; el estado y los datos persisten tras recargar.
+- ALUMNO FINAL: Alex visualiza estado `Corregida`, la calificación `8` y el feedback; no aparecen controles para modificar ni reenviar la entrega revisada.
+- CI de `1153465`: Frontend, PocketBase, Infrastructure y E2E PASS.
+- `bash v3/infrastructure/raspberry-pi/health-check.sh`: PASS.
