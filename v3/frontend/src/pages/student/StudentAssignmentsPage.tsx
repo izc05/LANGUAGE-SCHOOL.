@@ -1,5 +1,6 @@
 import { type ChangeEvent, type FormEvent, useEffect, useMemo, useState } from 'react'
 import DashboardShell from '../../components/DashboardShell'
+import PortalEmptyState from '../../components/PortalEmptyState'
 import { useAuth } from '../../features/auth/AuthProvider'
 import { getAssignmentAttachmentUrl, getSubmissionFileUrl } from '../../services/pocketbase/studentResources'
 import {
@@ -94,7 +95,7 @@ export default function StudentAssignmentsPage() {
     let mounted = true
     loadConnected()
       .catch(() => {
-        if (mounted) setError('No se han podido cargar tus tareas y entregas.')
+        if (mounted) setError('No se han podido cargar tus tareas y entregas. Inténtalo de nuevo en unos segundos.')
       })
       .finally(() => {
         if (mounted) setLoading(false)
@@ -130,7 +131,7 @@ export default function StudentAssignmentsPage() {
   async function downloadInstructions(task: TaskView) {
     if (!task.attachment) return
     if (isDemoMode || !task.record) {
-      setMessage('La descarga protegida del adjunto estará disponible con PocketBase conectado.')
+      setMessage('La descarga real no está disponible en la demostración.')
       return
     }
     try {
@@ -200,9 +201,9 @@ export default function StudentAssignmentsPage() {
           <div className="private-space-badge"><strong>{pending}</strong><span>tareas pendientes</span></div>
         </header>
 
-        {loading && <div className="cms-notice">Cargando tareas…</div>}
-        {message && <div className="cms-notice success-notice">{message}</div>}
-        {error && <div className="cms-notice auth-error">{error}</div>}
+        {loading && <div className="cms-notice" role="status">Cargando tareas…</div>}
+        {message && <div className="cms-notice success-notice" role="status">{message}</div>}
+        {error && <div className="cms-notice auth-error" role="alert">{error}</div>}
 
         <div className="student-tasks-layout">
           <section className="panel student-task-list-panel">
@@ -218,12 +219,24 @@ export default function StudentAssignmentsPage() {
                   </button>
                 )
               })}
-              {!loading && tasks.length === 0 && <p className="muted">No tienes tareas asignadas.</p>}
+              {!loading && tasks.length === 0 && (
+                <PortalEmptyState
+                  compact
+                  title="Todo al día"
+                  description="No tienes tareas asignadas ahora mismo. Cuando tu profesor publique una actividad aparecerá aquí."
+                  action={{ label: 'Ver material', to: '/alumno/material' }}
+                />
+              )}
             </div>
           </section>
 
           <section className="panel student-task-detail">
-            {!selectedTask && <div className="student-empty-detail"><span>TAREAS</span><h3>Selecciona una actividad</h3><p>Verás aquí las instrucciones, tu entrega y la corrección.</p></div>}
+            {!selectedTask && (
+              <PortalEmptyState
+                title={tasks.length === 0 ? 'Sin tareas pendientes' : 'Selecciona una actividad'}
+                description={tasks.length === 0 ? 'Puedes aprovechar para revisar el material publicado o consultar tus próximas clases.' : 'Aquí verás las instrucciones, tu entrega y la corrección del profesor.'}
+              />
+            )}
 
             {selectedTask && (
               <>
