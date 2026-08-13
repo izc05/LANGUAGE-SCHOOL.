@@ -342,3 +342,13 @@ Cada sesión debe empezar leyendo este archivo y actualizarlo al finalizar cada 
 - ADMIN consultó la misma Conversation Pilot en `/admin/clases` y vio a Alex Alumno Prueba como `Presente`, sin crear una asistencia adicional.
 - En `/alumno/clases`, Alex ve Conversation Pilot como próxima. La pantalla solo presenta asistencia en el historial de clases realizadas, por lo que la visibilidad de asistencia de esta sesión futura es `NO APLICA`; no se añadió funcionalidad.
 - Seguridad: Alex fue redirigido de `/profesor/clases` a `/alumno` y no dispone de controles de asistencia. Health-check del mini PC: PASS.
+
+### FASE 9.2B.12 → 9.2B.16 · Cierre de preproducción real — ✅ COMPLETADA
+
+- Roles y alcance: ADMIN, Laura y Alex fueron auditados en interfaz. ADMIN ve la estructura completa; Laura queda limitada a B1 Pilot A y Alex; Alex queda limitado a su propio portal. Las rutas de otro rol redirigen correctamente.
+- Responsive: validación móvil a 390 px y tableta a 768 px sobre rutas públicas, ADMIN, PROFESOR y ALUMNO; sin scroll horizontal y con acciones principales disponibles.
+- Backup: creado `/mnt/pocketbase-backup/language-school/language-school-20260813T210325Z.tar.gz`; el checksum SHA-256 devolvió `OK`.
+- Restore: se creó el aviso individual temporal `TEMP RESTORE MARKER` después del backup y se confirmó en Alex. La primera restauración fue detenida por un falso negativo de la comprobación de estructura del archivo. Se corrigió el script en `6cbba67` para que consuma el listado completo y no falle por SIGPIPE; CI completo PASS. La restauración posterior devolvió `Restore health check: SUCCESS` y preservó `pb_data.before-restore-20260813T210858Z`.
+- Datos restaurados por interfaz: Laura Prueba Docente, Alex Alumno Prueba, English B1 Pilot, B1 Pilot A, Conversation Pilot programada, Alex `Presente`, `Conversation Pilot · Vocabulary`, `Pilot Writing Task` corregida con nota `8`, `Private Pilot File` y `Bienvenido a la prueba`. El marcador temporal quedó ausente, como corresponde a una copia anterior.
+- Salud final: servicio activo, timer habilitado/activo, listeners restringidos a `127.0.0.1:8083` y `127.0.0.1:8091`, health-check completo PASS, portada HTTP 200 y Atelier Lumière sin alteraciones (HTTP 302 de acceso protegido).
+- Cloudflare, DNS, HTTPS y SMTP permanecen pendientes y sin cambios. No se inicia la fase 9.3.

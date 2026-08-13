@@ -82,6 +82,20 @@ Fecha de instalación: 2026-08-13 (Europe/Madrid).
 - Siguiente bloque: seguir desarrollando sobre el mini PC antes de publicar por dominio; Cloudflare, DNS, HTTPS y SMTP continúan pendientes.
 - Raspberry Pi 4: pendiente; no se marca como instalada.
 
+## FASE 9.2B.12 → 9.2B.16 · Cierre de preproducción real — ✅ COMPLETADA
+
+- Auditoría de roles: PASS. ADMIN conserva el control global; Laura solo accede a su ámbito docente (B1 Pilot A y Alex); Alex solo accede a su portal. Los intentos de rutas ajenas redirigen al portal del rol correspondiente.
+- Responsive: PASS en móvil (390 px) para web pública, los tres portales y sus acciones principales; también comprobado en tableta (768 px). Sin desbordamiento horizontal detectado.
+- Backup real: `language-school-20260813T210325Z.tar.gz` creado en `/mnt/pocketbase-backup/language-school`; SHA-256 validado con `OK`.
+- Restore real: PASS desde el archivo anterior. La primera ejecución detectó un falso negativo del validador de contenido del archivo; se corrigió de forma versionada en `6cbba67` y la segunda ejecución terminó con `Restore health check: SUCCESS`.
+- Seguridad de restauración: se preservó la copia anterior en `/var/lib/language-school/pb_data.before-restore-20260813T210858Z`.
+- Verificación posterior por interfaz: recuperados Laura, Alex, English B1 Pilot, B1 Pilot A, Conversation Pilot, asistencia `Presente`, material, tarea corregida con nota 8, archivo privado y aviso original. El aviso temporal `TEMP RESTORE MARKER`, creado después de la copia, no existe tras restaurar.
+- Servicio PocketBase: activo; Nginx y PocketBase permanecen enlazados solo en `127.0.0.1:8083` y `127.0.0.1:8091`.
+- Timer de backup: habilitado y activo; siguiente ejecución nocturna programada.
+- Health-check completo y portada HTTP: PASS. Atelier Lumière comprobado sin cambios (respuesta HTTP 302 de su acceso protegido).
+- CI de `6cbba67`: Frontend, PocketBase, Infrastructure y E2E PASS.
+- Cloudflare público, DNS, HTTPS y SMTP: continúan pendientes y no se modificaron.
+
 ## FASE 9.2B.6 · Primera clase real de prueba — ✅ COMPLETADA
 
 - Clase programada desde `/admin/clases`: `Conversation Pilot`.
