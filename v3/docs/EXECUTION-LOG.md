@@ -295,3 +295,12 @@ Cada sesión debe empezar leyendo este archivo y actualizarlo al finalizar cada 
 - Validación ALUMNO: Alex ve una única clase próxima en `/alumno/clases` y en el Dashboard: `Conversation Pilot · B1 Pilot A`.
 - Se corrigió el envío de fecha/hora en `edfa579` (`Persist selected class schedule`), se desplegó en modo connected y se comprobó en el mini PC.
 - Health-check de mini PC: PASS.
+
+### FASE 9.2B.7 · Material de clase — ✅ COMPLETADA
+
+- Laura publicó `Conversation Pilot · Vocabulary` exclusivamente para el grupo `B1 Pilot A` desde el portal de profesor.
+- Se utilizó un PDF ficticio de una página, sin datos personales, con el vocabulario del piloto `Conversation Pilot`.
+- Alex ve el recurso de grupo en `/alumno/material` con su título, descripción y archivo, y confirmó la descarga protegida mediante el botón de interfaz.
+- El alumno no tiene controles de edición, borrado ni cambio de destino.
+- Se corrigió el flujo de descarga protegida para navegar a la URL autorizada en la misma pestaña, evitando el bloqueo de aperturas asíncronas (`564cf91`, `9377e88`).
+- CI de `9377e88`: Frontend PASS, PocketBase PASS, Infrastructure PASS y E2E PASS. Health-check de mini PC: PASS.

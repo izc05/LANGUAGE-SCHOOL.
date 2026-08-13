@@ -92,3 +92,15 @@ Fecha de instalación: 2026-08-13 (Europe/Madrid).
 - ALUMNO: Alex ve una única clase próxima y el resumen muestra `Conversation Pilot · B1 Pilot A`.
 - Incidencia corregida: el envío de la programación conservaba el valor inicial de los campos nativos de fecha/hora. El ajuste se publicó en `edfa579` y se validó creando la sesión correcta; el intento con horario erróneo quedó cancelado, sin asistencia.
 - `bash v3/infrastructure/raspberry-pi/health-check.sh`: PASS.
+
+## FASE 9.2B.7 · Material de clase — ✅ COMPLETADA
+
+- Material publicado desde `/profesor/material`: `Conversation Pilot · Vocabulary`.
+- Destino: `B1 Pilot A`; archivo piloto PDF sin datos personales, `conversation-pilot-material.pdf`.
+- PROFESOR: PASS. Laura visualiza el recurso, su destino de grupo y las acciones de gestión dentro de su ámbito.
+- PUBLICACIÓN: PASS. El recurso quedó activo y visible como material de grupo.
+- ALUMNO: PASS. Alex visualiza título, descripción, archivo y etiqueta `Tu grupo` en `/alumno/material`.
+- DESCARGA: PASS. La descarga protegida se confirmó desde el botón normal del alumno y el PDF corresponde al material piloto validado.
+- PERMISOS: PASS. Alex solo dispone de lectura/descarga; no aparecen controles de edición, borrado ni cambio de destino.
+- Incidencia corregida: la apertura asíncrona en una nueva pestaña podía ser bloqueada por el navegador. La descarga autorizada se realiza ahora en la pestaña actual (`564cf91`, `9377e88`); Frontend, PocketBase, Infrastructure y E2E CI PASS.
+- `bash v3/infrastructure/raspberry-pi/health-check.sh`: PASS.
