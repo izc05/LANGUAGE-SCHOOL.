@@ -68,6 +68,7 @@ test('todas las rutas ADMIN cargan sin errores runtime', async ({ page }) => {
     '/admin/clases',
     '/admin/tarifas',
     '/admin/configuracion',
+    '/admin/sistema',
   ], errors)
 })
 
