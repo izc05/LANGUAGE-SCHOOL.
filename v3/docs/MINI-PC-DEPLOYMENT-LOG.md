@@ -1,0 +1,78 @@
+# Mini PC · registro de despliegue de preproducción
+
+Fecha de instalación: 2026-08-13 (Europe/Madrid).
+
+## Host auditado
+
+- Hostname: `Isi-Minipc`.
+- Sistema: Ubuntu 24.04.4 LTS.
+- Kernel: Linux 7.0.0-28-generic.
+- Arquitectura: `x86_64`, instalada como PocketBase `linux_amd64`.
+- Git: 2.43.0.
+- Node.js: 22.23.2, compatible con Vite 8.
+- npm: 10.9.8.
+- PocketBase Language School: 0.39.9, checksum SHA-256 oficial verificado.
+- Nginx: 1.24.0.
+- cloudflared existente: 2026.7.3.
+- Docker existente: 29.6.2.
+
+## Discos
+
+- Sistema: `/dev/sda2`, ext4, 233 GB, 107 GB disponibles durante la auditoría.
+- Backup externo real: `/dev/sdb1`, NTFS3, montado en `/mnt/pocketbase-backup`, 211 GB disponibles durante la auditoría.
+
+## Conflictos y decisiones
+
+- `127.0.0.1:8090` ya estaba ocupado por el PocketBase de otro proyecto; se eligió `127.0.0.1:8091` para Language School.
+- `127.0.0.1:8080` ya estaba ocupado por Docker; se eligió `127.0.0.1:8083` para Nginx de Language School.
+- No se detuvo ni se reutilizó ningún puerto existente.
+- Nginx no estaba instalado. Se instaló únicamente el paquete necesario y se desactivó el sitio genérico que Ubuntu había añadido en `0.0.0.0:80`; su archivo original se conservó.
+- Cloudflare y sus túneles existentes no se modificaron.
+
+## Rutas instaladas
+
+- Checkout: `/home/isi/projects/language-school`.
+- Rama: `feat/v3-platform-structure`.
+- PocketBase: `/opt/language-school/pocketbase`.
+- Frontend: `/opt/language-school/frontend`.
+- Datos persistentes: `/var/lib/language-school/pb_data`.
+- Configuración local: `/etc/language-school/production.env`, `root:root`, modo `0640`.
+- Nginx: `/etc/nginx/sites-available/language-school.conf`.
+- Backups: `/mnt/pocketbase-backup/language-school`.
+
+## Resultado
+
+- Migraciones frescas: PASS, 11 migraciones aplicadas.
+- Propietario de `pb_data`: `languageschool:languageschool`.
+- Superusuario local: creado, sin registrar identidad ni credenciales en este documento.
+- Primer ADMIN de Language School: creado y acceso a `/admin` confirmado por Isi.
+- Frontend: TypeScript PASS, Vite build PASS, `npm ci` con 0 vulnerabilidades.
+- Aviso no bloqueante: bundle principal superior a 500 kB después de minificación.
+- Servicio `language-school-pocketbase`: habilitado y activo.
+- Servicio `nginx`: habilitado y activo.
+- PocketBase: solo `127.0.0.1:8091`.
+- Nginx Language School: solo `127.0.0.1:8083`.
+- Health-check directo y mediante proxy: PASS.
+- Rutas `/`, `/programas`, `/profesores`, `/sobre-nosotros`, `/tarifas`, `/contacto` y `/acceso`: HTTP 200.
+- Panel interno `/_/` mediante Nginx: bloqueado con HTTP 404.
+- Backup físico: configurado, primera copia manual y checksum creados, timer nocturno activo.
+- Restauración física: pendiente de prueba específica.
+- Cloudflare público, DNS y HTTPS: no configurados en esta fase.
+
+## Servicios preexistentes preservados
+
+- Atelier Lumière: HTTP 200 después del despliegue.
+- Docker: activo.
+- Cloudflare Tunnel: activo y sin cambios.
+- PocketBase preexistente en `127.0.0.1:8090`: activo.
+- Servicios existentes en `3000`, `4000`, `5174`, `8080`, `8081`, `8082`, `8090`, `11434` y `18789`: preservados.
+
+## GitHub y pendientes
+
+- Commits principales: `5cddcf5`, `ed15497`, `927a135` y `0f473e7`.
+- Frontend CI: PASS.
+- PocketBase CI: PASS.
+- Infrastructure CI: PASS.
+- E2E CI: FAIL conocido por texto técnico visible en `AdminSiteEditor.tsx`; la instalación local no presenta fallos de salud.
+- Siguiente bloque: cerrar el residuo E2E y, después, configurar Cloudflare + HTTPS de forma separada.
+- Raspberry Pi 4: pendiente; no se marca como instalada.

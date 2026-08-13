@@ -50,6 +50,7 @@ if [[ "$PB_PORT" == "$PROXY_PORT" ]]; then
   exit 1
 fi
 
+NGINX_INSTALLED_NOW=0
 if ! command -v nginx >/dev/null; then
   if ! command -v apt-get >/dev/null; then
     echo 'nginx is not installed and apt-get is unavailable.' >&2
@@ -57,6 +58,17 @@ if ! command -v nginx >/dev/null; then
   fi
   apt-get update
   DEBIAN_FRONTEND=noninteractive apt-get install -y nginx
+  NGINX_INSTALLED_NOW=1
+fi
+
+# A fresh Ubuntu package enables a public default site on port 80. Disable only
+# that package-provided symlink; never remove a site that predates this install.
+DEFAULT_ENABLED_CONF='/etc/nginx/sites-enabled/default'
+DEFAULT_AVAILABLE_CONF='/etc/nginx/sites-available/default'
+if [[ "$NGINX_INSTALLED_NOW" -eq 1 ]] && \
+   [[ -L "$DEFAULT_ENABLED_CONF" ]] && \
+   [[ "$(readlink -f "$DEFAULT_ENABLED_CONF")" == "$DEFAULT_AVAILABLE_CONF" ]]; then
+  rm -f "$DEFAULT_ENABLED_CONF"
 fi
 
 nginx -t

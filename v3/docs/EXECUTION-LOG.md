@@ -230,6 +230,22 @@ Objetivos iniciales obtenidos de auditoría real:
 6. registrar privacidad/legal como bloqueador explícito del piloto público hasta completar textos reales y datos del responsable;
 7. mantener la validación E2E completa después de cada bloque.
 
+### FASE 9.2A · MINI PC PREPRODUCCIÓN — ✅ INSTALACIÓN LOCAL COMPLETADA
+
+- Host real: `Isi-Minipc`, Ubuntu 24.04.4 LTS, `x86_64` / `linux_amd64`.
+- Checkout: `/home/isi/projects/language-school`, rama `feat/v3-platform-structure`.
+- PocketBase 0.39.9: checksum oficial verificado, migraciones PASS y servicio activo en `127.0.0.1:8091`.
+- Frontend: TypeScript PASS, Vite PASS, 0 vulnerabilidades y despliegue en `/opt/language-school/frontend`.
+- Nginx 1.24.0: activo exclusivamente en `127.0.0.1:8083` para Language School.
+- `/api/health`: PASS directo y mediante Nginx.
+- `/_/`: bloqueado mediante Nginx con HTTP 404.
+- Superusuario y primer ADMIN creados; acceso a `/admin` confirmado por Isi.
+- Backup físico en `/mnt/pocketbase-backup`: primera copia y checksum PASS; timer nocturno activo.
+- Atelier Lumière, Docker, Cloudflare y PocketBase preexistente: activos e intactos.
+- Cloudflare público, DNS y HTTPS: no configurados todavía.
+- CI: Frontend, PocketBase e Infrastructure PASS; E2E pendiente por un texto técnico visible en `AdminSiteEditor.tsx`.
+- Detalle completo: `v3/docs/MINI-PC-DEPLOYMENT-LOG.md`.
+
 ### 9.2 Raspberry + SSD — 🔒 PENDIENTE DE HARDWARE
 1. instalar sistema ARM64 en SSD;
 2. confirmar boot desde SSD;
