@@ -117,14 +117,10 @@ export default function TeacherMaterialPage() {
 
   async function download(record: MaterialRecord) {
     if (isDemoMode) { setMessage('La descarga real no está disponible en la demostración.'); return }
-    const downloadWindow = window.open('', '_blank')
-    if (!downloadWindow) { setError('El navegador ha bloqueado la descarga. Permite las ventanas emergentes e inténtalo de nuevo.'); return }
     try {
       const url = await getTeacherMaterialDownloadUrl(record)
-      downloadWindow.opener = null
-      downloadWindow.location.replace(url)
+      window.location.assign(url)
     } catch {
-      downloadWindow.close()
       setError('No se ha podido abrir el recurso.')
     }
   }

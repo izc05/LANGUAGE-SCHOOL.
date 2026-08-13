@@ -79,18 +79,10 @@ export default function StudentMaterialPage() {
       return
     }
 
-    const downloadWindow = window.open('', '_blank')
-    if (!downloadWindow) {
-      setError('El navegador ha bloqueado la descarga. Permite las ventanas emergentes e inténtalo de nuevo.')
-      return
-    }
-
     try {
       const url = await getMaterialDownloadUrl(item.record)
-      downloadWindow.opener = null
-      downloadWindow.location.replace(url)
+      window.location.assign(url)
     } catch {
-      downloadWindow.close()
       setError('No se ha podido preparar la descarga de este material. Inténtalo de nuevo.')
     }
   }
