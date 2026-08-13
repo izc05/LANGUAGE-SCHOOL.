@@ -324,3 +324,12 @@ Cada sesión debe empezar leyendo este archivo y actualizarlo al finalizar cada 
 - La descarga normal de Laura fue autorizada y se verificó el contenido `Private student pilot file.` sin URL manual ni acceso a `pb_data`.
 - Seguridad básica: el intento de Alex de abrir `/profesor/alumnos` redirige a `/alumno`; la visibilidad docente queda vinculada a la matrícula ACTIVE de `B1 Pilot A`.
 - CI final de `e98309c`: Frontend PASS, PocketBase PASS, Infrastructure PASS y E2E PASS. Health-check del mini PC: PASS.
+
+### FASE 9.2B.10 · Aviso ADMIN → Alumno — ✅ COMPLETADA
+
+- ADMIN creó un único aviso individual desde `/admin/avisos`: `Bienvenido a la prueba`, tipo `GENERAL`, dirigido a `Alex Alumno Prueba`.
+- La creación confirmó `Aviso enviado a 1 alumno`; el histórico indica a Alex como destinatario y el aviso persiste tras recargar, sin duplicados.
+- Alex ve el título y el contenido completo en `/alumno/avisos`. Al abrir el aviso, su estado pasó de `Nuevo` a `Leído` y el contador de sin leer se actualizó de 1 a 0; ambos datos persistieron tras recargar.
+- Alex no puede acceder a `/admin/avisos`: el guard le redirige a `/alumno`. Su interfaz de avisos no contiene controles de edición, creación, autor, destinatario ni borrado.
+- Laura no ve el aviso individual de Alex en su resumen de profesor; el comportamiento confirma que no se trata de un aviso general docente.
+- No fue necesario modificar código ni esquema. Health-check del mini PC: PASS.

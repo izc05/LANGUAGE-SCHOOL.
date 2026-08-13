@@ -127,3 +127,14 @@ Fecha de instalación: 2026-08-13 (Europe/Madrid).
 - PERMISOS: PASS. Alex es redirigido de `/profesor/alumnos` a `/alumno`; conserva en cambio su propio control de archivo (`Archivar`).
 - CI de `e98309c`: Frontend, PocketBase, Infrastructure y E2E PASS.
 - `bash v3/infrastructure/raspberry-pi/health-check.sh`: PASS.
+
+## FASE 9.2B.10 · Aviso ADMIN → Alumno — ✅ COMPLETADA
+
+- CREACIÓN ADMIN: PASS. Se creó un único aviso desde `/admin/avisos`: `Bienvenido a la prueba`.
+- DESTINATARIO: `Alex Alumno Prueba`, seleccionado como alumno individual; tipo `GENERAL` y estado equivalente publicado/enviado.
+- VISIBILIDAD ALUMNO: PASS. Alex lo ve en `/alumno/avisos` con el contenido completo.
+- CONTENIDO: PASS. Incluye las tres secciones ficticias sobre acceso a clases, materiales, tareas, correcciones y archivos.
+- PERSISTENCIA: PASS. El aviso existe una sola vez tanto en ADMIN como en ALUMNO tras recargar.
+- ESTADO LEÍDO: PASS. Al abrirlo en el listado de Alex, cambió de `Nuevo` a `Leído` y el contador pasó de 1 a 0; persistió tras recargar.
+- PERMISOS: PASS. Alex no puede entrar a `/admin/avisos` (redirección a `/alumno`) ni dispone de edición, creación, destinatario, autor o borrado. Laura no muestra este aviso individual de Alex en su resumen docente.
+- `bash v3/infrastructure/raspberry-pi/health-check.sh`: PASS.
