@@ -55,3 +55,31 @@ test('los portales de Alumno y Profesor mantienen lenguaje de academia', async (
     await expectNoTechnicalBackendCopy(page)
   }
 })
+
+test('las pantallas ADMIN operativas no muestran implementación del backend', async ({ page }) => {
+  await login(page, requiredEnv('E2E_ADMIN_EMAIL'), requiredEnv('E2E_ADMIN_PASSWORD'), /\/admin$/)
+
+  const operationalRoutes = [
+    '/admin',
+    '/admin/web',
+    '/admin/web/sobre-nosotros',
+    '/admin/blog',
+    '/admin/multimedia',
+    '/admin/contactos',
+    '/admin/avisos',
+    '/admin/alumnos',
+    '/admin/profesores',
+    '/admin/profesores/publicos',
+    '/admin/cursos',
+    '/admin/clases',
+    '/admin/tarifas',
+    '/admin/configuracion',
+  ]
+
+  for (const path of operationalRoutes) {
+    await page.goto(path)
+    await expectNoTechnicalBackendCopy(page)
+  }
+
+  // /admin/sistema is intentionally technical and is excluded from this guard.
+})
