@@ -48,6 +48,7 @@ Fecha de instalación: 2026-08-13 (Europe/Madrid).
 - Primer ADMIN de Language School: creado y acceso a `/admin` confirmado por Isi.
 - Frontend: TypeScript PASS, Vite build PASS, `npm ci` con 0 vulnerabilidades.
 - Aviso no bloqueante: bundle principal superior a 500 kB después de minificación.
+- Editor `/admin/web`: acceso autenticado PASS, controles `Guardar borrador` y `Guardar y publicar` presentes, vista previa renderizada y sin nombres técnicos visibles.
 - Servicio `language-school-pocketbase`: habilitado y activo.
 - Servicio `nginx`: habilitado y activo.
 - PocketBase: solo `127.0.0.1:8091`.
@@ -69,10 +70,14 @@ Fecha de instalación: 2026-08-13 (Europe/Madrid).
 
 ## GitHub y pendientes
 
-- Commits principales: `5cddcf5`, `ed15497`, `927a135` y `0f473e7`.
+- FASE 9.2A: **COMPLETADA**.
+- HEAD de código desplegado: `924772e378b0582735edae8942e163997c610552`.
+- Cierre de copy para piloto: `8dac3a7`, `a3a88e4`, `4b2cb62` y `924772e`.
 - Frontend CI: PASS.
 - PocketBase CI: PASS.
 - Infrastructure CI: PASS.
-- E2E CI: FAIL conocido por texto técnico visible en `AdminSiteEditor.tsx`; la instalación local no presenta fallos de salud.
-- Siguiente bloque: cerrar el residuo E2E y, después, configurar Cloudflare + HTTPS de forma separada.
+- E2E CI: **30/30 PASS**.
+- Mini PC health y redespliegue exclusivo del frontend: PASS.
+- Backup y checksum: PASS; la prueba de restauración física continúa pendiente y no se marca como completada.
+- Siguiente bloque: seguir desarrollando sobre el mini PC antes de publicar por dominio; Cloudflare, DNS, HTTPS y SMTP continúan pendientes.
 - Raspberry Pi 4: pendiente; no se marca como instalada.

@@ -10,8 +10,8 @@ Este archivo es la **fuente de verdad** del desarrollo. Cada bloque se marca por
 - Frontend: React + TypeScript + Vite
 - Backend: PocketBase `0.39.9`
 - Producción prevista: Raspberry Pi 4 + SSD + disco externo de backup
-- Frente activo: **FASE 9.1B.11 · Preparación de piloto**
-- Hardware: **FASE 9.2 sigue pendiente**, pero no bloquea la preproducción en GitHub.
+- Frente activo: **desarrollo de piloto sobre el mini PC de preproducción**.
+- Hardware: **FASE 9.2A completada en el mini PC**; la Raspberry Pi 4 continúa pendiente.
 - HEAD estable de cierre 9.1B.10: `776640df0da5cb07fcc4fb9c0ea565da533f1259`.
 
 ### Estados
@@ -230,7 +230,7 @@ Objetivos iniciales obtenidos de auditoría real:
 6. registrar privacidad/legal como bloqueador explícito del piloto público hasta completar textos reales y datos del responsable;
 7. mantener la validación E2E completa después de cada bloque.
 
-### FASE 9.2A · MINI PC PREPRODUCCIÓN — ✅ INSTALACIÓN LOCAL COMPLETADA
+### FASE 9.2A · MINI PC PREPRODUCCIÓN — ✅ COMPLETADA
 
 - Host real: `Isi-Minipc`, Ubuntu 24.04.4 LTS, `x86_64` / `linux_amd64`.
 - Checkout: `/home/isi/projects/language-school`, rama `feat/v3-platform-structure`.
@@ -240,10 +240,14 @@ Objetivos iniciales obtenidos de auditoría real:
 - `/api/health`: PASS directo y mediante Nginx.
 - `/_/`: bloqueado mediante Nginx con HTTP 404.
 - Superusuario y primer ADMIN creados; acceso a `/admin` confirmado por Isi.
+- `/admin/web`: acceso autenticado PASS, botones de borrador/publicación presentes, vista previa PASS y sin nombres técnicos visibles.
 - Backup físico en `/mnt/pocketbase-backup`: primera copia y checksum PASS; timer nocturno activo.
+- Restauración física: pendiente de prueba específica; no se marca como completada.
 - Atelier Lumière, Docker, Cloudflare y PocketBase preexistente: activos e intactos.
 - Cloudflare público, DNS y HTTPS: no configurados todavía.
-- CI: Frontend, PocketBase e Infrastructure PASS; E2E pendiente por un texto técnico visible en `AdminSiteEditor.tsx`.
+- HEAD de código desplegado: `924772e378b0582735edae8942e163997c610552`.
+- CI: Frontend, PocketBase e Infrastructure PASS; E2E **30/30 PASS**.
+- Redespliegue realizado exclusivamente sobre el frontend; esquema, migraciones, `pb_data`, usuarios, Nginx, puertos, Cloudflare, backup y Atelier Lumière no se modificaron.
 - Detalle completo: `v3/docs/MINI-PC-DEPLOYMENT-LOG.md`.
 
 ### 9.2 Raspberry + SSD — 🔒 PENDIENTE DE HARDWARE
