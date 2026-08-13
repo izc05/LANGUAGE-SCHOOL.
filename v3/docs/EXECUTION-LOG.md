@@ -352,3 +352,13 @@ Cada sesión debe empezar leyendo este archivo y actualizarlo al finalizar cada 
 - Datos restaurados por interfaz: Laura Prueba Docente, Alex Alumno Prueba, English B1 Pilot, B1 Pilot A, Conversation Pilot programada, Alex `Presente`, `Conversation Pilot · Vocabulary`, `Pilot Writing Task` corregida con nota `8`, `Private Pilot File` y `Bienvenido a la prueba`. El marcador temporal quedó ausente, como corresponde a una copia anterior.
 - Salud final: servicio activo, timer habilitado/activo, listeners restringidos a `127.0.0.1:8083` y `127.0.0.1:8091`, health-check completo PASS, portada HTTP 200 y Atelier Lumière sin alteraciones (HTTP 302 de acceso protegido).
 - Cloudflare, DNS, HTTPS y SMTP permanecen pendientes y sin cambios. No se inicia la fase 9.3.
+
+### FASE 9.3A · Preparación segura para publicación — ✅ COMPLETADA (sin publicar)
+
+- Baseline validado sobre `6198e2d` con árbol limpio, rama correcta y health-check PASS.
+- Inventario no destructivo: Cloudflared `2026.7.3` está activo y habilitado como servicio; la arquitectura existente es un túnel gestionado remotamente con conector activo en el mini PC. No se leyeron ni guardaron tokens, credenciales o variables secretas.
+- Cloudflare muestra únicamente la zona `isivoltpro.com` y un túnel saludable ya usado por servicios existentes. Atelier Lumière mantiene su ruta independiente y respondió como antes (HTTP 302 de acceso protegido); no se modificó.
+- Isi eligió el candidato temporal `language-school.isivoltpro.com`. No se creó el hostname, DNS ni una ruta de túnel: la publicación continúa desactivada.
+- Estrategia para 9.3B: reutilizar el túnel existente con una ruta nueva hacia `http://127.0.0.1:8083`. PocketBase `127.0.0.1:8091` no se expondrá directamente; Nginx mantiene `/_/` bloqueado con 404.
+- `PUBLIC_ORIGIN` actual es local (`http://127.0.0.1:8083`). El futuro `https://language-school.isivoltpro.com` exige rebuild y despliegue de frontend. No se modificó `/etc/language-school/production.env`.
+- SMTP, recuperación por email, HTTPS público y router port-forward: pendientes, sin configuración ni secretos. Health final, timer de backup y web local: PASS.

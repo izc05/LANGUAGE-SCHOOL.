@@ -96,6 +96,19 @@ Fecha de instalación: 2026-08-13 (Europe/Madrid).
 - CI de `6cbba67`: Frontend, PocketBase, Infrastructure y E2E PASS.
 - Cloudflare público, DNS, HTTPS y SMTP: continúan pendientes y no se modificaron.
 
+## FASE 9.3A · Preparación segura para publicación — ✅ COMPLETADA (sin publicar)
+
+- Baseline: rama `feat/v3-platform-structure`, HEAD `6198e2d9c5e97c49ba3ae923f2fbf4a1d62f7a57`, árbol limpio y health-check PASS.
+- Cloudflared existente: instalado (`2026.7.3`), habilitado y activo como servicio systemd. No se inspeccionaron ni registraron tokens o credenciales.
+- Arquitectura Atelier: túnel Cloudflare gestionado remotamente, con conector activo en `Isi-Minipc`; no hay contenedor Docker de cloudflared. Atelier se mantuvo intacto (HTTP 302 de su acceso protegido).
+- Cloudflare: una única zona disponible, `isivoltpro.com`; un túnel existente saludable. No se crearon ni editaron rutas, hostnames, DNS ni túneles.
+- Candidato elegido por Isi: `language-school.isivoltpro.com`. Sigue sin crear ni publicar.
+- Estrategia recomendada: reutilizar el túnel/conector existente y añadir en la fase posterior un hostname con origen exclusivo `http://127.0.0.1:8083`.
+- Seguridad de origen: Nginx sirve en `127.0.0.1:8083`, `/api/` proxy a `127.0.0.1:8091` y `/_/` devuelve 404. No hay listeners Language School en 80 o 443.
+- `PUBLIC_ORIGIN` actual: `http://127.0.0.1:8083`. Propuesto: `https://language-school.isivoltpro.com`; requerirá reconstruir y desplegar el frontend al activar la publicación.
+- SMTP y recuperación de contraseña por correo: pendientes de una fase posterior, sin proveedor ni credenciales configurados.
+- Cloudflare público, DNS, HTTPS, SMTP y router port-forward: sin cambios en esta fase.
+
 ## FASE 9.2B.6 · Primera clase real de prueba — ✅ COMPLETADA
 
 - Clase programada desde `/admin/clases`: `Conversation Pilot`.
