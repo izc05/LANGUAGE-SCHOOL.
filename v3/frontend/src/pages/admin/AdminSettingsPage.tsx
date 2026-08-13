@@ -10,6 +10,9 @@ import {
 } from '../../services/pocketbase/siteManagement'
 import { adminNav } from './adminNav'
 
+const allowedLogoTypes = new Set(['image/png', 'image/jpeg', 'image/webp'])
+const maxLogoBytes = 5 * 1024 * 1024
+
 export default function AdminSettingsPage() {
   const [form, setForm] = useState<SiteSettingsInput>(demoSiteSettings)
   const [logo, setLogo] = useState<File | null>(null)
@@ -24,7 +27,7 @@ export default function AdminSettingsPage() {
     let mounted = true
     getSiteSettings()
       .then((record) => { if (mounted) setForm(settingsToInput(record)) })
-      .catch(() => { if (mounted) setError('No se ha podido cargar la configuración de PocketBase.') })
+      .catch(() => { if (mounted) setError('No se ha podido cargar la configuración general. Inténtalo de nuevo en unos segundos.') })
       .finally(() => { if (mounted) setLoading(false) })
     return () => { mounted = false }
   }, [])
@@ -37,9 +40,27 @@ export default function AdminSettingsPage() {
 
   function handleLogo(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0] ?? null
+    setNotice(null)
+    setError(null)
+
+    if (file && !allowedLogoTypes.has(file.type)) {
+      setLogo(null)
+      setLogoName('Sin nuevo logo seleccionado')
+      event.target.value = ''
+      setError('El logo debe estar en formato PNG, JPG o WEBP.')
+      return
+    }
+
+    if (file && file.size > maxLogoBytes) {
+      setLogo(null)
+      setLogoName('Sin nuevo logo seleccionado')
+      event.target.value = ''
+      setError('El logo supera el límite de 5 MB.')
+      return
+    }
+
     setLogo(file)
     setLogoName(file?.name ?? 'Sin nuevo logo seleccionado')
-    setNotice(null)
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -53,7 +74,7 @@ export default function AdminSettingsPage() {
     }
 
     if (isDemoMode) {
-      setNotice('Modo demo: configuración guardada únicamente en esta vista.')
+      setNotice('Configuración preparada en la demostración. No se ha guardado ningún cambio real.')
       return
     }
 
@@ -62,9 +83,9 @@ export default function AdminSettingsPage() {
       await saveSiteSettings(form, logo)
       setLogo(null)
       setLogoName('Sin nuevo logo seleccionado')
-      setNotice('Configuración general guardada en PocketBase.')
+      setNotice('Configuración general guardada correctamente.')
     } catch {
-      setError('No se ha podido guardar la configuración. Revisa la sesión ADMIN y la conexión.')
+      setError('No se ha podido guardar la configuración. Comprueba tu sesión y vuelve a intentarlo.')
     } finally {
       setSaving(false)
     }
@@ -77,36 +98,36 @@ export default function AdminSettingsPage() {
           <div>
             <span className="eyebrow">CMS · CONFIGURACIÓN</span>
             <h2>Identidad y contacto</h2>
-            <p>Centraliza aquí los datos que después reutilizarán la cabecera, contacto, footer y metadatos de la web.</p>
+            <p>Centraliza aquí los datos que reutilizan la cabecera, el acceso, los portales, el contacto y el pie de la web.</p>
           </div>
           <span className="status info">Configuración global</span>
         </header>
 
-        {loading && <div className="cms-notice">Cargando configuración…</div>}
-        {notice && <div className="cms-notice success-notice">{notice}</div>}
-        {error && <div className="cms-notice" role="alert">{error}</div>}
+        {loading && <div className="cms-notice" role="status">Cargando configuración…</div>}
+        {notice && <div className="cms-notice success-notice" role="status">{notice}</div>}
+        {error && <div className="cms-notice auth-error" role="alert">{error}</div>}
 
         <form className="admin-settings-grid" onSubmit={handleSubmit}>
           <section className="panel cms-form">
             <div className="panel-heading"><div><span className="eyebrow">MARCA</span><h3>Identidad de la academia</h3></div></div>
             <label className="field-stack"><span>Nombre</span><input value={form.academyName} onChange={(event) => setField('academyName', event.target.value)} required /></label>
-            <label className="field-stack"><span>Logo</span><input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" onChange={handleLogo} /></label>
-            <div className="settings-file-note"><strong>{logoName}</strong><small>PNG, JPG, WEBP o SVG. El logo anterior se conserva si no seleccionas otro.</small></div>
+            <label className="field-stack"><span>Logo</span><input type="file" accept="image/png,image/jpeg,image/webp" onChange={handleLogo} /></label>
+            <div className="settings-file-note"><strong>{logoName}</strong><small>PNG, JPG o WEBP · máximo 5 MB. El logo anterior se conserva si no seleccionas otro.</small></div>
             <label className="field-stack"><span>Dirección</span><textarea rows={3} value={form.address} onChange={(event) => setField('address', event.target.value)} placeholder="Dirección o localidad" /></label>
           </section>
 
           <section className="panel cms-form">
             <div className="panel-heading"><div><span className="eyebrow">CONTACTO</span><h3>Canales públicos</h3></div></div>
-            <label className="field-stack"><span>Email</span><input type="email" value={form.email} onChange={(event) => setField('email', event.target.value)} placeholder="info@..." /></label>
+            <label className="field-stack"><span>Email</span><input type="email" autoComplete="email" value={form.email} onChange={(event) => setField('email', event.target.value)} placeholder="info@..." /></label>
             <div className="field-row">
-              <label className="field-stack"><span>Teléfono</span><input value={form.phone} onChange={(event) => setField('phone', event.target.value)} /></label>
-              <label className="field-stack"><span>WhatsApp</span><input value={form.whatsapp} onChange={(event) => setField('whatsapp', event.target.value)} /></label>
+              <label className="field-stack"><span>Teléfono</span><input type="tel" autoComplete="tel" value={form.phone} onChange={(event) => setField('phone', event.target.value)} /></label>
+              <label className="field-stack"><span>WhatsApp</span><input type="tel" value={form.whatsapp} onChange={(event) => setField('whatsapp', event.target.value)} /></label>
             </div>
             <label className="field-stack"><span>Instagram</span><input type="url" value={form.instagram} onChange={(event) => setField('instagram', event.target.value)} placeholder="https://instagram.com/..." /></label>
             <label className="field-stack"><span>Facebook</span><input type="url" value={form.facebook} onChange={(event) => setField('facebook', event.target.value)} /></label>
             <label className="field-stack"><span>YouTube</span><input type="url" value={form.youtube} onChange={(event) => setField('youtube', event.target.value)} /></label>
             <button className="button button-primary" type="submit" disabled={saving}>{saving ? 'Guardando…' : 'Guardar configuración'}</button>
-            {isDemoMode && <small className="muted">Modo demo: no se guarda ningún dato real.</small>}
+            {isDemoMode && <small className="muted">Vista de demostración: no se guardan cambios reales.</small>}
           </section>
         </form>
       </div>
