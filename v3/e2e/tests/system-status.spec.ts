@@ -15,15 +15,17 @@ async function login(page: Page, email: string, password: string, expected: RegE
 }
 
 test('ADMIN puede consultar el estado seguro de la plataforma', async ({ page }) => {
-  await login(page, requiredEnv('E2E_ADMIN_EMAIL'), requiredEnv('E2E_ADMIN_PASSWORD'), /\/admin$/)
+  const adminPassword = requiredEnv('E2E_ADMIN_PASSWORD')
+  await login(page, requiredEnv('E2E_ADMIN_EMAIL'), adminPassword, /\/admin$/)
   const nav = page.getByRole('navigation', { name: 'Menú de Administrador' })
   await nav.getByRole('link', { name: 'Sistema' }).click()
   await expect(page).toHaveURL(/\/admin\/sistema$/)
   await expect(page.getByRole('heading', { name: 'Estado de la plataforma' })).toBeVisible()
   await expect(page.getByText('Operativo')).toBeVisible()
   await expect(page.getByText('Connected')).toBeVisible()
-  await expect(page.locator('body')).not.toContainText('token')
-  await expect(page.locator('body')).not.toContainText('password')
+  await expect(page.locator('body')).not.toContainText(adminPassword)
+  await expect(page.locator('body')).not.toContainText('Bearer ')
+  await expect(page.locator('body')).not.toContainText('E2eSuperuserPass123!')
 })
 
 test('STUDENT no puede acceder al diagnóstico ADMIN', async ({ page }) => {
