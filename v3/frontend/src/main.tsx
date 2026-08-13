@@ -20,6 +20,7 @@ import './styles/student-portal.css'
 import './styles/teacher-portal.css'
 import './styles/accessibility.css'
 import './styles/error-states.css'
+import './styles/dashboard-navigation.css'
 
 const root = document.getElementById('root')
 
