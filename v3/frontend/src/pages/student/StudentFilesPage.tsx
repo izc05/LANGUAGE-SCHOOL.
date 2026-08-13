@@ -145,7 +145,7 @@ export default function StudentFilesPage() {
 
     try {
       const url = await getMyFileDownloadUrl(record)
-      window.open(url, '_blank', 'noopener,noreferrer')
+      window.location.assign(url)
     } catch {
       setError('No se ha podido preparar la descarga. Inténtalo de nuevo.')
     }
@@ -191,9 +191,9 @@ export default function StudentFilesPage() {
             <div className="panel-heading"><div><span className="eyebrow">SUBIR</span><h3>Nuevo archivo</h3></div><span className="status success">Máx. 20 MB</span></div>
 
             <label className="upload-dropzone student-file-dropzone">
-              <input type="file" accept=".pdf,.doc,.docx,.mp3,.m4a,.jpg,.jpeg,.png,.webp" onChange={chooseFile} disabled={uploading} />
+              <input type="file" accept=".txt,.pdf,.doc,.docx,.mp3,.m4a,.jpg,.jpeg,.png,.webp" onChange={chooseFile} disabled={uploading} />
               <strong>{selectedFile ? selectedFile.name : 'Seleccionar archivo'}</strong>
-              <small>PDF, Word, audio o imagen</small>
+              <small>Texto, PDF, Word, audio o imagen</small>
             </label>
 
             <label className="field-stack"><span>Título</span><input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Nombre que verás en tu carpeta" /></label>

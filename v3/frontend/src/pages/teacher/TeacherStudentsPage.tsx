@@ -106,7 +106,7 @@ export default function TeacherStudentsPage() {
   async function downloadFile(record: StudentFileRecord) {
     setError(null); setMessage(null)
     if (isDemoMode) { setMessage('La descarga real no está disponible en la demostración.'); return }
-    try { window.open(await getAuthorizedStudentFileDownloadUrl(record), '_blank', 'noopener,noreferrer') }
+    try { window.location.assign(await getAuthorizedStudentFileDownloadUrl(record)) }
     catch { setError('No se puede descargar este archivo. Comprueba que el alumno siga asignado a uno de tus grupos.') }
   }
 
