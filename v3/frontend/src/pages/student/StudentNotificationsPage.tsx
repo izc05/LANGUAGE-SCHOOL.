@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import DashboardShell from '../../components/DashboardShell'
+import PortalEmptyState from '../../components/PortalEmptyState'
 import { useAuth } from '../../features/auth/AuthProvider'
 import { listMyNotifications, markMyNotificationRead, type NotificationRecord } from '../../services/pocketbase/studentPortal'
 import { studentNav } from './studentNav'
@@ -58,7 +59,7 @@ export default function StudentNotificationsPage() {
         })))
       })
       .catch(() => {
-        if (mounted) setError('No se han podido cargar tus avisos.')
+        if (mounted) setError('No se han podido cargar tus avisos. Inténtalo de nuevo en unos segundos.')
       })
       .finally(() => {
         if (mounted) setLoading(false)
@@ -93,8 +94,8 @@ export default function StudentNotificationsPage() {
           <div className="private-space-badge"><strong>{unread}</strong><span>sin leer</span></div>
         </header>
 
-        {loading && <div className="cms-notice">Cargando avisos…</div>}
-        {error && <div className="cms-notice auth-error">{error}</div>}
+        {loading && <div className="cms-notice" role="status">Cargando avisos…</div>}
+        {error && <div className="cms-notice auth-error" role="alert">{error}</div>}
 
         <section className="panel media-toolbar-panel">
           <div className="filter-pills">
@@ -115,7 +116,13 @@ export default function StudentNotificationsPage() {
               <span className={`status ${item.readAt ? 'success' : 'info'}`}>{item.readAt ? 'Leído' : 'Nuevo'}</span>
             </article>
           ))}
-          {!loading && visible.length === 0 && <p className="muted">No hay avisos que mostrar.</p>}
+          {!loading && visible.length === 0 && (
+            <PortalEmptyState
+              title={filter === 'UNREAD' ? 'No tienes avisos pendientes' : 'Todavía no hay avisos'}
+              description={filter === 'UNREAD' ? 'Has leído todas las comunicaciones disponibles.' : 'Las novedades sobre clases, material y tareas aparecerán aquí.'}
+              action={filter === 'UNREAD' ? { label: 'Ver todos', to: '/alumno/avisos' } : undefined}
+            />
+          )}
         </section>
       </div>
     </DashboardShell>
