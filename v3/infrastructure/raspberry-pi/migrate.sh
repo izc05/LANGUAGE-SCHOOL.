@@ -5,6 +5,8 @@ PB_BIN="${PB_BIN:-/opt/language-school/pocketbase/pocketbase}"
 PB_DATA="${PB_DATA:-/var/lib/language-school/pb_data}"
 PB_MIGRATIONS="${PB_MIGRATIONS:-/opt/language-school/pocketbase/pb_migrations}"
 SERVICE="${SERVICE:-language-school-pocketbase.service}"
+SERVICE_USER="${SERVICE_USER:-languageschool}"
+SERVICE_GROUP="${SERVICE_GROUP:-languageschool}"
 
 if [[ "${EUID}" -ne 0 ]]; then
   echo 'Run this script as root (sudo).' >&2
@@ -21,6 +23,25 @@ if [[ ! -d "$PB_MIGRATIONS" ]]; then
   exit 1
 fi
 
+if ! id "$SERVICE_USER" >/dev/null 2>&1; then
+  echo "Service user not found: $SERVICE_USER" >&2
+  exit 1
+fi
+
+if ! getent group "$SERVICE_GROUP" >/dev/null; then
+  echo "Service group not found: $SERVICE_GROUP" >&2
+  exit 1
+fi
+
+command -v runuser >/dev/null || {
+  echo 'Missing required command: runuser' >&2
+  exit 1
+}
+
+# PocketBase runs as the unprivileged service account. Keep the database owned
+# by that same account and run migrations with the same permissions.
+chown -R "$SERVICE_USER:$SERVICE_GROUP" "$PB_DATA"
+
 was_active=0
 if systemctl is-active --quiet "$SERVICE"; then
   was_active=1
@@ -35,7 +56,9 @@ restart_if_needed() {
 trap restart_if_needed EXIT
 
 set +e
-MIGRATION_OUTPUT=$("$PB_BIN" migrate up --dir="$PB_DATA" --migrationsDir="$PB_MIGRATIONS" 2>&1)
+cd "$PB_DATA"
+MIGRATION_OUTPUT=$(runuser --user "$SERVICE_USER" -- \
+  "$PB_BIN" migrate up --dir="$PB_DATA" --migrationsDir="$PB_MIGRATIONS" 2>&1)
 MIGRATION_EXIT=$?
 set -e
 printf '%s\n' "$MIGRATION_OUTPUT"
