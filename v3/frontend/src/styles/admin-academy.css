@@ -90,7 +90,7 @@
 .teacher-card-actions,
 .course-card-actions {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 7px;
 }
 
@@ -107,6 +107,17 @@
   color: var(--ink-soft);
   font-size: .72rem;
   font-weight: 700;
+}
+
+.teacher-card-actions .button-danger-soft {
+  border-color: rgba(185, 28, 28, 0.2);
+  background: rgba(254, 226, 226, 0.55);
+  color: #991b1b;
+}
+
+.teacher-card-actions button:disabled {
+  cursor: wait;
+  opacity: .58;
 }
 
 .teacher-load-panel {

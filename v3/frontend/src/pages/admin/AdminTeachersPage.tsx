@@ -4,6 +4,7 @@ import PortalEmptyState from '../../components/PortalEmptyState'
 import { useAuth } from '../../features/auth/AuthProvider'
 import {
   createAdminTeacher,
+  deleteAdminTeacher,
   listAdminClasses,
   listAdminEnrollments,
   listAdminGroups,
@@ -45,6 +46,7 @@ export default function AdminTeachersPage() {
   const [showCreate, setShowCreate] = useState(false)
   const [loading, setLoading] = useState(!isDemoMode)
   const [saving, setSaving] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [name, setName] = useState('')
@@ -139,6 +141,32 @@ export default function AdminTeachersPage() {
     }
   }
 
+  async function removeTeacher(record: TeacherView) {
+    setError(null)
+    setMessage(null)
+    const confirmed = window.confirm(
+      `¿Eliminar definitivamente a ${record.name}?\n\nSe borrarán su acceso y su perfil docente. Esta acción no se puede deshacer.`,
+    )
+    if (!confirmed) return
+
+    if (isDemoMode) {
+      setTeachers((current) => current.filter((item) => item.id !== record.user.id))
+      setMessage('Profesor eliminado en la demostración. No se ha modificado ningún dato real.')
+      return
+    }
+
+    setDeletingId(record.user.id)
+    try {
+      await deleteAdminTeacher(record.user)
+      setTeachers((current) => current.filter((item) => item.id !== record.user.id))
+      setMessage('Profesor eliminado correctamente.')
+    } catch (deletionError) {
+      setError(deletionError instanceof Error ? deletionError.message : 'No se ha podido eliminar el profesor.')
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
   return (
     <DashboardShell role="Administrador" name="Admin" nav={[...adminNav]}>
       <div className="dashboard-content cms-page">
@@ -181,7 +209,10 @@ export default function AdminTeachersPage() {
               </div>
               <div className="teacher-card-metrics"><div><span>Alumnos</span><strong>{teacher.students}</strong></div><div><span>Clases</span><strong>{teacher.classes}</strong></div></div>
               <div className="teacher-availability"><span>Grupos activos</span><strong>{teacher.groups.length ? teacher.groups.map((group) => group.name).join(' · ') : 'Sin asignar'}</strong></div>
-              <div className="teacher-card-actions"><button type="button" onClick={() => void toggleTeacher(teacher)}>{teacher.user.status === 'ACTIVE' ? 'Desactivar' : 'Activar'}</button></div>
+              <div className="teacher-card-actions">
+                <button type="button" disabled={deletingId === teacher.user.id} onClick={() => void toggleTeacher(teacher)}>{teacher.user.status === 'ACTIVE' ? 'Desactivar' : 'Activar'}</button>
+                <button className="button-danger-soft" type="button" disabled={deletingId === teacher.user.id} onClick={() => void removeTeacher(teacher)}>{deletingId === teacher.user.id ? 'Eliminando…' : 'Eliminar'}</button>
+              </div>
             </article>
           ))}
           {!loading && views.length === 0 && <PortalEmptyState title="Todavía no hay profesores registrados" description="Crea el primer profesor para asignarle grupos, alumnos y clases." />}

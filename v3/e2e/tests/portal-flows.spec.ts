@@ -101,6 +101,21 @@ test('ADMIN navega por el CMS completo', async ({ page }) => {
   await nav.getByRole('link', { name: 'Alumnos' }).click()
   await expect(page).toHaveURL(/\/admin\/alumnos$/)
 
+  await nav.getByRole('link', { name: 'Profesores', exact: true }).click()
+  await expect(page).toHaveURL(/\/admin\/profesores$/)
+  const teacherCard = page.locator('.teacher-admin-card').filter({ hasText: 'E2E Teacher' })
+  await expect(teacherCard.getByRole('button', { name: 'Eliminar' })).toBeVisible()
+  page.once('dialog', async (dialog) => {
+    expect(dialog.message()).toContain('Esta acción no se puede deshacer')
+    await dialog.dismiss()
+  })
+  await teacherCard.getByRole('button', { name: 'Eliminar' }).click()
+  await expect(teacherCard).toBeVisible()
+  page.once('dialog', (dialog) => dialog.accept())
+  await teacherCard.getByRole('button', { name: 'Eliminar' }).click()
+  await expect(page.getByRole('alert')).toContainText('No se puede eliminar porque conserva datos vinculados')
+  await expect(teacherCard).toBeVisible()
+
   await nav.getByRole('link', { name: 'Profesores web' }).click()
   await expect(page).toHaveURL(/\/admin\/profesores\/publicos$/)
   await expect(page.getByRole('heading', { name: 'Perfiles públicos del equipo' })).toBeVisible()

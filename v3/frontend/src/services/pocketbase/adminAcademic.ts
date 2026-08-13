@@ -80,6 +80,46 @@ export async function updateAdminUser(record: AppUser, patch: Partial<Pick<AppUs
   return pb.collection(collections.users).update<AppUser>(record.id, patch)
 }
 
+const teacherDependencies = [
+  { collection: collections.groups, field: 'teacher', label: 'grupos' },
+  { collection: collections.classes, field: 'teacher', label: 'clases' },
+  { collection: collections.materials, field: 'teacher', label: 'materiales' },
+  { collection: collections.assignments, field: 'teacher', label: 'tareas' },
+  { collection: collections.studentFiles, field: 'uploaded_by', label: 'archivos de alumnos' },
+  { collection: collections.blogPosts, field: 'author', label: 'artículos del blog' },
+  { collection: collections.mediaLibrary, field: 'uploaded_by', label: 'archivos multimedia' },
+  { collection: collections.notifications, field: 'created_by', label: 'notificaciones' },
+] as const
+
+export async function deleteAdminTeacher(record: AppUser): Promise<void> {
+  requireAdmin()
+  if (record.role !== 'TEACHER') throw new Error('La cuenta seleccionada no pertenece a un profesor.')
+
+  const dependencies = await Promise.all(teacherDependencies.map(async (dependency) => {
+    const result = await pb.collection(dependency.collection).getList(1, 1, {
+      filter: `${dependency.field} = "${quote(record.id)}"`,
+      fields: 'id',
+    })
+    return { ...dependency, count: result.totalItems }
+  }))
+  const linked = dependencies.filter((dependency) => dependency.count > 0)
+
+  if (linked.length > 0) {
+    const summary = linked.map((dependency) => `${dependency.count} ${dependency.label}`).join(', ')
+    throw new Error(`No se puede eliminar porque conserva datos vinculados (${summary}). Reasigna esos datos o desactiva la cuenta.`)
+  }
+
+  try {
+    await pb.collection(collections.users).delete(record.id)
+  } catch (error: unknown) {
+    const status = typeof error === 'object' && error && 'status' in error ? Number((error as { status?: unknown }).status) : 0
+    if (status === 400) {
+      throw new Error('No se puede eliminar porque todavía existen datos vinculados. Reasígnalos o desactiva la cuenta.')
+    }
+    throw error
+  }
+}
+
 export async function createAdminStudent(input: {
   email: string
   password: string
