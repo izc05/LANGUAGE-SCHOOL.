@@ -92,7 +92,7 @@ export default function AdminBlogManager() {
     let mounted = true
     reloadConnectedData()
       .catch(() => {
-        if (mounted) setError('No se han podido cargar los artículos o categorías desde PocketBase.')
+        if (mounted) setError('No se han podido cargar los artículos o las categorías. Inténtalo de nuevo.')
       })
       .finally(() => {
         if (mounted) setLoading(false)
@@ -181,7 +181,7 @@ export default function AdminBlogManager() {
       }
 
       await reloadConnectedData()
-      setMessage(status === 'PUBLISHED' ? 'Artículo publicado correctamente en PocketBase.' : 'Borrador guardado correctamente en PocketBase.')
+      setMessage(status === 'PUBLISHED' ? 'Artículo publicado correctamente.' : 'Borrador guardado correctamente.')
       resetEditor()
     } catch {
       setError('No se ha podido guardar el artículo. Revisa datos, conexión y permisos ADMIN.')
@@ -207,7 +207,7 @@ export default function AdminBlogManager() {
     try {
       await deleteBlogPost(editingId)
       await reloadConnectedData()
-      setMessage('Artículo eliminado de PocketBase.')
+      setMessage('Artículo eliminado correctamente.')
       resetEditor()
     } catch {
       setError('No se ha podido eliminar el artículo.')
@@ -231,7 +231,7 @@ export default function AdminBlogManager() {
           </div>
         </header>
 
-        {loading && <div className="cms-notice">Cargando blog desde PocketBase…</div>}
+        {loading && <div className="cms-notice">Cargando contenido del blog…</div>}
         {message && <div className="cms-notice success-notice">{message}</div>}
         {error && <div className="cms-notice">{error}</div>}
 
@@ -259,7 +259,7 @@ export default function AdminBlogManager() {
           <form className="panel blog-editor-panel" onSubmit={(event) => { event.preventDefault(); void savePost('DRAFT') }}>
             <div className="panel-heading">
               <div><span className="eyebrow">EDITOR</span><h3>{editingId ? 'Editar artículo' : 'Nuevo artículo'}</h3></div>
-              <span className="status info">{isDemoMode ? 'Demo' : 'PocketBase'}</span>
+              <span className="status info">{isDemoMode ? 'Demo' : 'Contenido activo'}</span>
             </div>
 
             <label className="field-stack">
