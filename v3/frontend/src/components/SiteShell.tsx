@@ -1,5 +1,7 @@
 import { type ReactNode, useEffect, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router'
+import BackendStatusBanner from './BackendStatusBanner'
+import { useBackendHealth } from '../hooks/useBackendHealth'
 import { demoSiteSettings } from '../services/pocketbase/siteManagement'
 import { getPublicSettings, type PublicSettings } from '../services/pocketbase/publicAcademy'
 
@@ -61,6 +63,7 @@ function applyPageMeta(pathname: string) {
 
 export default function SiteShell({ children }: SiteShellProps) {
   const location = useLocation()
+  const { unavailable, retry } = useBackendHealth()
   const [settings, setSettings] = useState<PublicSettings>({ ...demoSiteSettings, logoUrl: '' })
 
   useEffect(() => {
@@ -78,6 +81,7 @@ export default function SiteShell({ children }: SiteShellProps) {
   return (
     <div className="site-shell">
       <a className="skip-link" href="#main-content">Saltar al contenido</a>
+      <BackendStatusBanner visible={unavailable} onRetry={() => void retry()} />
       <header className="site-header">
         <div className="container header-inner">
           <Link className="brand" to="/" aria-label={`${brandName} - Inicio`}>
