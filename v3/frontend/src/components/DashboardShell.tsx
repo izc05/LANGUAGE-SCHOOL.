@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router'
+import BackendStatusBanner from './BackendStatusBanner'
+import { useBackendHealth } from '../hooks/useBackendHealth'
 import { useAuth } from '../features/auth/AuthProvider'
 import type { UserRole } from '../services/pocketbase/types'
 
@@ -20,6 +22,7 @@ function roleLabel(role: UserRole): DashboardShellProps['role'] {
 
 export default function DashboardShell({ role, name, nav, children }: DashboardShellProps) {
   const navigate = useNavigate()
+  const { unavailable, retry } = useBackendHealth()
   const { user, isDemoMode, logout } = useAuth()
 
   const effectiveRole = !isDemoMode && user ? roleLabel(user.role) : role
@@ -71,6 +74,7 @@ export default function DashboardShell({ role, name, nav, children }: DashboardS
       </aside>
 
       <section className="dashboard-main" id="main-content" tabIndex={-1}>
+        <BackendStatusBanner visible={unavailable} onRetry={() => void retry()} />
         <header className="dashboard-topbar">
           <div>
             <span className="eyebrow">{effectiveRole}</span>
