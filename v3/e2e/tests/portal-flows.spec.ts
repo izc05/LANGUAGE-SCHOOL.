@@ -12,6 +12,8 @@ const credentials = {
   student: { email: requiredEnv('E2E_STUDENT_EMAIL'), password: requiredEnv('E2E_STUDENT_PASSWORD') },
 }
 
+const academyName = 'E2E Language Academy'
+
 async function login(page: Page, email: string, password: string, expectedPath: RegExp) {
   await page.goto('/acceso')
   await page.getByLabel('Email').fill(email)
@@ -34,9 +36,9 @@ test('web pública y login cargan en modo conectado', async ({ page }) => {
   await page.goto('/')
   await expect(page).toHaveTitle('Language School · Inglés con confianza')
   await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', /Academia de idiomas/)
-  await expect(page.getByText('Language School').first()).toBeVisible()
+  await expect(page.locator('.site-header .brand strong')).toHaveText(academyName)
   await page.goto('/acceso')
-  await expect(page.getByText('Acceso protegido mediante PocketBase.')).toBeVisible()
+  await expect(page.getByText('Acceso seguro a tu espacio privado.')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Entrar' })).toBeEnabled()
 })
 
@@ -161,7 +163,7 @@ test('cabecera pública responsive sin desbordamiento en móvil y tablet', async
   ]) {
     await page.setViewportSize(viewport)
     await page.goto('/')
-    await expect(page.getByText('Language School').first()).toBeVisible()
+    await expect(page.locator('.site-header .brand strong')).toHaveText(academyName)
     await expect(page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('link', { name: 'Sobre nosotros' })).toBeVisible()
     await expectNoHorizontalPageOverflow(page)
   }
