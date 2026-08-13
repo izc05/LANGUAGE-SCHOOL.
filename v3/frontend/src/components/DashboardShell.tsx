@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router'
 import BackendStatusBanner from './BackendStatusBanner'
 import { useBackendHealth } from '../hooks/useBackendHealth'
+import { useAcademyBrand } from '../hooks/useAcademyBrand'
 import { useAuth } from '../features/auth/AuthProvider'
 import type { UserRole } from '../services/pocketbase/types'
 
@@ -22,6 +23,7 @@ function roleLabel(role: UserRole): DashboardShellProps['role'] {
 
 export default function DashboardShell({ role, name, nav, children }: DashboardShellProps) {
   const navigate = useNavigate()
+  const { academyName, logoUrl, initials } = useAcademyBrand()
   const { unavailable, retry } = useBackendHealth()
   const { user, isDemoMode, logout } = useAuth()
 
@@ -39,9 +41,11 @@ export default function DashboardShell({ role, name, nav, children }: DashboardS
     <div className="dashboard-shell">
       <a className="skip-link" href="#main-content">Saltar al contenido</a>
       <aside className="dashboard-sidebar">
-        <Link className="brand dashboard-brand" to="/">
-          <span className="brand-mark">LS</span>
-          <span><strong>Language School</strong><small>{effectiveRole}</small></span>
+        <Link className="brand dashboard-brand" to="/" aria-label={`${academyName} - Inicio`}>
+          {logoUrl
+            ? <img className="brand-logo-image" src={logoUrl} alt="" />
+            : <span className="brand-mark">{initials}</span>}
+          <span><strong>{academyName}</strong><small>{effectiveRole}</small></span>
         </Link>
 
         <nav className="dashboard-nav" aria-label={`Menú de ${effectiveRole}`}>
@@ -69,7 +73,7 @@ export default function DashboardShell({ role, name, nav, children }: DashboardS
 
         <div className="sidebar-footer">
           <Link to="/">Volver a la web</Link>
-          <small>{isDemoMode ? 'Vista de desarrollo · modo demo' : 'Sesión protegida por PocketBase'}</small>
+          <small>{isDemoMode ? 'Vista de desarrollo · modo demo' : 'Sesión segura · acceso privado'}</small>
         </div>
       </aside>
 
