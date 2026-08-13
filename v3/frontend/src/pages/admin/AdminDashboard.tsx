@@ -30,7 +30,7 @@ export default function AdminDashboard() {
           <div>
             <span className="eyebrow">CONTROL DE LA ACADEMIA</span>
             <h2>Gestiona la web y la plataforma sin tocar GitHub.</h2>
-            <p>La V3 conecta contenido público, academia, alumnos y solicitudes con PocketBase desde un único panel.</p>
+            <p>La plataforma conecta contenido público, academia, alumnos y solicitudes desde un único panel.</p>
           </div>
           <Link className="button button-primary" to="/admin/contactos">Ver solicitudes</Link>
         </div>
@@ -95,7 +95,7 @@ export default function AdminDashboard() {
                 <div><span className="content-state draft">Vacío</span><div><strong>Todavía no hay artículos</strong><small>Crea el primero desde Blog.</small></div></div>
               )}
               {!metrics && !error && (
-                <div><span className="content-state draft">...</span><div><strong>Actualizando Dashboard</strong><small>Consultando PocketBase.</small></div></div>
+                <div><span className="content-state draft">...</span><div><strong>Actualizando Dashboard</strong><small>Actualizando datos de la academia.</small></div></div>
               )}
             </div>
           </section>
