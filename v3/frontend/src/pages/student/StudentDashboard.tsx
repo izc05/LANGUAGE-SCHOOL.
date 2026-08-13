@@ -142,7 +142,13 @@ function ConnectedStudentDashboard() {
 
   const activeEnrollments = (snapshot?.enrollments || []).filter((enrollment: EnrollmentRecord) => enrollment.status === 'ACTIVE')
   const nextClass: ClassRecord | undefined = snapshot?.upcomingClasses[0]
-  const currentLevel = activeEnrollments[0]?.expand?.group?.expand?.course?.level || 'En progreso'
+  const currentEnrollment = activeEnrollments[0]
+  const currentCourse = currentEnrollment?.expand?.group?.expand?.course
+  const currentGroup = currentEnrollment?.expand?.group
+  const currentLevel = currentCourse?.level || 'En progreso'
+  const enrollmentSummary = currentEnrollment
+    ? `${currentCourse?.title || currentCourse?.level || 'Curso actual'} · ${currentGroup?.name || 'Grupo asignado'} · Matrícula activa`
+    : 'Cuando se programe una nueva clase aparecerá aquí.'
   const pendingAssignments = (snapshot?.assignments || []).filter((assignment: AssignmentRecord) => !submittedAssignmentIds.has(assignment.id))
   const unreadNotifications = (snapshot?.notifications || []).filter((notice: NotificationRecord) => !notice.read_at)
 
@@ -163,7 +169,7 @@ function ConnectedStudentDashboard() {
               <div>
                 <span className="eyebrow eyebrow-light">PRÓXIMA CLASE</span>
                 <h2>{nextClass ? formatClassDate(nextClass.starts_at) : 'No hay clases programadas'}</h2>
-                <p>{nextClass ? `${nextClass.topic}${nextClass.expand?.group?.name ? ` · ${nextClass.expand.group.name}` : ''}` : 'Cuando se programe una nueva clase aparecerá aquí.'}</p>
+                <p>{nextClass ? `${nextClass.topic}${nextClass.expand?.group?.name ? ` · ${nextClass.expand.group.name}` : ''}` : enrollmentSummary}</p>
               </div>
               <div className="dashboard-hero-badge"><strong>{currentLevel}</strong><span>Nivel actual</span></div>
             </section>
