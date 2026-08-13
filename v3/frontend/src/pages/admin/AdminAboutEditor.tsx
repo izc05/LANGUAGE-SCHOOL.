@@ -70,7 +70,7 @@ export default function AdminAboutEditor() {
           <div>
             <span className="eyebrow">CMS · SOBRE NOSOTROS</span>
             <h2>Historia, enfoque y valores</h2>
-            <p>Todo este contenido se publica desde PocketBase y puede modificarse sin tocar GitHub.</p>
+            <p>Gestiona aquí la historia, el enfoque y los valores de la academia. Publica los cambios cuando estén listos para mostrarse en la web.</p>
           </div>
           <a className="button button-ghost" href="/sobre-nosotros" target="_blank" rel="noreferrer">Vista pública ↗</a>
         </header>
