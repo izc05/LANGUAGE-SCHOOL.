@@ -54,7 +54,7 @@ export default function StudentMaterialPage() {
         })))
       })
       .catch(() => {
-        if (mounted) setError('No se ha podido cargar tu material autorizado.')
+        if (mounted) setError('No se ha podido cargar tu material. Inténtalo de nuevo en unos segundos.')
       })
       .finally(() => {
         if (mounted) setLoading(false)
@@ -75,7 +75,7 @@ export default function StudentMaterialPage() {
     setError(null)
     setMessage(null)
     if (isDemoMode || !item.record) {
-      setMessage('La descarga protegida estará disponible cuando PocketBase esté conectado.')
+      setMessage('La descarga real no está disponible en la demostración.')
       return
     }
 
@@ -83,7 +83,7 @@ export default function StudentMaterialPage() {
       const url = await getMaterialDownloadUrl(item.record)
       window.open(url, '_blank', 'noopener,noreferrer')
     } catch {
-      setError('No se ha podido generar el enlace protegido de este material.')
+      setError('No se ha podido preparar la descarga de este material. Inténtalo de nuevo.')
     }
   }
 
@@ -95,9 +95,9 @@ export default function StudentMaterialPage() {
           <div className="private-space-badge"><strong>{materials.length}</strong><span>recursos disponibles</span></div>
         </header>
 
-        {loading && <div className="cms-notice">Cargando material…</div>}
-        {message && <div className="cms-notice success-notice">{message}</div>}
-        {error && <div className="cms-notice auth-error">{error}</div>}
+        {loading && <div className="cms-notice" role="status">Cargando material…</div>}
+        {message && <div className="cms-notice success-notice" role="status">{message}</div>}
+        {error && <div className="cms-notice auth-error" role="alert">{error}</div>}
 
         <section className="panel media-toolbar-panel">
           <div className="media-toolbar">
@@ -128,7 +128,12 @@ export default function StudentMaterialPage() {
               <button className="button button-ghost button-small" type="button" onClick={() => void download(item)}>Descargar</button>
             </article>
           ))}
-          {!loading && visible.length === 0 && <div className="panel"><p className="muted">No hay material que coincida con este filtro.</p></div>}
+          {!loading && visible.length === 0 && (
+            <div className="panel portal-empty-inline">
+              <strong>{search.trim() || filter !== 'ALL' ? 'No hay resultados con estos filtros' : 'Todavía no tienes material publicado'}</strong>
+              <p>{search.trim() || filter !== 'ALL' ? 'Prueba a cambiar la búsqueda o seleccionar Todo.' : 'Cuando tu profesor publique un recurso aparecerá aquí automáticamente.'}</p>
+            </div>
+          )}
         </section>
       </div>
     </DashboardShell>
