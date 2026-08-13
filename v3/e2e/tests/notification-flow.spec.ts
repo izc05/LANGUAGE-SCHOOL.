@@ -37,7 +37,7 @@ test('ADMIN envía un aviso y el alumno lo recibe en su portal', async ({ page }
   const studentNav = page.getByRole('navigation', { name: 'Menú de Alumno' })
   await studentNav.getByRole('link', { name: 'Avisos' }).click()
   await expect(page).toHaveURL(/\/alumno\/avisos$/)
-  await expect(page.getByRole('heading', { name: 'Avisos y novedades' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Avisos', exact: true })).toBeVisible()
   await expect(page.getByText(title)).toBeVisible()
   await expect(page.getByText(body)).toBeVisible()
 })
