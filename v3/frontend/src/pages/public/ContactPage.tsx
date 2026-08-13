@@ -54,7 +54,7 @@ export default function ContactPage() {
         <div className="container public-page-hero-inner">
           <span className="eyebrow">CONTACTO</span>
           <h1>Cuéntanos qué quieres conseguir.</h1>
-          <p>Déjanos tus datos y tu objetivo. La solicitud quedará registrada en el panel ADMIN para poder hacer seguimiento.</p>
+          <p>Déjanos tus datos y tu objetivo. La academia podrá revisar tu solicitud y ponerse en contacto contigo.</p>
         </div>
       </section>
 
@@ -72,18 +72,18 @@ export default function ContactPage() {
             <label className="field-stack"><span>Me interesa</span><input value={interest} onChange={(event) => setInterest(event.target.value)} placeholder="Kids, B1, conversación..." /></label>
             <label className="field-stack"><span>Mensaje</span><textarea rows={6} value={message} onChange={(event) => setMessage(event.target.value)} required /></label>
             <button className="button button-primary" type="submit" disabled={sending}>{sending ? 'Enviando…' : 'Enviar solicitud'}</button>
-            <small className="muted">Al enviar el formulario, los datos se usarán únicamente para responder a tu solicitud. El texto legal definitivo se incorporará antes del piloto público.</small>
+            <small className="muted">El aviso de privacidad y el consentimiento definitivo son requisitos pendientes antes de abrir el piloto al público.</small>
           </form>
 
           <aside className="panel public-contact-info">
-            <span className="eyebrow">LANGUAGE SCHOOL</span>
+            <span className="eyebrow">{settings.academyName || 'ACADEMIA'}</span>
             <h2>También puedes encontrarnos aquí.</h2>
             {settings.address && <div><strong>Ubicación</strong><span>{settings.address}</span></div>}
             {settings.email && <div><strong>Email</strong><a href={`mailto:${settings.email}`}>{settings.email}</a></div>}
             {settings.phone && <div><strong>Teléfono</strong><a href={`tel:${settings.phone}`}>{settings.phone}</a></div>}
             {settings.whatsapp && <div><strong>WhatsApp</strong><span>{settings.whatsapp}</span></div>}
-            {settings.instagram && <div><strong>Instagram</strong><a href={settings.instagram} target="_blank" rel="noreferrer">@languageschool_rociuruiz ↗</a></div>}
-            <p>Los horarios y canales definitivos se gestionarán desde Configuración en el panel ADMIN.</p>
+            {settings.instagram && <div><strong>Instagram</strong><a href={settings.instagram} target="_blank" rel="noreferrer">Abrir Instagram ↗</a></div>}
+            <p>Los datos de contacto se gestionan desde Configuración en el panel de administración.</p>
           </aside>
         </div>
       </section>
