@@ -5,6 +5,7 @@ export const adminNav = [
   { label: 'Blog', to: '/admin/blog' },
   { label: 'Multimedia', to: '/admin/multimedia' },
   { label: 'Contactos', to: '/admin/contactos' },
+  { label: 'Avisos', to: '/admin/avisos' },
   { label: 'Alumnos', to: '/admin/alumnos' },
   { label: 'Profesores', to: '/admin/profesores' },
   { label: 'Profesores web', to: '/admin/profesores/publicos' },
@@ -12,4 +13,5 @@ export const adminNav = [
   { label: 'Clases', to: '/admin/clases' },
   { label: 'Tarifas', to: '/admin/tarifas' },
   { label: 'Configuración', to: '/admin/configuracion' },
+  { label: 'Sistema', to: '/admin/sistema' },
 ] as const
