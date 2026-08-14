@@ -203,3 +203,85 @@ body {
   .course-admin-card::before { margin: -24px -24px 9px; }
   .groups-overview-panel .panel-heading { padding: 20px; }
 }
+
+/* Profesor y Alumno: same visual language, retaining their own workflows. */
+.teacher-page-heading h2,
+.student-page-heading h2 { color: var(--ink); }
+.private-space-badge {
+  min-width: 154px;
+  border-color: rgba(197, 71, 108, .18);
+  border-radius: 16px;
+  background: linear-gradient(135deg, #fff8fa, #f8e7ed);
+  box-shadow: 0 10px 24px rgba(110, 46, 73, .06);
+}
+.private-space-badge strong { color: var(--rose-dark); }
+
+.teacher-record-icon,
+.teacher-profile-avatar,
+.student-file-type,
+.student-resource-icon {
+  background: linear-gradient(145deg, #fbebf0, #f5dde5);
+  color: var(--rose-dark);
+}
+.teacher-answer-box,
+.teacher-profile-note,
+.student-feedback-box,
+.student-security-note {
+  border-color: rgba(197, 71, 108, .13);
+  background: #fff8f9;
+}
+
+.teacher-correction-list button.active,
+.teacher-student-picker button.active,
+.teacher-class-list button.active,
+.student-task-list > button.active {
+  background: #fbf0f3;
+  box-shadow: inset 3px 0 0 var(--rose);
+}
+.teacher-correction-list button.active,
+.teacher-student-picker button.active,
+.teacher-class-list button.active { border-radius: 13px; }
+.teacher-class-list time,
+.student-class-date span,
+.student-task-list b,
+.student-notice-meta span { color: var(--rose-dark); }
+
+.teacher-record-actions button,
+.teacher-student-files button,
+.teacher-class-status-actions button,
+.teacher-attendance-actions button,
+.student-file-actions button {
+  border-color: rgba(91, 53, 73, .16);
+  color: var(--ink-soft);
+  background: rgba(255,255,255,.75);
+}
+.teacher-record-actions button:hover,
+.teacher-student-files button:hover,
+.teacher-class-status-actions button:hover,
+.teacher-attendance-actions button:hover,
+.student-file-actions button:hover { background: #fdf1f4; }
+.teacher-attendance-actions button.active {
+  border-color: rgba(102, 115, 56, .32);
+  background: #edf2da;
+  color: #596828;
+}
+
+.student-task-state {
+  background: #f7e5eb;
+  color: var(--rose-dark);
+}
+.student-notice-list article.unread .student-notice-dot {
+  background: var(--rose);
+  box-shadow: 0 0 0 4px rgba(236, 93, 133, .13);
+}
+.student-notice-dot { background: #dfd4d8; }
+
+.filter-pills button.active {
+  border-color: var(--rose-dark);
+  background: var(--rose-dark);
+}
+.student-files-search,
+.media-search input {
+  border-color: rgba(91, 53, 73, .16);
+  background: rgba(255,255,255,.82);
+}
