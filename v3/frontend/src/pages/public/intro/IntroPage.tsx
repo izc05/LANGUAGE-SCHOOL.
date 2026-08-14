@@ -104,11 +104,20 @@ function AtmosphereScene({ reducedMotion, settled }: { reducedMotion: boolean; s
 }
 
 function browserSupportsWebGl(): boolean {
+  let gl: WebGLRenderingContext | WebGL2RenderingContext | null = null
   try {
     const canvas = document.createElement('canvas')
-    return Boolean(canvas.getContext('webgl2') || canvas.getContext('webgl'))
+    const options: WebGLContextAttributes = { failIfMajorPerformanceCaveat: true }
+    gl = canvas.getContext('webgl2', options) || canvas.getContext('webgl', options)
+    if (!gl) return false
+
+    const debugInfo = gl.getExtension('WEBGL_debug_renderer_info')
+    const renderer = debugInfo ? String(gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL)) : ''
+    return !/(swiftshader|llvmpipe|software|basic render)/i.test(renderer)
   } catch {
     return false
+  } finally {
+    gl?.getExtension('WEBGL_lose_context')?.loseContext()
   }
 }
 

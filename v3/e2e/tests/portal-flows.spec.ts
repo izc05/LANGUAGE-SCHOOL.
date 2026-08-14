@@ -35,10 +35,13 @@ async function expectNoHorizontalPageOverflow(page: Page) {
 
 test('web pública y login cargan en modo conectado', async ({ page }) => {
   await page.goto('/')
-  await expect(page.getByRole('button', { name: 'Saltar intro' })).toBeVisible()
   const enterIntro = page.locator('.intro-enter-button')
-  await expect(enterIntro).toBeDisabled()
-  await page.getByRole('button', { name: 'Saltar intro' }).click()
+  const skipIntro = page.getByRole('button', { name: 'Saltar intro' })
+  await expect(enterIntro).toBeVisible()
+  if (await skipIntro.count()) {
+    await expect(enterIntro).toBeDisabled()
+    await skipIntro.click()
+  }
   await expect(enterIntro).toBeEnabled()
   await enterIntro.dispatchEvent('click')
   await expect(page).toHaveTitle('Language School · Inglés con confianza')
