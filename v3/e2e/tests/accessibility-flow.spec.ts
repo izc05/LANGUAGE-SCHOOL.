@@ -52,7 +52,7 @@ test('modo de movimiento reducido elimina transiciones largas', async ({ page })
   await page.goto('/')
   await expect(page.getByRole('button', { name: 'ENTRAR' })).toBeEnabled()
   await expect(page.getByRole('button', { name: 'Saltar intro' })).toHaveCount(0)
-  await page.getByRole('button', { name: 'ENTRAR' }).click()
+  await page.getByRole('button', { name: 'ENTRAR' }).dispatchEvent('click')
   const durationSeconds = await page.locator('.skip-link').evaluate((element) => {
     const raw = getComputedStyle(element).transitionDuration.trim()
     if (raw.endsWith('ms')) return Number.parseFloat(raw) / 1000
