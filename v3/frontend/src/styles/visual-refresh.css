@@ -285,3 +285,72 @@ body {
   border-color: rgba(91, 53, 73, .16);
   background: rgba(255,255,255,.82);
 }
+
+/* Web pública: editorial, cálida y conectada con el logotipo existente. */
+.site-header {
+  border-color: rgba(91, 53, 73, .09);
+  background: rgba(255, 251, 248, .9);
+}
+.brand strong { color: var(--ink); }
+.main-nav a { color: var(--ink-soft); }
+.main-nav a.active,
+.main-nav a:hover { color: var(--rose-dark); }
+.hero-v3 {
+  background:
+    radial-gradient(circle at 82% 21%, rgba(236, 93, 133, .17), transparent 23rem),
+    radial-gradient(circle at 74% 75%, rgba(173, 54, 93, .08), transparent 30rem),
+    linear-gradient(135deg, #fffaf7 0%, #f9edea 100%);
+}
+.hero-copy h1 em { color: var(--rose-dark); }
+.trust-row span::before { color: var(--rose); }
+.portal-card { border-color: rgba(91, 53, 73, .13); }
+.portal-label { color: var(--rose-dark); }
+.hero-orbit { border-color: rgba(197, 71, 108, .2); }
+
+.section-soft { background: #f9f1ee; }
+.program-card,
+.article-card {
+  border-color: rgba(91, 53, 73, .12);
+  border-radius: 22px;
+  box-shadow: 0 14px 35px rgba(74, 37, 55, .05);
+}
+.program-card:hover,
+.article-card:hover { box-shadow: 0 20px 42px rgba(74, 37, 55, .11); }
+.pill { background: #fae5eb; color: var(--rose-dark); }
+.program-number { color: #eedce2; }
+.program-card a,
+.article-card a,
+.text-link { color: var(--rose-dark); }
+.step-row > span { color: var(--rose-dark); }
+.platform-band {
+  background:
+    radial-gradient(circle at 88% 15%, rgba(236, 93, 133, .25), transparent 23rem),
+    linear-gradient(145deg, #342033, #211823);
+}
+.platform-features div { border-color: rgba(255, 215, 228, .16); }
+.platform-features span { color: #fff; background: var(--rose); }
+.cta-panel {
+  border: 1px solid rgba(197, 71, 108, .12);
+  background: linear-gradient(135deg, #f9e6ec, #f5efdf);
+}
+.site-footer { background: #251a26; }
+
+.public-page-hero,
+.about-hero {
+  background:
+    radial-gradient(circle at 85% 20%, rgba(236, 93, 133, .14), transparent 28rem),
+    linear-gradient(180deg, #fffdfb 0%, #fbf3f0 100%);
+}
+.public-course-card,
+.public-pricing-card,
+.public-teacher-card,
+.about-value-card {
+  border-color: rgba(91, 53, 73, .12);
+  background: rgba(255, 253, 251, .92);
+}
+.public-pricing-card.featured {
+  border-color: rgba(197, 71, 108, .4);
+  box-shadow: 0 24px 60px rgba(150, 47, 88, .14);
+}
+.pricing-badge { background: #fae3ea; color: var(--rose-dark); }
+.public-teacher-photo { color: var(--rose-dark); }
