@@ -376,6 +376,7 @@ export default function AdminCoursesPage() {
           <article><span>Ocupación</span><strong>{occupancy}%</strong><small>Matrículas activas</small></article>
         </section>
 
+        <div className="admin-course-workspace">
         <section className="course-admin-grid">
           {courses.map((course, index) => {
             const metrics = courseMetrics(course.id)
@@ -419,6 +420,7 @@ export default function AdminCoursesPage() {
           })}
           {!loading && groups.length === 0 && <PortalEmptyState compact title="Todavía no hay grupos" description="Crea un grupo después de tener al menos un curso y un profesor activos." />}
         </section>
+        </div>
 
         {selectedGroup && <section className="panel admin-enrollment-panel">
           <div className="panel-heading">

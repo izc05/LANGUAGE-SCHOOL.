@@ -22,6 +22,7 @@ import './styles/accessibility.css'
 import './styles/error-states.css'
 import './styles/dashboard-navigation.css'
 import './styles/pilot-readiness.css'
+import './styles/visual-refresh.css'
 
 const root = document.getElementById('root')
 
