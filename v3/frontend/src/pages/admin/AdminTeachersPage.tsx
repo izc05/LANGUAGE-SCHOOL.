@@ -8,13 +8,16 @@ import {
   listAdminClasses,
   listAdminEnrollments,
   listAdminGroups,
+  listAdminTeacherProfiles,
   listAdminUsers,
+  updateAdminTeacherProfile,
   updateAdminUser,
   type AdminEnrollmentRecord,
   type AdminGroupRecord,
 } from '../../services/pocketbase/adminAcademic'
 import type { AppUser } from '../../services/pocketbase/types'
 import type { ClassRecord } from '../../services/pocketbase/studentPortal'
+import type { TeacherProfileRecord } from '../../services/pocketbase/teacherPortal'
 import { adminNav } from './adminNav'
 
 type TeacherView = {
@@ -43,6 +46,7 @@ export default function AdminTeachersPage() {
   const [groups, setGroups] = useState<AdminGroupRecord[]>([])
   const [enrollments, setEnrollments] = useState<AdminEnrollmentRecord[]>([])
   const [classes, setClasses] = useState<ClassRecord[]>([])
+  const [profiles, setProfiles] = useState<TeacherProfileRecord[]>([])
   const [showCreate, setShowCreate] = useState(false)
   const [loading, setLoading] = useState(!isDemoMode)
   const [saving, setSaving] = useState(false)
@@ -55,18 +59,24 @@ export default function AdminTeachersPage() {
   const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
   const [specialties, setSpecialties] = useState('')
+  const [editingTeacherId, setEditingTeacherId] = useState<string | null>(null)
+  const [editName, setEditName] = useState('')
+  const [editSurname, setEditSurname] = useState('')
+  const [editPhone, setEditPhone] = useState('')
+  const [editSpecialties, setEditSpecialties] = useState('')
 
   useEffect(() => {
     if (isDemoMode) return
     let mounted = true
     setLoading(true)
-    Promise.all([listAdminUsers('TEACHER'), listAdminGroups(), listAdminEnrollments(), listAdminClasses()])
-      .then(([teacherUsers, groupRecords, enrollmentRecords, classRecords]) => {
+    Promise.all([listAdminUsers('TEACHER'), listAdminGroups(), listAdminEnrollments(), listAdminClasses(), listAdminTeacherProfiles()])
+      .then(([teacherUsers, groupRecords, enrollmentRecords, classRecords, profileRecords]) => {
         if (!mounted) return
         setTeachers(teacherUsers)
         setGroups(groupRecords)
         setEnrollments(enrollmentRecords)
         setClasses(classRecords)
+        setProfiles(profileRecords)
       })
       .catch(() => { if (mounted) setError('No se ha podido cargar el equipo docente. Inténtalo de nuevo en unos segundos.') })
       .finally(() => { if (mounted) setLoading(false) })
@@ -167,6 +177,32 @@ export default function AdminTeachersPage() {
     }
   }
 
+  function openEdit(record: TeacherView) {
+    setEditingTeacherId(record.user.id)
+    setEditName(record.user.name)
+    setEditSurname(record.user.surname)
+    setEditPhone(record.user.phone || '')
+    const profile = profiles.find((item) => item.user === record.user.id)
+    setEditSpecialties(Array.isArray(profile?.specialties) ? profile.specialties.join(', ') : profile?.specialties || '')
+  }
+
+  async function saveTeacherEdit(event: FormEvent<HTMLFormElement>, record: TeacherView) {
+    event.preventDefault()
+    setError(null); setMessage(null)
+    if (isDemoMode) { setEditingTeacherId(null); setMessage('Edición preparada en la demostración.'); return }
+    setSaving(true)
+    try {
+      const updated = await updateAdminUser(record.user, { name: editName.trim(), surname: editSurname.trim(), phone: editPhone.trim() })
+      const updatedProfile = await updateAdminTeacherProfile(record.user.id, editSpecialties.split(',').map((value) => value.trim()).filter(Boolean))
+      setTeachers((current) => current.map((item) => item.id === updated.id ? updated : item))
+      setProfiles((current) => current.map((item) => item.id === updatedProfile.id ? updatedProfile : item))
+      setEditingTeacherId(null)
+      setMessage('Ficha del profesor actualizada.')
+    } catch (editError) {
+      setError(editError instanceof Error ? editError.message : 'No se ha podido actualizar la ficha del profesor.')
+    } finally { setSaving(false) }
+  }
+
   return (
     <DashboardShell role="Administrador" name="Admin" nav={[...adminNav]}>
       <div className="dashboard-content cms-page">
@@ -215,9 +251,17 @@ export default function AdminTeachersPage() {
               <div className="teacher-card-metrics"><div><span>Alumnos</span><strong>{teacher.students}</strong></div><div><span>Clases</span><strong>{teacher.classes}</strong></div></div>
               <div className="teacher-availability"><span>Grupos activos</span><strong>{teacher.groups.length ? teacher.groups.map((group) => group.name).join(' · ') : 'Sin asignar'}</strong></div>
               <div className="teacher-card-actions">
+                <button type="button" onClick={() => openEdit(teacher)}>Editar ficha</button>
                 <button type="button" disabled={deletingId === teacher.user.id} onClick={() => void toggleTeacher(teacher)}>{teacher.user.status === 'ACTIVE' ? 'Desactivar' : 'Activar'}</button>
                 <button className="button-danger-soft" type="button" disabled={deletingId === teacher.user.id} onClick={() => void removeTeacher(teacher)}>{deletingId === teacher.user.id ? 'Eliminando…' : 'Eliminar'}</button>
               </div>
+              {editingTeacherId === teacher.user.id && <form className="admin-create-grid teacher-edit-form" onSubmit={(event) => void saveTeacherEdit(event, teacher)}>
+                <div><label>Nombre</label><input value={editName} onChange={(event) => setEditName(event.target.value)} required /></div>
+                <div><label>Apellidos</label><input value={editSurname} onChange={(event) => setEditSurname(event.target.value)} required /></div>
+                <div><label>Teléfono</label><input type="tel" value={editPhone} onChange={(event) => setEditPhone(event.target.value)} /></div>
+                <div><label>Especialidades</label><input value={editSpecialties} onChange={(event) => setEditSpecialties(event.target.value)} placeholder="Inglés general, conversación" /></div>
+                <div className="admin-create-action"><button type="button" onClick={() => setEditingTeacherId(null)}>Cancelar</button><button className="button button-primary" type="submit" disabled={saving}>{saving ? 'Guardando…' : 'Guardar cambios'}</button></div>
+              </form>}
             </article>
           ))}
           {!loading && views.length === 0 && <PortalEmptyState title="Todavía no hay profesores registrados" description="Crea el primer profesor para asignarle grupos, alumnos y clases." />}

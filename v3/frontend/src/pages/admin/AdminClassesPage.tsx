@@ -49,6 +49,13 @@ function datetimeLocal(offsetMinutes: number): string {
   return shifted.toISOString().slice(0, 16)
 }
 
+function toDatetimeLocal(value: string): string {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  const shifted = new Date(date.getTime() - date.getTimezoneOffset() * 60_000)
+  return shifted.toISOString().slice(0, 16)
+}
+
 function userName(user?: AppUser | null): string {
   if (!user) return 'Sin profesor'
   return [user.name, user.surname].filter(Boolean).join(' ') || user.email
@@ -85,6 +92,7 @@ export default function AdminClassesPage() {
   const [groupFilter, setGroupFilter] = useState('ALL')
   const [selectedClassId, setSelectedClassId] = useState<string | null>(isDemoMode ? demoClass.id : null)
   const [showCreate, setShowCreate] = useState(false)
+  const [showEdit, setShowEdit] = useState(false)
   const [loading, setLoading] = useState(!isDemoMode)
   const [detailLoading, setDetailLoading] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -95,6 +103,11 @@ export default function AdminClassesPage() {
   const [description, setDescription] = useState('')
   const [startsAt, setStartsAt] = useState(datetimeLocal(60))
   const [endsAt, setEndsAt] = useState(datetimeLocal(120))
+  const [editGroupId, setEditGroupId] = useState('')
+  const [editTopic, setEditTopic] = useState('')
+  const [editDescription, setEditDescription] = useState('')
+  const [editStartsAt, setEditStartsAt] = useState('')
+  const [editEndsAt, setEditEndsAt] = useState('')
 
   useEffect(() => {
     if (isDemoMode) return
@@ -229,6 +242,36 @@ export default function AdminClassesPage() {
     }
   }
 
+  function openClassEdit() {
+    if (!selectedClass) return
+    setEditGroupId(selectedClass.group)
+    setEditTopic(selectedClass.topic)
+    setEditDescription(selectedClass.description || '')
+    setEditStartsAt(toDatetimeLocal(selectedClass.starts_at))
+    setEditEndsAt(toDatetimeLocal(selectedClass.ends_at))
+    setShowEdit(true)
+  }
+
+  async function saveClassEdit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!selectedClass) return
+    const group = activeGroups.find((item) => item.id === editGroupId)
+    if (!group) { setError('Selecciona un grupo activo para la clase.'); return }
+    if (!editTopic.trim() || !editStartsAt || !editEndsAt || new Date(editEndsAt) <= new Date(editStartsAt)) { setError('Revisa tema, inicio y fin de la clase.'); return }
+    if (!window.confirm(`¿Guardar los cambios de la clase "${selectedClass.topic}"?`)) return
+    setError(null); setMessage(null)
+    if (isDemoMode) { setShowEdit(false); setMessage('Edición preparada en la demostración.'); return }
+    setSaving(true)
+    try {
+      const updated = await updateAdminClass(selectedClass, { group: group.id, teacher: group.teacher, topic: editTopic.trim(), description: editDescription.trim(), starts_at: new Date(editStartsAt).toISOString(), ends_at: new Date(editEndsAt).toISOString() })
+      setClasses((current) => current.map((item) => item.id === updated.id ? updated : item))
+      setShowEdit(false)
+      setMessage('Clase actualizada. El profesor se ha ajustado al profesor asignado al grupo.')
+    } catch (editError) {
+      setError(editError instanceof Error ? editError.message : 'No se ha podido actualizar la clase.')
+    } finally { setSaving(false) }
+  }
+
   async function setStudentAttendance(studentId: string, status: AttendanceRecord['status']) {
     if (!selectedClass) return
     setError(null)
@@ -329,11 +372,21 @@ export default function AdminClassesPage() {
             <div className="admin-class-detail-heading">
               <div><span className="eyebrow">CLASE SELECCIONADA</span><h3>{selectedClass.topic}</h3><p>{selectedGroup?.name || 'Grupo'} · {userName(selectedTeacher)} · {formatTime(selectedClass.starts_at)}–{formatTime(selectedClass.ends_at)} · {classStatusLabel(selectedClass.status)}</p></div>
               <div className="admin-class-status-actions">
+                <button type="button" onClick={openClassEdit}>Editar clase</button>
                 {selectedClass.status !== 'SCHEDULED' && <button type="button" onClick={() => void changeClassStatus(selectedClass, 'SCHEDULED')}>Reabrir</button>}
                 {selectedClass.status !== 'COMPLETED' && <button type="button" onClick={() => void changeClassStatus(selectedClass, 'COMPLETED')}>Completar</button>}
                 {selectedClass.status !== 'CANCELLED' && <button type="button" onClick={() => void changeClassStatus(selectedClass, 'CANCELLED')}>Cancelar</button>}
               </div>
             </div>
+            {showEdit && <form className="admin-create-grid class-edit-form" onSubmit={saveClassEdit}>
+              <div><label>Grupo</label><select value={editGroupId} onChange={(event) => setEditGroupId(event.target.value)} required>{activeGroups.map((group) => <option key={group.id} value={group.id}>{group.name} · {userName(teachers.find((teacher) => teacher.id === group.teacher))}</option>)}</select></div>
+              <div><label>Tema</label><input value={editTopic} onChange={(event) => setEditTopic(event.target.value)} required /></div>
+              <div><label>Inicio</label><input type="datetime-local" value={editStartsAt} onChange={(event) => setEditStartsAt(event.target.value)} required /></div>
+              <div><label>Fin</label><input type="datetime-local" value={editEndsAt} onChange={(event) => setEditEndsAt(event.target.value)} required /></div>
+              <div className="admin-create-wide"><label>Descripción</label><textarea rows={3} value={editDescription} onChange={(event) => setEditDescription(event.target.value)} /></div>
+              <p className="muted admin-create-wide">Al cambiar el grupo, la clase adopta automáticamente el profesor asignado a ese grupo. La asistencia existente se conserva y debe revisarse si el grupo cambia.</p>
+              <div className="admin-create-action"><button type="button" onClick={() => setShowEdit(false)}>Cancelar</button><button className="button button-primary" type="submit" disabled={saving}>{saving ? 'Guardando…' : 'Guardar cambios'}</button></div>
+            </form>}
 
             {detailLoading ? <div className="cms-notice" role="status">Cargando asistencia…</div> : <div className="admin-attendance-list">
               {classEnrollments.map((enrollment) => {

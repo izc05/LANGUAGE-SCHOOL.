@@ -6,9 +6,12 @@ import {
   createAdminStudent,
   listAdminClasses,
   listAdminEnrollments,
+  listAdminGroups,
   listAdminUsers,
+  moveAdminStudentToGroup,
   updateAdminUser,
   type AdminEnrollmentRecord,
+  type AdminGroupRecord,
 } from '../../services/pocketbase/adminAcademic'
 import type { AppUser } from '../../services/pocketbase/types'
 import type { ClassRecord } from '../../services/pocketbase/studentPortal'
@@ -49,10 +52,12 @@ export default function AdminStudentsPage() {
   const [teachers, setTeachers] = useState<AppUser[]>([])
   const [enrollments, setEnrollments] = useState<AdminEnrollmentRecord[]>([])
   const [classes, setClasses] = useState<ClassRecord[]>([])
+  const [groups, setGroups] = useState<AdminGroupRecord[]>([])
   const [query, setQuery] = useState('')
   const [status, setStatus] = useState<'Todos' | StudentView['status']>('Todos')
   const [selectedId, setSelectedId] = useState<string | null>(isDemoMode ? demoUsers[0].id : null)
   const [showCreate, setShowCreate] = useState(false)
+  const [showEdit, setShowEdit] = useState(false)
   const [loading, setLoading] = useState(!isDemoMode)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -62,18 +67,23 @@ export default function AdminStudentsPage() {
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
+  const [editName, setEditName] = useState('')
+  const [editSurname, setEditSurname] = useState('')
+  const [editPhone, setEditPhone] = useState('')
+  const [editGroupId, setEditGroupId] = useState('')
 
   useEffect(() => {
     if (isDemoMode) return
     let mounted = true
     setLoading(true)
-    Promise.all([listAdminUsers('STUDENT'), listAdminUsers('TEACHER'), listAdminEnrollments(), listAdminClasses()])
-      .then(([studentUsers, teacherUsers, enrollmentRecords, classRecords]) => {
+    Promise.all([listAdminUsers('STUDENT'), listAdminUsers('TEACHER'), listAdminEnrollments(), listAdminClasses(), listAdminGroups()])
+      .then(([studentUsers, teacherUsers, enrollmentRecords, classRecords, groupRecords]) => {
         if (!mounted) return
         setUsers(studentUsers)
         setTeachers(teacherUsers)
         setEnrollments(enrollmentRecords)
         setClasses(classRecords)
+        setGroups(groupRecords)
         if (studentUsers[0]) setSelectedId(studentUsers[0].id)
       })
       .catch(() => { if (mounted) setError('No se han podido cargar los alumnos. Inténtalo de nuevo en unos segundos.') })
@@ -164,6 +174,39 @@ export default function AdminStudentsPage() {
     }
   }
 
+  function openEdit() {
+    if (!selected) return
+    const enrollment = enrollments.find((item) => item.student === selected.user.id && item.status === 'ACTIVE')
+    setEditName(selected.user.name)
+    setEditSurname(selected.user.surname)
+    setEditPhone(selected.user.phone || '')
+    setEditGroupId(enrollment?.group || '')
+    setShowEdit(true)
+  }
+
+  async function saveEdit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!selected) return
+    setError(null); setMessage(null)
+    const activeEnrollment = enrollments.find((item) => item.student === selected.user.id && item.status === 'ACTIVE')
+    const target = groups.find((item) => item.id === editGroupId)
+    if (editGroupId && !target) { setError('Selecciona un grupo válido.'); return }
+    if (isDemoMode) { setShowEdit(false); setMessage('Edición preparada en la demostración.'); return }
+    setSaving(true)
+    try {
+      const updatedUser = await updateAdminUser(selected.user, { name: editName.trim(), surname: editSurname.trim(), phone: editPhone.trim() })
+      if (target && target.id !== activeEnrollment?.group) {
+        const moved = await moveAdminStudentToGroup({ studentId: selected.user.id, currentEnrollment: activeEnrollment, targetGroup: target })
+        setEnrollments((current) => [...current.filter((item) => item.id !== moved.current.id && item.id !== moved.previous?.id), ...(moved.previous ? [moved.previous] : []), moved.current])
+      }
+      setUsers((current) => current.map((item) => item.id === updatedUser.id ? updatedUser : item))
+      setShowEdit(false)
+      setMessage(target && target.id !== activeEnrollment?.group ? 'Ficha actualizada y matrícula trasladada; se conserva el historial anterior.' : 'Ficha del alumno actualizada.')
+    } catch (editError) {
+      setError(editError instanceof Error ? editError.message : 'No se ha podido actualizar la ficha del alumno.')
+    } finally { setSaving(false) }
+  }
+
   return (
     <DashboardShell role="Administrador" name="Admin" nav={[...adminNav]}>
       <div className="dashboard-content cms-page">
@@ -237,8 +280,17 @@ export default function AdminStudentsPage() {
                 <p className="muted">Los archivos y recursos privados del alumno solo son accesibles para su cuenta y para el personal autorizado según su relación académica.</p>
               </div>
               <div className="student-detail-actions">
+                <button type="button" onClick={openEdit}>Editar ficha</button>
                 <button className="button button-primary" type="button" onClick={() => void toggleSelectedStatus()}>{selected.user.status === 'ACTIVE' ? 'Desactivar alumno' : 'Activar alumno'}</button>
               </div>
+              {showEdit && <form className="admin-create-grid student-edit-form" onSubmit={saveEdit}>
+                <div><label>Nombre</label><input value={editName} onChange={(event) => setEditName(event.target.value)} required /></div>
+                <div><label>Apellidos</label><input value={editSurname} onChange={(event) => setEditSurname(event.target.value)} required /></div>
+                <div><label>Teléfono</label><input type="tel" value={editPhone} onChange={(event) => setEditPhone(event.target.value)} /></div>
+                <div><label>Grupo y nivel</label><select value={editGroupId} onChange={(event) => setEditGroupId(event.target.value)}><option value="">Sin grupo activo</option>{groups.filter((group) => group.status === 'ACTIVE').map((group) => <option key={group.id} value={group.id}>{group.expand?.course?.level || 'Sin nivel'} · {group.expand?.course?.title || 'Curso'} · {group.name}</option>)}</select></div>
+                <p className="muted admin-create-wide">Cambiar de grupo finaliza la matrícula activa anterior y crea una nueva, sin borrar su historial ni clases anteriores.</p>
+                <div className="admin-create-action"><button type="button" onClick={() => setShowEdit(false)}>Cancelar</button><button className="button button-primary" type="submit" disabled={saving}>{saving ? 'Guardando…' : 'Guardar cambios'}</button></div>
+              </form>}
             </>}
           </aside>
         </div>

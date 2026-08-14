@@ -176,6 +176,17 @@ export async function createAdminTeacher(input: {
   }
 }
 
+export async function updateAdminTeacherProfile(userId: string, specialties: string[]): Promise<TeacherProfileRecord> {
+  requireAdmin()
+  const profile = await pb.collection(collections.teacherProfiles).getFirstListItem<TeacherProfileRecord>(`user = "${quote(userId)}"`)
+  return pb.collection(collections.teacherProfiles).update<TeacherProfileRecord>(profile.id, { specialties })
+}
+
+export async function listAdminTeacherProfiles(): Promise<TeacherProfileRecord[]> {
+  requireAdmin()
+  return pb.collection(collections.teacherProfiles).getFullList<TeacherProfileRecord>({ sort: 'created' })
+}
+
 export async function getAdminStudentProfile(userId: string): Promise<AdminStudentProfileRecord | null> {
   requireAdmin()
   try {
@@ -287,6 +298,36 @@ export async function updateAdminEnrollmentStatus(record: AdminEnrollmentRecord,
     status,
     ended_at: status === 'FINISHED' || status === 'CANCELLED' ? new Date().toISOString() : '',
   }, { expand: 'student,group,group.course,group.teacher' })
+}
+
+export async function moveAdminStudentToGroup(input: {
+  studentId: string
+  currentEnrollment?: AdminEnrollmentRecord
+  targetGroup: AdminGroupRecord
+}): Promise<{ previous?: AdminEnrollmentRecord; current: AdminEnrollmentRecord }> {
+  requireAdmin()
+  if (input.targetGroup.status !== 'ACTIVE') throw new Error('El grupo de destino debe estar activo.')
+  if (input.currentEnrollment?.group === input.targetGroup.id) return { current: input.currentEnrollment }
+
+  const activeInTarget = await pb.collection(collections.enrollments).getList<AdminEnrollmentRecord>(1, 1, {
+    filter: `student = "${quote(input.studentId)}" && group = "${quote(input.targetGroup.id)}" && status = "ACTIVE"`,
+  })
+  if (activeInTarget.totalItems > 0) return { current: activeInTarget.items[0] }
+
+  const targetCount = await pb.collection(collections.enrollments).getList(1, 1, {
+    filter: `group = "${quote(input.targetGroup.id)}" && status = "ACTIVE"`,
+  })
+  if (targetCount.totalItems >= input.targetGroup.capacity) throw new Error('El grupo de destino ya ha alcanzado su capacidad.')
+
+  const current = await createAdminEnrollment({ studentId: input.studentId, groupId: input.targetGroup.id })
+  if (!input.currentEnrollment) return { current }
+  try {
+    const previous = await updateAdminEnrollmentStatus(input.currentEnrollment, 'FINISHED')
+    return { previous, current }
+  } catch (error) {
+    try { await updateAdminEnrollmentStatus(current, 'CANCELLED') } catch { /* avoid two active enrollments if closing history fails */ }
+    throw error
+  }
 }
 
 export async function listAdminClasses(limit = 250): Promise<ClassRecord[]> {
