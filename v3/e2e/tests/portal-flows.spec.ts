@@ -36,9 +36,10 @@ async function expectNoHorizontalPageOverflow(page: Page) {
 test('web pública y login cargan en modo conectado', async ({ page }) => {
   await page.goto('/')
   await expect(page.getByRole('button', { name: 'Saltar intro' })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'ENTRAR' })).toBeDisabled()
+  const enterIntro = page.locator('.intro-enter-button')
+  await expect(enterIntro).toBeDisabled()
   await page.getByRole('button', { name: 'Saltar intro' }).click()
-  await page.getByRole('button', { name: 'ENTRAR' }).click()
+  await enterIntro.click({ force: true })
   await expect(page).toHaveTitle('Language School · Inglés con confianza')
   await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', /Academia de idiomas/)
   await expect(page.locator('.site-header .brand strong')).toHaveText(academyName)

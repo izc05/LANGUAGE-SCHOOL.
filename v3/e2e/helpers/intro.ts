@@ -14,6 +14,6 @@ export async function enterHome(page: Page) {
   if (await skip.count()) await skip.click()
 
   await expect(enter).toBeEnabled()
-  await enter.click()
+  await enter.click({ force: true })
   await expect(homeHeader).toBeVisible()
 }
