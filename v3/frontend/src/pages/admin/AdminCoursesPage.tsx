@@ -100,6 +100,13 @@ export default function AdminCoursesPage() {
   const [enrollmentStudentId, setEnrollmentStudentId] = useState('')
   const [enrollmentGroupId, setEnrollmentGroupId] = useState('')
 
+  const [showGroupEdit, setShowGroupEdit] = useState(false)
+  const [editGroupName, setEditGroupName] = useState('')
+  const [editGroupTeacherId, setEditGroupTeacherId] = useState('')
+  const [editAcademicYear, setEditAcademicYear] = useState('')
+  const [editScheduleText, setEditScheduleText] = useState('')
+  const [editCapacity, setEditCapacity] = useState(1)
+
   useEffect(() => {
     if (isDemoMode) return
     let mounted = true
@@ -291,6 +298,60 @@ export default function AdminCoursesPage() {
     }
   }
 
+  function openGroupEdit() {
+    if (!selectedGroup) return
+    setEditGroupName(selectedGroup.name)
+    setEditGroupTeacherId(selectedGroup.teacher)
+    setEditAcademicYear(selectedGroup.academic_year)
+    setEditScheduleText(selectedGroup.schedule_text || '')
+    setEditCapacity(selectedGroup.capacity)
+    setShowGroupEdit(true)
+    setError(null)
+    setMessage(null)
+  }
+
+  async function saveGroupEdit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!selectedGroup) return
+    const activeCount = activeCountForGroup(selectedGroup.id)
+    const teacher = activeTeachers.find((item) => item.id === editGroupTeacherId)
+    if (!editGroupName.trim() || !teacher || !editAcademicYear.trim()) {
+      setError('Completa el nombre, el profesor activo y el curso académico.')
+      return
+    }
+    if (!Number.isInteger(editCapacity) || editCapacity < activeCount || editCapacity < 1) {
+      setError(`La capacidad no puede ser inferior a las ${activeCount} matrículas activas del grupo.`)
+      return
+    }
+    if (!window.confirm(`¿Guardar los cambios del grupo "${selectedGroup.name}"? Las matrículas y las clases existentes se conservan.`)) return
+    if (isDemoMode) {
+      setShowGroupEdit(false)
+      setMessage('Cambios del grupo preparados en la demostración. No se ha guardado ningún cambio real.')
+      return
+    }
+    setSaving(true)
+    setError(null)
+    try {
+      const updated = await updateAdminGroup(selectedGroup, {
+        name: editGroupName.trim(),
+        teacher: teacher.id,
+        academic_year: editAcademicYear.trim(),
+        schedule_text: editScheduleText.trim(),
+        capacity: editCapacity,
+      })
+      setGroups((current) => current.map((item) => item.id === updated.id ? updated : item))
+      setEnrollments((current) => current.map((item) => item.group === updated.id
+        ? { ...item, expand: { ...item.expand, group: updated } }
+        : item))
+      setShowGroupEdit(false)
+      setMessage('Grupo actualizado. Las matrículas y las clases ya registradas se conservan.')
+    } catch (updateError) {
+      setError(updateError instanceof Error ? updateError.message : 'No se ha podido actualizar el grupo.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   async function changeEnrollment(record: AdminEnrollmentRecord, status: AdminEnrollmentRecord['status']) {
     setError(null)
     setMessage(null)
@@ -425,8 +486,16 @@ export default function AdminCoursesPage() {
         {selectedGroup && <section className="panel admin-enrollment-panel">
           <div className="panel-heading">
             <div><span className="eyebrow">MATRÍCULAS · {selectedGroup.name}</span><h3>Alumnos del grupo</h3></div>
-            <div className="admin-group-actions"><button type="button" onClick={() => void toggleGroup(selectedGroup)}>{selectedGroup.status === 'ACTIVE' ? 'Pausar grupo' : 'Reactivar grupo'}</button><span className="status info">{activeCountForGroup(selectedGroup.id)}/{selectedGroup.capacity}</span></div>
+            <div className="admin-group-actions"><button type="button" onClick={openGroupEdit}>Editar grupo</button><button type="button" onClick={() => void toggleGroup(selectedGroup)}>{selectedGroup.status === 'ACTIVE' ? 'Pausar grupo' : 'Reactivar grupo'}</button><span className="status info">{activeCountForGroup(selectedGroup.id)}/{selectedGroup.capacity}</span></div>
           </div>
+          {showGroupEdit && <form className="admin-create-grid class-edit-form" onSubmit={saveGroupEdit}>
+            <div><label>Nombre del grupo</label><input value={editGroupName} onChange={(event) => setEditGroupName(event.target.value)} required /></div>
+            <div><label>Profesor</label><select value={editGroupTeacherId} onChange={(event) => setEditGroupTeacherId(event.target.value)} required>{activeTeachers.map((teacher) => <option key={teacher.id} value={teacher.id}>{userName(teacher)}</option>)}</select></div>
+            <div><label>Curso académico</label><input value={editAcademicYear} onChange={(event) => setEditAcademicYear(event.target.value)} required /></div>
+            <div><label>Horario</label><input value={editScheduleText} onChange={(event) => setEditScheduleText(event.target.value)} placeholder="Martes y jueves · 18:00" /></div>
+            <div><label>Capacidad</label><input type="number" min={activeCountForGroup(selectedGroup.id)} max={100} value={editCapacity} onChange={(event) => setEditCapacity(Number(event.target.value))} required /></div>
+            <div className="admin-create-action"><button className="button button-primary" type="submit" disabled={saving}>{saving ? 'Guardando…' : 'Guardar grupo'}</button><button className="button button-ghost" type="button" disabled={saving} onClick={() => setShowGroupEdit(false)}>Cancelar</button></div>
+          </form>}
           <div className="admin-enrollment-list">
             {selectedGroupEnrollments.map((record) => {
               const student = record.expand?.student || students.find((item) => item.id === record.student)
