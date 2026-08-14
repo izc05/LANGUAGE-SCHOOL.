@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { enterHome } from '../helpers/intro'
 
 test('avisa de caída temporal y se recupera al reintentar', async ({ page }) => {
   let healthAvailable = false
@@ -11,7 +12,7 @@ test('avisa de caída temporal y se recupera al reintentar', async ({ page }) =>
     await route.continue()
   })
 
-  await page.goto('/')
+  await enterHome(page)
   const banner = page.getByText('Conexión temporalmente no disponible')
   await expect(banner).toBeVisible()
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible()

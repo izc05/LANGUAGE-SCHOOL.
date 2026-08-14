@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { enterHome } from '../helpers/intro'
 
 function requiredEnv(name: string): string {
   const value = process.env[name]
@@ -23,7 +24,7 @@ async function useSkipLink(page: Page) {
 }
 
 test('web pública ofrece salto al contenido y landmarks principales', async ({ page }) => {
-  await page.goto('/')
+  await enterHome(page)
   await useSkipLink(page)
   await expect(page.getByRole('main')).toHaveCount(1)
   await expect(page.getByRole('navigation', { name: 'Navegación principal' })).toBeVisible()
@@ -49,6 +50,9 @@ test('formularios públicos mantienen etiquetas accesibles', async ({ page }) =>
 test('modo de movimiento reducido elimina transiciones largas', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/')
+  await expect(page.getByRole('button', { name: 'ENTRAR' })).toBeEnabled()
+  await expect(page.getByRole('button', { name: 'Saltar intro' })).toHaveCount(0)
+  await page.getByRole('button', { name: 'ENTRAR' }).click()
   const durationSeconds = await page.locator('.skip-link').evaluate((element) => {
     const raw = getComputedStyle(element).transitionDuration.trim()
     if (raw.endsWith('ms')) return Number.parseFloat(raw) / 1000

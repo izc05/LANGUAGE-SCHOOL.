@@ -1,9 +1,10 @@
 import { expect, test } from '@playwright/test'
+import { enterHome } from '../helpers/intro'
 
 test('la web pública mantiene contenido seguro si PocketBase deja de responder', async ({ page }) => {
   await page.route('**/api/**', (route) => route.abort('failed'))
 
-  await page.goto('/')
+  await enterHome(page)
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
   await expect(page.locator('body')).not.toContainText('ClientResponseError')
   await expect(page.locator('body')).not.toContainText('ECONNREFUSED')

@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { enterHome } from '../helpers/intro'
 
 function requiredEnv(name: string): string {
   const value = process.env[name]
@@ -34,8 +35,15 @@ async function expectNoHorizontalPageOverflow(page: Page) {
 
 test('web pública y login cargan en modo conectado', async ({ page }) => {
   await page.goto('/')
+  await expect(page.getByRole('button', { name: 'Saltar intro' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'ENTRAR' })).toBeDisabled()
+  await page.getByRole('button', { name: 'Saltar intro' }).click()
+  await page.getByRole('button', { name: 'ENTRAR' }).click()
   await expect(page).toHaveTitle('Language School · Inglés con confianza')
   await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', /Academia de idiomas/)
+  await expect(page.locator('.site-header .brand strong')).toHaveText(academyName)
+  await page.reload()
+  await expect(page.getByRole('button', { name: 'ENTRAR' })).toHaveCount(0)
   await expect(page.locator('.site-header .brand strong')).toHaveText(academyName)
   await page.goto('/acceso')
   await expect(page.getByText('Acceso seguro a tu espacio privado.')).toBeVisible()
@@ -177,7 +185,7 @@ test('cabecera pública responsive sin desbordamiento en móvil y tablet', async
     { width: 768, height: 1024 },
   ]) {
     await page.setViewportSize(viewport)
-    await page.goto('/')
+    await enterHome(page)
     await expect(page.locator('.site-header .brand strong')).toHaveText(academyName)
     await expect(page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('link', { name: 'Sobre nosotros' })).toBeVisible()
     await expectNoHorizontalPageOverflow(page)

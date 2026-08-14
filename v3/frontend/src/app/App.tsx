@@ -1,6 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router'
 import RequireRole from '../features/auth/RequireRole'
-import HomePage from '../pages/public/HomePage'
+import IntroGatePage from '../pages/public/IntroGatePage'
 import BlogPage from '../pages/public/BlogPage'
 import ProgramsPage from '../pages/public/ProgramsPage'
 import PricingPage from '../pages/public/PricingPage'
@@ -41,7 +41,7 @@ import AdminSystemStatusPage from '../pages/admin/AdminSystemStatusPage'
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<HomePage />} />
+      <Route path="/" element={<IntroGatePage />} />
       <Route path="/programas" element={<ProgramsPage />} />
       <Route path="/tarifas" element={<PricingPage />} />
       <Route path="/profesores" element={<TeachersPage />} />

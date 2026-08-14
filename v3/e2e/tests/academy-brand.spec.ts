@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { enterHome } from '../helpers/intro'
 
 const academyName = 'E2E Language Academy'
 
@@ -26,7 +27,7 @@ async function expectNoTechnicalBackendCopy(page: Page) {
 }
 
 test('la identidad configurada se comparte entre web, acceso y portal', async ({ page }) => {
-  await page.goto('/')
+  await enterHome(page)
   await expect(page.locator('.site-header .brand strong')).toHaveText(academyName)
 
   await login(page, requiredEnv('E2E_STUDENT_EMAIL'), requiredEnv('E2E_STUDENT_PASSWORD'), /\/alumno$/)
