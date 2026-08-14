@@ -7,9 +7,9 @@ Cloudflare Tunnel nunca apunta a PocketBase directamente.
 ```text
 Internet
   -> Cloudflare Tunnel
-  -> http://127.0.0.1:8080 (Nginx)
+  -> http://127.0.0.1:8083 (Nginx)
        -> /        React estático
-       -> /api/*   PocketBase 127.0.0.1:8090
+       -> /api/*   PocketBase 127.0.0.1:8091
 ```
 
 PocketBase `/_/` no se publica mediante Nginx.
@@ -19,7 +19,7 @@ PocketBase `/_/` no se publica mediante Nginx.
 Cloudflare recomienda actualmente los túneles gestionados remotamente para la mayoría de despliegues. Crea el túnel desde Cloudflare Zero Trust, configura un hostname público y usa como servicio de origen:
 
 ```text
-http://127.0.0.1:8080
+http://127.0.0.1:8083
 ```
 
 Instala `cloudflared` como servicio usando el token que entrega Cloudflare. El token es secreto y nunca se guarda en GitHub.
@@ -30,7 +30,7 @@ Instala `cloudflared` como servicio usando el token que entrega Cloudflare. El t
 
 La última regla de `ingress` debe seguir siendo el catch-all `http_status:404`.
 
-Antes de activar un túnel local, valida su configuración con `cloudflared tunnel ingress validate` y comprueba que el servicio de origen responde en `127.0.0.1:8080`.
+Antes de activar un túnel local, valida su configuración con `cloudflared tunnel ingress validate` y comprueba que el servicio de origen responde en `127.0.0.1:8083`.
 
 ## Comprobación
 
@@ -39,4 +39,4 @@ Una vez activo el túnel:
 1. `/` debe devolver el frontend.
 2. `/api/health` debe devolver la salud de PocketBase.
 3. `/_/` no debe mostrar el panel administrativo de PocketBase.
-4. No debe haber ningún reenvío de puertos 8090/8080 en el router.
+4. No debe haber ningún reenvío de puertos 8091/8083 en el router.

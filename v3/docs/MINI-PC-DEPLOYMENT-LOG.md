@@ -120,6 +120,18 @@ Fecha de instalación: 2026-08-13 (Europe/Madrid).
 - Incidencia corregida: el envío de la programación conservaba el valor inicial de los campos nativos de fecha/hora. El ajuste se publicó en `edfa579` y se validó creando la sesión correcta; el intento con horario erróneo quedó cancelado, sin asistencia.
 - `bash v3/infrastructure/raspberry-pi/health-check.sh`: PASS.
 
+## FASE 9.3B · Publicación Cloudflare — ✅ COMPLETADA
+
+- Dominio: `isivoltpro.com`; hostname publicado: `https://language-school.isivoltpro.com`.
+- Backup previo: `language-school-20260813T215133Z.tar.gz` en el disco de backup real; checksum SHA-256 `OK` y health posterior PASS.
+- Tunnel: se reutilizó el túnel remoto existente y saludable del mini PC. Se añadió exclusivamente la ruta `language-school.isivoltpro.com` hacia `http://127.0.0.1:8083`; las rutas existentes, incluida Atelier Lumière, no se modificaron.
+- DNS: creado automáticamente por Cloudflare Tunnel y resuelto públicamente. No se abrió ningún puerto ni se añadió port-forward en el router.
+- Origen público: `PUBLIC_ORIGIN=https://language-school.isivoltpro.com`; frontend connected reconstruido y desplegado. PocketBase continúa privado en `127.0.0.1:8091`.
+- HTTPS, web pública y `/api/health`: PASS. `/_/` devuelve 404 desde Internet.
+- Validación externa: ADMIN, Laura y Alex acceden por el hostname con su rol correcto; rutas cruzadas bloqueadas. Material y archivo privado descargan correctamente; Laura conserva solo lectura del archivo de Alex.
+- Servicios y seguridad: PocketBase, cloudflared y timer de backup activos; listeners Language School permanecen solo en `127.0.0.1:8083` y `127.0.0.1:8091`.
+- Atelier Lumière: intacto (HTTP 302 de acceso protegido). SMTP permanece pendiente.
+
 ## FASE 9.2B.7 · Material de clase — ✅ COMPLETADA
 
 - Material publicado desde `/profesor/material`: `Conversation Pilot · Vocabulary`.

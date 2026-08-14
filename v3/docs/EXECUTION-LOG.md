@@ -362,3 +362,12 @@ Cada sesión debe empezar leyendo este archivo y actualizarlo al finalizar cada 
 - Estrategia para 9.3B: reutilizar el túnel existente con una ruta nueva hacia `http://127.0.0.1:8083`. PocketBase `127.0.0.1:8091` no se expondrá directamente; Nginx mantiene `/_/` bloqueado con 404.
 - `PUBLIC_ORIGIN` actual es local (`http://127.0.0.1:8083`). El futuro `https://language-school.isivoltpro.com` exige rebuild y despliegue de frontend. No se modificó `/etc/language-school/production.env`.
 - SMTP, recuperación por email, HTTPS público y router port-forward: pendientes, sin configuración ni secretos. Health final, timer de backup y web local: PASS.
+
+### FASE 9.3B · Publicación Cloudflare — ✅ COMPLETADA
+
+- Previo a la publicación se creó el backup `language-school-20260813T215133Z.tar.gz`; checksum `OK`, health local PASS y Atelier intacto.
+- Se actualizó exclusivamente `PUBLIC_ORIGIN` local a `https://language-school.isivoltpro.com`, manteniendo `PB_URL=http://127.0.0.1:8091` y `PROXY_URL=http://127.0.0.1:8083`. El frontend connected se reconstruyó y desplegó sin modificar PocketBase.
+- Cloudflare Tunnel remoto existente: se creó una única ruta publicada `language-school.isivoltpro.com → http://127.0.0.1:8083`. Cloudflare creó el DNS asociado. No se creó túnel, no se regeneró token, no se abrió puerto y no se modificó Atelier.
+- Público: HTTPS 200, `/api/health` saludable y `/_/` devuelve 404. Portada y rutas públicas PASS.
+- Roles externos: ADMIN llega a `/admin`; Laura a `/profesor`, limitada a Alex y con descarga del archivo privado en solo lectura; Alex llega a `/alumno`, ve clase, material, tarea corregida con nota 8, archivo y aviso. Material y archivo privado descargan desde el hostname público. Alex queda redirigido desde `/admin` y `/profesor`; Laura desde `/admin`.
+- Salud final: PocketBase, cloudflared y timer de backup activos; listeners únicamente locales 8083/8091; Atelier conservado (HTTP 302 de acceso protegido). SMTP queda pendiente; no se inicia 9.3C.

@@ -6,5 +6,5 @@ credentials-file: /etc/cloudflared/<TUNNEL-UUID>.json
 
 ingress:
   - hostname: english.example.com
-    service: http://127.0.0.1:8080
+    service: http://127.0.0.1:8083
   - service: http_status:404
