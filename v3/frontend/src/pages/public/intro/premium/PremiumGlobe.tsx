@@ -13,9 +13,16 @@ type PremiumGlobeProps = {
 }
 
 function responsiveGlobeScale(width: number) {
-  if (width <= 760) return 0.76
-  if (width <= 1024) return 0.9
+  if (width <= 480) return 0.52
+  if (width <= 760) return 0.6
+  if (width <= 1024) return 0.84
   return 1
+}
+
+function responsiveGlobeY(width: number) {
+  if (width <= 480) return 0.18
+  if (width <= 760) return 0.1
+  return -0.2
 }
 
 export default function PremiumGlobe({ introComplete, scaleRef }: PremiumGlobeProps) {
@@ -31,7 +38,7 @@ export default function PremiumGlobe({ introComplete, scaleRef }: PremiumGlobePr
     if (!groupRef.current || !coreRef.current || !haloRef.current) return
 
     const baseScale = responsiveGlobeScale(state.size.width)
-    groupRef.current.position.y = state.size.width <= 760 ? -0.05 : -0.2
+    groupRef.current.position.y = responsiveGlobeY(state.size.width)
 
     if (!introComplete) {
       groupRef.current.scale.setScalar(Math.max(0, scaleRef.current) * baseScale)
@@ -46,7 +53,7 @@ export default function PremiumGlobe({ introComplete, scaleRef }: PremiumGlobePr
       groupRef.current.rotation.x = pointer.current.y * 0.2
       groupRef.current.rotation.z = pointer.current.x * -0.1
 
-      targetScale.current = baseScale * (hovered ? 1.05 : 1)
+      targetScale.current = baseScale * (hovered ? 1.04 : 1)
       const currentScale = groupRef.current.scale.x
       groupRef.current.scale.setScalar(THREE.MathUtils.damp(currentScale, targetScale.current, 4, delta))
       haloRef.current.rotation.z = state.clock.elapsedTime * 0.1
