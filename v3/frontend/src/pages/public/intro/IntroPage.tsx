@@ -283,7 +283,7 @@ export default function IntroPage({ onEnter }: IntroPageProps) {
             {webGlAvailable ? 'Mueve el cursor sobre el mundo' : 'Bienvenido a Language School'}
           </p>
           <button
-            className="premium-enter-button"
+            className="premium-enter-button intro-enter-button"
             type="button"
             onClick={enterAcademy}
             disabled={!settled || transitioning}
