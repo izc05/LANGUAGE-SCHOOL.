@@ -13,15 +13,15 @@ type PremiumGlobeProps = {
 }
 
 function responsiveGlobeScale(width: number) {
-  if (width <= 480) return 0.52
-  if (width <= 760) return 0.6
-  if (width <= 1024) return 0.84
+  if (width <= 480) return 0.46
+  if (width <= 760) return 0.54
+  if (width <= 1024) return 0.82
   return 1
 }
 
 function responsiveGlobeY(width: number) {
-  if (width <= 480) return 0.18
-  if (width <= 760) return 0.1
+  if (width <= 480) return 0.22
+  if (width <= 760) return 0.14
   return -0.2
 }
 
