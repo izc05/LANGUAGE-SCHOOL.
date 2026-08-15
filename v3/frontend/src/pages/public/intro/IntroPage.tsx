@@ -1,104 +1,163 @@
 import { Canvas, useFrame } from '@react-three/fiber'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { Environment, Lightformer, Preload } from '@react-three/drei'
+import { Suspense, useEffect, useRef, useState, type MutableRefObject } from 'react'
 import * as THREE from 'three'
-import FlightScene from './FlightScene'
-import GlobeScene from './GlobeScene'
-import './intro.css'
+import PremiumAirplane from './premium/PremiumAirplane'
+import PremiumAtmosphere from './premium/PremiumAtmosphere'
+import PremiumGlobe from './premium/PremiumGlobe'
+import { runPremiumCloudTransition } from './premium/cloudTransition'
+import './premium/premium-intro.css'
 
-const INTRO_MS = 7600
+const INTRO_DURATION = 8
 
 type IntroPageProps = {
   onEnter: () => void
 }
 
-type CloudClusterProps = {
-  seed: number
-  position: [number, number, number]
-  scale: [number, number, number]
-  opacity: number
+type SceneControllerProps = {
+  reducedMotion: boolean
+  skipped: boolean
+  planeProgress: MutableRefObject<number>
+  globeScale: MutableRefObject<number>
+  onBrandVisible: () => void
+  onActionsVisible: () => void
+  onSettled: () => void
 }
 
-function PearlCloudCluster({ seed, position, scale, opacity }: CloudClusterProps) {
-  const puffs = useMemo(() => {
-    let value = seed >>> 0
-    const random = () => {
-      value = (value * 1664525 + 1013904223) >>> 0
-      return value / 4294967296
+function easeInOutQuad(value: number) {
+  return value < 0.5
+    ? 2 * value * value
+    : 1 - Math.pow(-2 * value + 2, 2) / 2
+}
+
+function backOut(value: number) {
+  const c1 = 1.2
+  const c3 = c1 + 1
+  return 1 + c3 * Math.pow(value - 1, 3) + c1 * Math.pow(value - 1, 2)
+}
+
+function SceneController({
+  reducedMotion,
+  skipped,
+  planeProgress,
+  globeScale,
+  onBrandVisible,
+  onActionsVisible,
+  onSettled,
+}: SceneControllerProps) {
+  const fired = useRef({ brand: false, actions: false, settled: false })
+
+  useFrame((state) => {
+    if (reducedMotion || skipped) {
+      planeProgress.current = 1
+      globeScale.current = 1
+      state.camera.position.z = 5
+
+      if (!fired.current.brand) {
+        fired.current.brand = true
+        onBrandVisible()
+      }
+      if (!fired.current.actions) {
+        fired.current.actions = true
+        onActionsVisible()
+      }
+      if (!fired.current.settled) {
+        fired.current.settled = true
+        onSettled()
+      }
+      return
     }
 
-    return Array.from({ length: 9 }, (_, index) => ({
-      position: [(random() - 0.5) * 2.75, (random() - 0.5) * 0.9, (random() - 0.5) * 1.15] as [number, number, number],
-      scale: [0.78 + random() * 0.9, 0.48 + random() * 0.5, 0.62 + random() * 0.66] as [number, number, number],
-      color: index % 3 === 0 ? '#f8dce8' : index % 4 === 0 ? '#fff0f6' : '#ffffff',
-      opacity: opacity * (0.72 + random() * 0.28),
-    }))
-  }, [opacity, seed])
+    const elapsed = state.clock.elapsedTime
+    const flightProgress = THREE.MathUtils.clamp(elapsed / INTRO_DURATION, 0, 1)
+    planeProgress.current = easeInOutQuad(flightProgress)
 
-  return (
-    <group position={position} scale={scale}>
-      {puffs.map((puff, index) => (
-        <mesh key={index} position={puff.position} scale={puff.scale}>
-          <sphereGeometry args={[1, 18, 14]} />
-          <meshStandardMaterial
-            color={puff.color}
-            emissive="#fff7fb"
-            emissiveIntensity={0.12}
-            roughness={0.94}
-            metalness={0}
-            transparent
-            opacity={puff.opacity}
-            depthWrite={false}
-          />
-        </mesh>
-      ))}
-    </group>
-  )
-}
+    const cameraProgress = THREE.MathUtils.clamp(elapsed / (INTRO_DURATION * 0.7), 0, 1)
+    state.camera.position.z = THREE.MathUtils.lerp(15, 5, easeInOutQuad(cameraProgress))
 
-function PearlCloudField({ reducedMotion, settled }: { reducedMotion: boolean; settled: boolean }) {
-  const group = useRef<THREE.Group>(null)
+    const globeProgress = THREE.MathUtils.clamp((elapsed - INTRO_DURATION * 0.4) / 3, 0, 1)
+    globeScale.current = globeProgress <= 0 ? 0 : Math.max(0, backOut(globeProgress))
 
-  useFrame((state, delta) => {
-    if (!group.current) return
-    const interaction = settled && !reducedMotion ? 1 : 0.35
-    const targetX = state.pointer.x * -0.48 * interaction
-    const targetY = state.pointer.y * -0.3 * interaction
-    const targetZ = reducedMotion ? 0 : Math.sin(state.clock.elapsedTime * 0.22) * 0.14
-    group.current.position.x = THREE.MathUtils.damp(group.current.position.x, targetX, 2.4, delta)
-    group.current.position.y = THREE.MathUtils.damp(group.current.position.y, targetY, 2.4, delta)
-    group.current.position.z = THREE.MathUtils.damp(group.current.position.z, targetZ, 1.8, delta)
-    group.current.rotation.y = THREE.MathUtils.damp(group.current.rotation.y, state.pointer.x * 0.016 * interaction, 2.2, delta)
+    if (elapsed >= INTRO_DURATION * 0.75 && !fired.current.brand) {
+      fired.current.brand = true
+      onBrandVisible()
+    }
+
+    if (elapsed >= INTRO_DURATION * 0.85 && !fired.current.actions) {
+      fired.current.actions = true
+      onActionsVisible()
+    }
+
+    if (elapsed >= INTRO_DURATION && !fired.current.settled) {
+      fired.current.settled = true
+      planeProgress.current = 1
+      globeScale.current = 1
+      onSettled()
+    }
   })
 
-  return (
-    <group ref={group}>
-      <PearlCloudCluster seed={11} position={[-5.3, 2.35, -5.3]} scale={[1.55, 1, 1.15]} opacity={0.34} />
-      <PearlCloudCluster seed={17} position={[5.2, 2.55, -4.4]} scale={[1.45, 0.92, 1.08]} opacity={0.31} />
-      <PearlCloudCluster seed={23} position={[-5.2, -2.15, -1.1]} scale={[1.5, 1.08, 1.18]} opacity={0.42} />
-      <PearlCloudCluster seed={29} position={[5.4, -1.95, -0.45]} scale={[1.55, 1.02, 1.18]} opacity={0.42} />
-      <PearlCloudCluster seed={31} position={[-7, 0.35, 2.25]} scale={[1.25, 0.9, 0.95]} opacity={0.25} />
-      <PearlCloudCluster seed={37} position={[6.9, 0.6, 2.45]} scale={[1.2, 0.85, 0.95]} opacity={0.25} />
-    </group>
-  )
+  return null
 }
 
-function AtmosphereScene({ reducedMotion, settled }: { reducedMotion: boolean; settled: boolean }) {
+function PremiumScene({
+  reducedMotion,
+  skipped,
+  settled,
+  planeProgress,
+  globeScale,
+  onBrandVisible,
+  onActionsVisible,
+  onSettled,
+}: {
+  reducedMotion: boolean
+  skipped: boolean
+  settled: boolean
+  planeProgress: MutableRefObject<number>
+  globeScale: MutableRefObject<number>
+  onBrandVisible: () => void
+  onActionsVisible: () => void
+  onSettled: () => void
+}) {
   return (
     <Canvas
       dpr={[1, 1.5]}
-      camera={{ position: [0, 0, 8.5], fov: 46, near: 0.1, far: 60 }}
-      gl={{ antialias: true, powerPreference: 'high-performance', alpha: false }}
+      camera={{ position: [0, 0, 15], fov: 40, near: 0.1, far: 60 }}
+      gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
     >
-      <color attach="background" args={['#fffafc']} />
-      <fog attach="fog" args={['#fff7fb', 9, 30]} />
-      <ambientLight intensity={2.1} />
-      <hemisphereLight args={['#ffffff', '#f2b3cf', 1.55]} />
-      <directionalLight position={[4, 8, 7]} intensity={2.4} color="#ffffff" />
-      <pointLight position={[-5, 2, 5]} intensity={25} color="#f7c3dc" distance={18} />
-      <pointLight position={[6, -2, 3]} intensity={18} color="#e869a6" distance={16} />
-      <PearlCloudField reducedMotion={reducedMotion} settled={settled} />
-      <GlobeScene reducedMotion={reducedMotion} interactive={settled} />
-      <FlightScene reducedMotion={reducedMotion} settled={settled} />
+      <SceneController
+        reducedMotion={reducedMotion}
+        skipped={skipped}
+        planeProgress={planeProgress}
+        globeScale={globeScale}
+        onBrandVisible={onBrandVisible}
+        onActionsVisible={onActionsVisible}
+        onSettled={onSettled}
+      />
+
+      <color attach="background" args={['#fffcfd']} />
+      <fog attach="fog" args={['#fffcfd', 5, 20]} />
+
+      <ambientLight intensity={1.5} color="#ffffff" />
+      <directionalLight position={[5, 5, 5]} intensity={2} color="#ffffff" />
+      <directionalLight position={[-5, 5, -5]} intensity={1} color="#f4a7c8" />
+
+      <PremiumAtmosphere />
+
+      <Suspense fallback={null}>
+        <PremiumGlobe introComplete={settled} scaleRef={globeScale} />
+      </Suspense>
+
+      <PremiumAirplane progressRef={planeProgress} />
+
+      <Environment resolution={256}>
+        <group rotation={[-Math.PI / 2, 0, 0]}>
+          <Lightformer form="circle" intensity={4} rotation-x={Math.PI / 2} position={[0, 5, -9]} scale={2} />
+          <Lightformer form="circle" intensity={2} rotation-y={Math.PI / 2} position={[-5, 1, -1]} scale={2} />
+          <Lightformer form="circle" intensity={2} rotation-y={Math.PI / 2} position={[5, 1, -1]} scale={2} />
+          <Lightformer form="circle" intensity={2} rotation-y={-Math.PI / 2} position={[10, 1, 0]} scale={8} />
+        </group>
+      </Environment>
+      <Preload all />
     </Canvas>
   )
 }
@@ -123,8 +182,14 @@ function browserSupportsWebGl(): boolean {
 
 export default function IntroPage({ onEnter }: IntroPageProps) {
   const [reducedMotion, setReducedMotion] = useState(false)
-  const [settled, setSettled] = useState(false)
   const [webGlAvailable] = useState(browserSupportsWebGl)
+  const [skipped, setSkipped] = useState(false)
+  const [brandVisible, setBrandVisible] = useState(false)
+  const [actionsVisible, setActionsVisible] = useState(false)
+  const [settled, setSettled] = useState(false)
+  const [transitioning, setTransitioning] = useState(false)
+  const planeProgress = useRef(0)
+  const globeScale = useRef(0)
 
   useEffect(() => {
     document.title = 'Language School · Rocío Ruiz'
@@ -136,44 +201,97 @@ export default function IntroPage({ onEnter }: IntroPageProps) {
   }, [])
 
   useEffect(() => {
-    if (reducedMotion || !webGlAvailable) {
+    if (!webGlAvailable || reducedMotion) {
+      setBrandVisible(true)
+      setActionsVisible(true)
       setSettled(true)
-      return
     }
-    const timer = window.setTimeout(() => setSettled(true), INTRO_MS)
-    return () => window.clearTimeout(timer)
   }, [reducedMotion, webGlAvailable])
 
+  function skipIntro() {
+    planeProgress.current = 1
+    globeScale.current = 1
+    setSkipped(true)
+    setBrandVisible(true)
+    setActionsVisible(true)
+    setSettled(true)
+  }
+
+  function enterAcademy() {
+    if (!settled || transitioning) return
+
+    if (!webGlAvailable || reducedMotion) {
+      onEnter()
+      return
+    }
+
+    setTransitioning(true)
+    try {
+      runPremiumCloudTransition(onEnter)
+    } catch {
+      setTransitioning(false)
+      onEnter()
+    }
+  }
+
+  const classes = [
+    'premium-intro',
+    reducedMotion ? 'reduced-motion' : '',
+    brandVisible ? 'brand-visible' : '',
+    actionsVisible ? 'actions-visible' : '',
+    settled ? 'settled' : '',
+  ].filter(Boolean).join(' ')
+
   return (
-    <main className={`intro-gate${reducedMotion ? ' reduced-motion' : ''}${settled ? ' intro-settled' : ''}`}>
+    <main className={classes}>
       {webGlAvailable ? (
-        <div className="intro-canvas-wrap" aria-hidden="true">
-          <AtmosphereScene reducedMotion={reducedMotion} settled={settled} />
+        <div className="premium-intro-canvas" aria-hidden="true">
+          <PremiumScene
+            reducedMotion={reducedMotion}
+            skipped={skipped}
+            settled={settled}
+            planeProgress={planeProgress}
+            globeScale={globeScale}
+            onBrandVisible={() => setBrandVisible(true)}
+            onActionsVisible={() => setActionsVisible(true)}
+            onSettled={() => setSettled(true)}
+          />
         </div>
       ) : (
-        <div className="intro-static-globe" aria-hidden="true" />
-      )}
-      <div className="intro-soft-glow intro-glow-a" aria-hidden="true" />
-      <div className="intro-soft-glow intro-glow-b" aria-hidden="true" />
-
-      <section className="intro-brand-lockup" aria-label="Language School Rocío Ruiz">
-        <span className="intro-brand-language">LANGUAGE</span>
-        <strong className="intro-brand-school">School</strong>
-        <span className="intro-brand-rocio">ROCÍO RUIZ</span>
-      </section>
-
-      {!settled && !reducedMotion && (
-        <button className="skip-intro" type="button" onClick={() => setSettled(true)}>
-          Saltar intro
-        </button>
+        <div className="premium-static-globe" aria-hidden="true" />
       )}
 
-      <div className="intro-entry-actions" aria-hidden={!settled}>
-        <button className="intro-enter-button" type="button" onClick={onEnter} disabled={!settled}>
-          <span>ENTRAR</span>
-          <span aria-hidden="true" className="intro-enter-arrow">↗</span>
-        </button>
-        <p>{webGlAvailable ? 'Mueve el cursor sobre el mundo' : 'Bienvenido a Language School'}</p>
+      <div className="premium-intro-glow" aria-hidden="true" />
+      <div className="premium-intro-vignette" aria-hidden="true" />
+
+      <div className="premium-intro-ui">
+        <section className="premium-brand-lockup" aria-label="Language School Rocío Ruiz">
+          <span className="premium-brand-language">LANGUAGE</span>
+          <strong className="premium-brand-school">School</strong>
+          <div className="premium-brand-divider" aria-hidden="true" />
+          <span className="premium-brand-rocio">ROCÍO RUIZ</span>
+        </section>
+
+        {!settled && !reducedMotion && (
+          <button className="premium-skip-button" type="button" onClick={skipIntro}>
+            Saltar intro
+          </button>
+        )}
+
+        <div className="premium-entry-actions" aria-hidden={!actionsVisible}>
+          <p className="premium-instruction">
+            {webGlAvailable ? 'Mueve el cursor sobre el mundo' : 'Bienvenido a Language School'}
+          </p>
+          <button
+            className="premium-enter-button"
+            type="button"
+            onClick={enterAcademy}
+            disabled={!settled || transitioning}
+          >
+            <span>{transitioning ? 'ENTRANDO…' : 'ENTRAR'}</span>
+            {!transitioning && <span aria-hidden="true" className="premium-enter-arrow">↗</span>}
+          </button>
+        </div>
       </div>
     </main>
   )
