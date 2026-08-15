@@ -1,0 +1,288 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Playball&display=swap');
+
+.premium-intro {
+  --premium-magenta: #d62974;
+  --premium-magenta-light: #f4a7c8;
+  --premium-pearl: #fffcfd;
+  --premium-dark: #333333;
+  position: fixed;
+  inset: 0;
+  min-height: 100dvh;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--premium-pearl);
+  color: var(--premium-dark);
+  font-family: 'Montserrat', sans-serif;
+}
+
+.premium-intro-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.premium-intro-canvas canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.premium-intro-vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 46%, transparent 34%, rgba(255, 252, 254, 0.58) 100%);
+}
+
+.premium-intro-glow {
+  position: absolute;
+  z-index: 3;
+  width: min(68vw, 56rem);
+  aspect-ratio: 1;
+  left: 50%;
+  top: 46%;
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(244, 167, 200, 0.16), rgba(255, 252, 253, 0) 68%);
+  filter: blur(18px);
+}
+
+.premium-intro-ui {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.premium-brand-lockup {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(38rem, 90vw);
+  transform: translate(-50%, calc(-50% + 20px));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  opacity: 0;
+  transition: opacity 1.2s ease, transform 1.2s cubic-bezier(.2,.7,.2,1);
+}
+
+.premium-intro.brand-visible .premium-brand-lockup,
+.premium-intro.settled .premium-brand-lockup {
+  opacity: 1;
+  transform: translate(-50%, -50%);
+}
+
+.premium-brand-language {
+  position: relative;
+  z-index: 2;
+  margin-bottom: -0.5rem;
+  color: #555;
+  font-size: clamp(0.85rem, 1.25vw, 1.2rem);
+  font-weight: 600;
+  letter-spacing: clamp(0.28em, 0.5vw, 0.42em);
+  text-transform: uppercase;
+}
+
+.premium-brand-school {
+  margin: 0;
+  color: var(--premium-magenta);
+  font-family: 'Playball', cursive;
+  font-size: clamp(4.75rem, 8vw, 8.6rem);
+  font-weight: 400;
+  line-height: 0.92;
+  text-shadow: 0 4px 20px rgba(214, 41, 116, 0.22);
+}
+
+.premium-brand-divider {
+  position: relative;
+  width: 80px;
+  height: 1px;
+  margin: clamp(0.75rem, 1.4vh, 1rem) 0;
+  background: var(--premium-magenta-light);
+}
+
+.premium-brand-divider::after {
+  content: '♥';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  padding: 0 10px;
+  background: var(--premium-pearl);
+  color: var(--premium-magenta);
+  font-size: 0.72rem;
+}
+
+.premium-brand-rocio {
+  color: #777;
+  font-size: clamp(0.68rem, 0.95vw, 0.9rem);
+  font-weight: 600;
+  letter-spacing: clamp(0.24em, 0.42vw, 0.34em);
+  text-transform: uppercase;
+}
+
+.premium-entry-actions {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(2rem, 8vh, 5.5rem);
+  transform: translateX(-50%) translateY(10px);
+  width: min(32rem, 92vw);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(0.75rem, 1.6vh, 1.2rem);
+  opacity: 0;
+  transition: opacity 0.9s ease, transform 0.9s ease;
+}
+
+.premium-intro.actions-visible .premium-entry-actions,
+.premium-intro.settled .premium-entry-actions {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.premium-instruction {
+  margin: 0;
+  color: #888;
+  font-size: clamp(0.68rem, 0.85vw, 0.82rem);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.premium-enter-button {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  min-width: 12rem;
+  padding: 0.9rem 2.5rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--premium-magenta);
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(214, 41, 116, 0.3);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  transition: transform 0.28s cubic-bezier(.175,.885,.32,1.275), box-shadow 0.28s ease, background-color 0.28s ease, opacity 0.2s ease;
+}
+
+.premium-enter-button:hover:not(:disabled),
+.premium-enter-button:focus-visible:not(:disabled) {
+  transform: translateY(-3px) scale(1.04);
+  background: #c22066;
+  box-shadow: 0 12px 30px rgba(214, 41, 116, 0.4);
+  outline: none;
+}
+
+.premium-enter-button:disabled {
+  opacity: 0.58;
+  cursor: default;
+}
+
+.premium-enter-arrow {
+  display: inline-block;
+  transition: transform 0.28s ease;
+}
+
+.premium-enter-button:hover:not(:disabled) .premium-enter-arrow {
+  transform: translate(3px, -3px);
+}
+
+.premium-skip-button {
+  position: absolute;
+  left: clamp(1rem, 2.5vw, 2rem);
+  top: clamp(1rem, 2.5vw, 2rem);
+  z-index: 20;
+  pointer-events: auto;
+  padding: 0.64rem 0.95rem;
+  border: 1px solid rgba(214, 41, 116, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.56);
+  color: #8e7381;
+  backdrop-filter: blur(12px);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.premium-skip-button:hover,
+.premium-skip-button:focus-visible {
+  border-color: rgba(214, 41, 116, 0.3);
+  color: var(--premium-magenta);
+  outline: none;
+}
+
+.premium-static-globe {
+  position: absolute;
+  left: 50%;
+  top: 45%;
+  width: min(46vw, 24rem);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border: 1px solid rgba(214, 41, 116, 0.2);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 36% 30%, rgba(255,255,255,.94), rgba(255,255,255,.36) 26%, rgba(244,167,200,.16) 54%, rgba(255,255,255,.06) 72%),
+    linear-gradient(135deg, rgba(255,255,255,.7), rgba(244,167,200,.12));
+  box-shadow: inset 0 0 40px rgba(255,255,255,.88), 0 24px 70px rgba(214,41,116,.12);
+}
+
+.premium-intro.reduced-motion *,
+.premium-intro.reduced-motion *::before,
+.premium-intro.reduced-motion *::after {
+  animation: none !important;
+  transition-duration: 0.01ms !important;
+}
+
+@media (max-height: 760px) and (min-width: 760px) {
+  .premium-brand-lockup {
+    top: 48%;
+  }
+
+  .premium-brand-school {
+    font-size: clamp(4.2rem, 7vw, 6.2rem);
+  }
+
+  .premium-entry-actions {
+    bottom: 1.4rem;
+  }
+}
+
+@media (max-width: 760px) {
+  .premium-brand-lockup {
+    top: 51%;
+    width: 92vw;
+  }
+
+  .premium-brand-school {
+    font-size: clamp(4rem, 20vw, 6rem);
+  }
+
+  .premium-brand-language {
+    font-size: 0.78rem;
+  }
+
+  .premium-brand-rocio {
+    font-size: 0.62rem;
+  }
+
+  .premium-entry-actions {
+    bottom: max(1.5rem, env(safe-area-inset-bottom));
+  }
+
+  .premium-instruction {
+    display: none;
+  }
+}
