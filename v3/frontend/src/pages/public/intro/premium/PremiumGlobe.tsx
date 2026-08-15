@@ -12,6 +12,12 @@ type PremiumGlobeProps = {
   scaleRef: React.MutableRefObject<number>
 }
 
+function responsiveGlobeScale(width: number) {
+  if (width <= 760) return 0.76
+  if (width <= 1024) return 0.9
+  return 1
+}
+
 export default function PremiumGlobe({ introComplete, scaleRef }: PremiumGlobeProps) {
   const groupRef = useRef<THREE.Group>(null)
   const coreRef = useRef<THREE.Mesh>(null)
@@ -24,8 +30,11 @@ export default function PremiumGlobe({ introComplete, scaleRef }: PremiumGlobePr
   useFrame((state, delta) => {
     if (!groupRef.current || !coreRef.current || !haloRef.current) return
 
+    const baseScale = responsiveGlobeScale(state.size.width)
+    groupRef.current.position.y = state.size.width <= 760 ? -0.05 : -0.2
+
     if (!introComplete) {
-      groupRef.current.scale.setScalar(Math.max(0, scaleRef.current))
+      groupRef.current.scale.setScalar(Math.max(0, scaleRef.current) * baseScale)
     }
 
     groupRef.current.rotation.y += delta * 0.015
@@ -37,7 +46,7 @@ export default function PremiumGlobe({ introComplete, scaleRef }: PremiumGlobePr
       groupRef.current.rotation.x = pointer.current.y * 0.2
       groupRef.current.rotation.z = pointer.current.x * -0.1
 
-      targetScale.current = hovered ? 1.05 : 1
+      targetScale.current = baseScale * (hovered ? 1.05 : 1)
       const currentScale = groupRef.current.scale.x
       groupRef.current.scale.setScalar(THREE.MathUtils.damp(currentScale, targetScale.current, 4, delta))
       haloRef.current.rotation.z = state.clock.elapsedTime * 0.1
