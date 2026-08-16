@@ -27,6 +27,7 @@ import './styles/home-premium-v2.css'
 import './styles/home-premium-v2-shell.css'
 import './styles/home-premium-v2-phase2.css'
 import './styles/home-premium-v2-phase2-fix.css'
+import './styles/home-premium-v2-phase3.css'
 
 const root = document.getElementById('root')
 
