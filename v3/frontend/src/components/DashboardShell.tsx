@@ -31,6 +31,11 @@ export default function DashboardShell({ role, name, nav, children }: DashboardS
   const effectiveName = !isDemoMode && user
     ? [user.name, user.surname].filter(Boolean).join(' ').trim() || user.email
     : name
+  const roleClass = effectiveRole === 'Alumno'
+    ? 'dashboard-shell-student'
+    : effectiveRole === 'Profesor'
+      ? 'dashboard-shell-teacher'
+      : 'dashboard-shell-admin'
 
   function handleLogout() {
     logout()
@@ -38,7 +43,7 @@ export default function DashboardShell({ role, name, nav, children }: DashboardS
   }
 
   return (
-    <div className="dashboard-shell">
+    <div className={`dashboard-shell ${roleClass}`}>
       <a className="skip-link" href="#main-content">Saltar al contenido</a>
       <aside className="dashboard-sidebar">
         <Link className="brand dashboard-brand" to="/" aria-label={`${academyName} - Inicio`}>
