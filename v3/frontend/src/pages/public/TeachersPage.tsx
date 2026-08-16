@@ -31,6 +31,8 @@ export default function TeachersPage() {
   const [teachers, setTeachers] = useState<PublicTeacherProfile[]>(isDemoMode ? demoPublicTeachers : [])
   const [loading, setLoading] = useState(!isDemoMode)
   const heroVisual = `${import.meta.env.BASE_URL}visuals/teachers-hero.svg`
+  const methodVisual = `${import.meta.env.BASE_URL}visuals/teachers-method.svg`
+  const feedbackVisual = `${import.meta.env.BASE_URL}visuals/teachers-feedback.svg`
 
   useEffect(() => {
     let mounted = true
@@ -116,6 +118,60 @@ export default function TeachersPage() {
                   </article>
                 )
               })}
+            </div>
+          </div>
+        </section>
+
+        <section className="section teachers-v2-method-section">
+          <div className="container">
+            <div className="teachers-v2-method-intro">
+              <div>
+                <span className="eyebrow">DENTRO DE UNA CLASE</span>
+                <h2>La diferencia no está solo en explicar. Está en acompañar el proceso.</h2>
+              </div>
+              <p>La clase se construye para que el alumno use el idioma, entienda qué puede mejorar y salga con un siguiente paso claro. Más conversación útil, menos sensación de estar memorizando por memorizar.</p>
+            </div>
+
+            <div className="teachers-v2-method-grid">
+              <article className="teachers-v2-method-card">
+                <div className="teachers-v2-method-copy">
+                  <span className="eyebrow">01 · PRÁCTICA</span>
+                  <h3>Hablar primero. Afinar después.</h3>
+                  <p>Situaciones, preguntas y objetivos concretos convierten el inglés en una herramienta que se usa desde el principio.</p>
+                  <div className="teachers-v2-method-tags" aria-label="Claves de práctica">
+                    <span>Contexto real</span>
+                    <span>Participación</span>
+                    <span>Corrección útil</span>
+                  </div>
+                </div>
+                <div className="teachers-v2-method-visual">
+                  <img src={methodVisual} alt="Ilustración editorial de práctica oral y conversación guiada" />
+                  <div className="teachers-v2-method-caption">
+                    <small>EN CLASE</small>
+                    <strong>Más uso real del idioma.</strong>
+                  </div>
+                </div>
+              </article>
+
+              <article className="teachers-v2-method-card">
+                <div className="teachers-v2-method-copy">
+                  <span className="eyebrow">02 · FEEDBACK</span>
+                  <h3>Entender qué mejorar cambia la forma de avanzar.</h3>
+                  <p>Correcciones claras, objetivos alcanzables y seguimiento ayudan a convertir cada error en información útil para la siguiente clase.</p>
+                  <div className="teachers-v2-method-tags" aria-label="Claves de seguimiento">
+                    <span>Objetivos claros</span>
+                    <span>Progreso visible</span>
+                    <span>Siguiente paso</span>
+                  </div>
+                </div>
+                <div className="teachers-v2-method-visual">
+                  <img src={feedbackVisual} alt="Ilustración editorial de feedback, correcciones y progreso" />
+                  <div className="teachers-v2-method-caption">
+                    <small>ENTRE CLASES</small>
+                    <strong>Feedback que se entiende.</strong>
+                  </div>
+                </div>
+              </article>
             </div>
           </div>
         </section>
