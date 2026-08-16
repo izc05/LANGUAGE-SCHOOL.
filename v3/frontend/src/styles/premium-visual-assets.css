@@ -20,6 +20,11 @@
 .home-premium-v2 .blog-journal-art{display:block;width:min(100%,310px);max-height:190px;object-fit:cover;margin:0 0 18px auto;border-radius:24px;border:1px solid rgba(190,65,106,.09);box-shadow:0 18px 42px rgba(83,43,59,.07)}
 .home-premium-v2 .blog-featured-card,.home-premium-v2 .blog-secondary-card{transition:transform .35s cubic-bezier(.2,.7,.2,1),box-shadow .35s ease}
 .home-premium-v2 .blog-featured-card:hover{transform:translateY(-5px);box-shadow:0 30px 68px rgba(80,42,58,.1)}
+.programs-v2-course-visual.has-artwork{position:relative;background:#fff9f8!important}
+.programs-v2-course-fallback{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;transition:transform .65s cubic-bezier(.2,.7,.2,1),filter .65s ease;filter:saturate(.94)}
+.programs-v2-course:hover .programs-v2-course-fallback{transform:scale(1.035);filter:saturate(1.03)}
+.programs-v2-course-visual.has-artwork::after{content:'';position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,transparent 42%,rgba(71,36,50,.18));pointer-events:none}
+.programs-v2-course-visual.has-artwork .programs-v2-course-symbol,.programs-v2-course-visual.has-artwork .programs-v2-course-visual-label,.programs-v2-course-visual.has-artwork>strong{position:relative;z-index:2}
 .public-premium-v2 main>section{position:relative}
 .public-premium-v2 main>section+section::before{content:'';position:absolute;top:0;left:50%;width:min(1160px,88vw);height:1px;transform:translateX(-50%);background:linear-gradient(90deg,transparent,rgba(190,65,106,.11),transparent);pointer-events:none}
 .public-reveal{opacity:0;transform:translateY(26px);transition:opacity .72s cubic-bezier(.2,.7,.2,1),transform .72s cubic-bezier(.2,.7,.2,1)}
@@ -28,4 +33,4 @@
 @keyframes premiumFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 @media(max-width:860px){.home-premium-v2 .programs-path-wrap{margin-top:4px}.home-premium-v2 .method-premium-art{max-width:520px}.home-premium-v2 .blog-journal-art{margin-left:0}.home-premium-v2 .platform-floating-feature{animation:none}}
 @media(max-width:600px){.home-premium-v2 .programs-path-wrap{border-radius:22px;margin-bottom:26px}.home-premium-v2 .programs-path-wrap img{width:150%;max-width:none;transform:translateX(-17%)}.home-premium-v2 .method-premium-art{margin-top:28px;border-radius:24px}.home-premium-v2 .blog-journal-art{width:100%;max-height:160px}}
-@media(prefers-reduced-motion:reduce){.public-reveal{opacity:1;transform:none;transition:none}.home-premium-v2 .hero-stage-illustration,.home-premium-v2 .method-premium-art img,.home-premium-v2 .platform-dashboard-card,.home-premium-v2 .platform-floating-feature{transition:none;animation:none}}
+@media(prefers-reduced-motion:reduce){.public-reveal{opacity:1;transform:none;transition:none}.home-premium-v2 .hero-stage-illustration,.home-premium-v2 .method-premium-art img,.home-premium-v2 .platform-dashboard-card,.home-premium-v2 .platform-floating-feature,.programs-v2-course-fallback{transition:none;animation:none}}
