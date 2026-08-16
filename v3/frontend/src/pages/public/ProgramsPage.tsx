@@ -63,7 +63,7 @@ export default function ProgramsPage() {
         <div className="container programs-v2-hero-grid">
           <div className="programs-v2-hero-copy">
             <span className="eyebrow">PROGRAMAS · LANGUAGE SCHOOL</span>
-            <h1>Un inglés distinto para <em>cada etapa.</em></h1>
+            <h1>Encuentra el inglés que <em>encaja contigo.</em></h1>
             <p>Desde los primeros años de colegio hasta la universidad, la vida profesional o una certificación. El objetivo cambia; la atención personal y el seguimiento, no.</p>
             <div className="programs-v2-hero-actions">
               <a className="button button-primary" href="#catalogo-programas">Ver programas</a>
