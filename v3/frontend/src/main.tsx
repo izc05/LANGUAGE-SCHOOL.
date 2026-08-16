@@ -37,6 +37,7 @@ import './styles/blog-premium-v2.css'
 import './styles/public-premium-v2-shell.css'
 import './styles/access-premium-v2.css'
 import './styles/premium-visual-assets.css'
+import './styles/student-dashboard-premium-v2.css'
 
 const root = document.getElementById('root')
 if (!root) throw new Error('No se ha encontrado el elemento #root')
