@@ -26,6 +26,8 @@ export default function PremiumAirplane({ progressRef }: { progressRef: React.Mu
   const point = useRef(new THREE.Vector3())
   const tangent = useRef(new THREE.Vector3())
   const up = useRef(new THREE.Vector3(0, 1, 0))
+  const lookTarget = useRef(new THREE.Vector3())
+  const orientationMatrix = useRef(new THREE.Matrix4())
 
   const fuselageGeo = useMemo(() => {
     const profile: THREE.Vector2[] = []
@@ -97,10 +99,10 @@ export default function PremiumAirplane({ progressRef }: { progressRef: React.Mu
     flightPath.getTangentAt(t, tangent.current)
 
     const bankAmount = Math.sin(t * Math.PI * 4) * 0.28
-    const matrix = new THREE.Matrix4()
     up.current.set(0, 1, 0).applyAxisAngle(tangent.current, bankAmount)
-    matrix.lookAt(point.current, point.current.clone().add(tangent.current), up.current)
-    groupRef.current.quaternion.setFromRotationMatrix(matrix)
+    lookTarget.current.copy(point.current).add(tangent.current)
+    orientationMatrix.current.lookAt(point.current, lookTarget.current, up.current)
+    groupRef.current.quaternion.setFromRotationMatrix(orientationMatrix.current)
 
     const scale = 0.68 + (1 - t) * 0.42
     groupRef.current.scale.setScalar(scale)

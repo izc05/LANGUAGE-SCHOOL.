@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { useFrame } from '@react-three/fiber'
+import { useFrame, useThree } from '@react-three/fiber'
 import { MeshTransmissionMaterial, Ring, useTexture } from '@react-three/drei'
 import * as THREE from 'three'
 
@@ -32,8 +32,11 @@ export default function PremiumGlobe({ introComplete, scaleRef }: PremiumGlobePr
   const haloRef = useRef<THREE.Group>(null)
   const [hovered, setHovered] = useState(false)
   const earthMap = useTexture(EARTH_TEXTURE_URL)
+  const sceneWidth = useThree((state) => state.size.width)
   const targetScale = useRef(1)
   const pointer = useRef(new THREE.Vector2())
+
+  const transmissionResolution = sceneWidth <= 760 ? 512 : sceneWidth <= 1024 ? 768 : 1024
 
   useFrame((state, delta) => {
     if (!groupRef.current || !coreRef.current || !haloRef.current) return
@@ -72,11 +75,6 @@ export default function PremiumGlobe({ introComplete, scaleRef }: PremiumGlobePr
         </Ring>
       </group>
 
-      <mesh>
-        <sphereGeometry args={[1.52, 32, 32]} />
-        <meshBasicMaterial color={MAGENTA} wireframe transparent opacity={0.028} />
-      </mesh>
-
       <mesh
         ref={coreRef}
         onPointerOver={() => introComplete && setHovered(true)}
@@ -89,12 +87,12 @@ export default function PremiumGlobe({ introComplete, scaleRef }: PremiumGlobePr
           thickness={0.2}
           color={GLASS_PINK}
           roughness={0}
-          chromaticAberration={0.01}
+          chromaticAberration={0.006}
           anisotropicBlur={0}
           clearcoat={1}
           clearcoatRoughness={0}
           envMapIntensity={0.72}
-          resolution={1024}
+          resolution={transmissionResolution}
         />
       </mesh>
 
