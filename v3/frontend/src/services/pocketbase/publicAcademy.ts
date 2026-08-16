@@ -46,6 +46,11 @@ function normalizeFeatures(value: unknown): string[] {
   return value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
 }
 
+export function getPublicCourseCoverUrl(course: PublicCourseRecord, thumb = '1200x800'): string {
+  if (!course.cover_image || isDemoMode) return ''
+  return pb.files.getURL(course, course.cover_image, { thumb })
+}
+
 export async function listPublicCourses(): Promise<PublicCourseRecord[]> {
   if (isDemoMode) return demoPublicCourses
   return pb.collection(collections.courses).getFullList<PublicCourseRecord>({
