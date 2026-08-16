@@ -47,10 +47,17 @@ const programs = [
 ]
 
 const steps = [
-  ['01', 'Conocemos tu punto de partida', 'Nivel, objetivo, disponibilidad y la forma en que aprendes mejor.'],
-  ['02', 'Creamos una ruta clara', 'Cada etapa tiene contenidos, tareas y objetivos que puedes seguir.'],
-  ['03', 'Practicamos de verdad', 'Speaking, listening, writing y vocabulario aplicado a situaciones reales.'],
-  ['04', 'Medimos el progreso', 'El alumno puede consultar material, tareas, clases y evolución desde su espacio privado.'],
+  ['01', 'Conectamos', 'Conocemos el nivel, los objetivos, el ritmo y lo que necesita cada alumno.'],
+  ['02', 'Aprendemos', 'Clases dinámicas, práctica guiada y contenidos pensados para cada etapa.'],
+  ['03', 'Practicamos', 'Speaking, listening, writing y vocabulario aplicados a situaciones reales.'],
+  ['04', 'Avanzamos', 'Seguimiento, tareas, materiales y progreso visibles también fuera del aula.'],
+]
+
+const platformFeatures = [
+  ['01', 'Clases', 'Próximas sesiones y acceso directo.'],
+  ['02', 'Recursos', 'Materiales, audios, PDFs y vocabulario.'],
+  ['03', 'Tareas', 'Entregas y feedback en un mismo espacio.'],
+  ['04', 'Progreso', 'Objetivos, evolución y próximos pasos.'],
 ]
 
 export default function HomePage() {
@@ -164,36 +171,89 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="section">
-        <div className="container split-feature">
-          <div className="section-heading left">
-            <span className="eyebrow">MÉTODO</span>
-            <h2>La clase termina. El aprendizaje continúa.</h2>
-            <p>El trabajo realizado en clase continúa en el espacio privado del alumno, con materiales, tareas y seguimiento siempre disponibles.</p>
-            <Link className="text-link" to="/acceso">Ver cómo será el área privada →</Link>
+      <section className="method-premium">
+        <div className="container method-premium-grid">
+          <div className="method-premium-intro">
+            <span className="eyebrow">NUESTRO MÉTODO</span>
+            <h2>Un método pensado para que <em>realmente</em> aprendas.</h2>
+            <p>Conversación, objetivos claros y continuidad entre clases. Lo importante no es acumular teoría: es notar que cada semana entiendes, hablas y avanzas un poco más.</p>
+            <Link className="button button-ghost" to="/sobre-nosotros">Conoce nuestro método</Link>
           </div>
-          <div className="steps-list">
+
+          <div className="method-premium-steps">
             {steps.map(([number, title, text]) => (
-              <div className="step-row" key={number}>
-                <span>{number}</span><div><h3>{title}</h3><p>{text}</p></div>
-              </div>
+              <article className="method-premium-step" key={number}>
+                <span className="method-number">{number}</span>
+                <div className="method-icon" aria-hidden="true">{number === '01' ? '◎' : number === '02' ? '▤' : number === '03' ? '◌' : '↗'}</div>
+                <div>
+                  <h3>{title}</h3>
+                  <p>{text}</p>
+                </div>
+              </article>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="section platform-band">
-        <div className="container platform-grid">
-          <div>
-            <span className="eyebrow eyebrow-light">PLATAFORMA DEL ALUMNO</span>
-            <h2>Todo lo importante, en un solo lugar.</h2>
-            <p>Material del profesor, archivos propios, tareas, próximas clases, avisos y recursos. Sin carpetas perdidas ni enlaces dispersos.</p>
-            <Link className="button button-light" to="/acceso">Acceder al espacio del alumno</Link>
+      <section className="platform-premium">
+        <div className="container platform-premium-grid">
+          <div className="platform-premium-copy">
+            <span className="eyebrow">PLATAFORMA DEL ALUMNO</span>
+            <h2>Todo tu inglés, <em>en un solo lugar.</em></h2>
+            <p>Clases, materiales, tareas y seguimiento continúan disponibles después de salir del aula. El alumno sabe siempre qué tiene, qué viene después y cómo está avanzando.</p>
+            <Link className="button button-primary" to="/acceso">Entrar a mi plataforma</Link>
+
+            <div className="platform-mini-features">
+              {platformFeatures.map(([number, title, text]) => (
+                <div key={title}>
+                  <span>{number}</span>
+                  <p><strong>{title}</strong>{text}</p>
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="platform-features">
-            {['Mis clases', 'Archivos privados', 'Tareas y entregas', 'Material de estudio', 'Listening', 'Avisos'].map(item => (
-              <div key={item}><span>✓</span>{item}</div>
-            ))}
+
+          <div className="platform-dashboard-wrap" aria-label="Vista conceptual del espacio privado del alumno">
+            <div className="platform-dashboard-glow" />
+            <div className="platform-dashboard-card">
+              <aside className="platform-dashboard-nav" aria-hidden="true">
+                <div className="platform-dashboard-brand">LS</div>
+                {['Inicio', 'Clases', 'Tareas', 'Recursos', 'Progreso', 'Mensajes'].map((item, index) => (
+                  <span className={index === 0 ? 'active' : ''} key={item}>{item}</span>
+                ))}
+              </aside>
+
+              <div className="platform-dashboard-main">
+                <div className="platform-dashboard-top">
+                  <div><small>GOOD AFTERNOON</small><strong>Hola, Marta 👋</strong></div>
+                  <span className="platform-avatar">MR</span>
+                </div>
+
+                <div className="platform-dashboard-metrics">
+                  <article className="platform-class-card">
+                    <small>PRÓXIMA CLASE</small>
+                    <strong>Speaking Club · B1</strong>
+                    <span>Miércoles · 18:00</span>
+                    <button type="button" tabIndex={-1}>Entrar a clase</button>
+                  </article>
+                  <article className="platform-progress-card">
+                    <small>TU PROGRESO</small>
+                    <div className="platform-progress-ring"><strong>72%</strong></div>
+                    <span>¡Vas por buen camino!</span>
+                  </article>
+                </div>
+
+                <div className="platform-dashboard-list">
+                  <small>CONTINUAR APRENDIENDO</small>
+                  <div><span>Vocabulary · Travel & experiences</span><strong>80%</strong></div>
+                  <div><span>Listening practice</span><strong>60%</strong></div>
+                </div>
+              </div>
+            </div>
+
+            <div className="platform-floating-feature feature-listening"><span>♫</span><strong>Listening</strong></div>
+            <div className="platform-floating-feature feature-tasks"><span>✓</span><strong>Tareas</strong></div>
+            <div className="platform-floating-feature feature-progress"><span>↗</span><strong>Progreso</strong></div>
           </div>
         </div>
       </section>
