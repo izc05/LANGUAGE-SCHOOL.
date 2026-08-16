@@ -35,6 +35,7 @@ import './styles/pricing-premium-v2.css'
 import './styles/contact-premium-v2.css'
 import './styles/blog-premium-v2.css'
 import './styles/public-premium-v2-shell.css'
+import './styles/access-premium-v2.css'
 
 const root = document.getElementById('root')
 
