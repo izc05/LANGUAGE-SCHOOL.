@@ -9,10 +9,41 @@ import {
 } from '../../services/pocketbase/siteContent'
 
 const programs = [
-  { tag: '6–12 años', title: 'Kids', text: 'Una base sólida con vocabulario, comprensión, juegos guiados y speaking progresivo.' },
-  { tag: '13–17 años', title: 'Teens', text: 'Refuerzo, confianza al hablar y preparación orientada a objetivos académicos.' },
-  { tag: 'Adultos', title: 'English for life', text: 'Inglés práctico para trabajo, viajes, conversación y desarrollo personal.' },
-  { tag: 'A2 · B1 · B2 · C1', title: 'Exámenes', text: 'Preparación estructurada por destrezas, simulacros y corrección personalizada.' },
+  {
+    className: 'kids',
+    symbol: '✦',
+    tag: '6–12 años',
+    title: 'Kids',
+    text: 'Una base sólida con vocabulario, comprensión, juegos guiados y speaking progresivo.',
+  },
+  {
+    className: 'teens',
+    symbol: '★',
+    tag: '13–17 años',
+    title: 'Teens',
+    text: 'Refuerzo, confianza al hablar y preparación orientada a objetivos académicos.',
+  },
+  {
+    className: 'university',
+    symbol: 'U',
+    tag: 'Universidad',
+    title: 'Young adults',
+    text: 'Inglés para estudios, presentaciones, intercambios, Erasmus y primeros retos profesionales.',
+  },
+  {
+    className: 'adults',
+    symbol: '∞',
+    tag: 'Adultos',
+    title: 'English for life',
+    text: 'Inglés práctico para trabajo, viajes, conversación y desarrollo personal.',
+  },
+  {
+    className: 'exams',
+    symbol: '✓',
+    tag: 'A2 · B1 · B2 · C1',
+    title: 'Exámenes',
+    text: 'Preparación estructurada por destrezas, simulacros y corrección personalizada.',
+  },
 ]
 
 const steps = [
@@ -66,62 +97,67 @@ export default function HomePage() {
         <div className="container hero-grid-v3">
           <div className="hero-copy">
             <span className="eyebrow">{hero.eyebrow}</span>
-            <h1>{hero.title}</h1>
+            <h1>
+              Inglés para cada etapa de tu
+              <span className="hero-accent">vida.</span>
+            </h1>
             <p className="hero-lead">{hero.subtitle}</p>
             <div className="hero-actions">
               <a className="button button-primary" href="#programas">{hero.primaryCta}</a>
               <Link className="button button-ghost" to="/acceso">{hero.secondaryCta}</Link>
             </div>
             <div className="trust-row">
-              <span>Grupos reducidos</span><span>Seguimiento personal</span><span>Recursos privados</span>
+              <span>Grupos reducidos</span>
+              <span>Seguimiento personal</span>
+              <span>Clases + espacio digital</span>
             </div>
           </div>
 
           <div
-            className="hero-visual"
-            aria-label="Vista conceptual de la plataforma del alumno"
+            className={`hero-stage${heroImageUrl ? ' has-photo' : ''}`}
+            aria-label="Language School: aprendizaje para distintas etapas"
             style={heroImageUrl ? {
-              backgroundImage: `linear-gradient(rgba(16,38,60,.14), rgba(16,38,60,.22)), url(${heroImageUrl})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              borderRadius: '32px',
-              boxShadow: 'var(--shadow)',
+              backgroundImage: `linear-gradient(100deg, rgba(63,35,48,.10), rgba(63,35,48,.02)), url(${heroImageUrl})`,
             } : undefined}
           >
-            <div className="hero-orbit orbit-one" />
-            <div className="hero-orbit orbit-two" />
-            <article className="portal-card portal-card-main">
-              <span className="portal-label">MY ENGLISH SPACE</span>
-              <h3>Good afternoon, Emma.</h3>
-              <p>Tu próxima clase empieza el jueves a las 18:00.</p>
-              <div className="progress-line"><span style={{ width: '72%' }} /></div>
-              <div className="portal-stats"><strong>72%</strong><span>Objetivo B1</span></div>
-            </article>
-            <article className="portal-card portal-card-small portal-card-task">
-              <span>Writing</span><strong>1 tarea pendiente</strong><small>Entrega · viernes</small>
-            </article>
-            <article className="portal-card portal-card-small portal-card-file">
-              <span>Nuevo material</span><strong>Unit 04 · Travel</strong><small>PDF · Listening</small>
-            </article>
+            <div className="hero-person-silhouette" aria-hidden="true" />
+            <div className="hero-stage-copy">
+              <strong>Tu camino. Tu ritmo.</strong>
+              <span>Niños, adolescentes, universidad, adultos y preparación de exámenes.</span>
+            </div>
+            <div className="hero-float-stack" aria-hidden="true">
+              <article className="hero-float-card">
+                <span className="hero-float-icon">01</span>
+                <div><strong>Clases cercanas</strong><span>Atención personal y objetivos claros.</span></div>
+              </article>
+              <article className="hero-float-card">
+                <span className="hero-float-icon">02</span>
+                <div><strong>Tu progreso</strong><span>Material, tareas y seguimiento siempre disponibles.</span></div>
+              </article>
+              <article className="hero-float-card">
+                <span className="hero-float-icon">03</span>
+                <div><strong>Tu siguiente paso</strong><span>Una ruta distinta para cada etapa.</span></div>
+              </article>
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="section section-soft" id="programas">
+      <section className="programs-premium" id="programas">
         <div className="container">
           <div className="section-heading">
-            <span className="eyebrow">PROGRAMAS</span>
-            <h2>Un camino distinto para cada etapa.</h2>
-            <p>No queremos llenar una web de cursos. Queremos que cada persona encuentre rápidamente dónde encaja.</p>
+            <span className="eyebrow">PROGRAMAS PARA TODAS LAS ETAPAS</span>
+            <h2>Encuentra tu camino en inglés.</h2>
+            <p>Una misma academia, distintas necesidades. El programa cambia contigo: colegio, instituto, universidad, vida adulta o certificación.</p>
           </div>
-          <div className="program-grid">
-            {programs.map((program, index) => (
-              <article className="program-card" key={program.title}>
-                <span className="program-number">0{index + 1}</span>
+          <div className="program-grid-premium">
+            {programs.map((program) => (
+              <article className={`program-card-premium ${program.className}`} key={program.title}>
+                <span className="program-symbol">{program.symbol}</span>
                 <span className="pill">{program.tag}</span>
                 <h3>{program.title}</h3>
                 <p>{program.text}</p>
-                <a href="#contacto">Consultar →</a>
+                <Link to="/programas">Ver programa →</Link>
               </article>
             ))}
           </div>
