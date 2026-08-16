@@ -28,12 +28,24 @@ function formatPublishedDate(value: string): string {
   return new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }).format(date)
 }
 
+function categoryVisual(category: string): string {
+  const value = category.toLowerCase()
+  if (value.includes('speak')) return 'journal-speaking.svg'
+  if (value.includes('vocab')) return 'journal-vocabulary.svg'
+  if (value.includes('exam') || value.includes('cambridge')) return 'journal-exams.svg'
+  if (value.includes('listen')) return 'journal-listening.svg'
+  if (value.includes('gram')) return 'journal-grammar.svg'
+  if (value.includes('parent') || value.includes('famil')) return 'journal-parents.svg'
+  return 'blog-journal.svg'
+}
+
 export default function BlogPage() {
   const [articles, setArticles] = useState<ArticleItem[]>(isDemoMode ? demoArticles : [])
   const [filter, setFilter] = useState('Todos')
   const [loading, setLoading] = useState(!isDemoMode)
   const [error, setError] = useState(false)
-  const journalVisual = `${import.meta.env.BASE_URL}visuals/blog-journal.svg`
+  const visualBase = `${import.meta.env.BASE_URL}visuals/`
+  const journalVisual = `${visualBase}blog-journal.svg`
 
   useEffect(() => {
     if (isDemoMode) return
@@ -102,8 +114,8 @@ export default function BlogPage() {
 
             {!error && featuredArticle && (
               <article className="blog-v2-featured">
-                <div className={`blog-v2-featured-visual ${featuredArticle.coverUrl ? 'has-cover' : ''}`} style={featuredArticle.coverUrl ? { backgroundImage: `url(${featuredArticle.coverUrl})` } : undefined}>
-                  {!featuredArticle.coverUrl && <span>{featuredArticle.category}</span>}
+                <div className={`blog-v2-featured-visual ${featuredArticle.coverUrl ? 'has-cover' : 'has-generated-visual'}`} style={featuredArticle.coverUrl ? { backgroundImage: `url(${featuredArticle.coverUrl})` } : undefined}>
+                  {!featuredArticle.coverUrl && <img className="journal-generated-visual" src={`${visualBase}${categoryVisual(featuredArticle.category)}`} alt="" loading="lazy" />}
                 </div>
                 <div className="blog-v2-featured-copy">
                   <div className="blog-v2-meta"><span>{featuredArticle.category}</span><small>{featuredArticle.meta}</small></div>
@@ -117,8 +129,8 @@ export default function BlogPage() {
             <div className="blog-v2-grid">
               {secondaryArticles.map((article, index) => (
                 <article className="blog-v2-card" key={article.id}>
-                  <div className={`blog-v2-card-visual visual-${(index % 4) + 1}`} style={article.coverUrl ? { backgroundImage: `url(${article.coverUrl})` } : undefined}>
-                    {!article.coverUrl && <span>{article.category.slice(0, 1)}</span>}
+                  <div className={`blog-v2-card-visual visual-${(index % 4) + 1} ${article.coverUrl ? 'has-cover' : 'has-generated-visual'}`} style={article.coverUrl ? { backgroundImage: `url(${article.coverUrl})` } : undefined}>
+                    {!article.coverUrl && <img className="journal-generated-visual" src={`${visualBase}${categoryVisual(article.category)}`} alt="" loading="lazy" />}
                   </div>
                   <div className="blog-v2-card-copy">
                     <div className="blog-v2-meta"><span>{article.category}</span><small>{article.meta}</small></div>
