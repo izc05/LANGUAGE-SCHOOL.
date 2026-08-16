@@ -33,6 +33,7 @@ export default function BlogPage() {
   const [filter, setFilter] = useState('Todos')
   const [loading, setLoading] = useState(!isDemoMode)
   const [error, setError] = useState(false)
+  const journalVisual = `${import.meta.env.BASE_URL}visuals/blog-journal.svg`
 
   useEffect(() => {
     if (isDemoMode) return
@@ -64,56 +65,80 @@ export default function BlogPage() {
 
   const categories = useMemo(() => ['Todos', ...Array.from(new Set(articles.map((article) => article.category)))], [articles])
   const visibleArticles = filter === 'Todos' ? articles : articles.filter((article) => article.category === filter)
+  const featuredArticle = visibleArticles[0]
+  const secondaryArticles = visibleArticles.slice(1)
 
   return (
     <SiteShell>
-      <section className="page-hero">
-        <div className="container narrow">
-          <span className="eyebrow">LANGUAGE SCHOOL JOURNAL</span>
-          <h1>Ideas para aprender mejor.</h1>
-          <p>Consejos de clase, inglés práctico, preparación de exámenes y recursos seleccionados por la academia.</p>
-        </div>
-      </section>
-
-      <section className="section section-soft">
-        <div className="container">
-          <div className="blog-toolbar">
-            <strong>{loading ? 'Cargando artículos…' : 'Últimos artículos'}</strong>
-            <div className="filter-pills">
-              {categories.map((category) => (
-                <button key={category} className={filter === category ? 'active' : ''} type="button" onClick={() => setFilter(category)}>
-                  {category}
-                </button>
-              ))}
+      <div className="blog-premium-v2">
+        <section className="blog-v2-hero">
+          <div className="container blog-v2-hero-grid">
+            <div className="blog-v2-hero-copy">
+              <span className="eyebrow">LANGUAGE SCHOOL JOURNAL</span>
+              <h1>Ideas para aprender mejor.</h1>
+              <p>Consejos de clase, inglés práctico, preparación de exámenes y recursos seleccionados por la academia.</p>
+              <div className="blog-v2-topic-row"><span>Speaking</span><span>Vocabulary</span><span>Exams</span><span>Listening</span></div>
+            </div>
+            <div className="blog-v2-hero-visual">
+              <img src={journalVisual} alt="Ilustración editorial del Language School Journal" />
+              <div className="blog-v2-floating-note"><small>READ · LISTEN · PRACTISE</small><strong>Un poco de inglés, muchas veces.</strong></div>
             </div>
           </div>
+        </section>
 
-          {error && <div className="panel"><p className="muted">El blog no está disponible temporalmente. La web principal continúa funcionando con normalidad.</p></div>}
+        <section className="section blog-v2-content-section">
+          <div className="container">
+            <div className="blog-v2-toolbar">
+              <div><span className="eyebrow">JOURNAL</span><h2>{loading ? 'Cargando artículos…' : 'Últimos artículos'}</h2></div>
+              <div className="blog-v2-filters" aria-label="Filtrar artículos por categoría">
+                {categories.map((category) => (
+                  <button key={category} className={filter === category ? 'active' : ''} type="button" onClick={() => setFilter(category)}>{category}</button>
+                ))}
+              </div>
+            </div>
 
-          {!error && !loading && visibleArticles.length === 0 && (
-            <div className="panel"><p className="muted">Todavía no hay artículos publicados en esta categoría.</p></div>
-          )}
+            {error && <div className="panel"><p className="muted">El blog no está disponible temporalmente. La web principal continúa funcionando con normalidad.</p></div>}
+            {!error && !loading && visibleArticles.length === 0 && <div className="panel"><p className="muted">Todavía no hay artículos publicados en esta categoría.</p></div>}
 
-          <div className="blog-grid">
-            {visibleArticles.map((article, index) => (
-              <article className={`blog-card ${index === 0 ? 'blog-card-featured' : ''}`} key={article.id}>
-                <div
-                  className="blog-card-visual"
-                  style={article.coverUrl ? { backgroundImage: `url(${article.coverUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
-                >
-                  {!article.coverUrl && <span>{article.category.slice(0, 1)}</span>}
+            {!error && featuredArticle && (
+              <article className="blog-v2-featured">
+                <div className={`blog-v2-featured-visual ${featuredArticle.coverUrl ? 'has-cover' : ''}`} style={featuredArticle.coverUrl ? { backgroundImage: `url(${featuredArticle.coverUrl})` } : undefined}>
+                  {!featuredArticle.coverUrl && <span>{featuredArticle.category}</span>}
                 </div>
-                <div className="blog-card-body">
-                  <div className="article-meta"><span>{article.category}</span><small>{article.meta}</small></div>
-                  <h2>{article.title}</h2>
-                  <p>{article.description}</p>
+                <div className="blog-v2-featured-copy">
+                  <div className="blog-v2-meta"><span>{featuredArticle.category}</span><small>{featuredArticle.meta}</small></div>
+                  <h2>{featuredArticle.title}</h2>
+                  <p>{featuredArticle.description}</p>
                   <button type="button" className="text-link button-reset">Leer artículo →</button>
                 </div>
               </article>
-            ))}
+            )}
+
+            <div className="blog-v2-grid">
+              {secondaryArticles.map((article, index) => (
+                <article className="blog-v2-card" key={article.id}>
+                  <div className={`blog-v2-card-visual visual-${(index % 4) + 1}`} style={article.coverUrl ? { backgroundImage: `url(${article.coverUrl})` } : undefined}>
+                    {!article.coverUrl && <span>{article.category.slice(0, 1)}</span>}
+                  </div>
+                  <div className="blog-v2-card-copy">
+                    <div className="blog-v2-meta"><span>{article.category}</span><small>{article.meta}</small></div>
+                    <h3>{article.title}</h3>
+                    <p>{article.description}</p>
+                    <button type="button" className="text-link button-reset">Leer artículo →</button>
+                  </div>
+                </article>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+
+        <section className="section blog-v2-note-section">
+          <div className="container blog-v2-note">
+            <span className="blog-v2-note-mark" aria-hidden="true">“</span>
+            <div><span className="eyebrow">IDEA DEL JOURNAL</span><h2>No necesitas estudiar inglés todo el día. Necesitas volver a él con frecuencia.</h2></div>
+          </div>
+        </section>
+      </div>
     </SiteShell>
   )
 }
