@@ -6,6 +6,7 @@ import { demoAboutContent, getPublishedAboutContent, type AboutPageContent } fro
 export default function AboutPage() {
   const [content, setContent] = useState<AboutPageContent>(demoAboutContent)
   const journeyVisual = `${import.meta.env.BASE_URL}visuals/about-language-journey.svg`
+  const continuityVisual = `${import.meta.env.BASE_URL}visuals/about-continuity.svg`
 
   useEffect(() => {
     let mounted = true
@@ -82,9 +83,19 @@ export default function AboutPage() {
 
         <section className="section about-v2-continuity-section">
           <div className="container about-v2-continuity">
-            <div className="about-v2-continuity-copy">
-              <span className="eyebrow">ANTES · DURANTE · DESPUÉS</span>
-              <h2>La clase forma parte de un proceso, no es un momento aislado.</h2>
+            <div className="about-v2-continuity-stage">
+              <div className="about-v2-continuity-copy">
+                <span className="eyebrow">ANTES · DURANTE · DESPUÉS</span>
+                <h2>La clase forma parte de un proceso, no es un momento aislado.</h2>
+                <p>Todo empieza con un objetivo concreto, continúa con práctica guiada y se consolida con material, tareas y seguimiento. La experiencia tiene que sentirse conectada de principio a fin.</p>
+              </div>
+              <div className="about-v2-continuity-visual">
+                <img src={continuityVisual} alt="Ilustración editorial del proceso objetivo, práctica y continuidad" />
+                <div className="about-v2-continuity-badge">
+                  <small>UN MISMO HILO</small>
+                  <strong>Objetivo → práctica → progreso</strong>
+                </div>
+              </div>
             </div>
             <div className="about-v2-continuity-steps">
               <article><span>01</span><strong>Objetivo</strong><p>Sabes qué estás trabajando y para qué.</p></article>
