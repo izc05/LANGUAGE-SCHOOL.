@@ -32,6 +32,7 @@ import './styles/programs-premium-v2.css'
 import './styles/teachers-premium-v2.css'
 import './styles/about-premium-v2.css'
 import './styles/pricing-premium-v2.css'
+import './styles/contact-premium-v2.css'
 
 const root = document.getElementById('root')
 
