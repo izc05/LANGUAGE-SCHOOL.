@@ -258,24 +258,70 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="section">
+      <section className="blog-premium">
         <div className="container">
-          <div className="section-heading section-heading-row">
-            <div><span className="eyebrow">BLOG</span><h2>English, one useful idea at a time.</h2></div>
-            <Link className="text-link" to="/blog">Ver todos los artículos →</Link>
+          <div className="blog-premium-heading">
+            <div>
+              <span className="eyebrow">ENGLISH JOURNAL</span>
+              <h2>Ideas que puedes llevarte <em>hoy</em> a clase.</h2>
+            </div>
+            <div className="blog-premium-heading-side">
+              <p>Speaking, vocabulario, exámenes y pequeños hábitos para seguir aprendiendo también fuera del aula.</p>
+              <Link className="text-link" to="/blog">Explorar el blog →</Link>
+            </div>
           </div>
-          <div className="article-grid">
-            <article className="article-card featured-article"><span>Speaking</span><h3>5 formas de ganar confianza al hablar inglés</h3><p>Pequeños hábitos para dejar de traducir mentalmente cada frase.</p><Link to="/blog">Leer artículo →</Link></article>
-            <article className="article-card"><span>Vocabulary</span><h3>Cómo aprender vocabulario sin memorizar listas infinitas</h3><p>Contexto, repetición y uso real.</p><Link to="/blog">Leer →</Link></article>
-            <article className="article-card"><span>Exams</span><h3>B1: qué debes dominar antes de empezar simulacros</h3><p>Una lista sencilla para comprobar tu base.</p><Link to="/blog">Leer →</Link></article>
+
+          <div className="blog-premium-grid">
+            <article className="blog-featured-card">
+              <div className="blog-visual blog-visual-speaking" aria-hidden="true">
+                <span className="blog-visual-word">SPEAK</span>
+                <span className="blog-visual-number">01</span>
+                <span className="blog-visual-orbit" />
+              </div>
+              <div className="blog-featured-copy">
+                <div className="blog-meta"><span>Speaking</span><small>5 min</small></div>
+                <h3>5 formas de ganar confianza al hablar inglés</h3>
+                <p>Pequeños hábitos para dejar de traducir mentalmente cada frase y empezar a comunicarte con más naturalidad.</p>
+                <Link to="/blog">Leer artículo <span aria-hidden="true">↗</span></Link>
+              </div>
+            </article>
+
+            <div className="blog-secondary-stack">
+              <article className="blog-secondary-card vocabulary">
+                <div className="blog-secondary-index">02</div>
+                <div className="blog-meta"><span>Vocabulary</span><small>4 min</small></div>
+                <h3>Cómo aprender vocabulario sin memorizar listas infinitas</h3>
+                <p>Contexto, repetición y uso real: una forma más natural de hacer que las palabras se queden.</p>
+                <Link to="/blog" aria-label="Leer artículo sobre vocabulario">Leer →</Link>
+              </article>
+
+              <article className="blog-secondary-card exams">
+                <div className="blog-secondary-index">03</div>
+                <div className="blog-meta"><span>Exams</span><small>6 min</small></div>
+                <h3>B1: qué debes dominar antes de empezar simulacros</h3>
+                <p>Una guía sencilla para comprobar tu base y preparar el examen con una ruta más clara.</p>
+                <Link to="/blog" aria-label="Leer artículo sobre exámenes">Leer →</Link>
+              </article>
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="section cta-section">
-        <div className="container cta-panel">
-          <div><span className="eyebrow">PRIMER PASO</span><h2>Cuéntanos qué quieres conseguir con tu inglés.</h2></div>
-          <a className="button button-primary" href="#contacto">Solicitar información</a>
+      <section className="home-final-cta" id="contacto">
+        <div className="home-final-orb home-final-orb-one" aria-hidden="true" />
+        <div className="home-final-orb home-final-orb-two" aria-hidden="true" />
+        <div className="container home-final-cta-inner">
+          <div className="home-final-kicker">
+            <span>Kids</span><i>·</i><span>Teens</span><i>·</i><span>Universidad</span><i>·</i><span>Adultos</span><i>·</i><span>Exámenes</span>
+          </div>
+          <span className="eyebrow">TU SIGUIENTE PASO</span>
+          <h2>Tu inglés puede empezar <em>aquí.</em></h2>
+          <p>Cuéntanos tu edad, nivel u objetivo. Te ayudamos a encontrar el programa y el ritmo que mejor encajan contigo.</p>
+          <div className="home-final-actions">
+            <Link className="button button-primary" to="/contacto">Cuéntanos qué necesitas</Link>
+            <Link className="button button-ghost" to="/programas">Ver todos los programas</Link>
+          </div>
+          <small>Language School · Rocío Ruiz · inglés para cada etapa</small>
         </div>
       </section>
     </SiteShell>
