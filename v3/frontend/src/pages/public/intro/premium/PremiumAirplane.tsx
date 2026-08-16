@@ -23,6 +23,7 @@ export const flightPath = new THREE.CatmullRomCurve3([
 
 export default function PremiumAirplane({ progressRef }: { progressRef: React.MutableRefObject<number> }) {
   const groupRef = useRef<THREE.Group>(null)
+  const lightRef = useRef<THREE.PointLight>(null)
   const point = useRef(new THREE.Vector3())
   const tangent = useRef(new THREE.Vector3())
   const up = useRef(new THREE.Vector3(0, 1, 0))
@@ -104,9 +105,17 @@ export default function PremiumAirplane({ progressRef }: { progressRef: React.Mu
     orientationMatrix.current.lookAt(point.current, lookTarget.current, up.current)
     groupRef.current.quaternion.setFromRotationMatrix(orientationMatrix.current)
 
-    const scale = 0.68 + (1 - t) * 0.42
-    groupRef.current.scale.setScalar(scale)
-    groupRef.current.visible = t < 0.99
+    const baseScale = 0.68 + (1 - t) * 0.42
+    const exitFactor = t <= 0.955
+      ? 1
+      : THREE.MathUtils.smoothstep(1 - t, 0.001, 0.045)
+
+    groupRef.current.scale.setScalar(baseScale * exitFactor)
+    groupRef.current.visible = t < 0.999
+
+    if (lightRef.current) {
+      lightRef.current.intensity = 1.2 * exitFactor
+    }
   })
 
   return (
@@ -182,7 +191,7 @@ export default function PremiumAirplane({ progressRef }: { progressRef: React.Mu
         <meshBasicMaterial color="#eafcff" />
       </mesh>
 
-      <pointLight position={[0, -0.04, 0.85]} color={MAGENTA} intensity={1.2} distance={2.6} />
+      <pointLight ref={lightRef} position={[0, -0.04, 0.85]} color={MAGENTA} intensity={1.2} distance={2.6} />
     </group>
   )
 }
