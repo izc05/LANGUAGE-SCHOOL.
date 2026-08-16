@@ -16,6 +16,7 @@ export default function ContactPage() {
   const [sending, setSending] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const contactVisual = `${import.meta.env.BASE_URL}visuals/contact-conversation.svg`
 
   useEffect(() => {
     let mounted = true
@@ -50,43 +51,74 @@ export default function ContactPage() {
 
   return (
     <SiteShell>
-      <section className="public-page-hero">
-        <div className="container public-page-hero-inner">
-          <span className="eyebrow">CONTACTO</span>
-          <h1>Cuéntanos qué quieres conseguir.</h1>
-          <p>Déjanos tus datos y tu objetivo. La academia podrá revisar tu solicitud y ponerse en contacto contigo.</p>
-        </div>
-      </section>
-
-      <section className="section section-soft">
-        <div className="container public-contact-grid">
-          <form className="panel public-contact-form" onSubmit={handleSubmit}>
-            <div className="panel-heading"><div><span className="eyebrow">SOLICITUD</span><h2>Quiero información</h2></div></div>
-            {notice && <div className="cms-notice success-notice" role="status">{notice}</div>}
-            {error && <div className="cms-notice" role="alert">{error}</div>}
-            <label className="field-stack"><span>Nombre</span><input value={name} onChange={(event) => setName(event.target.value)} required /></label>
-            <div className="field-row">
-              <label className="field-stack"><span>Email</span><input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required /></label>
-              <label className="field-stack"><span>Teléfono</span><input value={phone} onChange={(event) => setPhone(event.target.value)} /></label>
+      <div className="contact-premium-v2">
+        <section className="contact-v2-hero">
+          <div className="container contact-v2-hero-grid">
+            <div className="contact-v2-hero-copy">
+              <span className="eyebrow">CONTACTO</span>
+              <h1>Cuéntanos qué quieres conseguir.</h1>
+              <p>Déjanos tus datos y tu objetivo. La academia podrá revisar tu solicitud y ponerse en contacto contigo.</p>
+              <div className="contact-v2-hero-tags"><span>Kids</span><span>Teens</span><span>Universidad</span><span>Adultos</span><span>Exámenes</span></div>
             </div>
-            <label className="field-stack"><span>Me interesa</span><input value={interest} onChange={(event) => setInterest(event.target.value)} placeholder="Kids, B1, conversación..." /></label>
-            <label className="field-stack"><span>Mensaje</span><textarea rows={6} value={message} onChange={(event) => setMessage(event.target.value)} required /></label>
-            <button className="button button-primary" type="submit" disabled={sending}>{sending ? 'Enviando…' : 'Enviar solicitud'}</button>
-            <small className="muted">Este formulario todavía no está abierto para solicitudes reales.</small>
-          </form>
+            <div className="contact-v2-hero-visual">
+              <img src={contactVisual} alt="Ilustración de una profesora orientando a una estudiante" />
+              <div className="contact-v2-floating-note"><small>PRIMER PASO</small><strong>Cuéntanos tu objetivo.</strong></div>
+            </div>
+          </div>
+        </section>
 
-          <aside className="panel public-contact-info">
-            <span className="eyebrow">{settings.academyName || 'ACADEMIA'}</span>
-            <h2>También puedes encontrarnos aquí.</h2>
-            {settings.address && <div><strong>Ubicación</strong><span>{settings.address}</span></div>}
-            {settings.email && <div><strong>Email</strong><a href={`mailto:${settings.email}`}>{settings.email}</a></div>}
-            {settings.phone && <div><strong>Teléfono</strong><a href={`tel:${settings.phone}`}>{settings.phone}</a></div>}
-            {settings.whatsapp && <div><strong>WhatsApp</strong><span>{settings.whatsapp}</span></div>}
-            {settings.instagram && <div><strong>Instagram</strong><a href={settings.instagram} target="_blank" rel="noreferrer">Abrir Instagram ↗</a></div>}
-            <p>Escríbenos por el canal que prefieras y te responderemos lo antes posible.</p>
-          </aside>
-        </div>
-      </section>
+        <section className="section contact-v2-main-section">
+          <div className="container contact-v2-grid">
+            <form className="contact-v2-form" onSubmit={handleSubmit}>
+              <div className="contact-v2-form-heading">
+                <span className="eyebrow">SOLICITUD</span>
+                <h2>Quiero información</h2>
+                <p>Cuanto mejor conozcamos tu objetivo, más útil será la primera respuesta.</p>
+              </div>
+              {notice && <div className="cms-notice success-notice" role="status">{notice}</div>}
+              {error && <div className="cms-notice" role="alert">{error}</div>}
+              <div className="contact-v2-fields">
+                <label className="field-stack"><span>Nombre</span><input value={name} onChange={(event) => setName(event.target.value)} required /></label>
+                <div className="field-row">
+                  <label className="field-stack"><span>Email</span><input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required /></label>
+                  <label className="field-stack"><span>Teléfono</span><input value={phone} onChange={(event) => setPhone(event.target.value)} /></label>
+                </div>
+                <label className="field-stack"><span>Me interesa</span><input value={interest} onChange={(event) => setInterest(event.target.value)} placeholder="Kids, B1, conversación..." /></label>
+                <label className="field-stack"><span>Mensaje</span><textarea rows={6} value={message} onChange={(event) => setMessage(event.target.value)} required /></label>
+              </div>
+              <button className="button button-primary" type="submit" disabled={sending}>{sending ? 'Enviando…' : 'Enviar solicitud'}</button>
+              <small className="contact-v2-form-note">{isDemoMode ? 'Modo demo: el envío se simula y no genera una solicitud real.' : 'La academia recibirá esta solicitud para poder ponerse en contacto contigo.'}</small>
+            </form>
+
+            <aside className="contact-v2-info">
+              <div className="contact-v2-info-heading">
+                <span className="eyebrow">{settings.academyName || 'ACADEMIA'}</span>
+                <h2>También puedes encontrarnos aquí.</h2>
+                <p>Elige el canal que te resulte más cómodo.</p>
+              </div>
+              <div className="contact-v2-info-list">
+                {settings.address && <div><span>01</span><strong>Ubicación</strong><p>{settings.address}</p></div>}
+                {settings.email && <div><span>02</span><strong>Email</strong><a href={`mailto:${settings.email}`}>{settings.email}</a></div>}
+                {settings.phone && <div><span>03</span><strong>Teléfono</strong><a href={`tel:${settings.phone}`}>{settings.phone}</a></div>}
+                {settings.whatsapp && <div><span>04</span><strong>WhatsApp</strong><p>{settings.whatsapp}</p></div>}
+                {settings.instagram && <div><span>05</span><strong>Instagram</strong><a href={settings.instagram} target="_blank" rel="noreferrer">Abrir Instagram ↗</a></div>}
+              </div>
+              <div className="contact-v2-info-footer"><span aria-hidden="true">↗</span><p>Escríbenos por el canal que prefieras y te responderemos lo antes posible.</p></div>
+            </aside>
+          </div>
+        </section>
+
+        <section className="section contact-v2-process-section">
+          <div className="container contact-v2-process">
+            <div><span className="eyebrow">¿QUÉ PASA DESPUÉS?</span><h2>Una conversación sencilla, sin presión.</h2></div>
+            <div className="contact-v2-process-grid">
+              <article><span>01</span><strong>Nos cuentas</strong><p>Objetivo, edad o nivel aproximado y lo que necesitas mejorar.</p></article>
+              <article><span>02</span><strong>Te orientamos</strong><p>Revisamos qué programa o enfoque puede encajar mejor contigo.</p></article>
+              <article><span>03</span><strong>Decides</strong><p>Con la información clara, eliges si quieres dar el siguiente paso.</p></article>
+            </div>
+          </div>
+        </section>
+      </div>
     </SiteShell>
   )
 }
