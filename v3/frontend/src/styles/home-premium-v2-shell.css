@@ -1,0 +1,36 @@
+.home-premium-v2 .header-inner {
+  min-height: 88px;
+}
+
+.home-premium-v2 .brand-logo-image {
+  width: 62px;
+  height: 62px;
+  padding: 2px;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.home-premium-v2 .brand-copy {
+  display: none;
+}
+
+.home-premium-v2 .main-nav {
+  gap: 22px;
+}
+
+.home-premium-v2 .main-nav a {
+  font-size: .86rem;
+}
+
+.home-premium-v2 .site-header .button-outline {
+  border-color: rgba(183,45,92,.28);
+  color: #a72c56;
+  background: rgba(255,255,255,.68);
+}
+
+@media (max-width: 760px) {
+  .home-premium-v2 .brand-logo-image {
+    width: 52px;
+    height: 52px;
+  }
+}
