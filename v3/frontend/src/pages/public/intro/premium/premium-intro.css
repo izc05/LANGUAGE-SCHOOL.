@@ -60,7 +60,7 @@
   position: absolute;
   left: 50%;
   top: 50%;
-  width: min(38rem, 90vw);
+  width: min(42rem, 92vw);
   transform: translate(-50%, calc(-50% + 20px));
   display: flex;
   flex-direction: column;
@@ -82,7 +82,7 @@
   z-index: 2;
   margin-bottom: -0.5rem;
   color: #40343a;
-  font-size: clamp(0.85rem, 1.25vw, 1.2rem);
+  font-size: clamp(0.95rem, 1.4vw, 1.32rem);
   font-weight: 700;
   letter-spacing: clamp(0.28em, 0.5vw, 0.42em);
   text-transform: uppercase;
@@ -93,7 +93,7 @@
   margin: 0;
   color: var(--premium-magenta);
   font-family: 'Playball', cursive;
-  font-size: clamp(4.75rem, 8vw, 8.6rem);
+  font-size: clamp(5.2rem, 8.8vw, 9.4rem);
   font-weight: 400;
   line-height: 0.92;
   text-shadow: 0 4px 20px rgba(214, 41, 116, 0.22);
@@ -101,7 +101,7 @@
 
 .premium-brand-divider {
   position: relative;
-  width: 80px;
+  width: 86px;
   height: 1px;
   margin: clamp(0.75rem, 1.4vh, 1rem) 0;
   background: var(--premium-magenta-light);
@@ -121,7 +121,7 @@
 
 .premium-brand-rocio {
   color: #58404a;
-  font-size: clamp(0.68rem, 0.95vw, 0.9rem);
+  font-size: clamp(0.76rem, 1.05vw, 1rem);
   font-weight: 700;
   letter-spacing: clamp(0.24em, 0.42vw, 0.34em);
   text-transform: uppercase;
@@ -254,7 +254,7 @@
   }
 
   .premium-brand-school {
-    font-size: clamp(4.2rem, 7vw, 6.2rem);
+    font-size: clamp(4.55rem, 7.6vw, 6.65rem);
   }
 
   .premium-entry-actions {
@@ -274,28 +274,28 @@
 
   .premium-brand-lockup {
     top: 49.5%;
-    width: 94vw;
+    width: 95vw;
   }
 
   .premium-brand-school {
-    font-size: clamp(4.6rem, 22vw, 6.7rem);
+    font-size: clamp(4.9rem, 23.5vw, 7.1rem);
     line-height: 0.9;
     text-shadow: 0 5px 24px rgba(214, 41, 116, 0.28);
   }
 
   .premium-brand-language {
     margin-bottom: -0.35rem;
-    font-size: 0.86rem;
+    font-size: 0.92rem;
     letter-spacing: 0.34em;
   }
 
   .premium-brand-divider {
-    width: 92px;
+    width: 96px;
     margin: 0.9rem 0;
   }
 
   .premium-brand-rocio {
-    font-size: 0.69rem;
+    font-size: 0.74rem;
     letter-spacing: 0.3em;
   }
 
