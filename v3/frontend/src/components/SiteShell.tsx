@@ -78,10 +78,16 @@ export default function SiteShell({ children }: SiteShellProps) {
 
   const brandName = settings.academyName || 'Language School'
   const isHome = location.pathname === '/'
+  const isPrograms = location.pathname === '/programas'
+  const shellClassName = [
+    'site-shell',
+    isHome ? 'home-premium-v2' : '',
+    isPrograms ? 'programs-premium-v2' : '',
+  ].filter(Boolean).join(' ')
   const resolvedLogoUrl = settings.logoUrl || `${import.meta.env.BASE_URL}brand/language-school-rocio-ruiz-logo.svg`
 
   return (
-    <div className={isHome ? 'site-shell home-premium-v2' : 'site-shell'}>
+    <div className={shellClassName}>
       <a className="skip-link" href="#main-content">Saltar al contenido</a>
       <BackendStatusBanner visible={unavailable} onRetry={() => void retry()} />
       <header className="site-header">
