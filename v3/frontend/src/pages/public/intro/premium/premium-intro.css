@@ -81,11 +81,12 @@
   position: relative;
   z-index: 2;
   margin-bottom: -0.5rem;
-  color: #555;
+  color: #40343a;
   font-size: clamp(0.85rem, 1.25vw, 1.2rem);
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: clamp(0.28em, 0.5vw, 0.42em);
   text-transform: uppercase;
+  text-shadow: 0 1px 12px rgba(255, 255, 255, 0.96), 0 0 24px rgba(255, 255, 255, 0.72);
 }
 
 .premium-brand-school {
@@ -119,11 +120,12 @@
 }
 
 .premium-brand-rocio {
-  color: #777;
+  color: #58404a;
   font-size: clamp(0.68rem, 0.95vw, 0.9rem);
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: clamp(0.24em, 0.42vw, 0.34em);
   text-transform: uppercase;
+  text-shadow: 0 1px 12px rgba(255, 255, 255, 0.96), 0 0 22px rgba(255, 255, 255, 0.68);
 }
 
 .premium-entry-actions {
