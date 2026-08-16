@@ -25,6 +25,7 @@ import './styles/pilot-readiness.css'
 import './styles/visual-refresh.css'
 import './styles/home-premium-v2.css'
 import './styles/home-premium-v2-shell.css'
+import './styles/home-premium-v2-phase2.css'
 
 const root = document.getElementById('root')
 
