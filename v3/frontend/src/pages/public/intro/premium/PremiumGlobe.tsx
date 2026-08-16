@@ -5,6 +5,7 @@ import * as THREE from 'three'
 
 const MAGENTA = '#d62974'
 const MAGENTA_LIGHT = '#f4a7c8'
+const GLASS_PINK = '#fff1f7'
 const EARTH_TEXTURE_URL = 'https://raw.githubusercontent.com/izc05/web-v1.1/44fa75a35e59693fd53486a0798f258ac58b0fdb/public/earth.jpg'
 
 type PremiumGlobeProps = {
@@ -63,17 +64,17 @@ export default function PremiumGlobe({ introComplete, scaleRef }: PremiumGlobePr
   return (
     <group ref={groupRef} position={[0, -0.2, 0]} scale={0}>
       <group ref={haloRef}>
-        <Ring args={[2.3, 2.32, 64]} rotation={[Math.PI / 2.5, 0.2, 0]}>
-          <meshBasicMaterial color={MAGENTA} transparent opacity={0.3} side={THREE.DoubleSide} />
+        <Ring args={[2.3, 2.33, 64]} rotation={[Math.PI / 2.5, 0.2, 0]}>
+          <meshBasicMaterial color={MAGENTA} transparent opacity={0.48} side={THREE.DoubleSide} />
         </Ring>
-        <Ring args={[2.1, 2.11, 64]} rotation={[Math.PI / 3, -0.1, 0]}>
-          <meshBasicMaterial color={MAGENTA_LIGHT} transparent opacity={0.2} side={THREE.DoubleSide} />
+        <Ring args={[2.1, 2.125, 64]} rotation={[Math.PI / 3, -0.1, 0]}>
+          <meshBasicMaterial color={MAGENTA_LIGHT} transparent opacity={0.34} side={THREE.DoubleSide} />
         </Ring>
       </group>
 
       <mesh>
         <sphereGeometry args={[1.52, 32, 32]} />
-        <meshBasicMaterial color={MAGENTA} wireframe transparent opacity={0.015} />
+        <meshBasicMaterial color={MAGENTA} wireframe transparent opacity={0.028} />
       </mesh>
 
       <mesh
@@ -86,13 +87,13 @@ export default function PremiumGlobe({ introComplete, scaleRef }: PremiumGlobePr
           backside
           backsideThickness={0.1}
           thickness={0.2}
-          color="#ffffff"
+          color={GLASS_PINK}
           roughness={0}
           chromaticAberration={0.01}
           anisotropicBlur={0}
           clearcoat={1}
           clearcoatRoughness={0}
-          envMapIntensity={0.8}
+          envMapIntensity={0.72}
           resolution={1024}
         />
       </mesh>
@@ -101,15 +102,15 @@ export default function PremiumGlobe({ introComplete, scaleRef }: PremiumGlobePr
         <sphereGeometry args={[1, 64, 64]} />
         <meshStandardMaterial
           map={earthMap}
-          color="#ffffff"
-          emissive="#ffffff"
+          color="#fff9fb"
+          emissive="#fff4f8"
           emissiveMap={earthMap}
-          emissiveIntensity={0.3}
+          emissiveIntensity={0.32}
           roughness={0.5}
         />
       </mesh>
 
-      <pointLight position={[0, 0, 1.5]} color="#ffffff" intensity={4} distance={6} />
+      <pointLight position={[0, 0, 1.5]} color="#ffd8e8" intensity={3.2} distance={6} />
     </group>
   )
 }
