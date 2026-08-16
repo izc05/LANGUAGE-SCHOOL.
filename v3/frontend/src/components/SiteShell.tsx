@@ -77,18 +77,18 @@ export default function SiteShell({ children }: SiteShellProps) {
   }, [])
 
   const brandName = settings.academyName || 'Language School'
+  const isHome = location.pathname === '/'
+  const resolvedLogoUrl = settings.logoUrl || '/brand/language-school-rocio-ruiz-logo.png'
 
   return (
-    <div className="site-shell">
+    <div className={isHome ? 'site-shell home-premium-v2' : 'site-shell'}>
       <a className="skip-link" href="#main-content">Saltar al contenido</a>
       <BackendStatusBanner visible={unavailable} onRetry={() => void retry()} />
       <header className="site-header">
         <div className="container header-inner">
           <Link className="brand" to="/" aria-label={`${brandName} - Inicio`}>
-            {settings.logoUrl
-              ? <img className="brand-logo-image" src={settings.logoUrl} alt="" />
-              : <span className="brand-mark">LS</span>}
-            <span>
+            <img className="brand-logo-image" src={resolvedLogoUrl} alt="" />
+            <span className="brand-copy">
               <strong>{brandName}</strong>
               <small>English with confidence</small>
             </span>
@@ -116,9 +116,7 @@ export default function SiteShell({ children }: SiteShellProps) {
         <div className="container footer-grid">
           <div>
             <div className="brand brand-footer">
-              {settings.logoUrl
-                ? <img className="brand-logo-image" src={settings.logoUrl} alt="" />
-                : <span className="brand-mark">LS</span>}
+              <img className="brand-logo-image" src={resolvedLogoUrl} alt="" />
               <span><strong>{brandName}</strong></span>
             </div>
             <p>Aprender inglés con seguimiento real, recursos claros y un espacio digital propio para cada alumno.</p>
