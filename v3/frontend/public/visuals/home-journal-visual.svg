@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 500" role="img" aria-labelledby="title desc">
+<title id="title">English Journal</title><desc id="desc">Libro abierto, auriculares, lápiz y conversación en una ilustración editorial.</desc>
+<defs><linearGradient id="b" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fffaf8"/><stop offset="1" stop-color="#f7e5ec"/></linearGradient><linearGradient id="r" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e76591"/><stop offset="1" stop-color="#bd2f69"/></linearGradient><filter id="s"><feDropShadow dx="0" dy="18" stdDeviation="16" flood-color="#77364f" flood-opacity=".12"/></filter></defs>
+<rect width="760" height="500" rx="46" fill="url(#b)"/>
+<circle cx="612" cy="92" r="96" fill="#fff" opacity=".45"/>
+<g transform="translate(120 160)" filter="url(#s)">
+  <path d="M0 50c75-42 155-34 218 4v185c-69-34-142-40-218-5z" fill="#fff" stroke="#e5a8bc" stroke-width="4"/>
+  <path d="M436 50c-75-42-155-34-218 4v185c69-34 142-40 218-5z" fill="#fff" stroke="#e5a8bc" stroke-width="4"/>
+  <path d="M218 55v184" stroke="#d66a8b" stroke-width="4"/>
+  <path d="M37 90h128M37 118h112M37 146h126M270 90h128M270 118h98M270 146h117" stroke="#e9c7d2" stroke-width="5" stroke-linecap="round"/>
+  <path d="M78 199c32-23 65-26 97-8" fill="none" stroke="#d5507c" stroke-width="7" stroke-linecap="round"/>
+  <path d="M278 195c28-30 64-38 108-22" fill="none" stroke="#c33b71" stroke-width="7" stroke-linecap="round"/>
+</g>
+<g transform="translate(68 88)" filter="url(#s)">
+  <path d="M28 72c0-36 28-64 64-64s64 28 64 64" fill="none" stroke="url(#r)" stroke-width="14" stroke-linecap="round"/>
+  <rect x="10" y="70" width="33" height="70" rx="16" fill="#cf3f75"/><rect x="141" y="70" width="33" height="70" rx="16" fill="#cf3f75"/>
+</g>
+<g transform="translate(574 272) rotate(-14)" filter="url(#s)"><rect width="38" height="168" rx="18" fill="url(#r)"/><path d="M0 145h38l-19 39z" fill="#f0c0ce"/><path d="M10 26h18" stroke="#fff" stroke-width="4" stroke-linecap="round"/></g>
+<g transform="translate(530 86)" filter="url(#s)">
+  <path d="M0 50c0-26 21-47 47-47h76c26 0 47 21 47 47v5c0 26-21 47-47 47H80l-39 31 10-31h-4C21 102 0 81 0 55z" fill="#fff" stroke="#edbdcb" stroke-width="3"/>
+  <circle cx="58" cy="53" r="7" fill="#c83c72"/><circle cx="85" cy="53" r="7" fill="#df7398"/><circle cx="112" cy="53" r="7" fill="#efb0c4"/>
+</g>
+<path d="M80 418c151 54 365 63 556 4" fill="none" stroke="#d45b82" stroke-width="3" stroke-dasharray="8 12" opacity=".38"/>
+<path d="M652 401l31 10-13 7-5 20-7-2 1-18-14-10z" fill="#c93670" opacity=".7"/>
+</svg>
