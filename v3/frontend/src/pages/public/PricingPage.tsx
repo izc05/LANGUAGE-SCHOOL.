@@ -8,6 +8,7 @@ export default function PricingPage() {
   const [plans, setPlans] = useState<PublicPricingRecord[]>(isDemoMode ? demoPublicPricing : [])
   const [loading, setLoading] = useState(!isDemoMode)
   const pricingVisual = `${import.meta.env.BASE_URL}visuals/pricing-confidence.svg`
+  const pricingFitVisual = `${import.meta.env.BASE_URL}visuals/pricing-fit.svg`
 
   useEffect(() => {
     let mounted = true
@@ -71,7 +72,20 @@ export default function PricingPage() {
 
         <section className="section pricing-v2-fit-section">
           <div className="container pricing-v2-fit">
-            <div className="pricing-v2-fit-copy"><span className="eyebrow">EL PLAN ADECUADO</span><h2>No todo depende del precio.</h2><p>Antes de recomendar una opción, miramos tres cosas que cambian por completo la experiencia de aprendizaje.</p></div>
+            <div className="pricing-v2-fit-stage">
+              <div className="pricing-v2-fit-copy">
+                <span className="eyebrow">EL PLAN ADECUADO</span>
+                <h2>No todo depende del precio.</h2>
+                <p>Antes de recomendar una opción, miramos tres cosas que cambian por completo la experiencia de aprendizaje.</p>
+              </div>
+              <div className="pricing-v2-fit-visual">
+                <img src={pricingFitVisual} alt="Ilustración editorial de objetivo, nivel y disponibilidad para elegir un plan" />
+                <div className="pricing-v2-fit-note">
+                  <small>TRES VARIABLES</small>
+                  <strong>Objetivo · nivel · disponibilidad</strong>
+                </div>
+              </div>
+            </div>
             <div className="pricing-v2-fit-grid">
               <article><span>01</span><strong>Tu objetivo</strong><p>Conversación, estudios, trabajo, exámenes o una mezcla de varios.</p></article>
               <article><span>02</span><strong>Tu punto de partida</strong><p>El nivel real ayuda a elegir un ritmo exigente sin que resulte frustrante.</p></article>
