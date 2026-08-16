@@ -78,7 +78,7 @@ export default function SiteShell({ children }: SiteShellProps) {
 
   const brandName = settings.academyName || 'Language School'
   const isHome = location.pathname === '/'
-  const resolvedLogoUrl = settings.logoUrl || '/brand/language-school-rocio-ruiz-logo.png'
+  const resolvedLogoUrl = settings.logoUrl || '/brand/language-school-rocio-ruiz-logo.svg'
 
   return (
     <div className={isHome ? 'site-shell home-premium-v2' : 'site-shell'}>
