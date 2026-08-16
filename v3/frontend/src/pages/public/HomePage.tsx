@@ -234,7 +234,7 @@ export default function HomePage() {
                     <small>PRÓXIMA CLASE</small>
                     <strong>Speaking Club · B1</strong>
                     <span>Miércoles · 18:00</span>
-                    <button type="button" tabIndex={-1}>Entrar a clase</button>
+                    <span className="platform-class-action">Entrar a clase</span>
                   </article>
                   <article className="platform-progress-card">
                     <small>TU PROGRESO</small>
