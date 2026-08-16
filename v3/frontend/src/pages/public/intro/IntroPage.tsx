@@ -118,11 +118,15 @@ function PremiumScene({
   onActionsVisible: () => void
   onSettled: () => void
 }) {
+  const renderDpr = typeof window === 'undefined'
+    ? 1.25
+    : Math.min(window.devicePixelRatio || 1, window.innerWidth <= 760 ? 1.35 : 1.65)
+
   return (
     <Canvas
-      dpr={[1, 1.5]}
+      dpr={renderDpr}
       camera={{ position: [0, 0, 15], fov: 40, near: 0.1, far: 60 }}
-      gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
+      gl={{ antialias: true, alpha: false, stencil: false, powerPreference: 'high-performance' }}
     >
       <SceneController
         reducedMotion={reducedMotion}
