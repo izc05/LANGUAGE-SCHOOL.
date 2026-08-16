@@ -1,18 +1,13 @@
 import { type ReactNode, useEffect, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router'
 import BackendStatusBanner from './BackendStatusBanner'
+import PublicVisualMotion from './PublicVisualMotion'
 import { useBackendHealth } from '../hooks/useBackendHealth'
 import { demoSiteSettings } from '../services/pocketbase/siteManagement'
 import { getPublicSettings, type PublicSettings } from '../services/pocketbase/publicAcademy'
 
-type SiteShellProps = {
-  children: ReactNode
-}
-
-type PageMeta = {
-  title: string
-  description: string
-}
+type SiteShellProps = { children: ReactNode }
+type PageMeta = { title: string; description: string }
 
 const publicMeta: Record<string, PageMeta> = {
   '/': { title: 'Language School · Inglés con confianza', description: 'Academia de idiomas con clases presenciales y online, programas por objetivos y espacio privado para cada alumno.' },
@@ -28,11 +23,7 @@ function applyPageMeta(pathname: string) {
   const meta = publicMeta[pathname] ?? { title: 'Página no encontrada · Language School', description: 'La página solicitada no está disponible. Vuelve a Language School para seguir navegando.' }
   document.title = meta.title
   let description = document.querySelector<HTMLMetaElement>('meta[name="description"]')
-  if (!description) {
-    description = document.createElement('meta')
-    description.name = 'description'
-    document.head.appendChild(description)
-  }
+  if (!description) { description = document.createElement('meta'); description.name = 'description'; document.head.appendChild(description) }
   description.content = meta.description
 }
 
@@ -56,6 +47,7 @@ export default function SiteShell({ children }: SiteShellProps) {
 
   return (
     <div className={shellClassName}>
+      <PublicVisualMotion />
       <a className="skip-link" href="#main-content">Saltar al contenido</a>
       <BackendStatusBanner visible={unavailable} onRetry={() => void retry()} />
       <header className="site-header">
@@ -73,19 +65,9 @@ export default function SiteShell({ children }: SiteShellProps) {
       <main id="main-content" tabIndex={-1}>{children}</main>
       <footer className="site-footer">
         <div className="container footer-grid">
-          <div>
-            <div className="brand brand-footer"><img className="brand-logo-image" src={resolvedLogoUrl} alt="" /><span><strong>{brandName}</strong></span></div>
-            <p>Aprender inglés con seguimiento real, recursos claros y un espacio digital propio para cada alumno.</p>
-          </div>
+          <div><div className="brand brand-footer"><img className="brand-logo-image" src={resolvedLogoUrl} alt="" /><span><strong>{brandName}</strong></span></div><p>Aprender inglés con seguimiento real, recursos claros y un espacio digital propio para cada alumno.</p></div>
           <div><strong>Academia</strong><Link to="/programas">Programas</Link><Link to="/profesores">Profesores</Link><Link to="/sobre-nosotros">Sobre nosotros</Link><Link to="/tarifas">Tarifas</Link><Link to="/blog">Blog</Link><Link to="/acceso">Acceso</Link></div>
-          <div>
-            <strong>Contacto</strong>
-            {settings.address && <span>{settings.address}</span>}
-            {settings.email && <a href={`mailto:${settings.email}`}>{settings.email}</a>}
-            {settings.phone && <a href={`tel:${settings.phone}`}>{settings.phone}</a>}
-            <Link to="/contacto">Formulario de contacto</Link>
-            {settings.instagram && <a href={settings.instagram} target="_blank" rel="noreferrer">Instagram ↗</a>}
-          </div>
+          <div><strong>Contacto</strong>{settings.address && <span>{settings.address}</span>}{settings.email && <a href={`mailto:${settings.email}`}>{settings.email}</a>}{settings.phone && <a href={`tel:${settings.phone}`}>{settings.phone}</a>}<Link to="/contacto">Formulario de contacto</Link>{settings.instagram && <a href={settings.instagram} target="_blank" rel="noreferrer">Instagram ↗</a>}</div>
         </div>
         <div className="container footer-bottom">© {new Date().getFullYear()} {brandName}</div>
       </footer>
