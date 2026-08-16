@@ -19,6 +19,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const fallbackLogoUrl = `${import.meta.env.BASE_URL}brand/language-school-rocio-ruiz-logo.svg`
+  const portalVisual = `${import.meta.env.BASE_URL}visuals/student-access-portal.svg`
 
   useEffect(() => {
     if (!isDemoMode && ready && isAuthenticated && user) {
@@ -44,14 +46,13 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="auth-page">
+    <div className="auth-page auth-premium-v2">
       <section className="auth-brand-panel">
         <Link className="brand brand-light" to="/" aria-label={`${academyName} - Inicio`}>
-          {logoUrl
-            ? <img className="brand-logo-image" src={logoUrl} alt="" />
-            : <span className="brand-mark">{initials}</span>}
+          <img className="brand-logo-image" src={logoUrl || fallbackLogoUrl} alt="" />
           <span><strong>{academyName}</strong><small>English with confidence</small></span>
         </Link>
+
         <div className="auth-brand-copy">
           <span className="eyebrow eyebrow-light">TU ESPACIO</span>
           <h1>La clase continúa aquí.</h1>
@@ -63,6 +64,12 @@ export default function LoginPage() {
             <span>Archivos privados</span>
           </div>
         </div>
+
+        <div className="auth-premium-visual" aria-hidden="true">
+          <img src={portalVisual} alt="" />
+          <div className="auth-premium-status"><small>YOUR ENGLISH SPACE</small><strong>Todo tu aprendizaje, conectado.</strong></div>
+        </div>
+
         <small className="auth-note">
           {isDemoMode ? 'Vista de demostración para revisar la plataforma.' : 'Acceso seguro a tu espacio privado.'}
         </small>
@@ -70,6 +77,10 @@ export default function LoginPage() {
 
       <section className="auth-form-panel">
         <div className="auth-card">
+          <div className="auth-card-brand">
+            <span className="auth-card-brand-mark">{initials}</span>
+            <span>ÁREA PRIVADA</span>
+          </div>
           <span className="eyebrow">ACCESO A LA PLATAFORMA</span>
           <h2>Bienvenido de nuevo.</h2>
           <p className="muted">
