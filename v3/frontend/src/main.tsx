@@ -41,6 +41,7 @@ import './styles/access-premium-v2.css'
 import './styles/premium-visual-assets.css'
 import './styles/portal-role-premium-v2.css'
 import './styles/student-dashboard-premium-v2.css'
+import './styles/photography-pass-v2.css'
 
 const root = document.getElementById('root')
 if (!root) throw new Error('No se ha encontrado el elemento #root')
