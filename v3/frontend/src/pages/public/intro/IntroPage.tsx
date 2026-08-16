@@ -151,10 +151,30 @@ function PremiumScene({
 
       <Environment resolution={256}>
         <group rotation={[-Math.PI / 2, 0, 0]}>
-          <Lightformer form="circle" intensity={4} rotation-x={Math.PI / 2} position={[0, 5, -9]} scale={2} />
-          <Lightformer form="circle" intensity={2} rotation-y={Math.PI / 2} position={[-5, 1, -1]} scale={2} />
-          <Lightformer form="circle" intensity={2} rotation-y={Math.PI / 2} position={[5, 1, -1]} scale={2} />
-          <Lightformer form="circle" intensity={2} rotation-y={-Math.PI / 2} position={[10, 1, 0]} scale={8} />
+          <Lightformer
+            form="rect"
+            intensity={3.2}
+            color="#fff4f8"
+            rotation-x={Math.PI / 2}
+            position={[0, 6, -10]}
+            scale={[6, 2, 1]}
+          />
+          <Lightformer
+            form="rect"
+            intensity={1.25}
+            color="#f8bfd5"
+            rotation-y={Math.PI / 2}
+            position={[-7, 2, -2]}
+            scale={[4, 1.4, 1]}
+          />
+          <Lightformer
+            form="rect"
+            intensity={1.15}
+            color="#fff8fb"
+            rotation-y={Math.PI / 2}
+            position={[7, 2, -2]}
+            scale={[4, 1.4, 1]}
+          />
         </group>
       </Environment>
       <Preload all />
