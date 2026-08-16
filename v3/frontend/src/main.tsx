@@ -24,6 +24,7 @@ import './styles/dashboard-navigation.css'
 import './styles/pilot-readiness.css'
 import './styles/visual-refresh.css'
 import './styles/home-premium-v2.css'
+import './styles/home-premium-v2-shell.css'
 
 const root = document.getElementById('root')
 
