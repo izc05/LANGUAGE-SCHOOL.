@@ -9,7 +9,6 @@ import './styles/public-pages.css'
 import './styles/admin-cms.css'
 import './styles/admin-students.css'
 import './styles/admin-academy.css'
-import './styles/admin-academic-real.css'
 import './styles/admin-settings.css'
 import './styles/admin-contacts.css'
 import './styles/admin-notifications.css'
@@ -36,20 +35,16 @@ import './styles/contact-premium-v2.css'
 import './styles/blog-premium-v2.css'
 import './styles/public-premium-v2-shell.css'
 import './styles/access-premium-v2.css'
+import './styles/premium-visual-assets.css'
 
 const root = document.getElementById('root')
-
-if (!root) {
-  throw new Error('No se ha encontrado el elemento #root')
-}
+if (!root) throw new Error('No se ha encontrado el elemento #root')
 
 createRoot(root).render(
   <StrictMode>
     <AppErrorBoundary>
       <BrowserRouter>
-        <AuthProvider>
-          <App />
-        </AuthProvider>
+        <AuthProvider><App /></AuthProvider>
       </BrowserRouter>
     </AppErrorBoundary>
   </StrictMode>,
