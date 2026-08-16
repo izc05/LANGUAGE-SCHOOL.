@@ -19,6 +19,8 @@ const publicMeta: Record<string, PageMeta> = {
   '/contacto': { title: 'Contacto · Language School', description: 'Contacta con Language School y cuéntanos qué quieres conseguir con tu inglés.' },
 }
 
+const audienceLabels = ['Kids', 'Teens', 'Universidad', 'Adultos', 'Exámenes']
+
 function applyPageMeta(pathname: string) {
   const meta = publicMeta[pathname] ?? { title: 'Página no encontrada · Language School', description: 'La página solicitada no está disponible. Vuelve a Language School para seguir navegando.' }
   document.title = meta.title
@@ -50,6 +52,20 @@ export default function SiteShell({ children }: SiteShellProps) {
       <PublicVisualMotion />
       <a className="skip-link" href="#main-content">Saltar al contenido</a>
       <BackendStatusBanner visible={unavailable} onRetry={() => void retry()} />
+
+      <div className="academy-topbar" aria-label="Información rápida de la academia">
+        <div className="container academy-topbar-inner">
+          <span className="academy-topbar-confidence"><i aria-hidden="true">♥</i> English with confidence</span>
+          <div className="academy-topbar-audience" aria-label="Etapas disponibles">
+            {audienceLabels.map((label, index) => <span key={label}>{index > 0 && <i aria-hidden="true">·</i>}{label}</span>)}
+          </div>
+          <div className="academy-topbar-contact">
+            {settings.phone && <a href={`tel:${settings.phone}`}>☎ {settings.phone}</a>}
+            {settings.email && <a href={`mailto:${settings.email}`}>✉ {settings.email}</a>}
+          </div>
+        </div>
+      </div>
+
       <header className="site-header">
         <div className="container header-inner">
           <Link className="brand" to="/" aria-label={`${brandName} - Inicio`}>
@@ -64,6 +80,11 @@ export default function SiteShell({ children }: SiteShellProps) {
       </header>
       <main id="main-content" tabIndex={-1}>{children}</main>
       <footer className="site-footer">
+        <div className="container footer-audience-ribbon">
+          <div><span className="eyebrow">INGLÉS PARA CADA ETAPA</span><strong>Un mismo lugar. Distintos caminos.</strong></div>
+          <div className="footer-audience-list">{audienceLabels.map((label) => <span key={label}>{label}</span>)}</div>
+          <Link to="/programas">Ver programas <span aria-hidden="true">↗</span></Link>
+        </div>
         <div className="container footer-grid">
           <div><div className="brand brand-footer"><img className="brand-logo-image" src={resolvedLogoUrl} alt="" /><span><strong>{brandName}</strong></span></div><p>Aprender inglés con seguimiento real, recursos claros y un espacio digital propio para cada alumno.</p></div>
           <div><strong>Academia</strong><Link to="/programas">Programas</Link><Link to="/profesores">Profesores</Link><Link to="/sobre-nosotros">Sobre nosotros</Link><Link to="/tarifas">Tarifas</Link><Link to="/blog">Blog</Link><Link to="/acceso">Acceso</Link></div>
