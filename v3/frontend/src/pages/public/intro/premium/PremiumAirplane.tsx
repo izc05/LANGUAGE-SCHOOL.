@@ -3,6 +3,10 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 
 const MAGENTA = '#d62974'
+const MAGENTA_DARK = '#9e164f'
+const PEARL = '#fffdfd'
+const METAL = '#d7d1d5'
+const CANOPY = '#3b2632'
 
 export const flightPath = new THREE.CatmullRomCurve3([
   new THREE.Vector3(-8, -2, 6),
@@ -24,62 +28,81 @@ export default function PremiumAirplane({ progressRef }: { progressRef: React.Mu
   const up = useRef(new THREE.Vector3(0, 1, 0))
 
   const fuselageGeo = useMemo(() => {
-    const points: THREE.Vector2[] = []
-    for (let i = 0; i <= 40; i += 1) {
-      const x = i / 40
-      let r = 0.045
-      if (x < 0.3) {
-        const t = x / 0.3
-        r = 0.045 * (0.1 + 0.9 * t)
-      } else if (x > 0.75) {
-        const t = (x - 0.75) / 0.25
-        r = 0.045 * Math.cos(t * Math.PI / 2)
+    const profile: THREE.Vector2[] = []
+    for (let i = 0; i <= 56; i += 1) {
+      const t = i / 56
+      let radius: number
+
+      if (t < 0.18) {
+        const nose = t / 0.18
+        radius = 0.012 + 0.118 * Math.pow(nose, 0.68)
+      } else if (t < 0.7) {
+        const middle = (t - 0.18) / 0.52
+        radius = 0.13 - 0.012 * middle
+      } else {
+        const tail = (t - 0.7) / 0.3
+        radius = 0.118 * Math.pow(1 - tail, 0.72) + 0.008
       }
-      points.push(new THREE.Vector2(r, (0.5 - x) * 1.4))
+
+      profile.push(new THREE.Vector2(radius, -1.02 + t * 2.04))
     }
-    const geo = new THREE.LatheGeometry(points, 32)
-    geo.rotateX(Math.PI / 2)
-    return geo
+
+    const geometry = new THREE.LatheGeometry(profile, 40)
+    geometry.rotateX(Math.PI / 2)
+    return geometry
   }, [])
 
   const wingGeo = useMemo(() => {
     const shape = new THREE.Shape()
-    shape.moveTo(0, -0.2)
-    shape.lineTo(0.9, 0.2)
-    shape.lineTo(0.9, 0.3)
-    shape.lineTo(0, 0.15)
-    shape.lineTo(0, -0.2)
-    const geo = new THREE.ShapeGeometry(shape)
-    geo.rotateX(Math.PI / 2)
-    return geo
+    shape.moveTo(0.08, -0.28)
+    shape.lineTo(1.05, 0.18)
+    shape.lineTo(0.94, 0.38)
+    shape.lineTo(0.2, 0.14)
+    shape.lineTo(0.08, -0.28)
+    const geometry = new THREE.ShapeGeometry(shape)
+    geometry.rotateX(Math.PI / 2)
+    return geometry
   }, [])
 
-  const tailGeo = useMemo(() => {
+  const stabilizerGeo = useMemo(() => {
     const shape = new THREE.Shape()
-    shape.moveTo(0.55, -0.02)
-    shape.lineTo(0.65, 0.25)
-    shape.lineTo(0.75, 0.25)
-    shape.lineTo(0.7, -0.02)
-    shape.lineTo(0.55, -0.02)
-    const geo = new THREE.ShapeGeometry(shape)
-    geo.rotateY(Math.PI / 2)
-    return geo
+    shape.moveTo(0.04, -0.05)
+    shape.lineTo(0.48, 0.16)
+    shape.lineTo(0.42, 0.27)
+    shape.lineTo(0.08, 0.14)
+    shape.lineTo(0.04, -0.05)
+    const geometry = new THREE.ShapeGeometry(shape)
+    geometry.rotateX(Math.PI / 2)
+    return geometry
+  }, [])
+
+  const finGeo = useMemo(() => {
+    const shape = new THREE.Shape()
+    shape.moveTo(-0.12, 0)
+    shape.lineTo(0.08, 0.44)
+    shape.lineTo(0.18, 0.42)
+    shape.lineTo(0.22, 0)
+    shape.lineTo(-0.12, 0)
+    const geometry = new THREE.ShapeGeometry(shape)
+    geometry.rotateY(-Math.PI / 2)
+    return geometry
   }, [])
 
   useFrame(() => {
     if (!groupRef.current) return
+
     const t = Math.max(0, Math.min(progressRef.current, 0.999))
     flightPath.getPointAt(t, point.current)
     groupRef.current.position.copy(point.current)
     flightPath.getTangentAt(t, tangent.current)
-    const bankAmount = Math.sin(t * Math.PI * 4) * 0.4
 
+    const bankAmount = Math.sin(t * Math.PI * 4) * 0.28
     const matrix = new THREE.Matrix4()
     up.current.set(0, 1, 0).applyAxisAngle(tangent.current, bankAmount)
     matrix.lookAt(point.current, point.current.clone().add(tangent.current), up.current)
     groupRef.current.quaternion.setFromRotationMatrix(matrix)
 
-    const scale = 0.7 + (1 - t) * 0.5
+    const scale = 0.68 + (1 - t) * 0.42
     groupRef.current.scale.setScalar(scale)
     groupRef.current.visible = t < 0.99
   })
@@ -87,29 +110,77 @@ export default function PremiumAirplane({ progressRef }: { progressRef: React.Mu
   return (
     <group ref={groupRef}>
       <mesh geometry={fuselageGeo}>
-        <meshPhysicalMaterial color={MAGENTA} clearcoat={1} roughness={0.1} metalness={0.1} />
+        <meshPhysicalMaterial
+          color={PEARL}
+          metalness={0.14}
+          roughness={0.18}
+          clearcoat={1}
+          clearcoatRoughness={0.06}
+        />
       </mesh>
 
-      <mesh geometry={wingGeo}>
-        <meshBasicMaterial color="#ffffff" side={THREE.DoubleSide} />
-      </mesh>
-      <mesh geometry={wingGeo} scale={[-1, 1, 1]}>
-        <meshBasicMaterial color="#ffffff" side={THREE.DoubleSide} />
+      <mesh position={[0, -0.105, -0.04]}>
+        <boxGeometry args={[0.022, 0.018, 1.38]} />
+        <meshPhysicalMaterial color={MAGENTA} metalness={0.08} roughness={0.2} clearcoat={1} />
       </mesh>
 
-      <mesh geometry={tailGeo}>
-        <meshBasicMaterial color="#ffffff" side={THREE.DoubleSide} />
+      <mesh geometry={wingGeo} position={[0, -0.018, -0.03]}>
+        <meshPhysicalMaterial color={PEARL} side={THREE.DoubleSide} metalness={0.16} roughness={0.16} clearcoat={1} />
+      </mesh>
+      <mesh geometry={wingGeo} position={[0, -0.018, -0.03]} scale={[-1, 1, 1]}>
+        <meshPhysicalMaterial color={PEARL} side={THREE.DoubleSide} metalness={0.16} roughness={0.16} clearcoat={1} />
       </mesh>
 
-      <mesh geometry={wingGeo} position={[0, 0, 0.6]} scale={[0.3, 0.3, 0.3]}>
-        <meshBasicMaterial color="#ffffff" side={THREE.DoubleSide} />
+      <mesh geometry={stabilizerGeo} position={[0, 0.015, 0.67]}>
+        <meshPhysicalMaterial color={PEARL} side={THREE.DoubleSide} roughness={0.18} clearcoat={1} />
       </mesh>
-      <mesh geometry={wingGeo} position={[0, 0, 0.6]} scale={[-0.3, 0.3, 0.3]}>
-        <meshBasicMaterial color="#ffffff" side={THREE.DoubleSide} />
+      <mesh geometry={stabilizerGeo} position={[0, 0.015, 0.67]} scale={[-1, 1, 1]}>
+        <meshPhysicalMaterial color={PEARL} side={THREE.DoubleSide} roughness={0.18} clearcoat={1} />
       </mesh>
 
-      <pointLight position={[-1.4, -0.05, 0.2]} color="#ff0000" intensity={1} distance={2} />
-      <pointLight position={[1.4, -0.05, 0.2]} color="#00ff00" intensity={1} distance={2} />
+      <mesh geometry={finGeo} position={[0, 0.055, 0.68]}>
+        <meshPhysicalMaterial color={MAGENTA} side={THREE.DoubleSide} roughness={0.16} clearcoat={1} />
+      </mesh>
+
+      <mesh position={[0, 0.095, -0.55]} scale={[0.115, 0.07, 0.25]}>
+        <sphereGeometry args={[1, 32, 24]} />
+        <meshPhysicalMaterial
+          color={CANOPY}
+          metalness={0.2}
+          roughness={0.08}
+          clearcoat={1}
+          transparent
+          opacity={0.9}
+        />
+      </mesh>
+
+      {[-0.34, 0.34].map((x) => (
+        <group key={x} position={[x, -0.075, 0.16]}>
+          <mesh rotation={[Math.PI / 2, 0, 0]}>
+            <cylinderGeometry args={[0.075, 0.095, 0.5, 28, 1, false]} />
+            <meshPhysicalMaterial color={METAL} metalness={0.72} roughness={0.18} clearcoat={0.75} />
+          </mesh>
+          <mesh position={[0, 0, -0.252]}>
+            <circleGeometry args={[0.068, 28]} />
+            <meshStandardMaterial color="#171317" metalness={0.45} roughness={0.22} />
+          </mesh>
+          <mesh position={[0, 0, 0.252]} rotation={[0, Math.PI, 0]}>
+            <circleGeometry args={[0.055, 28]} />
+            <meshBasicMaterial color={MAGENTA_DARK} />
+          </mesh>
+        </group>
+      ))}
+
+      <mesh position={[-1.01, 0, 0.2]}>
+        <sphereGeometry args={[0.025, 16, 12]} />
+        <meshBasicMaterial color="#c81f4d" />
+      </mesh>
+      <mesh position={[1.01, 0, 0.2]}>
+        <sphereGeometry args={[0.025, 16, 12]} />
+        <meshBasicMaterial color="#eafcff" />
+      </mesh>
+
+      <pointLight position={[0, -0.04, 0.85]} color={MAGENTA} intensity={1.2} distance={2.6} />
     </group>
   )
 }
