@@ -1,4 +1,5 @@
 import { type ChangeEvent, type FormEvent, useEffect, useState } from 'react'
+import { Link } from 'react-router'
 import DashboardShell from '../../components/DashboardShell'
 import { isDemoMode } from '../../config/environment'
 import {
@@ -12,8 +13,19 @@ import {
   getEditableHomeContent,
   saveHomeContent,
   type HomePageContent,
+  type HomeVisualContent,
 } from '../../services/pocketbase/siteContent'
 import { adminNav } from './adminNav'
+
+const visualSlots: Array<{ key: keyof HomeVisualContent; label: string; hint: string }> = [
+  { key: 'kidsMediaId', label: 'Kids', hint: 'Tarjeta de programa para 6–12 años' },
+  { key: 'teensMediaId', label: 'Teens', hint: 'Tarjeta de adolescentes / instituto' },
+  { key: 'universityMediaId', label: 'Universidad', hint: 'Young adults, Erasmus y estudios' },
+  { key: 'adultsMediaId', label: 'Adultos', hint: 'English for life / conversación' },
+  { key: 'examsMediaId', label: 'Exámenes', hint: 'Preparación y certificación' },
+  { key: 'methodMediaId', label: 'Método', hint: 'Fotografía del bloque Nuestro método' },
+  { key: 'journalMediaId', label: 'English Journal', hint: 'Imagen principal del bloque Blog' },
+]
 
 function releaseObjectUrl(value: string | null) {
   if (value?.startsWith('blob:')) URL.revokeObjectURL(value)
@@ -26,6 +38,7 @@ export default function AdminSiteEditor() {
   const [primaryCta, setPrimaryCta] = useState(demoHomeContent.hero.primaryCta)
   const [secondaryCta, setSecondaryCta] = useState(demoHomeContent.hero.secondaryCta)
   const [heroMediaId, setHeroMediaId] = useState(demoHomeContent.hero.mediaId)
+  const [visuals, setVisuals] = useState<HomeVisualContent>({ ...demoHomeContent.visuals })
   const [mediaOptions, setMediaOptions] = useState<MediaRecord[]>([])
   const [imageName, setImageName] = useState('Sin imagen seleccionada')
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
@@ -54,6 +67,7 @@ export default function AdminSiteEditor() {
         setPrimaryCta(content.hero.primaryCta)
         setSecondaryCta(content.hero.secondaryCta)
         setHeroMediaId(content.hero.mediaId)
+        setVisuals(content.visuals)
         setMediaOptions(media)
         setSaved(status === 'PUBLISHED')
 
@@ -140,6 +154,11 @@ export default function AdminSiteEditor() {
     setPreviewUrl(getMediaUrl(record, '800x600'))
   }
 
+  function selectVisualMedia(key: keyof HomeVisualContent, id: string) {
+    markDirty()
+    setVisuals((current) => ({ ...current, [key]: id }))
+  }
+
   function buildContent(): HomePageContent {
     return {
       hero: {
@@ -150,6 +169,7 @@ export default function AdminSiteEditor() {
         secondaryCta: secondaryCta.trim() || demoHomeContent.hero.secondaryCta,
         mediaId: heroMediaId,
       },
+      visuals,
     }
   }
 
@@ -171,7 +191,7 @@ export default function AdminSiteEditor() {
     try {
       await saveHomeContent(buildContent(), publish)
       setSaved(publish)
-      setNotice(publish ? 'Portada publicada correctamente.' : 'Borrador guardado correctamente.')
+      setNotice(publish ? 'Portada e imágenes publicadas correctamente.' : 'Borrador guardado correctamente.')
     } catch {
       setError('No se han podido guardar los cambios. Revisa la conexión y que la cuenta tenga rol ADMIN.')
     } finally {
@@ -191,10 +211,7 @@ export default function AdminSiteEditor() {
           <div>
             <span className="eyebrow">CMS · PÁGINA WEB</span>
             <h2>Editar portada</h2>
-            <p>
-              Edita aquí el contenido principal de la portada. Puedes guardar un borrador o publicar los cambios para mostrarlos en
-              la web.
-            </p>
+            <p>Edita el mensaje, la imagen principal y los visuales de la Home sin tocar código.</p>
           </div>
           <a className="button button-ghost" href="/" target="_blank" rel="noreferrer">Vista pública ↗</a>
         </header>
@@ -210,31 +227,13 @@ export default function AdminSiteEditor() {
               <span className={`status ${saved ? 'success' : 'info'}`}>{saved ? 'Publicado' : 'Cambios sin publicar'}</span>
             </div>
 
-            <label className="field-stack">
-              <span>Etiqueta superior</span>
-              <input value={heroEyebrow} onChange={(event) => { setHeroEyebrow(event.target.value); markDirty() }} />
-            </label>
-
-            <label className="field-stack">
-              <span>Título principal</span>
-              <textarea value={heroTitle} onChange={(event) => { setHeroTitle(event.target.value); markDirty() }} rows={3} />
-              <small>{heroTitle.length}/110 caracteres recomendados</small>
-            </label>
-
-            <label className="field-stack">
-              <span>Texto de presentación</span>
-              <textarea value={heroSubtitle} onChange={(event) => { setHeroSubtitle(event.target.value); markDirty() }} rows={4} />
-            </label>
+            <label className="field-stack"><span>Etiqueta superior</span><input value={heroEyebrow} onChange={(event) => { setHeroEyebrow(event.target.value); markDirty() }} /></label>
+            <label className="field-stack"><span>Título principal</span><textarea value={heroTitle} onChange={(event) => { setHeroTitle(event.target.value); markDirty() }} rows={3} /><small>{heroTitle.length}/110 caracteres recomendados</small></label>
+            <label className="field-stack"><span>Texto de presentación</span><textarea value={heroSubtitle} onChange={(event) => { setHeroSubtitle(event.target.value); markDirty() }} rows={4} /></label>
 
             <div className="field-grid-two">
-              <label className="field-stack">
-                <span>Botón principal</span>
-                <input value={primaryCta} onChange={(event) => { setPrimaryCta(event.target.value); markDirty() }} />
-              </label>
-              <label className="field-stack">
-                <span>Botón secundario</span>
-                <input value={secondaryCta} onChange={(event) => { setSecondaryCta(event.target.value); markDirty() }} />
-              </label>
+              <label className="field-stack"><span>Botón principal</span><input value={primaryCta} onChange={(event) => { setPrimaryCta(event.target.value); markDirty() }} /></label>
+              <label className="field-stack"><span>Botón secundario</span><input value={secondaryCta} onChange={(event) => { setSecondaryCta(event.target.value); markDirty() }} /></label>
             </div>
 
             <div className="field-stack">
@@ -246,27 +245,15 @@ export default function AdminSiteEditor() {
               </label>
 
               {!isDemoMode && mediaOptions.length > 0 && (
-                <label className="field-stack">
-                  <span>O elegir una imagen existente</span>
-                  <select value={heroMediaId} onChange={(event) => selectExistingMedia(event.target.value)}>
-                    <option value="">Sin imagen</option>
-                    {mediaOptions.map((item) => (
-                      <option key={item.id} value={item.id}>{item.title || item.file}</option>
-                    ))}
-                  </select>
-                </label>
+                <label className="field-stack"><span>O elegir una imagen existente</span><select value={heroMediaId} onChange={(event) => selectExistingMedia(event.target.value)}><option value="">Sin imagen</option>{mediaOptions.map((item) => <option key={item.id} value={item.id}>{item.title || item.file}</option>)}</select></label>
               )}
 
               <div className="selected-file"><span>IMG</span><div><strong>{imageName}</strong><small>{heroMediaId ? 'Vinculada a la portada' : 'Vista previa local o sin vincular'}</small></div></div>
             </div>
 
             <div className="cms-form-actions">
-              <button className="button button-primary" type="submit" disabled={saving || loading || uploadingImage}>
-                {saving ? 'Guardando…' : 'Guardar y publicar'}
-              </button>
-              <button className="button button-ghost" type="button" disabled={saving || loading || uploadingImage} onClick={() => void persist(false)}>
-                Guardar borrador
-              </button>
+              <button className="button button-primary" type="submit" disabled={saving || loading || uploadingImage}>{saving ? 'Guardando…' : 'Guardar y publicar'}</button>
+              <button className="button button-ghost" type="button" disabled={saving || loading || uploadingImage} onClick={() => void persist(false)}>Guardar borrador</button>
             </div>
           </form>
 
@@ -274,20 +261,37 @@ export default function AdminSiteEditor() {
             <div className="preview-browser-bar"><i /><i /><i /><span>Vista previa de portada</span></div>
             <div className="cms-hero-preview">
               <div className="cms-hero-preview-copy">
-                <span className="eyebrow">{heroEyebrow || 'LANGUAGE SCHOOL'}</span>
-                <h1>{heroTitle || 'Título de portada'}</h1>
-                <p>{heroSubtitle || 'Texto de presentación de la academia.'}</p>
-                <div className="hero-actions">
-                  <span className="button button-primary">{primaryCta || 'Botón principal'}</span>
-                  <span className="button button-ghost">{secondaryCta || 'Botón secundario'}</span>
-                </div>
+                <span className="eyebrow">{heroEyebrow || 'LANGUAGE SCHOOL'}</span><h1>{heroTitle || 'Título de portada'}</h1><p>{heroSubtitle || 'Texto de presentación de la academia.'}</p>
+                <div className="hero-actions"><span className="button button-primary">{primaryCta || 'Botón principal'}</span><span className="button button-ghost">{secondaryCta || 'Botón secundario'}</span></div>
               </div>
-              <div className="cms-image-preview" style={previewUrl ? { backgroundImage: `url(${previewUrl})` } : undefined}>
-                {!previewUrl && <div><span>IMAGEN</span><strong>{imageName}</strong><small>Sube o selecciona una imagen de Multimedia</small></div>}
-              </div>
+              <div className="cms-image-preview" style={previewUrl ? { backgroundImage: `url(${previewUrl})` } : undefined}>{!previewUrl && <div><span>IMAGEN</span><strong>{imageName}</strong><small>Sube o selecciona una imagen de Multimedia</small></div>}</div>
             </div>
           </aside>
         </div>
+
+        <section className="panel cms-section-list home-visual-admin-panel">
+          <div className="panel-heading">
+            <div><span className="eyebrow">IMÁGENES DE LA HOME</span><h3>Visuales por sección</h3><p className="muted">Sube fotografías a Multimedia y asígnalas aquí. Si dejas un campo vacío, la web utiliza el fallback visual del diseño.</p></div>
+            <Link className="button button-ghost" to="/admin/multimedia">Abrir Multimedia</Link>
+          </div>
+          <div className="home-visual-admin-grid">
+            {visualSlots.map((slot) => {
+              const selected = mediaOptions.find((item) => item.id === visuals[slot.key])
+              const selectedUrl = selected ? getMediaUrl(selected, '400x260') : ''
+              return (
+                <label className="home-visual-admin-card" key={slot.key}>
+                  <span className="home-visual-admin-preview" style={selectedUrl ? { backgroundImage: `url(${selectedUrl})` } : undefined}>{!selectedUrl && <b>IMG</b>}</span>
+                  <strong>{slot.label}</strong><small>{slot.hint}</small>
+                  <select value={visuals[slot.key]} onChange={(event) => selectVisualMedia(slot.key, event.target.value)} disabled={isDemoMode || mediaOptions.length === 0}>
+                    <option value="">Usar imagen automática</option>
+                    {mediaOptions.map((item) => <option key={item.id} value={item.id}>{item.title || item.file}</option>)}
+                  </select>
+                </label>
+              )
+            })}
+          </div>
+          <div className="cms-form-actions"><button className="button button-primary" type="button" disabled={saving || loading} onClick={() => void persist(true)}>Guardar imágenes y publicar</button></div>
+        </section>
 
         <section className="panel cms-section-list">
           <div className="panel-heading"><div><span className="eyebrow">RESTO DE LA HOME</span><h3>Secciones editables</h3></div><span className="status success">Estructura preparada</span></div>
