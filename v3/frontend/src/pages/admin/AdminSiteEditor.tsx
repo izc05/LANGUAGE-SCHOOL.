@@ -17,14 +17,22 @@ import {
 } from '../../services/pocketbase/siteContent'
 import { adminNav } from './adminNav'
 
-const visualSlots: Array<{ key: keyof HomeVisualContent; label: string; hint: string }> = [
+const homeVisualSlots: Array<{ key: keyof HomeVisualContent; label: string; hint: string }> = [
   { key: 'kidsMediaId', label: 'Kids', hint: 'Tarjeta de programa para 6–12 años' },
   { key: 'teensMediaId', label: 'Teens', hint: 'Tarjeta de adolescentes / instituto' },
   { key: 'universityMediaId', label: 'Universidad', hint: 'Young adults, Erasmus y estudios' },
   { key: 'adultsMediaId', label: 'Adultos', hint: 'English for life / conversación' },
   { key: 'examsMediaId', label: 'Exámenes', hint: 'Preparación y certificación' },
   { key: 'methodMediaId', label: 'Método', hint: 'Fotografía del bloque Nuestro método' },
-  { key: 'journalMediaId', label: 'English Journal', hint: 'Imagen principal del bloque Blog' },
+  { key: 'journalMediaId', label: 'English Journal', hint: 'Imagen principal del bloque Blog en Home' },
+]
+
+const publicPageVisualSlots: Array<{ key: keyof HomeVisualContent; label: string; hint: string }> = [
+  { key: 'teachersHeroMediaId', label: 'Profesores', hint: 'Imagen principal de la página Equipo docente' },
+  { key: 'aboutHeroMediaId', label: 'Sobre nosotros', hint: 'Imagen principal de la historia de la academia' },
+  { key: 'pricingHeroMediaId', label: 'Tarifas', hint: 'Imagen principal de la página de precios' },
+  { key: 'blogHeroMediaId', label: 'Blog', hint: 'Imagen principal de Language School Journal' },
+  { key: 'contactHeroMediaId', label: 'Contacto', hint: 'Imagen principal antes del formulario y el mapa' },
 ]
 
 function releaseObjectUrl(value: string | null) {
@@ -204,14 +212,31 @@ export default function AdminSiteEditor() {
     void persist(true)
   }
 
+  function renderVisualCards(slots: Array<{ key: keyof HomeVisualContent; label: string; hint: string }>) {
+    return slots.map((slot) => {
+      const selected = mediaOptions.find((item) => item.id === visuals[slot.key])
+      const selectedUrl = selected ? getMediaUrl(selected, '400x260') : ''
+      return (
+        <label className="home-visual-admin-card" key={slot.key}>
+          <span className="home-visual-admin-preview" style={selectedUrl ? { backgroundImage: `url(${selectedUrl})` } : undefined}>{!selectedUrl && <b>IMG</b>}</span>
+          <strong>{slot.label}</strong><small>{slot.hint}</small>
+          <select value={visuals[slot.key]} onChange={(event) => selectVisualMedia(slot.key, event.target.value)} disabled={isDemoMode || mediaOptions.length === 0}>
+            <option value="">Usar imagen automática</option>
+            {mediaOptions.map((item) => <option key={item.id} value={item.id}>{item.title || item.file}</option>)}
+          </select>
+        </label>
+      )
+    })
+  }
+
   return (
     <DashboardShell role="Administrador" name="Admin" nav={[...adminNav]}>
       <div className="dashboard-content cms-page">
         <header className="cms-page-heading">
           <div>
             <span className="eyebrow">CMS · PÁGINA WEB</span>
-            <h2>Editar portada</h2>
-            <p>Edita el mensaje, la imagen principal y los visuales de la Home sin tocar código.</p>
+            <h2>Editar web pública</h2>
+            <p>Edita la portada y elige las imágenes principales de la web sin tocar código.</p>
           </div>
           <a className="button button-ghost" href="/" target="_blank" rel="noreferrer">Vista pública ↗</a>
         </header>
@@ -274,32 +299,25 @@ export default function AdminSiteEditor() {
             <div><span className="eyebrow">IMÁGENES DE LA HOME</span><h3>Visuales por sección</h3><p className="muted">Sube fotografías a Multimedia y asígnalas aquí. Si dejas un campo vacío, la web utiliza el fallback visual del diseño.</p></div>
             <Link className="button button-ghost" to="/admin/multimedia">Abrir Multimedia</Link>
           </div>
-          <div className="home-visual-admin-grid">
-            {visualSlots.map((slot) => {
-              const selected = mediaOptions.find((item) => item.id === visuals[slot.key])
-              const selectedUrl = selected ? getMediaUrl(selected, '400x260') : ''
-              return (
-                <label className="home-visual-admin-card" key={slot.key}>
-                  <span className="home-visual-admin-preview" style={selectedUrl ? { backgroundImage: `url(${selectedUrl})` } : undefined}>{!selectedUrl && <b>IMG</b>}</span>
-                  <strong>{slot.label}</strong><small>{slot.hint}</small>
-                  <select value={visuals[slot.key]} onChange={(event) => selectVisualMedia(slot.key, event.target.value)} disabled={isDemoMode || mediaOptions.length === 0}>
-                    <option value="">Usar imagen automática</option>
-                    {mediaOptions.map((item) => <option key={item.id} value={item.id}>{item.title || item.file}</option>)}
-                  </select>
-                </label>
-              )
-            })}
+          <div className="home-visual-admin-grid">{renderVisualCards(homeVisualSlots)}</div>
+        </section>
+
+        <section className="panel cms-section-list home-visual-admin-panel public-page-visual-admin-panel">
+          <div className="panel-heading">
+            <div><span className="eyebrow">IMÁGENES DE PÁGINAS</span><h3>Portadas de la web pública</h3><p className="muted">Controla la fotografía principal de Profesores, Sobre nosotros, Tarifas, Blog y Contacto. Vacío = fotografía automática actual.</p></div>
+            <span className="status info">5 páginas</span>
           </div>
-          <div className="cms-form-actions"><button className="button button-primary" type="button" disabled={saving || loading} onClick={() => void persist(true)}>Guardar imágenes y publicar</button></div>
+          <div className="home-visual-admin-grid">{renderVisualCards(publicPageVisualSlots)}</div>
+          <div className="cms-form-actions"><button className="button button-primary" type="button" disabled={saving || loading} onClick={() => void persist(true)}>Guardar todas las imágenes y publicar</button></div>
         </section>
 
         <section className="panel cms-section-list">
-          <div className="panel-heading"><div><span className="eyebrow">RESTO DE LA HOME</span><h3>Secciones editables</h3></div><span className="status success">Estructura preparada</span></div>
+          <div className="panel-heading"><div><span className="eyebrow">GESTIÓN WEB</span><h3>Contenido conectado</h3></div><span className="status success">CMS activo</span></div>
           <div className="cms-section-cards">
-            <button type="button"><b>01</b><span><strong>Programas</strong><small>Kids, Teens, Adultos y Exámenes</small></span><em>Editar →</em></button>
-            <button type="button"><b>02</b><span><strong>Metodología</strong><small>Pasos, mensajes y beneficios</small></span><em>Editar →</em></button>
-            <button type="button"><b>03</b><span><strong>Profesores</strong><small>Foto, nombre, especialidad y bio</small></span><em>Editar →</em></button>
-            <button type="button"><b>04</b><span><strong>Contacto</strong><small>Teléfono, email, dirección y horarios</small></span><em>Editar →</em></button>
+            <button type="button"><b>01</b><span><strong>Programas</strong><small>Imágenes generales y portadas específicas por curso</small></span><em>Activo</em></button>
+            <button type="button"><b>02</b><span><strong>Metodología</strong><small>Imagen principal seleccionable desde Multimedia</small></span><em>Activo</em></button>
+            <button type="button"><b>03</b><span><strong>Profesores</strong><small>Foto individual y portada pública configurables</small></span><em>Activo</em></button>
+            <button type="button"><b>04</b><span><strong>Contacto</strong><small>Imagen, datos, dirección y mapa conectado</small></span><em>Activo</em></button>
           </div>
         </section>
       </div>
