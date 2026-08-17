@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import SiteShell from '../../components/SiteShell'
 import { isDemoMode } from '../../config/environment'
 import { getBlogCoverUrl, listPublishedBlogPosts } from '../../services/pocketbase/blog'
+import { getPublishedHomeVisualUrl } from '../../services/pocketbase/siteContent'
 
 type ArticleItem = {
   id: string
@@ -44,27 +45,33 @@ export default function BlogPage() {
   const [filter, setFilter] = useState('Todos')
   const [loading, setLoading] = useState(!isDemoMode)
   const [error, setError] = useState(false)
+  const [heroPhoto, setHeroPhoto] = useState('')
   const visualBase = `${import.meta.env.BASE_URL}visuals/`
   const journalVisual = `${visualBase}blog-journal.svg`
 
   useEffect(() => {
-    if (isDemoMode) return
-
     let mounted = true
-    listPublishedBlogPosts()
-      .then((records) => {
+
+    Promise.all([
+      isDemoMode ? Promise.resolve([]) : listPublishedBlogPosts(),
+      getPublishedHomeVisualUrl('blogHeroMediaId'),
+    ])
+      .then(([records, photo]) => {
         if (!mounted) return
-        setArticles(records.map((record) => ({
-          id: record.id,
-          category: record.expand?.category?.name || 'English',
-          title: record.title,
-          meta: formatPublishedDate(record.published_at),
-          description: record.excerpt || 'Nuevo artículo de Language School.',
-          coverUrl: getBlogCoverUrl(record),
-        })))
+        setHeroPhoto(photo)
+        if (!isDemoMode) {
+          setArticles(records.map((record) => ({
+            id: record.id,
+            category: record.expand?.category?.name || 'English',
+            title: record.title,
+            meta: formatPublishedDate(record.published_at),
+            description: record.excerpt || 'Nuevo artículo de Language School.',
+            coverUrl: getBlogCoverUrl(record),
+          })))
+        }
       })
       .catch(() => {
-        if (mounted) setError(true)
+        if (mounted && !isDemoMode) setError(true)
       })
       .finally(() => {
         if (mounted) setLoading(false)
@@ -91,7 +98,7 @@ export default function BlogPage() {
               <p>Consejos de clase, inglés práctico, preparación de exámenes y recursos seleccionados por la academia.</p>
               <div className="blog-v2-topic-row"><span>Speaking</span><span>Vocabulary</span><span>Exams</span><span>Listening</span></div>
             </div>
-            <div className="blog-v2-hero-visual">
+            <div className={`blog-v2-hero-visual${heroPhoto ? ' has-cms-photo' : ''}`} style={heroPhoto ? { backgroundImage: `linear-gradient(180deg, rgba(53,25,39,.02), rgba(53,25,39,.20)), url(${heroPhoto})` } : undefined}>
               <img src={journalVisual} alt="Ilustración editorial del Language School Journal" />
               <div className="blog-v2-floating-note"><small>READ · LISTEN · PRACTISE</small><strong>Un poco de inglés, muchas veces.</strong></div>
             </div>
