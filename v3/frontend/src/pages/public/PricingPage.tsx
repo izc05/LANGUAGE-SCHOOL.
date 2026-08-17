@@ -31,26 +31,27 @@ export default function PricingPage() {
   return (
     <SiteShell>
       <div className="pricing-premium-v2">
-        <section className="pricing-v2-hero">
+        <section className="pricing-v2-hero pricing-v2-hero-editorial">
           <div className="container pricing-v2-hero-grid">
             <div className="pricing-v2-hero-copy">
               <span className="eyebrow">TARIFAS</span>
               <h1>Precios claros, sin letra pequeña.</h1>
               <p>Consulta las opciones disponibles y contacta con la academia para encontrar la que mejor encaja con tu objetivo.</p>
               <div className="pricing-v2-trust-row">
-                <span>Plan según objetivo</span>
-                <span>Seguimiento incluido</span>
+                <span>Planes publicados por la academia</span>
+                <span>Seguimiento incluido cuando corresponda</span>
                 <span>Orientación antes de elegir</span>
               </div>
+              <div className="pricing-v2-hero-actions"><a className="button button-primary" href="#planes">Ver tarifas</a><Link className="button button-ghost" to="/contacto">Preguntar a la academia</Link></div>
             </div>
-            <div className={`pricing-v2-hero-visual${heroPhoto ? ' has-cms-photo' : ''}`} style={heroPhoto ? { backgroundImage: `linear-gradient(180deg, rgba(52,24,38,.03), rgba(52,24,38,.19)), url(${heroPhoto})` } : undefined}>
-              <img src={pricingVisual} alt="Ilustración de planes de aprendizaje claros y flexibles" />
+            <div className={`pricing-v2-hero-visual${heroPhoto ? ' has-cms-photo' : ''}`} style={heroPhoto ? { backgroundImage: `linear-gradient(180deg, rgba(52,24,38,.03), rgba(52,24,38,.18)), url(${heroPhoto})` } : undefined}>
+              {!heroPhoto && <img src={pricingVisual} alt="Ilustración editorial sobre planes de aprendizaje" />}
               <div className="pricing-v2-floating-card"><small>ANTES DE ELEGIR</small><strong>Objetivo · nivel · ritmo</strong></div>
             </div>
           </div>
         </section>
 
-        <section className="section pricing-v2-plans-section">
+        <section className="section pricing-v2-plans-section" id="planes">
           <div className="container">
             <div className="pricing-v2-section-head">
               <div><span className="eyebrow">PLANES PUBLICADOS</span><h2>Elige con información, no a ciegas.</h2></div>
@@ -71,7 +72,7 @@ export default function PricingPage() {
                   <div className="pricing-v2-price"><strong>{Number(plan.price).toLocaleString('es-ES', { maximumFractionDigits: 2 })} €</strong><span>{plan.billing_text}</span></div>
                   <p>{plan.description}</p>
                   {plan.features?.length > 0 && <ul>{plan.features.map((feature) => <li key={feature}><span>✓</span>{feature}</li>)}</ul>}
-                  <Link className="button button-primary button-full" to={`/contacto?interes=${encodeURIComponent(plan.name)}`}>Quiero información</Link>
+                  <Link className="button button-primary button-full" to={`/contacto?interes=${encodeURIComponent(plan.name)}`}>Preguntar por este plan</Link>
                 </article>
               ))}
             </div>
