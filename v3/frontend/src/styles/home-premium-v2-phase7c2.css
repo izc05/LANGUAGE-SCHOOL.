@@ -1,0 +1,304 @@
+/*
+ * FASE 7C.2 — PROGRAMAS EN HOME
+ * Scope estricto: bloque Programas de la Home.
+ * Dirección: editorial humano · academia real.
+ * Las imágenes siguen llegando del CMS mediante --program-photo.
+ */
+
+.home-premium-v2 .programs-premium {
+  position: relative;
+  padding: 108px 0 112px;
+  overflow: hidden;
+  border-top: 1px solid rgba(92, 58, 73, .07);
+  background:
+    radial-gradient(circle at 88% 8%, rgba(201, 63, 108, .055), transparent 24rem),
+    linear-gradient(180deg, #fffdfa 0%, #fdf8f5 100%);
+}
+
+.home-premium-v2 .programs-premium .section-heading {
+  max-width: 760px;
+  margin: 0 0 50px;
+  text-align: left;
+}
+
+.home-premium-v2 .programs-premium .section-heading .eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #b63b63;
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .19em;
+}
+
+.home-premium-v2 .programs-premium .section-heading .eyebrow::before {
+  content: '';
+  width: 22px;
+  height: 1px;
+  background: currentColor;
+  opacity: .5;
+}
+
+.home-premium-v2 .programs-premium .section-heading h2 {
+  max-width: 720px;
+  margin: 16px 0 19px;
+  color: #33252f;
+  font-size: clamp(3rem, 4.7vw, 4.8rem);
+  line-height: .99;
+  letter-spacing: -.047em;
+  text-wrap: balance;
+}
+
+.home-premium-v2 .programs-premium .section-heading p {
+  max-width: 650px;
+  margin: 0;
+  color: #75616b;
+  font-size: 1rem;
+  line-height: 1.72;
+}
+
+/* El antiguo trazo decorativo competía con las fotografías. */
+.home-premium-v2 .programs-path-wrap {
+  display: none;
+}
+
+.home-premium-v2 .program-grid-premium {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.home-premium-v2 .program-card-premium {
+  --program-fallback: linear-gradient(145deg, #f3dfe5 0%, #f8ece8 100%);
+  position: relative;
+  min-height: 390px;
+  grid-column: span 4;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 192px 27px 27px;
+  overflow: hidden;
+  border: 1px solid rgba(101, 63, 80, .105);
+  border-radius: 25px;
+  background: rgba(255, 255, 255, .92);
+  box-shadow: 0 18px 42px rgba(75, 39, 55, .055);
+  transition: transform .24s ease, box-shadow .24s ease, border-color .24s ease;
+}
+
+.home-premium-v2 .program-card-premium.adults,
+.home-premium-v2 .program-card-premium.exams {
+  grid-column: span 6;
+  min-height: 365px;
+}
+
+.home-premium-v2 .program-card-premium.kids {
+  --program-fallback: linear-gradient(145deg, #f6d9cf 0%, #faeee9 100%);
+}
+
+.home-premium-v2 .program-card-premium.teens {
+  --program-fallback: linear-gradient(145deg, #efd7e0 0%, #f8e9ee 100%);
+}
+
+.home-premium-v2 .program-card-premium.university {
+  --program-fallback: linear-gradient(145deg, #e7dff0 0%, #f4eef7 100%);
+}
+
+.home-premium-v2 .program-card-premium.adults {
+  --program-fallback: linear-gradient(145deg, #eaded6 0%, #f8f0ea 100%);
+}
+
+.home-premium-v2 .program-card-premium.exams {
+  --program-fallback: linear-gradient(145deg, #f1d8dd 0%, #faebed 100%);
+}
+
+/* La imagen pasa a ser una parte real de la tarjeta, no un fondo ornamental. */
+.home-premium-v2 .program-card-premium::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 164px;
+  background-image:
+    linear-gradient(180deg, rgba(54, 31, 42, .015), rgba(54, 31, 42, .14)),
+    var(--program-photo, var(--program-fallback));
+  background-position: center;
+  background-size: cover;
+  transition: transform .42s cubic-bezier(.2,.72,.2,1);
+}
+
+.home-premium-v2 .program-card-premium::after {
+  content: '';
+  position: absolute;
+  left: 27px;
+  right: 27px;
+  top: 163px;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(181, 52, 94, .16), transparent);
+  pointer-events: none;
+}
+
+.home-premium-v2 .program-card-premium:hover {
+  transform: translateY(-4px);
+  border-color: rgba(181, 52, 94, .18);
+  box-shadow: 0 26px 58px rgba(75, 39, 55, .085);
+}
+
+.home-premium-v2 .program-card-premium:hover::before {
+  transform: scale(1.025);
+}
+
+.home-premium-v2 .program-symbol {
+  position: absolute;
+  z-index: 2;
+  left: 24px;
+  top: 137px;
+  width: 45px;
+  height: 45px;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  border: 1px solid rgba(255,255,255,.85);
+  border-radius: 50%;
+  color: #a93159;
+  background: rgba(255, 252, 250, .94);
+  box-shadow: 0 10px 26px rgba(76, 38, 55, .10);
+  font-size: .96rem;
+  font-weight: 800;
+  backdrop-filter: blur(12px);
+}
+
+.home-premium-v2 .program-card-premium .pill {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  color: #ad5270;
+  background: transparent;
+  font-size: .64rem;
+  font-weight: 800;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+}
+
+.home-premium-v2 .program-card-premium h3 {
+  margin: 11px 0 11px;
+  color: #3b2a34;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(1.65rem, 2.2vw, 2.15rem);
+  font-weight: 650;
+  line-height: 1.02;
+  letter-spacing: -.025em;
+}
+
+.home-premium-v2 .program-card-premium p {
+  max-width: 500px;
+  flex: 1;
+  margin: 0;
+  color: #7b6872;
+  font-size: .88rem;
+  line-height: 1.62;
+}
+
+.home-premium-v2 .program-card-premium a {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 22px;
+  color: #a93259;
+  font-size: .78rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.home-premium-v2 .program-card-premium a::after {
+  content: '↗';
+  width: 25px;
+  height: 25px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #fae8ed;
+  font-size: .7rem;
+  transition: transform .2s ease;
+}
+
+.home-premium-v2 .program-card-premium a:hover::after,
+.home-premium-v2 .program-card-premium a:focus-visible::after {
+  transform: translate(2px, -2px);
+}
+
+@media (max-width: 1050px) {
+  .home-premium-v2 .programs-premium {
+    padding-block: 94px 100px;
+  }
+
+  .home-premium-v2 .program-grid-premium {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .home-premium-v2 .program-card-premium,
+  .home-premium-v2 .program-card-premium.adults,
+  .home-premium-v2 .program-card-premium.exams {
+    grid-column: auto;
+    min-height: 365px;
+  }
+
+  .home-premium-v2 .program-card-premium.exams {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 700px) {
+  .home-premium-v2 .programs-premium {
+    padding-block: 78px 82px;
+  }
+
+  .home-premium-v2 .programs-premium .section-heading {
+    margin-bottom: 36px;
+  }
+
+  .home-premium-v2 .programs-premium .section-heading h2 {
+    font-size: clamp(2.7rem, 12vw, 3.8rem);
+  }
+
+  .home-premium-v2 .program-grid-premium {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .home-premium-v2 .program-card-premium,
+  .home-premium-v2 .program-card-premium.adults,
+  .home-premium-v2 .program-card-premium.exams {
+    grid-column: auto;
+    min-height: 330px;
+    padding: 172px 22px 23px;
+    border-radius: 21px;
+  }
+
+  .home-premium-v2 .program-card-premium::before {
+    height: 146px;
+  }
+
+  .home-premium-v2 .program-card-premium::after {
+    left: 22px;
+    right: 22px;
+    top: 145px;
+  }
+
+  .home-premium-v2 .program-symbol {
+    left: 20px;
+    top: 121px;
+    width: 42px;
+    height: 42px;
+  }
+
+  .home-premium-v2 .program-card-premium h3 {
+    font-size: 1.72rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-premium-v2 .program-card-premium,
+  .home-premium-v2 .program-card-premium::before,
+  .home-premium-v2 .program-card-premium a::after {
+    transition: none;
+  }
+}
