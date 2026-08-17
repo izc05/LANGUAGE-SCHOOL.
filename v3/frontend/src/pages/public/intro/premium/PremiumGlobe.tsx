@@ -1,6 +1,6 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
-import { MeshTransmissionMaterial, Ring, useTexture } from '@react-three/drei'
+import { MeshTransmissionMaterial, Ring } from '@react-three/drei'
 import * as THREE from 'three'
 
 const MAGENTA = '#d62974'
@@ -31,10 +31,39 @@ export default function PremiumGlobe({ introComplete, scaleRef }: PremiumGlobePr
   const coreRef = useRef<THREE.Mesh>(null)
   const haloRef = useRef<THREE.Group>(null)
   const [hovered, setHovered] = useState(false)
-  const earthMap = useTexture(EARTH_TEXTURE_URL)
+  const [earthMap, setEarthMap] = useState<THREE.Texture | null>(null)
   const sceneWidth = useThree((state) => state.size.width)
   const targetScale = useRef(1)
   const pointer = useRef(new THREE.Vector2())
+
+  useEffect(() => {
+    let mounted = true
+    const loader = new THREE.TextureLoader()
+
+    loader.load(
+      EARTH_TEXTURE_URL,
+      (texture) => {
+        texture.colorSpace = THREE.SRGBColorSpace
+        texture.anisotropy = 4
+        texture.needsUpdate = true
+        if (mounted) setEarthMap(texture)
+        else texture.dispose()
+      },
+      undefined,
+      () => {
+        // La intro sigue funcionando aunque GitHub/raw o la red no entregue la textura.
+        if (mounted) setEarthMap(null)
+      },
+    )
+
+    return () => {
+      mounted = false
+      setEarthMap((texture) => {
+        texture?.dispose()
+        return null
+      })
+    }
+  }, [])
 
   const transmissionResolution = sceneWidth <= 760 ? 512 : sceneWidth <= 1024 ? 768 : 1024
 
@@ -99,14 +128,28 @@ export default function PremiumGlobe({ introComplete, scaleRef }: PremiumGlobePr
       <mesh scale={1.44} rotation={[0.45, Math.PI / 1.7, 0]}>
         <sphereGeometry args={[1, 64, 64]} />
         <meshStandardMaterial
-          map={earthMap}
-          color="#fff9fb"
-          emissive="#fff4f8"
-          emissiveMap={earthMap}
-          emissiveIntensity={0.32}
+          map={earthMap ?? undefined}
+          color={earthMap ? '#fff9fb' : '#f4a7c8'}
+          emissive={earthMap ? '#fff4f8' : '#d62974'}
+          emissiveMap={earthMap ?? undefined}
+          emissiveIntensity={earthMap ? 0.32 : 0.18}
           roughness={0.5}
         />
       </mesh>
+
+      {!earthMap && (
+        <group rotation={[0.1, 0.4, 0]}>
+          <Ring args={[1.47, 1.49, 96]} rotation={[Math.PI / 2, 0, 0]}>
+            <meshBasicMaterial color="#fff7fb" transparent opacity={0.55} side={THREE.DoubleSide} />
+          </Ring>
+          <Ring args={[1.47, 1.49, 96]} rotation={[Math.PI / 2, Math.PI / 3, 0]}>
+            <meshBasicMaterial color="#fff7fb" transparent opacity={0.42} side={THREE.DoubleSide} />
+          </Ring>
+          <Ring args={[1.47, 1.49, 96]} rotation={[Math.PI / 2, -Math.PI / 3, 0]}>
+            <meshBasicMaterial color="#fff7fb" transparent opacity={0.42} side={THREE.DoubleSide} />
+          </Ring>
+        </group>
+      )}
 
       <pointLight position={[0, 0, 1.5]} color="#ffd8e8" intensity={3.2} distance={6} />
     </group>
