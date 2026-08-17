@@ -43,6 +43,7 @@ import './styles/portal-role-premium-v2.css'
 import './styles/student-dashboard-premium-v2.css'
 import './styles/photography-pass-v2.css'
 import './styles/premium-completion-pass.css'
+import './styles/premium-detail-pass-v2.css'
 
 const root = document.getElementById('root')
 if (!root) throw new Error('No se ha encontrado el elemento #root')
