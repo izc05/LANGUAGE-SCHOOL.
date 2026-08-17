@@ -34,3 +34,11 @@ jobs:
 
       - name: Build V3 frontend
         run: npm run build
+
+      - name: Upload compiled visual preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: v3-frontend-preview-${{ github.sha }}
+          path: v3/frontend/dist
+          if-no-files-found: error
+          retention-days: 7
