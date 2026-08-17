@@ -90,6 +90,15 @@ jobs:
           cat "$RUNNER_TEMP/e2e-pocketbase.log" >&2
           exit 1
 
+      - name: Verify Cloudflare Turnstile test credentials
+        run: |
+          RESULT=$(curl -fsS \
+            -H 'Content-Type: application/json' \
+            --data "$(jq -nc --arg secret "$TURNSTILE_SECRET_KEY" --arg response 'XXXX.DUMMY.TOKEN.XXXX' '{secret:$secret,response:$response}')" \
+            https://challenges.cloudflare.com/turnstile/v0/siteverify)
+          printf '%s\n' "$RESULT" | jq -e '.success == true' >/dev/null
+          echo 'Turnstile test Siteverify accepted the official dummy token.'
+
       - name: Seed connected browser users
         run: bash "$GITHUB_WORKSPACE/v3/e2e/seed-e2e.sh"
 
@@ -128,8 +137,22 @@ jobs:
       - name: Print PocketBase diagnostics
         if: failure()
         run: |
-          echo '--- PocketBase E2E log (last 200 lines) ---'
+          echo '--- PocketBase process output (last 200 lines) ---'
           tail -n 200 "$RUNNER_TEMP/e2e-pocketbase.log" || true
+
+          echo '--- PocketBase internal error/contact logs ---'
+          sleep 4
+          AUTH_RESPONSE=$(curl -fsS \
+            -H 'Content-Type: application/json' \
+            --data "$(jq -nc --arg identity "$PB_SUPERUSER_EMAIL" --arg password "$PB_SUPERUSER_PASSWORD" '{identity:$identity,password:$password}')" \
+            "$PB_URL/api/collections/_superusers/auth-with-password")
+          AUTH_TOKEN=$(printf '%s' "$AUTH_RESPONSE" | jq -r '.token')
+          test -n "$AUTH_TOKEN"
+          curl -fsS \
+            -H "Authorization: $AUTH_TOKEN" \
+            "$PB_URL/api/logs?page=1&perPage=100&sort=-created" \
+            | jq -c '.items[] | select((.level > 0) or (.message | contains("[contact]")) or ((.data.url // "") | contains("/api/language-school/contact"))) | {created,level,message,data:{status:.data.status,url:.data.url,type:.data.type,stage:.data.stage,error:.data.error}}' \
+            || true
 
       - name: Upload Playwright diagnostics
         if: failure()
