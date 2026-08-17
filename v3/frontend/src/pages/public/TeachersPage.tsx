@@ -20,14 +20,6 @@ function initials(name: string): string {
     .join('') || 'LS'
 }
 
-const audience = [
-  ['01', 'Kids'],
-  ['02', 'Teens'],
-  ['03', 'Universidad'],
-  ['04', 'Adultos'],
-  ['05', 'Exámenes'],
-] as const
-
 export default function TeachersPage() {
   const [teachers, setTeachers] = useState<PublicTeacherProfile[]>(isDemoMode ? demoPublicTeachers : [])
   const [loading, setLoading] = useState(!isDemoMode)
@@ -54,31 +46,25 @@ export default function TeachersPage() {
   return (
     <SiteShell>
       <div className="teachers-premium-v2">
-        <section className="teachers-v2-hero">
+        <section className="teachers-v2-hero teachers-v2-hero-editorial">
           <div className="container teachers-v2-hero-grid">
             <div className="teachers-v2-hero-copy">
               <span className="eyebrow">EQUIPO DOCENTE</span>
               <h1>Aprender mejor empieza por <span>sentirse acompañado.</span></h1>
               <p>Conoce a las personas que están detrás de cada clase, cada corrección y cada pequeño avance.</p>
-              <div className="teachers-v2-audience" aria-label="Etapas de aprendizaje">
-                {audience.map(([number, label]) => (
-                  <span key={label}><small>{number}</small>{label}</span>
-                ))}
-              </div>
+              <div className="teachers-v2-hero-actions"><a className="button button-primary" href="#equipo-docente">Conoce al equipo</a><Link className="button button-ghost" to="/contacto">Hablar con la academia</Link></div>
             </div>
-            <div className={`teachers-v2-hero-visual${heroPhoto ? ' has-cms-photo' : ''}`} style={heroPhoto ? { backgroundImage: `linear-gradient(180deg, rgba(52,24,38,.02), rgba(52,24,38,.22)), url(${heroPhoto})` } : undefined}>
-              <img src={heroVisual} alt="Ilustración de una profesora acompañando a estudiantes de distintas edades" />
-              <span className="teachers-v2-orbit teachers-v2-orbit-one" aria-hidden="true" />
-              <span className="teachers-v2-orbit teachers-v2-orbit-two" aria-hidden="true" />
+            <div className={`teachers-v2-hero-visual${heroPhoto ? ' has-cms-photo' : ''}`} style={heroPhoto ? { backgroundImage: `linear-gradient(180deg, rgba(52,24,38,.02), rgba(52,24,38,.20)), url(${heroPhoto})` } : undefined}>
+              {!heroPhoto && <img src={heroVisual} alt="Ilustración editorial del equipo docente de Language School" />}
               <div className="teachers-v2-floating-note">
-                <small>NUESTRO ENFOQUE</small>
-                <strong>Confianza antes que perfección.</strong>
+                <small>LANGUAGE SCHOOL · ROCÍO RUIZ</small>
+                <strong>Personas que enseñan, escuchan y acompañan.</strong>
               </div>
             </div>
           </div>
         </section>
 
-        <section className="section teachers-v2-team-section">
+        <section className="section teachers-v2-team-section" id="equipo-docente">
           <div className="container">
             <div className="teachers-v2-section-head">
               <div>
@@ -121,7 +107,6 @@ export default function TeachersPage() {
                           {specialties.map((specialty) => <span key={specialty}>{specialty}</span>)}
                         </div>
                       )}
-                      <blockquote>“Aprender también es sentirse seguro para intentarlo.”</blockquote>
                     </div>
                   </article>
                 )
