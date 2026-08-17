@@ -41,10 +41,17 @@ export type SiteSettingsInput = {
   phone: string
   email: string
   whatsapp: string
+  whatsappEnabled: boolean
+  whatsappMessage: string
   address: string
   instagram: string
   facebook: string
   youtube: string
+  cookieBannerEnabled: boolean
+  cookieIntro: string
+  cookiePolicyText: string
+  privacyPolicyText: string
+  legalNoticeText: string
 }
 
 export const demoPricingPlans: PricingPlanRecord[] = [
@@ -65,10 +72,17 @@ export const demoSiteSettings: SiteSettingsInput = {
   phone: '',
   email: '',
   whatsapp: '',
+  whatsappEnabled: true,
+  whatsappMessage: 'Hola, quiero información sobre las clases de inglés.',
   address: 'Calle Luis Carvajal, 23, Jódar, Jaén',
-  instagram: 'https://www.instagram.com/languageschool_rociuruiz/',
+  instagram: 'https://www.instagram.com/languageschool_rocioruiz/',
   facebook: '',
   youtube: '',
+  cookieBannerEnabled: true,
+  cookieIntro: 'Usamos almacenamiento técnico necesario y, solo si lo autorizas, preferencias para cargar servicios externos como Google Maps. Puedes aceptar, rechazar o configurar tus preferencias.',
+  cookiePolicyText: '',
+  privacyPolicyText: '',
+  legalNoticeText: '',
 }
 
 function requireAdmin() {
@@ -80,6 +94,14 @@ function requireAdmin() {
 function normalizeFeatures(value: unknown): string[] {
   if (!Array.isArray(value)) return []
   return value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+}
+
+function readBoolean(value: unknown, fallback: boolean): boolean {
+  if (typeof value === 'boolean') return value
+  if (typeof value !== 'string') return fallback
+  if (value.toLowerCase() === 'true') return true
+  if (value.toLowerCase() === 'false') return false
+  return fallback
 }
 
 export async function listPricingPlans(): Promise<PricingPlanRecord[]> {
@@ -126,8 +148,22 @@ export async function saveSiteSettings(input: SiteSettingsInput, logo?: File | n
   payload.set('email', input.email.trim())
   payload.set('whatsapp', input.whatsapp.trim())
   payload.set('address', input.address.trim())
-  payload.set('social_links', JSON.stringify({ instagram: input.instagram.trim(), facebook: input.facebook.trim(), youtube: input.youtube.trim() }))
-  payload.set('legal_texts', JSON.stringify(current?.legal_texts ?? {}))
+  payload.set('social_links', JSON.stringify({
+    ...(current?.social_links ?? {}),
+    instagram: input.instagram.trim(),
+    facebook: input.facebook.trim(),
+    youtube: input.youtube.trim(),
+    whatsapp_enabled: String(input.whatsappEnabled),
+    whatsapp_message: input.whatsappMessage.trim(),
+  }))
+  payload.set('legal_texts', JSON.stringify({
+    ...(current?.legal_texts ?? {}),
+    cookie_banner_enabled: String(input.cookieBannerEnabled),
+    cookie_intro: input.cookieIntro.trim(),
+    cookie_policy: input.cookiePolicyText.trim(),
+    privacy_policy: input.privacyPolicyText.trim(),
+    legal_notice: input.legalNoticeText.trim(),
+  }))
   if (logo) payload.set('logo', logo)
 
   if (current) return pb.collection(collections.siteSettings).update<SiteSettingsRecord>(current.id, payload)
@@ -138,7 +174,19 @@ export function settingsToInput(record: SiteSettingsRecord | null): SiteSettings
   if (!record) return demoSiteSettings
   return {
     academyName: record.academy_name || demoSiteSettings.academyName,
-    phone: record.phone || '', email: record.email || '', whatsapp: record.whatsapp || '', address: record.address || '',
-    instagram: record.social_links?.instagram || '', facebook: record.social_links?.facebook || '', youtube: record.social_links?.youtube || '',
+    phone: record.phone || '',
+    email: record.email || '',
+    whatsapp: record.whatsapp || '',
+    whatsappEnabled: readBoolean(record.social_links?.whatsapp_enabled, true),
+    whatsappMessage: record.social_links?.whatsapp_message || demoSiteSettings.whatsappMessage,
+    address: record.address || '',
+    instagram: record.social_links?.instagram || '',
+    facebook: record.social_links?.facebook || '',
+    youtube: record.social_links?.youtube || '',
+    cookieBannerEnabled: readBoolean(record.legal_texts?.cookie_banner_enabled, true),
+    cookieIntro: record.legal_texts?.cookie_intro || demoSiteSettings.cookieIntro,
+    cookiePolicyText: record.legal_texts?.cookie_policy || '',
+    privacyPolicyText: record.legal_texts?.privacy_policy || '',
+    legalNoticeText: record.legal_texts?.legal_notice || '',
   }
 }
