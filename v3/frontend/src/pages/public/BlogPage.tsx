@@ -93,22 +93,22 @@ export default function BlogPage() {
   return (
     <SiteShell>
       <div className="blog-premium-v2">
-        <section className="blog-v2-hero">
+        <section className="blog-v2-hero blog-v2-hero-editorial">
           <div className="container blog-v2-hero-grid">
             <div className="blog-v2-hero-copy">
               <span className="eyebrow">LANGUAGE SCHOOL JOURNAL</span>
               <h1>Ideas para aprender mejor.</h1>
               <p>Consejos de clase, inglés práctico, preparación de exámenes y recursos seleccionados por la academia.</p>
-              <div className="blog-v2-topic-row"><span>Speaking</span><span>Vocabulary</span><span>Exams</span><span>Listening</span></div>
+              <a className="text-link blog-v2-hero-link" href="#articulos">Ir a los últimos artículos →</a>
             </div>
-            <div className={`blog-v2-hero-visual${heroPhoto ? ' has-cms-photo' : ''}`} style={heroPhoto ? { backgroundImage: `linear-gradient(180deg, rgba(53,25,39,.02), rgba(53,25,39,.20)), url(${heroPhoto})` } : undefined}>
-              <img src={journalVisual} alt="Ilustración editorial del Language School Journal" />
+            <div className={`blog-v2-hero-visual${heroPhoto ? ' has-cms-photo' : ''}`} style={heroPhoto ? { backgroundImage: `linear-gradient(180deg, rgba(53,25,39,.02), rgba(53,25,39,.18)), url(${heroPhoto})` } : undefined}>
+              {!heroPhoto && <img src={journalVisual} alt="Ilustración editorial del Language School Journal" />}
               <div className="blog-v2-floating-note"><small>READ · LISTEN · PRACTISE</small><strong>Un poco de inglés, muchas veces.</strong></div>
             </div>
           </div>
         </section>
 
-        <section className="section blog-v2-content-section">
+        <section className="section blog-v2-content-section" id="articulos">
           <div className="container">
             <div className="blog-v2-toolbar">
               <div><span className="eyebrow">JOURNAL</span><h2>{loading ? 'Cargando artículos…' : 'Últimos artículos'}</h2></div>
