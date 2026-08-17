@@ -16,7 +16,7 @@ test('rechazar cookies opcionales mantiene Google Maps sin cargar', async ({ pag
 test('aceptar Preferencias permite cargar el mapa externo', async ({ page }) => {
   await page.goto('/contacto')
 
-  await page.getByRole('button', { name: 'Configurar' }).click()
+  await page.getByRole('button', { name: 'Configurar', exact: true }).click()
   await page.getByLabel('Preferencias').check()
   await page.getByRole('button', { name: 'Guardar selección' }).click()
 
