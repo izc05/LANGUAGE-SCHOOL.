@@ -40,11 +40,12 @@ test('el shell desktop mantiene marca, navegación y acceso sin compresión en 1
   }
 })
 
-test('la Home completa mantiene sus siete bloques y cero overflow en 1440 1180 820 y 390', async ({ page }) => {
+test('la Home completa mantiene sus ocho bloques y cero overflow en 1440 1180 820 y 390', async ({ page }) => {
   const sections = [
     '.hero-v3',
     '.programs-premium',
     '.academy-real-premium',
+    '.home-reasons',
     '.method-premium',
     '.platform-premium',
     '.blog-premium',
@@ -66,6 +67,7 @@ test('la Home completa mantiene sus siete bloques y cero overflow en 1440 1180 8
     }
 
     await expect(page.locator('.program-card-premium')).toHaveCount(5)
+    await expect(page.locator('.home-reasons-list article')).toHaveCount(6)
     await expect(page.locator('.method-premium-step')).toHaveCount(4)
     await expect(page.locator('.platform-dashboard-card')).toHaveCount(1)
     await expect(page.locator('.blog-featured-card')).toHaveCount(1)
