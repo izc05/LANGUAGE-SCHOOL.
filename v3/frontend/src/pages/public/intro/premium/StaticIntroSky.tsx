@@ -1,3 +1,5 @@
+import './static-intro-sky.css'
+
 export default function StaticIntroSky({ transitioning = false }: { transitioning?: boolean }) {
   return (
     <div className={`premium-static-sky${transitioning ? ' is-transitioning' : ''}`} aria-hidden="true">
