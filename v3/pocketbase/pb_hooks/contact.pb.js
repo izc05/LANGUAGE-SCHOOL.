@@ -1,41 +1,39 @@
-function readText(value) {
-  return typeof value === 'string' ? value.trim() : ''
-}
-
-function traceContact(stage, detail) {
-  if (detail === undefined || detail === '') {
-    console.log('[contact] stage=' + stage)
-    return
-  }
-  console.log('[contact] stage=' + stage + ' ' + detail)
-}
-
-function logContactError(stage, error) {
-  $app.logger().error('[contact] protected contact request failed', 'stage', stage, 'error', error)
-  traceContact(stage + '-error')
-}
-
-function invalidContactPayload(body) {
-  const name = readText(body.name)
-  const email = readText(body.email)
-  const phone = readText(body.phone)
-  const interest = readText(body.interest)
-  const message = readText(body.message)
-
-  if (!name || !email || !message) return true
-  if (name.length > 160 || email.length > 255 || phone.length > 30 || interest.length > 160 || message.length > 4000) return true
-  if (email.indexOf('@') === -1) return true
-  return false
-}
-
-function allowedTurnstileHostname(hostname) {
-  const configured = readText($os.getenv('TURNSTILE_ALLOWED_HOSTNAMES'))
-  if (!configured) return true
-  const allowed = configured.split(',').map((item) => item.trim().toLowerCase()).filter(Boolean)
-  return allowed.indexOf(readText(hostname).toLowerCase()) !== -1
-}
-
 routerAdd('POST', '/api/language-school/contact', (e) => {
+  const readText = (value) => typeof value === 'string' ? value.trim() : ''
+
+  const traceContact = (stage, detail) => {
+    if (detail === undefined || detail === '') {
+      console.log('[contact] stage=' + stage)
+      return
+    }
+    console.log('[contact] stage=' + stage + ' ' + detail)
+  }
+
+  const logContactError = (stage, error) => {
+    $app.logger().error('[contact] protected contact request failed', 'stage', stage, 'error', error)
+    traceContact(stage + '-error')
+  }
+
+  const invalidContactPayload = (body) => {
+    const name = readText(body.name)
+    const email = readText(body.email)
+    const phone = readText(body.phone)
+    const interest = readText(body.interest)
+    const message = readText(body.message)
+
+    if (!name || !email || !message) return true
+    if (name.length > 160 || email.length > 255 || phone.length > 30 || interest.length > 160 || message.length > 4000) return true
+    if (email.indexOf('@') === -1) return true
+    return false
+  }
+
+  const allowedTurnstileHostname = (hostname) => {
+    const configured = readText($os.getenv('TURNSTILE_ALLOWED_HOSTNAMES'))
+    if (!configured) return true
+    const allowed = configured.split(',').map((item) => item.trim().toLowerCase()).filter(Boolean)
+    return allowed.indexOf(readText(hostname).toLowerCase()) !== -1
+  }
+
   const body = e.requestInfo().body || {}
 
   // Honeypot: bots that fill hidden fields get a neutral success response.
