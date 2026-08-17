@@ -5,7 +5,9 @@ type PublicWhatsAppButtonProps = {
 }
 
 function normalizeWhatsAppNumber(value: string): string {
-  return value.replace(/\D/g, '')
+  const digits = value.replace(/\D/g, '')
+  if (digits.length === 9 && /^[67]/.test(digits)) return `34${digits}`
+  return digits
 }
 
 export default function PublicWhatsAppButton({ enabled, phone, message }: PublicWhatsAppButtonProps) {
