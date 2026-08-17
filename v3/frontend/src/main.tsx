@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router'
 import App from './app/App'
 import AppErrorBoundary from './components/AppErrorBoundary'
+import RouteSeoPolicy from './components/RouteSeoPolicy'
 import ScrollToTop from './components/ScrollToTop'
 import { AuthProvider } from './features/auth/AuthProvider'
 import './styles/global.css'
@@ -77,6 +78,7 @@ createRoot(root).render(
     <AppErrorBoundary>
       <BrowserRouter>
         <ScrollToTop />
+        <RouteSeoPolicy />
         <AuthProvider><App /></AuthProvider>
       </BrowserRouter>
     </AppErrorBoundary>
