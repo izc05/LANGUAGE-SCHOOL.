@@ -105,7 +105,7 @@ export default function ProgramsPage() {
                     <div className="programs-v2-course-meta"><span>{String(index + 1).padStart(2, '0')}</span><span className="pill">{course.level || 'Inglés'}</span></div>
                     <h3>{course.title}</h3><p>{course.description || 'Programa adaptado al nivel y objetivos del alumno.'}</p>
                     <div className="programs-v2-course-points" aria-label="Qué puedes esperar"><span>Grupos reducidos</span><span>Seguimiento</span><span>Recursos digitales</span></div>
-                    <Link className="programs-v2-course-link" to={`/contacto?interes=${encodeURIComponent(course.title)}`}>Consultar este programa <span aria-hidden="true">↗</span></Link>
+                    <Link className="programs-v2-course-link" to={`/programas/${encodeURIComponent(course.slug)}`}>Ver ficha del programa <span aria-hidden="true">↗</span></Link>
                   </div>
                 </article>
               )
