@@ -61,3 +61,51 @@ test('endpoint protegido rechaza solicitudes sin token Turnstile', async ({ requ
 
   expect(response.status()).toBe(400)
 })
+
+test('endpoint protegido acepta un token Turnstile válido de prueba', async ({ request }) => {
+  const pbUrl = process.env.PB_URL || 'http://127.0.0.1:8090'
+  const response = await request.post(`${pbUrl}/api/language-school/contact`, {
+    data: {
+      name: 'Turnstile E2E',
+      email: 'turnstile-e2e@example.com',
+      phone: '',
+      interest: 'Seguridad',
+      message: 'Validación positiva del endpoint protegido.',
+      website: '',
+      turnstileToken: 'XXXX.DUMMY.TOKEN.XXXX',
+    },
+  })
+
+  if (response.status() !== 201) {
+    await new Promise((resolve) => setTimeout(resolve, 4_000))
+    const identity = process.env.PB_SUPERUSER_EMAIL || ''
+    const password = process.env.PB_SUPERUSER_PASSWORD || ''
+    const auth = await request.post(`${pbUrl}/api/collections/_superusers/auth-with-password`, {
+      data: { identity, password },
+    })
+    const authBody = await auth.json() as { token?: string }
+    const filter = '(data.url~"/api/language-school/contact" || message~"[contact]")'
+    const logs = authBody.token
+      ? await request.get(`${pbUrl}/api/logs?page=1&perPage=50&sort=-created&filter=${encodeURIComponent(filter)}`, {
+          headers: { Authorization: authBody.token },
+        })
+      : null
+    const logBody = logs?.ok() ? await logs.json() as { items?: Array<Record<string, unknown>> } : { items: [] }
+    const safeLogs = (logBody.items || []).map((item) => {
+      const data = (item.data || {}) as Record<string, unknown>
+      return {
+        created: item.created,
+        level: item.level,
+        message: item.message,
+        status: data.status,
+        url: data.url,
+        stage: data.stage,
+        error: data.error,
+      }
+    })
+    const responseBody = await response.text()
+    console.error('Protected contact diagnostic:', JSON.stringify({ status: response.status(), responseBody, safeLogs }))
+  }
+
+  expect(response.status()).toBe(201)
+})
