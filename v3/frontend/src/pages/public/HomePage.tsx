@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { type CSSProperties, useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import SiteShell from '../../components/SiteShell'
 import { getMediaById, getMediaUrl } from '../../services/pocketbase/media'
@@ -6,15 +6,16 @@ import {
   demoHomeContent,
   getPublishedHomeContent,
   type HomePageContent,
+  type HomeVisualContent,
 } from '../../services/pocketbase/siteContent'
 
 const programs = [
-  { className: 'kids', symbol: '✦', tag: '6–12 años', title: 'Kids', text: 'Una base sólida con vocabulario, comprensión, juegos guiados y speaking progresivo.' },
-  { className: 'teens', symbol: '★', tag: '13–17 años', title: 'Teens', text: 'Refuerzo, confianza al hablar y preparación orientada a objetivos académicos.' },
-  { className: 'university', symbol: 'U', tag: 'Universidad', title: 'Young adults', text: 'Inglés para estudios, presentaciones, intercambios, Erasmus y primeros retos profesionales.' },
-  { className: 'adults', symbol: '∞', tag: 'Adultos', title: 'English for life', text: 'Inglés práctico para trabajo, viajes, conversación y desarrollo personal.' },
-  { className: 'exams', symbol: '✓', tag: 'A2 · B1 · B2 · C1', title: 'Exámenes', text: 'Preparación estructurada por destrezas, simulacros y corrección personalizada.' },
-]
+  { className: 'kids', visualKey: 'kidsMediaId', symbol: '✦', tag: '6–12 años', title: 'Kids', text: 'Una base sólida con vocabulario, comprensión, juegos guiados y speaking progresivo.' },
+  { className: 'teens', visualKey: 'teensMediaId', symbol: '★', tag: '13–17 años', title: 'Teens', text: 'Refuerzo, confianza al hablar y preparación orientada a objetivos académicos.' },
+  { className: 'university', visualKey: 'universityMediaId', symbol: 'U', tag: 'Universidad', title: 'Young adults', text: 'Inglés para estudios, presentaciones, intercambios, Erasmus y primeros retos profesionales.' },
+  { className: 'adults', visualKey: 'adultsMediaId', symbol: '∞', tag: 'Adultos', title: 'English for life', text: 'Inglés práctico para trabajo, viajes, conversación y desarrollo personal.' },
+  { className: 'exams', visualKey: 'examsMediaId', symbol: '✓', tag: 'A2 · B1 · B2 · C1', title: 'Exámenes', text: 'Preparación estructurada por destrezas, simulacros y corrección personalizada.' },
+] as const
 
 const steps = [
   ['01', 'Conectamos', 'Conocemos el nivel, los objetivos, el ritmo y lo que necesita cada alumno.'],
@@ -30,9 +31,25 @@ const platformFeatures = [
   ['04', 'Progreso', 'Objetivos, evolución y próximos pasos.'],
 ]
 
+const emptyVisualUrls: Record<keyof HomeVisualContent, string> = {
+  kidsMediaId: '',
+  teensMediaId: '',
+  universityMediaId: '',
+  adultsMediaId: '',
+  examsMediaId: '',
+  methodMediaId: '',
+  journalMediaId: '',
+}
+
+function cssPhotoVariable(name: string, url: string): CSSProperties | undefined {
+  if (!url) return undefined
+  return { [name]: `url("${url}")` } as CSSProperties
+}
+
 export default function HomePage() {
   const [homeContent, setHomeContent] = useState<HomePageContent>(demoHomeContent)
   const [heroImageUrl, setHeroImageUrl] = useState<string | null>(null)
+  const [visualUrls, setVisualUrls] = useState<Record<keyof HomeVisualContent, string>>({ ...emptyVisualUrls })
   const visualBase = `${import.meta.env.BASE_URL}visuals/`
 
   useEffect(() => {
@@ -54,6 +71,20 @@ export default function HomePage() {
         } else {
           setHeroImageUrl(null)
         }
+
+        const visualEntries = await Promise.all(
+          (Object.keys(content.visuals) as Array<keyof HomeVisualContent>).map(async (key) => {
+            const id = content.visuals[key]
+            if (!id) return [key, ''] as const
+            try {
+              const media = await getMediaById(id)
+              return [key, getMediaUrl(media, '1200x800')] as const
+            } catch {
+              return [key, ''] as const
+            }
+          }),
+        )
+        if (mounted) setVisualUrls({ ...emptyVisualUrls, ...Object.fromEntries(visualEntries) })
       } catch {
         // La web pública nunca queda inutilizada si PocketBase no responde.
       }
@@ -108,7 +139,7 @@ export default function HomePage() {
           <div className="programs-path-wrap" aria-hidden="true"><img src={`${visualBase}home-programs-path.svg`} alt="" loading="lazy" /></div>
           <div className="program-grid-premium">
             {programs.map((program) => (
-              <article className={`program-card-premium ${program.className}`} key={program.title}>
+              <article className={`program-card-premium ${program.className}`} key={program.title} style={cssPhotoVariable('--program-photo', visualUrls[program.visualKey])}>
                 <span className="program-symbol">{program.symbol}</span><span className="pill">{program.tag}</span><h3>{program.title}</h3><p>{program.text}</p><Link to="/programas">Ver programa →</Link>
               </article>
             ))}
@@ -123,7 +154,7 @@ export default function HomePage() {
             <h2>Un método pensado para que <em>realmente</em> aprendas.</h2>
             <p>Conversación, objetivos claros y continuidad entre clases. Lo importante no es acumular teoría: es notar que cada semana entiendes, hablas y avanzas un poco más.</p>
             <Link className="button button-ghost" to="/sobre-nosotros">Conoce nuestro método</Link>
-            <figure className="method-premium-art" aria-hidden="true"><img src={`${visualBase}home-method-compass.svg`} alt="" loading="lazy" /></figure>
+            <figure className="method-premium-art" aria-hidden="true" style={cssPhotoVariable('--method-photo', visualUrls.methodMediaId)}><img src={`${visualBase}home-method-compass.svg`} alt="" loading="lazy" /></figure>
           </div>
 
           <div className="method-premium-steps">
@@ -175,7 +206,7 @@ export default function HomePage() {
 
           <div className="blog-premium-grid">
             <article className="blog-featured-card">
-              <div className="blog-visual blog-visual-speaking" aria-hidden="true"><span className="blog-visual-word">SPEAK</span><span className="blog-visual-number">01</span><span className="blog-visual-orbit" /></div>
+              <div className="blog-visual blog-visual-speaking" aria-hidden="true" style={cssPhotoVariable('--journal-photo', visualUrls.journalMediaId)}><span className="blog-visual-word">SPEAK</span><span className="blog-visual-number">01</span><span className="blog-visual-orbit" /></div>
               <div className="blog-featured-copy"><div className="blog-meta"><span>Speaking</span><small>5 min</small></div><h3>5 formas de ganar confianza al hablar inglés</h3><p>Pequeños hábitos para dejar de traducir mentalmente cada frase y empezar a comunicarte con más naturalidad.</p><Link to="/blog">Leer artículo <span aria-hidden="true">↗</span></Link></div>
             </article>
             <div className="blog-secondary-stack">
