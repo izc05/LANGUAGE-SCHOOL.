@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import SiteShell from '../../components/SiteShell'
 import { isDemoMode } from '../../config/environment'
+import { getPublishedHomeVisualUrl } from '../../services/pocketbase/siteContent'
 import {
   demoPublicTeachers,
   getTeacherPhotoUrl,
@@ -30,6 +31,7 @@ const audience = [
 export default function TeachersPage() {
   const [teachers, setTeachers] = useState<PublicTeacherProfile[]>(isDemoMode ? demoPublicTeachers : [])
   const [loading, setLoading] = useState(!isDemoMode)
+  const [heroPhoto, setHeroPhoto] = useState('')
   const heroVisual = `${import.meta.env.BASE_URL}visuals/teachers-hero.svg`
   const methodVisual = `${import.meta.env.BASE_URL}visuals/teachers-method.svg`
   const feedbackVisual = `${import.meta.env.BASE_URL}visuals/teachers-feedback.svg`
@@ -40,6 +42,12 @@ export default function TeachersPage() {
       .then((records) => { if (mounted) setTeachers(records) })
       .catch(() => undefined)
       .finally(() => { if (mounted) setLoading(false) })
+    return () => { mounted = false }
+  }, [])
+
+  useEffect(() => {
+    let mounted = true
+    getPublishedHomeVisualUrl('teachersHeroMediaId').then((url) => { if (mounted) setHeroPhoto(url) }).catch(() => undefined)
     return () => { mounted = false }
   }, [])
 
@@ -58,7 +66,7 @@ export default function TeachersPage() {
                 ))}
               </div>
             </div>
-            <div className="teachers-v2-hero-visual">
+            <div className={`teachers-v2-hero-visual${heroPhoto ? ' has-cms-photo' : ''}`} style={heroPhoto ? { backgroundImage: `linear-gradient(180deg, rgba(52,24,38,.02), rgba(52,24,38,.22)), url(${heroPhoto})` } : undefined}>
               <img src={heroVisual} alt="Ilustración de una profesora acompañando a estudiantes de distintas edades" />
               <span className="teachers-v2-orbit teachers-v2-orbit-one" aria-hidden="true" />
               <span className="teachers-v2-orbit teachers-v2-orbit-two" aria-hidden="true" />
