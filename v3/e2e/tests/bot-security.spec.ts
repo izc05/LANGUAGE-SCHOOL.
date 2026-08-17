@@ -32,3 +32,32 @@ test('una ruta pública no hereda la directiva privada', async ({ page }) => {
   await page.goto('/contacto')
   await expect(page.locator('meta[data-language-school-route-seo]')).toHaveCount(0)
 })
+
+test('PocketBase rechaza el bypass directo de contact_requests', async ({ request }) => {
+  const pbUrl = process.env.PB_URL || 'http://127.0.0.1:8090'
+  const response = await request.post(`${pbUrl}/api/collections/contact_requests/records`, {
+    data: {
+      name: 'Bypass Bot',
+      email: 'bot@example.com',
+      message: 'Intento directo sin Turnstile',
+      status: 'NEW',
+    },
+  })
+
+  expect(response.ok()).toBeFalsy()
+})
+
+test('endpoint protegido rechaza solicitudes sin token Turnstile', async ({ request }) => {
+  const pbUrl = process.env.PB_URL || 'http://127.0.0.1:8090'
+  const response = await request.post(`${pbUrl}/api/language-school/contact`, {
+    data: {
+      name: 'No Token',
+      email: 'notoken@example.com',
+      message: 'Solicitud sin verificación',
+      website: '',
+      turnstileToken: '',
+    },
+  })
+
+  expect(response.status()).toBe(400)
+})
