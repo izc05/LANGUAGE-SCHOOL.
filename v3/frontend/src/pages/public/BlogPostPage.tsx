@@ -77,7 +77,7 @@ function toDetail(record: BlogPostRecord): ArticleDetail {
     content: record.content,
     category: record.expand?.category?.name || 'English',
     publishedAt: record.published_at,
-    coverUrl: getBlogCoverUrl(record, '1200x800'),
+    coverUrl: getBlogCoverUrl(record, '1400x900'),
     seoTitle: record.seo_title || '',
     seoDescription: record.seo_description || '',
   }
@@ -127,14 +127,25 @@ export default function BlogPostPage() {
 
   useEffect(() => {
     if (!article) return
-    document.title = article.seoTitle || `${article.title} · Language School`
+    const previousTitle = document.title
     let description = document.querySelector<HTMLMetaElement>('meta[name="description"]')
+    const hadDescription = Boolean(description)
+    const previousDescription = description?.content || ''
     if (!description) {
       description = document.createElement('meta')
       description.name = 'description'
       document.head.appendChild(description)
     }
+
+    document.title = article.seoTitle || `${article.title} · Language School`
     description.content = article.seoDescription || article.excerpt || 'Artículo de Language School Journal.'
+
+    return () => {
+      document.title = previousTitle
+      if (!description) return
+      if (hadDescription) description.content = previousDescription
+      else description.remove()
+    }
   }, [article])
 
   const blocks = useMemo(
@@ -144,7 +155,7 @@ export default function BlogPostPage() {
 
   return (
     <SiteShell>
-      <div className="blog-detail-page">
+      <div className="blog-detail-page blog-detail-editorial">
         {loading && (
           <section className="section blog-detail-state"><div className="container"><div className="panel public-empty-state">Cargando artículo…</div></div></section>
         )}
@@ -174,7 +185,7 @@ export default function BlogPostPage() {
 
               {article.coverUrl && (
                 <div className="container blog-detail-cover-wrap">
-                  <img className="blog-detail-cover" src={article.coverUrl} alt="" />
+                  <img className="blog-detail-cover" src={article.coverUrl} alt={`Portada de ${article.title}`} />
                 </div>
               )}
 
