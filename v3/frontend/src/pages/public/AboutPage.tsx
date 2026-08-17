@@ -25,24 +25,22 @@ export default function AboutPage() {
   return (
     <SiteShell>
       <div className="about-premium-v2">
-        <section className="about-v2-hero">
+        <section className="about-v2-hero about-v2-hero-editorial">
           <div className="container about-v2-hero-grid">
             <div className="about-v2-hero-copy">
               <span className="eyebrow">{content.eyebrow}</span>
               <h1>{content.title}</h1>
               <p>{content.intro}</p>
-              <div className="about-v2-hero-tags" aria-label="Cómo trabajamos">
-                <span>Clases cercanas</span>
-                <span>Práctica real</span>
-                <span>Seguimiento</span>
-                <span>Espacio digital</span>
+              <div className="about-v2-local-signature">
+                <strong>Rocío Ruiz</strong><span>Language School</span><span>Jódar · Jaén</span>
               </div>
+              <div className="about-v2-hero-actions"><Link className="button button-primary" to="/contacto">Conoce la academia</Link><Link className="button button-ghost" to="/profesores">Conoce al equipo</Link></div>
             </div>
             <div className={`about-v2-visual${heroPhoto ? ' has-cms-photo' : ''}`} style={heroPhoto ? { backgroundImage: `linear-gradient(180deg, rgba(52,24,38,.02), rgba(52,24,38,.18)), url(${heroPhoto})` } : undefined}>
-              <img src={journeyVisual} alt="Ilustración del viaje de aprendizaje en Language School" />
+              {!heroPhoto && <img src={journeyVisual} alt="Ilustración editorial de Language School" />}
               <div className="about-v2-visual-note">
-                <small>LANGUAGE SCHOOL</small>
-                <strong>Aprender → usar → confiar</strong>
+                <small>LANGUAGE SCHOOL · ROCÍO RUIZ</small>
+                <strong>Una academia local hecha de personas.</strong>
               </div>
             </div>
           </div>
@@ -51,9 +49,9 @@ export default function AboutPage() {
         <section className="section about-v2-story-section">
           <div className="container about-v2-story-grid">
             <div className="about-v2-story-heading">
-              <span className="eyebrow">NUESTRA FORMA DE ENSEÑAR</span>
+              <span className="eyebrow">NUESTRA HISTORIA Y NUESTRA FORMA DE ENSEÑAR</span>
               <h2>{content.storyTitle}</h2>
-              <div className="about-v2-story-line" aria-hidden="true"><span>01</span><span>02</span><span>03</span></div>
+              <div className="about-v2-story-location"><span>JÓDAR</span><strong>Una academia cercana, cuidada y con nombre propio.</strong></div>
             </div>
             <div className="about-v2-story-copy">
               {content.storyParagraphs.map((paragraph, index) => (
@@ -62,7 +60,6 @@ export default function AboutPage() {
                   <p>{paragraph}</p>
                 </div>
               ))}
-              <blockquote>“El objetivo no es saber más inglés sobre el papel. Es poder usarlo con más seguridad.”</blockquote>
             </div>
           </div>
         </section>
@@ -80,7 +77,6 @@ export default function AboutPage() {
               {content.values.map((value, index) => (
                 <article className="about-v2-value-card" key={`${value.title}-${index}`}>
                   <span className="about-v2-value-number">{String(index + 1).padStart(2, '0')}</span>
-                  <div className="about-v2-value-icon" aria-hidden="true">{index === 0 ? '♡' : index === 1 ? '↗' : '∞'}</div>
                   <h3>{value.title}</h3>
                   <p>{value.text}</p>
                 </article>
