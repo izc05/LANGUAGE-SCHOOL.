@@ -21,6 +21,17 @@ const themeVisualKeys: Record<CourseTheme, keyof HomeVisualContent> = {
 }
 const emptyThemeVisuals: Record<CourseTheme, string> = { kids: '', teens: '', university: '', adults: '', exams: '' }
 
+// Fotografías editoriales de respaldo. La portada del curso subida en Admin y las
+// imágenes de etapa del CMS siempre tienen prioridad. El SVG local queda como
+// último salvavidas si la fotografía remota no estuviera disponible.
+const editorialPhotoFallbacks: Record<CourseTheme, string> = {
+  kids: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=1500&q=84',
+  teens: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1500&q=84',
+  university: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1500&q=84',
+  adults: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1500&q=84',
+  exams: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1500&q=84',
+}
+
 function getCourseTheme(course: PublicCourseRecord): CourseTheme {
   const value = `${course.slug} ${course.title} ${course.level}`.toLowerCase()
   if (/(kid|niñ|primaria|6–12|6-12)/.test(value)) return 'kids'
@@ -32,6 +43,10 @@ function getCourseTheme(course: PublicCourseRecord): CourseTheme {
 
 function getThemeSymbol(theme: CourseTheme) { if (theme === 'kids') return '✦'; if (theme === 'teens') return '★'; if (theme === 'university') return 'U'; if (theme === 'exams') return '✓'; return '∞' }
 function getThemeLabel(theme: CourseTheme) { if (theme === 'kids') return 'BUILD CONFIDENCE'; if (theme === 'teens') return 'FIND YOUR VOICE'; if (theme === 'university') return 'OPEN YOUR WORLD'; if (theme === 'exams') return 'REACH YOUR GOAL'; return 'ENGLISH FOR LIFE' }
+
+function photoLayers(primary: string, localFallback: string, endOpacity = '.18') {
+  return `linear-gradient(180deg, rgba(45,25,35,.015), rgba(45,25,35,${endOpacity})), url("${primary}"), url("${localFallback}")`
+}
 
 export default function ProgramsPage() {
   const [courses, setCourses] = useState<PublicCourseRecord[]>(isDemoMode ? demoPublicCourses : [])
@@ -57,14 +72,15 @@ export default function ProgramsPage() {
           catch { return [theme, ''] as const }
         }))
         if (mounted) setThemeVisuals({ ...emptyThemeVisuals, ...Object.fromEntries(entries) })
-      } catch { /* packaged local fallbacks remain available */ }
+      } catch { /* photography + packaged fallback remain available */ }
     }
     void loadThemeVisuals()
     return () => { mounted = false }
   }, [])
 
   const heroManagedVisual = themeVisuals.university || themeVisuals.adults || themeVisuals.teens || themeVisuals.kids || themeVisuals.exams
-  const heroVisualUrl = heroManagedVisual || `${visualBase}program-photo-university.svg`
+  const heroPrimaryPhoto = heroManagedVisual || editorialPhotoFallbacks.university
+  const heroLocalFallback = `${visualBase}program-photo-university.svg`
 
   return (
     <SiteShell>
@@ -77,8 +93,8 @@ export default function ProgramsPage() {
             <div className="programs-v2-hero-actions"><a className="button button-primary" href="#catalogo-programas">Ver programas</a><Link className="button button-ghost" to="/contacto">Ayúdame a elegir</Link></div>
           </div>
           <figure
-            className={`programs-v2-hero-visual${heroManagedVisual ? ' has-photo' : ' has-local-fallback'}`}
-            style={{ backgroundImage: `linear-gradient(180deg, rgba(45,25,35,.01), rgba(45,25,35,.16)), url(${heroVisualUrl})` }}
+            className={`programs-v2-hero-visual has-photo${heroManagedVisual ? ' has-cms-photo' : ' has-editorial-photo'}`}
+            style={{ backgroundImage: photoLayers(heroPrimaryPhoto, heroLocalFallback, '.20') }}
           >
             <figcaption><span>UNA ACADEMIA · DISTINTAS ETAPAS</span><strong>Tu objetivo cambia. El acompañamiento permanece.</strong><small>Kids · Teens · Universidad · Adultos · Exámenes</small></figcaption>
           </figure>
@@ -98,12 +114,16 @@ export default function ProgramsPage() {
               const theme = getCourseTheme(course)
               const coverUrl = getPublicCourseCoverUrl(course)
               const adminFallbackUrl = themeVisuals[theme]
+              const editorialPhoto = editorialPhotoFallbacks[theme]
               const localFallbackUrl = `${visualBase}program-photo-${theme}.svg`
-              const imageUrl = coverUrl || adminFallbackUrl || localFallbackUrl
+              const primaryPhoto = coverUrl || adminFallbackUrl || editorialPhoto
               const managedVisual = Boolean(coverUrl || adminFallbackUrl)
               return (
                 <article className={`programs-v2-course ${theme}`} key={course.id}>
-                  <div className={`programs-v2-course-visual${managedVisual ? ' has-image' : ' has-local-fallback'}`} style={{ backgroundImage: `linear-gradient(160deg, rgba(44,24,34,.01), rgba(44,24,34,.15)), url(${imageUrl})` }}>
+                  <div
+                    className={`programs-v2-course-visual has-image${managedVisual ? ' has-managed-photo' : ' has-editorial-photo'}`}
+                    style={{ backgroundImage: photoLayers(primaryPhoto, localFallbackUrl, '.23') }}
+                  >
                     <span className="programs-v2-course-symbol" aria-hidden="true">{getThemeSymbol(theme)}</span><span className="programs-v2-course-visual-label">{getThemeLabel(theme)}</span><strong aria-hidden="true">{String(index + 1).padStart(2, '0')}</strong>
                   </div>
                   <div className="programs-v2-course-copy">
