@@ -38,13 +38,25 @@ jobs:
             PB_BIN=/usr/bin/echo \
             PB_DATA=/tmp/pb_data \
             PB_MIGRATIONS=/tmp/pb_migrations \
+            PB_HOOKS=/tmp/pb_hooks \
+            TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA \
             bash v3/infrastructure/raspberry-pi/start-pocketbase.sh)
           printf '%s' "$OUTPUT" | grep -q -- '--http=127.0.0.1:8090'
+          printf '%s' "$OUTPUT" | grep -q -- '--hooksDir=/tmp/pb_hooks'
 
           if PB_URL=http://0.0.0.0:8090 \
             PB_BIN=/usr/bin/echo \
+            TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA \
             bash v3/infrastructure/raspberry-pi/start-pocketbase.sh; then
             echo 'PocketBase start wrapper accepted a non-loopback origin.' >&2
+            exit 1
+          fi
+
+          if PB_URL=http://127.0.0.1:8090 \
+            PB_BIN=/usr/bin/echo \
+            TURNSTILE_SECRET_KEY=replace-with-real-secret-key \
+            bash v3/infrastructure/raspberry-pi/start-pocketbase.sh; then
+            echo 'PocketBase start wrapper accepted a placeholder Turnstile secret.' >&2
             exit 1
           fi
 
