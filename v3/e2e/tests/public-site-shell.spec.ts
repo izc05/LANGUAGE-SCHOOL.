@@ -73,6 +73,34 @@ test('la Home completa mantiene sus siete bloques y cero overflow en 1440 1180 8
   }
 })
 
+test('todas las páginas públicas principales permanecen dentro del viewport en 820 y 390', async ({ page }) => {
+  const routes = [
+    ['/programas', '.programs-premium-v2'],
+    ['/tarifas', '.pricing-premium-v2'],
+    ['/profesores', '.teachers-premium-v2'],
+    ['/sobre-nosotros', '.about-premium-v2'],
+    ['/blog', '.blog-premium-v2'],
+    ['/contacto', '.contact-premium-v2'],
+  ] as const
+
+  for (const width of [820, 390]) {
+    await page.setViewportSize({ width, height: width === 390 ? 844 : 900 })
+    for (const [path, rootSelector] of routes) {
+      await page.goto(path)
+      await expect(page.locator(rootSelector)).toHaveCount(1)
+      await page.waitForTimeout(220)
+      await expectShell(page)
+
+      const rootBox = await page.locator(rootSelector).boundingBox()
+      expect(rootBox, `${path} debe tener geometría en ${width}px`).not.toBeNull()
+      if (rootBox) {
+        expect(rootBox.x, `${path} empieza fuera del viewport en ${width}px`).toBeGreaterThanOrEqual(-1)
+        expect(rootBox.x + rootBox.width, `${path} desborda en ${width}px`).toBeLessThanOrEqual(width + 1)
+      }
+    }
+  }
+})
+
 test('el menú compacto funciona con teclado, Escape y cierre tras navegación en 820', async ({ page }) => {
   await page.setViewportSize({ width: 820, height: 900 })
   await enterHome(page)
