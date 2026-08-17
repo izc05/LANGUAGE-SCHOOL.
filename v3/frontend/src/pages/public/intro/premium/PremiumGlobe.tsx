@@ -5,6 +5,8 @@ import * as THREE from 'three'
 
 const MAGENTA = '#d62974'
 const MAGENTA_LIGHT = '#f4a7c8'
+const ROSE_GLASS = '#ffd9e8'
+const ROSE_HIGHLIGHT = '#ffe8f1'
 
 type PremiumGlobeProps = {
   introComplete: boolean
@@ -47,7 +49,6 @@ export default function PremiumGlobe({ introComplete, scaleRef }: PremiumGlobePr
       groupRef.current.scale.setScalar(Math.max(0, scaleRef.current) * baseScale)
     }
 
-    // Los reflejos se desplazan muy despacio como en una burbuja real.
     highlightRef.current.rotation.z = Math.sin(state.clock.elapsedTime * 0.18) * 0.035
     highlightRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.14) * 0.045
 
@@ -69,11 +70,6 @@ export default function PremiumGlobe({ introComplete, scaleRef }: PremiumGlobePr
 
   return (
     <group ref={groupRef} position={[0, -0.2, 0]} scale={0}>
-      {/*
-        Cristal real: recupera la óptica de la esfera original de Antigravity.
-        No hay Tierra, malla ni relleno decorativo; el volumen nace de refracción,
-        clearcoat y de los Lightformers del entorno.
-      */}
       <mesh
         onPointerOver={() => introComplete && setHovered(true)}
         onPointerOut={() => setHovered(false)}
@@ -81,29 +77,31 @@ export default function PremiumGlobe({ introComplete, scaleRef }: PremiumGlobePr
         <sphereGeometry args={[1.5, 128, 128]} />
         <MeshTransmissionMaterial
           backside
-          backsideThickness={0.16}
-          thickness={0.24}
-          color="#fffafd"
-          roughness={hovered && introComplete ? 0.018 : 0.028}
-          chromaticAberration={hovered && introComplete ? 0.024 : 0.016}
-          anisotropicBlur={0.055}
+          backsideThickness={0.075}
+          thickness={0.13}
+          transmission={1}
+          color="#fff9fc"
+          attenuationColor={ROSE_GLASS}
+          attenuationDistance={4.8}
+          roughness={hovered && introComplete ? 0.012 : 0.018}
+          chromaticAberration={hovered && introComplete ? 0.014 : 0.009}
+          anisotropicBlur={0.032}
           clearcoat={1}
-          clearcoatRoughness={0.018}
-          envMapIntensity={1.7}
-          ior={1.33}
+          clearcoatRoughness={0.012}
+          envMapIntensity={1.5}
+          ior={1.18}
           resolution={resolution}
         />
       </mesh>
 
-      {/* Contracara apenas perceptible: da espesor sin convertirla en una bola blanca. */}
-      <mesh scale={0.987}>
+      <mesh scale={0.989}>
         <sphereGeometry args={[1.5, 96, 96]} />
         <meshPhysicalMaterial
-          color="#ffdbea"
+          color={ROSE_GLASS}
           transparent
-          opacity={0.018}
+          opacity={0.009}
           transmission={1}
-          thickness={0.025}
+          thickness={0.012}
           roughness={0}
           clearcoat={1}
           clearcoatRoughness={0}
@@ -113,37 +111,33 @@ export default function PremiumGlobe({ introComplete, scaleRef }: PremiumGlobePr
       </mesh>
 
       <group ref={highlightRef}>
-        {/* Reflejo largo de estudio: no dibuja una órbita, solo una luz curvada. */}
         <mesh position={[-0.48, 0.62, 1.27]} rotation={[0.08, 0.32, -0.82]}>
-          <torusGeometry args={[0.54, 0.018, 16, 120, Math.PI * 0.64]} />
-          <meshBasicMaterial color="#ffffff" transparent opacity={0.72} depthWrite={false} />
+          <torusGeometry args={[0.54, 0.016, 16, 120, Math.PI * 0.64]} />
+          <meshBasicMaterial color={ROSE_HIGHLIGHT} transparent opacity={0.68} depthWrite={false} />
         </mesh>
         <mesh position={[-0.42, 0.55, 1.31]} rotation={[0.06, 0.30, -0.80]}>
           <torusGeometry args={[0.63, 0.007, 12, 120, Math.PI * 0.52]} />
-          <meshBasicMaterial color={MAGENTA_LIGHT} transparent opacity={0.38} depthWrite={false} />
+          <meshBasicMaterial color={MAGENTA_LIGHT} transparent opacity={0.46} depthWrite={false} />
         </mesh>
 
-        {/* Reflejo secundario más corto en el lado opuesto. */}
         <mesh position={[0.88, -0.72, 1.02]} rotation={[0.08, -0.24, 2.36]}>
-          <torusGeometry args={[0.27, 0.009, 12, 72, Math.PI * 0.58]} />
-          <meshBasicMaterial color={MAGENTA} transparent opacity={0.28} depthWrite={false} />
+          <torusGeometry args={[0.27, 0.008, 12, 72, Math.PI * 0.58]} />
+          <meshBasicMaterial color={MAGENTA_LIGHT} transparent opacity={0.36} depthWrite={false} />
         </mesh>
 
-        {/* Hot-spots de cristal, muy pequeños. */}
         <mesh position={[-0.96, 0.47, 1.11]}>
-          <sphereGeometry args={[0.027, 20, 20]} />
-          <meshBasicMaterial color="#ffffff" transparent opacity={0.9} depthWrite={false} />
+          <sphereGeometry args={[0.025, 20, 20]} />
+          <meshBasicMaterial color={ROSE_HIGHLIGHT} transparent opacity={0.88} depthWrite={false} />
         </mesh>
         <mesh position={[-0.86, 0.36, 1.20]}>
-          <sphereGeometry args={[0.015, 16, 16]} />
-          <meshBasicMaterial color={MAGENTA_LIGHT} transparent opacity={0.8} depthWrite={false} />
+          <sphereGeometry args={[0.014, 16, 16]} />
+          <meshBasicMaterial color={MAGENTA_LIGHT} transparent opacity={0.82} depthWrite={false} />
         </mesh>
       </group>
 
-      {/* Iluminación equivalente a la que hacía brillar la Tierra original. */}
-      <pointLight position={[-1.7, 1.5, 2.5]} color="#fff7fc" intensity={5.2} distance={7} />
-      <pointLight position={[1.55, -0.95, 2.2]} color={MAGENTA_LIGHT} intensity={2.8} distance={6} />
-      <pointLight position={[0.2, -0.1, -0.35]} color="#fff2f8" intensity={3.6} distance={3.8} />
+      <pointLight position={[-1.7, 1.5, 2.5]} color={ROSE_HIGHLIGHT} intensity={4.8} distance={7} />
+      <pointLight position={[1.55, -0.95, 2.2]} color={MAGENTA_LIGHT} intensity={3.2} distance={6} />
+      <pointLight position={[0.2, -0.1, -0.35]} color="#ffe8f2" intensity={2.8} distance={3.8} />
     </group>
   )
 }
