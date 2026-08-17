@@ -63,6 +63,8 @@ import './styles/public-premium-v2-shell.css'
 import './styles/public-shell-viewport-guard.css'
 import './styles/public-heroes-phase7j1.css'
 import './styles/programs-phase7j2.css'
+import './styles/public-consent-whatsapp.css'
+import './styles/admin-privacy-settings.css'
 
 const root = document.getElementById('root')
 if (!root) throw new Error('No se ha encontrado el elemento #root')
