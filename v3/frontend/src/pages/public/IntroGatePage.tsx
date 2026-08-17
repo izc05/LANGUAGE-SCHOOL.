@@ -1,10 +1,12 @@
 import { lazy, Suspense, useState } from 'react'
 import HomePage from './HomePage'
 import IntroSceneErrorBoundary from './intro/premium/IntroSceneErrorBoundary'
+import StaticIntroSky from './intro/premium/StaticIntroSky'
 import './intro/premium/premium-intro.css'
 
 const IntroPage = lazy(() => import('./intro/IntroPage'))
 const INTRO_SESSION_KEY = 'language-school:intro-completed'
+const SAFE_CLOUD_TRANSITION_MS = 1050
 
 function introAlreadyCompleted(): boolean {
   try {
@@ -15,9 +17,18 @@ function introAlreadyCompleted(): boolean {
 }
 
 function StaticIntroFallback({ onEnter }: { onEnter: () => void }) {
+  const [transitioning, setTransitioning] = useState(false)
+
+  function startEnter() {
+    if (transitioning) return
+    setTransitioning(true)
+    window.setTimeout(onEnter, SAFE_CLOUD_TRANSITION_MS)
+  }
+
   return (
-    <main className="premium-intro reduced-motion brand-visible actions-visible settled">
+    <main className="premium-intro brand-visible actions-visible settled">
       <div className="premium-static-globe" aria-hidden="true" />
+      <StaticIntroSky transitioning={transitioning} />
       <div className="premium-intro-glow" aria-hidden="true" />
       <div className="premium-intro-vignette" aria-hidden="true" />
       <div className="premium-intro-ui">
@@ -29,9 +40,9 @@ function StaticIntroFallback({ onEnter }: { onEnter: () => void }) {
         </section>
         <div className="premium-entry-actions">
           <p className="premium-instruction">Bienvenido a Language School</p>
-          <button className="premium-enter-button intro-enter-button" type="button" onClick={onEnter}>
-            <span>ENTRAR</span>
-            <span aria-hidden="true" className="premium-enter-arrow">↗</span>
+          <button className="premium-enter-button intro-enter-button" type="button" onClick={startEnter} disabled={transitioning}>
+            <span>{transitioning ? 'ENTRANDO…' : 'ENTRAR'}</span>
+            {!transitioning && <span aria-hidden="true" className="premium-enter-arrow">↗</span>}
           </button>
         </div>
       </div>
