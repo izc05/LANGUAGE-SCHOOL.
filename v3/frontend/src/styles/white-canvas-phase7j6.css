@@ -1,0 +1,160 @@
+/* FASE 7J.6 · Lienzo blanco + difuminado de marca
+ * Blanco dominante; rosa/marfil como luz ambiental localizada.
+ * La plataforma del alumno conserva su contraste oscuro como único momento fuerte.
+ */
+
+:root {
+  --ls-canvas: #ffffff;
+  --ls-canvas-soft: #fffdfc;
+  --ls-blush-light: rgba(213, 74, 121, .065);
+  --ls-blush-faint: rgba(231, 150, 177, .045);
+  --ls-rose-shadow: rgba(80, 38, 56, .075);
+}
+
+html,
+body,
+#root {
+  background: var(--ls-canvas);
+}
+
+body {
+  color: #33282e;
+}
+
+/* HOME · un solo lienzo blanco con pequeñas zonas de luz rosa. */
+.home-premium-v2 .hero-v3 {
+  background:
+    radial-gradient(circle at 88% 18%, rgba(213, 74, 121, .085), transparent 28rem),
+    radial-gradient(circle at 8% 92%, rgba(238, 193, 207, .10), transparent 22rem),
+    linear-gradient(180deg, #fff 0%, #fff 72%, #fffdfc 100%) !important;
+}
+
+.home-premium-v2 .programs-premium {
+  background:
+    radial-gradient(circle at 86% 12%, var(--ls-blush-light), transparent 25rem),
+    radial-gradient(circle at 4% 88%, var(--ls-blush-faint), transparent 22rem),
+    #fff !important;
+}
+
+.home-premium-v2 .academy-real-premium {
+  background:
+    radial-gradient(circle at 11% 18%, rgba(213, 74, 121, .055), transparent 28rem),
+    radial-gradient(circle at 92% 84%, rgba(240, 196, 208, .07), transparent 24rem),
+    #fff !important;
+}
+
+.home-premium-v2 .method-premium {
+  background:
+    radial-gradient(circle at 82% 24%, rgba(213, 74, 121, .06), transparent 25rem),
+    #fff !important;
+}
+
+.home-premium-v2 .blog-premium {
+  background:
+    radial-gradient(circle at 88% 12%, rgba(213, 74, 121, .055), transparent 24rem),
+    radial-gradient(circle at 7% 88%, rgba(238, 193, 207, .055), transparent 22rem),
+    #fff !important;
+}
+
+.home-premium-v2 .home-final-cta {
+  background:
+    radial-gradient(circle at 15% 20%, rgba(219, 99, 137, .11), transparent 27rem),
+    radial-gradient(circle at 86% 76%, rgba(239, 178, 197, .12), transparent 29rem),
+    #fff !important;
+}
+
+.home-premium-v2 .home-final-cta-inner {
+  border-color: rgba(126, 67, 91, .095);
+  background: rgba(255, 255, 255, .82);
+  box-shadow: 0 24px 58px rgba(73, 36, 52, .07);
+}
+
+/* Las tarjetas ganan presencia porque ya no compiten con un fondo teñido. */
+.home-premium-v2 .program-card-premium,
+.home-premium-v2 .blog-featured-card,
+.home-premium-v2 .platform-dashboard-card {
+  border-color: rgba(95, 55, 72, .105);
+}
+
+.home-premium-v2 .program-card-premium {
+  background: rgba(255, 255, 255, .98);
+  box-shadow: 0 20px 48px rgba(73, 36, 52, .07);
+}
+
+/* PÁGINAS INTERIORES · fondo blanco común. */
+.programs-premium-v2,
+.teachers-premium-v2,
+.about-premium-v2,
+.pricing-premium-v2,
+.blog-premium-v2,
+.contact-premium-v2,
+.course-detail-premium-v2 {
+  background: #fff !important;
+}
+
+.teachers-premium-v2 .teachers-v2-hero-editorial,
+.about-premium-v2 .about-v2-hero-editorial,
+.pricing-premium-v2 .pricing-v2-hero-editorial,
+.blog-premium-v2 .blog-v2-hero-editorial,
+.contact-premium-v2 .contact-v2-hero-editorial,
+.programs-premium-v2 .programs-v2-hero-editorial {
+  background:
+    radial-gradient(circle at 86% 17%, rgba(213, 74, 121, .075), transparent 25rem),
+    radial-gradient(circle at 8% 88%, rgba(238, 193, 207, .055), transparent 22rem),
+    #fff !important;
+}
+
+/* Programas: alternancia casi blanca para separar contenido sin crear bloques pesados. */
+.programs-premium-v2 .programs-v2-stages {
+  background: #fff !important;
+}
+
+.programs-premium-v2 .programs-v2-catalog {
+  background:
+    radial-gradient(circle at 92% 18%, rgba(213, 74, 121, .05), transparent 25rem),
+    #fff !important;
+}
+
+.programs-premium-v2 .programs-v2-guidance {
+  background:
+    radial-gradient(circle at 12% 70%, rgba(231, 150, 177, .06), transparent 24rem),
+    #fff !important;
+}
+
+/* Legal y contacto también se integran en el mismo lienzo. */
+.legal-page,
+.contact-premium-v2 .contact-v2-main-section,
+.contact-premium-v2 .contact-v2-map-section,
+.contact-premium-v2 .contact-v2-process-section {
+  background:
+    radial-gradient(circle at 92% 10%, rgba(213, 74, 121, .045), transparent 22rem),
+    #fff !important;
+}
+
+/* Separación editorial: líneas mínimas en lugar de cambios completos de color. */
+.home-premium-v2 .programs-premium,
+.home-premium-v2 .academy-real-premium,
+.home-premium-v2 .method-premium,
+.home-premium-v2 .blog-premium,
+.programs-premium-v2 .programs-v2-stages,
+.programs-premium-v2 .programs-v2-catalog,
+.programs-premium-v2 .programs-v2-guidance {
+  border-color: rgba(94, 55, 72, .055) !important;
+}
+
+@media (max-width: 760px) {
+  .home-premium-v2 .hero-v3,
+  .home-premium-v2 .programs-premium,
+  .home-premium-v2 .academy-real-premium,
+  .home-premium-v2 .method-premium,
+  .home-premium-v2 .blog-premium,
+  .home-premium-v2 .home-final-cta,
+  .teachers-premium-v2 .teachers-v2-hero-editorial,
+  .about-premium-v2 .about-v2-hero-editorial,
+  .pricing-premium-v2 .pricing-v2-hero-editorial,
+  .blog-premium-v2 .blog-v2-hero-editorial,
+  .contact-premium-v2 .contact-v2-hero-editorial,
+  .programs-premium-v2 .programs-v2-hero-editorial {
+    background-size: auto, auto, auto;
+  }
+}
