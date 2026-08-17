@@ -3,17 +3,26 @@ import { Link } from 'react-router'
 import SiteShell from '../../components/SiteShell'
 import { isDemoMode } from '../../config/environment'
 import { demoPublicPricing, listPublicPricing, type PublicPricingRecord } from '../../services/pocketbase/publicAcademy'
+import { getPublishedHomeVisualUrl } from '../../services/pocketbase/siteContent'
 
 export default function PricingPage() {
   const [plans, setPlans] = useState<PublicPricingRecord[]>(isDemoMode ? demoPublicPricing : [])
   const [loading, setLoading] = useState(!isDemoMode)
+  const [heroPhoto, setHeroPhoto] = useState('')
   const pricingVisual = `${import.meta.env.BASE_URL}visuals/pricing-confidence.svg`
   const pricingFitVisual = `${import.meta.env.BASE_URL}visuals/pricing-fit.svg`
 
   useEffect(() => {
     let mounted = true
-    listPublicPricing()
-      .then((records) => { if (mounted) setPlans(records) })
+    Promise.all([
+      listPublicPricing(),
+      getPublishedHomeVisualUrl('pricingHeroMediaId'),
+    ])
+      .then(([records, photo]) => {
+        if (!mounted) return
+        setPlans(records)
+        setHeroPhoto(photo)
+      })
       .catch(() => undefined)
       .finally(() => { if (mounted) setLoading(false) })
     return () => { mounted = false }
@@ -34,7 +43,7 @@ export default function PricingPage() {
                 <span>Orientación antes de elegir</span>
               </div>
             </div>
-            <div className="pricing-v2-hero-visual">
+            <div className={`pricing-v2-hero-visual${heroPhoto ? ' has-cms-photo' : ''}`} style={heroPhoto ? { backgroundImage: `linear-gradient(180deg, rgba(52,24,38,.03), rgba(52,24,38,.19)), url(${heroPhoto})` } : undefined}>
               <img src={pricingVisual} alt="Ilustración de planes de aprendizaje claros y flexibles" />
               <div className="pricing-v2-floating-card"><small>ANTES DE ELEGIR</small><strong>Objetivo · nivel · ritmo</strong></div>
             </div>
