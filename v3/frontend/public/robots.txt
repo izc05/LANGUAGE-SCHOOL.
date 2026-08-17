@@ -1,0 +1,52 @@
+# Language School — crawler policy
+# Public pages remain discoverable by search engines and search assistants.
+# Private portals and administration must never be crawled.
+
+User-agent: *
+Content-signal: search=yes, ai-train=no, use=reference
+Allow: /
+Disallow: /acceso
+Disallow: /admin
+Disallow: /alumno
+Disallow: /profesor
+
+# OpenAI training crawler: blocked.
+User-agent: GPTBot
+Disallow: /
+
+# OpenAI search and user-requested browsing: allowed on public pages only.
+User-agent: OAI-SearchBot
+Allow: /
+Disallow: /acceso
+Disallow: /admin
+Disallow: /alumno
+Disallow: /profesor
+
+User-agent: ChatGPT-User
+Allow: /
+Disallow: /acceso
+Disallow: /admin
+Disallow: /alumno
+Disallow: /profesor
+
+# Other AI training / bulk crawlers: blocked.
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: meta-externalagent
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: Amazonbot
+Disallow: /
+
+User-agent: Applebot-Extended
+Disallow: /
