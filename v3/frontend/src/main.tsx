@@ -36,7 +36,6 @@ import './styles/pricing-premium-v2.css'
 import './styles/pricing-premium-v2-phase2.css'
 import './styles/contact-premium-v2.css'
 import './styles/blog-premium-v2.css'
-import './styles/public-premium-v2-shell.css'
 import './styles/access-premium-v2.css'
 import './styles/premium-visual-assets.css'
 import './styles/portal-role-premium-v2.css'
@@ -46,6 +45,7 @@ import './styles/premium-completion-pass.css'
 import './styles/premium-detail-pass-v2.css'
 import './styles/admin-visual-map-v2.css'
 import './styles/cms-functional-closeout.css'
+import './styles/public-premium-v2-shell.css'
 
 const root = document.getElementById('root')
 if (!root) throw new Error('No se ha encontrado el elemento #root')
