@@ -97,7 +97,7 @@ export default function AdminSettingsPage() {
         <header className="cms-page-heading">
           <div>
             <span className="eyebrow">CMS · CONFIGURACIÓN</span>
-            <h2>Identidad, contacto y privacidad</h2>
+            <h2>Identidad y contacto</h2>
             <p>Centraliza aquí los datos públicos de la academia, los canales de contacto y las preferencias legales de la web.</p>
           </div>
           <span className="status info">Configuración global</span>
