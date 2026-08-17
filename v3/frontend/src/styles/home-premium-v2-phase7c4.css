@@ -1,0 +1,271 @@
+/* FASE 7C.4 · Método editorial / academia real
+ * Scope exclusivo: sección Método de Home.
+ * Conserva contenido, CMS y navegación. Reduce superficies y hace protagonista
+ * la fotografía administrable methodMediaId.
+ */
+
+.home-premium-v2 .method-premium {
+  padding: clamp(5.6rem, 8vw, 8rem) 0;
+  background:
+    radial-gradient(circle at 82% 22%, rgba(210, 83, 124, .07), transparent 25rem),
+    linear-gradient(180deg, #fffdfb 0%, #fff9f6 100%);
+}
+
+.home-premium-v2 .method-premium::before {
+  display: none;
+}
+
+.home-premium-v2 .method-premium-grid {
+  grid-template-columns: minmax(0, .94fr) minmax(0, 1.06fr);
+  gap: clamp(3.5rem, 7vw, 7rem);
+  align-items: center;
+}
+
+.home-premium-v2 .method-premium-intro {
+  position: static;
+  top: auto;
+}
+
+.home-premium-v2 .method-premium-intro .eyebrow {
+  color: #ba496c;
+}
+
+.home-premium-v2 .method-premium-intro h2 {
+  max-width: 660px;
+  margin: 1rem 0 1.45rem;
+  font-size: clamp(2.75rem, 4.45vw, 4.65rem);
+  line-height: .98;
+  letter-spacing: -.052em;
+}
+
+.home-premium-v2 .method-premium-intro h2 em {
+  color: #b92f60;
+  font-weight: 500;
+}
+
+.home-premium-v2 .method-premium-intro > p {
+  max-width: 590px;
+  margin-bottom: 1.8rem;
+  color: #75636d;
+  font-size: 1rem;
+  line-height: 1.78;
+}
+
+.home-premium-v2 .method-premium-intro > .button {
+  min-height: 48px;
+  padding-inline: 1.15rem;
+  border-color: rgba(181, 53, 94, .17);
+  background: rgba(255, 255, 255, .58);
+}
+
+.home-premium-v2 .method-premium-art {
+  min-height: clamp(330px, 34vw, 455px);
+  position: relative;
+  margin: 2.6rem 0 0;
+  overflow: hidden;
+  border: 1px solid rgba(119, 67, 87, .08);
+  border-radius: 30px 30px 72px 30px;
+  background-image:
+    linear-gradient(180deg, rgba(50, 25, 37, .015) 45%, rgba(50, 25, 37, .17) 100%),
+    var(--method-photo, url('https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=1400&q=86'));
+  background-position: center;
+  background-size: cover;
+  box-shadow: 0 26px 64px rgba(74, 34, 52, .10);
+}
+
+.home-premium-v2 .method-premium-art::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,.20), transparent 38%),
+    radial-gradient(circle at 18% 18%, rgba(255,255,255,.32), transparent 17rem);
+}
+
+.home-premium-v2 .method-premium-art::after {
+  content: 'CLASE · PRÁCTICA · SEGUIMIENTO';
+  position: absolute;
+  left: 1.35rem;
+  bottom: 1.25rem;
+  padding: .62rem .78rem;
+  border: 1px solid rgba(255,255,255,.55);
+  border-radius: 999px;
+  color: #5e4050;
+  background: rgba(255,250,248,.84);
+  box-shadow: 0 10px 30px rgba(54,28,41,.10);
+  backdrop-filter: blur(14px);
+  font-size: .59rem;
+  font-weight: 800;
+  letter-spacing: .14em;
+}
+
+.home-premium-v2 .method-premium-art img {
+  display: none;
+}
+
+.home-premium-v2 .method-premium-steps {
+  position: relative;
+  border-top: 0;
+}
+
+.home-premium-v2 .method-premium-steps::before {
+  content: '';
+  position: absolute;
+  left: 2.2rem;
+  top: 2.6rem;
+  bottom: 2.6rem;
+  width: 1px;
+  background: linear-gradient(180deg, rgba(201,76,112,.12), rgba(201,76,112,.38), rgba(201,76,112,.08));
+}
+
+.home-premium-v2 .method-premium-step {
+  grid-template-columns: 4.5rem minmax(0, 1fr);
+  gap: 1.55rem;
+  min-height: 0;
+  padding: 1.7rem 0 1.8rem;
+  border-top: 1px solid rgba(92, 60, 74, .105);
+  border-bottom: 0;
+  background: transparent;
+  transition: transform .22s ease;
+}
+
+.home-premium-v2 .method-premium-step:last-child {
+  border-bottom: 1px solid rgba(92, 60, 74, .105);
+}
+
+.home-premium-v2 .method-premium-step:hover {
+  padding-inline: 0;
+  background: transparent;
+  transform: translateX(.35rem);
+}
+
+.home-premium-v2 .method-number {
+  position: relative;
+  z-index: 1;
+  width: 4.5rem;
+  height: 4.5rem;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(194,65,103,.13);
+  border-radius: 50%;
+  color: #b83c63;
+  background: #fffaf8;
+  box-shadow: 0 8px 22px rgba(78,38,55,.055);
+  font-size: 1.18rem;
+  font-style: italic;
+}
+
+.home-premium-v2 .method-icon {
+  display: none;
+}
+
+.home-premium-v2 .method-premium-step > div:last-child {
+  align-self: center;
+}
+
+.home-premium-v2 .method-premium-step h3 {
+  margin: 0 0 .45rem;
+  color: #3d2a35;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(1.45rem, 2vw, 1.85rem);
+  font-weight: 600;
+  letter-spacing: -.025em;
+}
+
+.home-premium-v2 .method-premium-step p {
+  max-width: 580px;
+  color: #806d77;
+  font-size: .93rem;
+  line-height: 1.62;
+}
+
+@media (max-width: 1000px) {
+  .home-premium-v2 .method-premium-grid {
+    grid-template-columns: 1fr;
+    gap: 3.8rem;
+  }
+
+  .home-premium-v2 .method-premium-intro {
+    display: grid;
+    grid-template-columns: minmax(0, .84fr) minmax(300px, 1.16fr);
+    column-gap: 2.4rem;
+    align-items: end;
+  }
+
+  .home-premium-v2 .method-premium-intro > .eyebrow,
+  .home-premium-v2 .method-premium-intro > h2,
+  .home-premium-v2 .method-premium-intro > p,
+  .home-premium-v2 .method-premium-intro > .button {
+    grid-column: 1;
+  }
+
+  .home-premium-v2 .method-premium-art {
+    grid-column: 2;
+    grid-row: 1 / span 4;
+    min-height: 380px;
+    margin: 0;
+  }
+
+  .home-premium-v2 .method-premium-steps {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 2.4rem;
+  }
+
+  .home-premium-v2 .method-premium-steps::before {
+    display: none;
+  }
+
+  .home-premium-v2 .method-premium-step:nth-child(2) {
+    border-top-color: rgba(92, 60, 74, .105);
+  }
+}
+
+@media (max-width: 760px) {
+  .home-premium-v2 .method-premium {
+    padding: 4.8rem 0 5.4rem;
+  }
+
+  .home-premium-v2 .method-premium-intro {
+    display: block;
+  }
+
+  .home-premium-v2 .method-premium-intro h2 {
+    font-size: clamp(2.65rem, 12vw, 3.65rem);
+  }
+
+  .home-premium-v2 .method-premium-art {
+    min-height: 290px;
+    margin-top: 2rem;
+    border-radius: 24px 24px 50px 24px;
+  }
+
+  .home-premium-v2 .method-premium-art::after {
+    left: 1rem;
+    bottom: 1rem;
+    font-size: .52rem;
+  }
+
+  .home-premium-v2 .method-premium-steps {
+    display: block;
+  }
+
+  .home-premium-v2 .method-premium-step {
+    grid-template-columns: 3.7rem minmax(0, 1fr);
+    gap: 1.1rem;
+    padding: 1.45rem 0;
+  }
+
+  .home-premium-v2 .method-number {
+    width: 3.7rem;
+    height: 3.7rem;
+    font-size: 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-premium-v2 .method-premium-step {
+    transition: none;
+  }
+}
