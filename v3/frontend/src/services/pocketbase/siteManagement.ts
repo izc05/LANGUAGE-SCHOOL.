@@ -49,6 +49,9 @@ export type SiteSettingsInput = {
   youtube: string
   cookieBannerEnabled: boolean
   cookieIntro: string
+  legalOwnerName: string
+  legalTaxId: string
+  legalRegistryDetails: string
   cookiePolicyText: string
   privacyPolicyText: string
   legalNoticeText: string
@@ -80,6 +83,9 @@ export const demoSiteSettings: SiteSettingsInput = {
   youtube: '',
   cookieBannerEnabled: true,
   cookieIntro: 'Usamos almacenamiento técnico necesario y, solo si lo autorizas, preferencias para cargar servicios externos como Google Maps. Puedes aceptar, rechazar o configurar tus preferencias.',
+  legalOwnerName: '',
+  legalTaxId: '',
+  legalRegistryDetails: '',
   cookiePolicyText: '',
   privacyPolicyText: '',
   legalNoticeText: '',
@@ -160,6 +166,9 @@ export async function saveSiteSettings(input: SiteSettingsInput, logo?: File | n
     ...(current?.legal_texts ?? {}),
     cookie_banner_enabled: String(input.cookieBannerEnabled),
     cookie_intro: input.cookieIntro.trim(),
+    legal_owner_name: input.legalOwnerName.trim(),
+    legal_tax_id: input.legalTaxId.trim(),
+    legal_registry_details: input.legalRegistryDetails.trim(),
     cookie_policy: input.cookiePolicyText.trim(),
     privacy_policy: input.privacyPolicyText.trim(),
     legal_notice: input.legalNoticeText.trim(),
@@ -185,6 +194,9 @@ export function settingsToInput(record: SiteSettingsRecord | null): SiteSettings
     youtube: record.social_links?.youtube || '',
     cookieBannerEnabled: readBoolean(record.legal_texts?.cookie_banner_enabled, true),
     cookieIntro: record.legal_texts?.cookie_intro || demoSiteSettings.cookieIntro,
+    legalOwnerName: record.legal_texts?.legal_owner_name || '',
+    legalTaxId: record.legal_texts?.legal_tax_id || '',
+    legalRegistryDetails: record.legal_texts?.legal_registry_details || '',
     cookiePolicyText: record.legal_texts?.cookie_policy || '',
     privacyPolicyText: record.legal_texts?.privacy_policy || '',
     legalNoticeText: record.legal_texts?.legal_notice || '',
