@@ -12,8 +12,19 @@ export type HomeHeroContent = {
   mediaId: string
 }
 
+export type HomeVisualContent = {
+  kidsMediaId: string
+  teensMediaId: string
+  universityMediaId: string
+  adultsMediaId: string
+  examsMediaId: string
+  methodMediaId: string
+  journalMediaId: string
+}
+
 export type HomePageContent = {
   hero: HomeHeroContent
+  visuals: HomeVisualContent
 }
 
 export type AboutValue = {
@@ -39,6 +50,16 @@ export type SitePageRecord = RecordModel & {
   status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'
 }
 
+const emptyHomeVisuals: HomeVisualContent = {
+  kidsMediaId: '',
+  teensMediaId: '',
+  universityMediaId: '',
+  adultsMediaId: '',
+  examsMediaId: '',
+  methodMediaId: '',
+  journalMediaId: '',
+}
+
 export const demoHomeContent: HomePageContent = {
   hero: {
     eyebrow: 'ACADEMIA DE INGLÉS · JÓDAR',
@@ -49,6 +70,7 @@ export const demoHomeContent: HomePageContent = {
     secondaryCta: 'Entrar a mi espacio',
     mediaId: '',
   },
+  visuals: { ...emptyHomeVisuals },
 }
 
 export const demoAboutContent: AboutPageContent = {
@@ -79,13 +101,20 @@ function stringArray(value: unknown, fallback: string[]): string[] {
   return result.length > 0 ? result : fallback
 }
 
+function visualId(raw: Record<string, unknown>, key: keyof HomeVisualContent): string {
+  const value = raw[key]
+  return isString(value) ? value.trim() : ''
+}
+
 export function normalizeHomeContent(value: unknown): HomePageContent {
   if (!value || typeof value !== 'object') return demoHomeContent
 
-  const rawHero = (value as { hero?: unknown }).hero
+  const raw = value as { hero?: unknown; visuals?: unknown }
+  const rawHero = raw.hero
   if (!rawHero || typeof rawHero !== 'object') return demoHomeContent
 
   const hero = rawHero as Partial<Record<keyof HomeHeroContent, unknown>>
+  const rawVisuals = raw.visuals && typeof raw.visuals === 'object' ? raw.visuals as Record<string, unknown> : {}
 
   return {
     hero: {
@@ -95,6 +124,15 @@ export function normalizeHomeContent(value: unknown): HomePageContent {
       primaryCta: isString(hero.primaryCta) && hero.primaryCta.trim() ? hero.primaryCta : demoHomeContent.hero.primaryCta,
       secondaryCta: isString(hero.secondaryCta) && hero.secondaryCta.trim() ? hero.secondaryCta : demoHomeContent.hero.secondaryCta,
       mediaId: isString(hero.mediaId) ? hero.mediaId.trim() : '',
+    },
+    visuals: {
+      kidsMediaId: visualId(rawVisuals, 'kidsMediaId'),
+      teensMediaId: visualId(rawVisuals, 'teensMediaId'),
+      universityMediaId: visualId(rawVisuals, 'universityMediaId'),
+      adultsMediaId: visualId(rawVisuals, 'adultsMediaId'),
+      examsMediaId: visualId(rawVisuals, 'examsMediaId'),
+      methodMediaId: visualId(rawVisuals, 'methodMediaId'),
+      journalMediaId: visualId(rawVisuals, 'journalMediaId'),
     },
   }
 }
