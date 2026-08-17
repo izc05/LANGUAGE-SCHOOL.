@@ -57,13 +57,14 @@ export default function ProgramsPage() {
           catch { return [theme, ''] as const }
         }))
         if (mounted) setThemeVisuals({ ...emptyThemeVisuals, ...Object.fromEntries(entries) })
-      } catch { /* fallback visuals remain available */ }
+      } catch { /* packaged local fallbacks remain available */ }
     }
     void loadThemeVisuals()
     return () => { mounted = false }
   }, [])
 
-  const heroVisualUrl = themeVisuals.university || themeVisuals.adults || themeVisuals.teens || themeVisuals.kids || themeVisuals.exams
+  const heroManagedVisual = themeVisuals.university || themeVisuals.adults || themeVisuals.teens || themeVisuals.kids || themeVisuals.exams
+  const heroVisualUrl = heroManagedVisual || `${visualBase}program-photo-university.svg`
 
   return (
     <SiteShell>
@@ -76,8 +77,8 @@ export default function ProgramsPage() {
             <div className="programs-v2-hero-actions"><a className="button button-primary" href="#catalogo-programas">Ver programas</a><Link className="button button-ghost" to="/contacto">Ayúdame a elegir</Link></div>
           </div>
           <figure
-            className={`programs-v2-hero-visual${heroVisualUrl ? ' has-photo' : ''}`}
-            style={heroVisualUrl ? { backgroundImage: `linear-gradient(180deg, rgba(45,25,35,.02), rgba(45,25,35,.22)), url(${heroVisualUrl})` } : undefined}
+            className={`programs-v2-hero-visual${heroManagedVisual ? ' has-photo' : ' has-local-fallback'}`}
+            style={{ backgroundImage: `linear-gradient(180deg, rgba(45,25,35,.01), rgba(45,25,35,.16)), url(${heroVisualUrl})` }}
           >
             <figcaption><span>UNA ACADEMIA · DISTINTAS ETAPAS</span><strong>Tu objetivo cambia. El acompañamiento permanece.</strong><small>Kids · Teens · Universidad · Adultos · Exámenes</small></figcaption>
           </figure>
@@ -97,11 +98,12 @@ export default function ProgramsPage() {
               const theme = getCourseTheme(course)
               const coverUrl = getPublicCourseCoverUrl(course)
               const adminFallbackUrl = themeVisuals[theme]
-              const imageUrl = coverUrl || adminFallbackUrl
+              const localFallbackUrl = `${visualBase}program-photo-${theme}.svg`
+              const imageUrl = coverUrl || adminFallbackUrl || localFallbackUrl
+              const managedVisual = Boolean(coverUrl || adminFallbackUrl)
               return (
                 <article className={`programs-v2-course ${theme}`} key={course.id}>
-                  <div className={`programs-v2-course-visual${coverUrl ? ' has-image' : ' has-artwork'}`} style={imageUrl ? { backgroundImage: `linear-gradient(160deg, rgba(44,24,34,.05), rgba(44,24,34,.29)), url(${imageUrl})` } : undefined}>
-                    {!imageUrl && <img className="programs-v2-course-fallback" src={`${visualBase}program-${theme}.svg`} alt="" loading="lazy" />}
+                  <div className={`programs-v2-course-visual${managedVisual ? ' has-image' : ' has-local-fallback'}`} style={{ backgroundImage: `linear-gradient(160deg, rgba(44,24,34,.01), rgba(44,24,34,.15)), url(${imageUrl})` }}>
                     <span className="programs-v2-course-symbol" aria-hidden="true">{getThemeSymbol(theme)}</span><span className="programs-v2-course-visual-label">{getThemeLabel(theme)}</span><strong aria-hidden="true">{String(index + 1).padStart(2, '0')}</strong>
                   </div>
                   <div className="programs-v2-course-copy">
