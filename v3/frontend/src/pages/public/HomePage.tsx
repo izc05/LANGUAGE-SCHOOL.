@@ -16,6 +16,15 @@ const programs = [
   { className: 'exams', visualKey: 'examsMediaId', symbol: '✓', tag: 'A2 · B1 · B2 · C1', title: 'Exámenes', text: 'Preparación estructurada por destrezas, simulacros y corrección personalizada.' },
 ] as const
 
+const reasons = [
+  ['01', 'Grupos reducidos', 'Más espacio para participar, preguntar y recibir correcciones durante la clase.'],
+  ['02', 'Seguimiento personal', 'Sabes qué estás trabajando, qué necesitas reforzar y cuál es tu siguiente paso.'],
+  ['03', 'Una academia para cada etapa', 'Kids, Teens, universidad, adultos y preparación de exámenes dentro de un mismo recorrido.'],
+  ['04', 'Continuidad fuera del aula', 'Clases, tareas, materiales y progreso siguen disponibles también en el espacio digital.'],
+  ['05', 'Cercanía de verdad', 'Una academia local en Jódar, con comunicación directa para alumnos y familias.'],
+  ['06', 'Objetivos que tienen sentido', 'Colegio, conversación, trabajo, viajes o certificación: el punto de partida es lo que necesitas conseguir.'],
+] as const
+
 const steps = [
   ['01', 'Conectamos', 'Conocemos el nivel, los objetivos, el ritmo y lo que necesita cada alumno.'],
   ['02', 'Aprendemos', 'Clases dinámicas, práctica guiada y contenidos pensados para cada etapa.'],
@@ -200,6 +209,28 @@ export default function HomePage() {
             </figure>
 
             <div className="academy-real-note" aria-hidden="true"><span>LS</span><p><strong>Academia real.</strong> Personas, clases y progreso.</p></div>
+          </div>
+        </div>
+      </section>
+
+      <section className="home-reasons" aria-labelledby="home-reasons-title">
+        <div className="container home-reasons-grid">
+          <div className="home-reasons-heading">
+            <span className="eyebrow">POR QUÉ LANGUAGE SCHOOL</span>
+            <h2 id="home-reasons-title">Lo que importa no es solo dar clase. Es que <em>notes que avanzas.</em></h2>
+            <p>Una estructura sencilla, cercana y continua para que el aprendizaje tenga sentido dentro y fuera del aula.</p>
+            <div className="home-reasons-actions">
+              <Link className="button button-primary" to="/programas">Encuentra tu programa</Link>
+              <Link className="text-link" to="/contacto">Pregúntanos →</Link>
+            </div>
+          </div>
+          <div className="home-reasons-list">
+            {reasons.map(([number, title, text]) => (
+              <article key={number}>
+                <span>{number}</span>
+                <div><h3>{title}</h3><p>{text}</p></div>
+              </article>
+            ))}
           </div>
         </div>
       </section>
