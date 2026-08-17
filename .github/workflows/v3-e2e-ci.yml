@@ -125,6 +125,12 @@ jobs:
         working-directory: v3/e2e
         run: npm test
 
+      - name: Print PocketBase diagnostics
+        if: failure()
+        run: |
+          echo '--- PocketBase E2E log (last 200 lines) ---'
+          tail -n 200 "$RUNNER_TEMP/e2e-pocketbase.log" || true
+
       - name: Upload Playwright diagnostics
         if: failure()
         uses: actions/upload-artifact@v4
