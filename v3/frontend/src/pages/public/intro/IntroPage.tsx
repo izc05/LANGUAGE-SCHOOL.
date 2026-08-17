@@ -8,9 +8,11 @@ import PremiumGlobe from './premium/PremiumGlobe'
 import StaticIntroSky from './premium/StaticIntroSky'
 import { runPremiumCloudTransition } from './premium/cloudTransition'
 import './premium/premium-intro.css'
+import './premium/bubble-globe.css'
+import './premium/intro-final-tuning.css'
 
-const INTRO_DURATION = 8
-const SAFE_CLOUD_TRANSITION_MS = 1050
+const INTRO_DURATION = 6
+const SAFE_CLOUD_TRANSITION_MS = 1200
 
 type IntroPageProps = {
   onEnter: () => void
@@ -74,18 +76,18 @@ function SceneController({
     const flightProgress = THREE.MathUtils.clamp(elapsed / INTRO_DURATION, 0, 1)
     planeProgress.current = easeInOutQuad(flightProgress)
 
-    const cameraProgress = THREE.MathUtils.clamp(elapsed / (INTRO_DURATION * 0.7), 0, 1)
+    const cameraProgress = THREE.MathUtils.clamp(elapsed / (INTRO_DURATION * 0.72), 0, 1)
     state.camera.position.z = THREE.MathUtils.lerp(15, 5, easeInOutQuad(cameraProgress))
 
-    const globeProgress = THREE.MathUtils.clamp((elapsed - INTRO_DURATION * 0.4) / 3, 0, 1)
+    const globeProgress = THREE.MathUtils.clamp((elapsed - INTRO_DURATION * 0.24) / 2.35, 0, 1)
     globeScale.current = globeProgress <= 0 ? 0 : Math.max(0, backOut(globeProgress))
 
-    if (elapsed >= INTRO_DURATION * 0.75 && !fired.current.brand) {
+    if (elapsed >= INTRO_DURATION * 0.56 && !fired.current.brand) {
       fired.current.brand = true
       onBrandVisible()
     }
 
-    if (elapsed >= INTRO_DURATION * 0.85 && !fired.current.actions) {
+    if (elapsed >= INTRO_DURATION * 0.74 && !fired.current.actions) {
       fired.current.actions = true
       onActionsVisible()
     }
@@ -315,7 +317,7 @@ export default function IntroPage({ onEnter }: IntroPageProps) {
 
         <div className="premium-entry-actions" aria-hidden={!actionsVisible}>
           <p className="premium-instruction">
-            {webGlAvailable ? 'Mueve el cursor sobre el mundo' : 'Bienvenido a Language School'}
+            {webGlAvailable ? 'Mueve el cursor sobre la esfera' : 'Bienvenido a Language School'}
           </p>
           <button
             className="premium-enter-button intro-enter-button"
