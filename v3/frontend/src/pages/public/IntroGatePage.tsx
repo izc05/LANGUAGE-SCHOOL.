@@ -4,10 +4,11 @@ import IntroSceneErrorBoundary from './intro/premium/IntroSceneErrorBoundary'
 import StaticIntroSky from './intro/premium/StaticIntroSky'
 import './intro/premium/premium-intro.css'
 import './intro/premium/bubble-globe.css'
+import './intro/premium/intro-final-tuning.css'
 
 const IntroPage = lazy(() => import('./intro/IntroPage'))
 const INTRO_SESSION_KEY = 'language-school:intro-completed'
-const SAFE_CLOUD_TRANSITION_MS = 1050
+const SAFE_CLOUD_TRANSITION_MS = 1200
 
 function introAlreadyCompleted(): boolean {
   try {
