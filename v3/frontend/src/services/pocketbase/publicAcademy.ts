@@ -46,6 +46,14 @@ function normalizeFeatures(value: unknown): string[] {
   return value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
 }
 
+function readBoolean(value: unknown, fallback: boolean): boolean {
+  if (typeof value === 'boolean') return value
+  if (typeof value !== 'string') return fallback
+  if (value.toLowerCase() === 'true') return true
+  if (value.toLowerCase() === 'false') return false
+  return fallback
+}
+
 export function getPublicCourseCoverUrl(course: PublicCourseRecord, thumb = '1200x800'): string {
   if (!course.cover_image || isDemoMode) return ''
   return pb.files.getURL(course, course.cover_image, { thumb })
@@ -86,10 +94,17 @@ export async function getPublicSettings(): Promise<PublicSettings> {
     phone: record.phone || '',
     email: record.email || '',
     whatsapp: record.whatsapp || '',
+    whatsappEnabled: readBoolean(record.social_links?.whatsapp_enabled, true),
+    whatsappMessage: record.social_links?.whatsapp_message || demoSiteSettings.whatsappMessage,
     address: record.address || '',
     instagram: record.social_links?.instagram || '',
     facebook: record.social_links?.facebook || '',
     youtube: record.social_links?.youtube || '',
+    cookieBannerEnabled: readBoolean(record.legal_texts?.cookie_banner_enabled, true),
+    cookieIntro: record.legal_texts?.cookie_intro || demoSiteSettings.cookieIntro,
+    cookiePolicyText: record.legal_texts?.cookie_policy || '',
+    privacyPolicyText: record.legal_texts?.privacy_policy || '',
+    legalNoticeText: record.legal_texts?.legal_notice || '',
     logoUrl: record.logo ? pb.files.getURL(record, record.logo, { thumb: '160x160' }) : '',
   }
 }
