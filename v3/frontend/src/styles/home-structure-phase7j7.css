@@ -1,0 +1,151 @@
+/* FASE 7J.7 · Completitud estructural
+ * Benchmark: Wizz Learning como referencia de ritmo y jerarquía, nunca de copia visual.
+ * Este bloque añade razones verificables sin volver a una Home saturada de tarjetas.
+ */
+
+.home-reasons {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(5.5rem, 8vw, 8.5rem) 0;
+  border-top: 1px solid rgba(94, 55, 72, .055);
+  border-bottom: 1px solid rgba(94, 55, 72, .055);
+  background:
+    radial-gradient(circle at 86% 14%, rgba(213, 74, 121, .06), transparent 26rem),
+    radial-gradient(circle at 8% 88%, rgba(238, 193, 207, .055), transparent 22rem),
+    #fff;
+}
+
+.home-reasons-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, .82fr) minmax(480px, 1.18fr);
+  gap: clamp(3rem, 7vw, 7rem);
+  align-items: start;
+}
+
+.home-reasons-heading {
+  position: sticky;
+  top: 7.5rem;
+  display: grid;
+  gap: 1.25rem;
+  max-width: 34rem;
+}
+
+.home-reasons-heading h2 {
+  margin: 0;
+  color: #30252b;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(2.6rem, 4.8vw, 4.9rem);
+  line-height: .98;
+  letter-spacing: -.035em;
+}
+
+.home-reasons-heading h2 em {
+  color: #c62668;
+  font-weight: 500;
+}
+
+.home-reasons-heading > p {
+  margin: 0;
+  max-width: 31rem;
+  color: #6c5d65;
+  font-size: 1.04rem;
+  line-height: 1.75;
+}
+
+.home-reasons-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  flex-wrap: wrap;
+  padding-top: .35rem;
+}
+
+.home-reasons-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-top: 1px solid rgba(89, 53, 69, .12);
+}
+
+.home-reasons-list article {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 1rem;
+  min-height: 190px;
+  padding: 1.65rem 1.55rem 1.75rem 0;
+  border-bottom: 1px solid rgba(89, 53, 69, .12);
+  transition: transform .22s ease, background .22s ease;
+}
+
+.home-reasons-list article:nth-child(odd) {
+  padding-right: 2rem;
+  border-right: 1px solid rgba(89, 53, 69, .12);
+}
+
+.home-reasons-list article:nth-child(even) {
+  padding-left: 1.75rem;
+}
+
+.home-reasons-list article:hover {
+  transform: translateY(-3px);
+  background: linear-gradient(120deg, rgba(255,255,255,.05), rgba(247,226,234,.24));
+}
+
+.home-reasons-list article > span {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgba(198, 38, 104, .15);
+  border-radius: 50%;
+  color: #bd2b65;
+  background: rgba(255, 248, 250, .82);
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+}
+
+.home-reasons-list h3 {
+  margin: .12rem 0 .55rem;
+  color: #382b32;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(1.35rem, 2vw, 1.75rem);
+  line-height: 1.12;
+}
+
+.home-reasons-list p {
+  margin: 0;
+  color: #74656d;
+  line-height: 1.62;
+}
+
+@media (max-width: 980px) {
+  .home-reasons-grid {
+    grid-template-columns: 1fr;
+  }
+  .home-reasons-heading {
+    position: static;
+    max-width: 46rem;
+  }
+}
+
+@media (max-width: 680px) {
+  .home-reasons {
+    padding: 4.5rem 0;
+  }
+  .home-reasons-list {
+    grid-template-columns: 1fr;
+  }
+  .home-reasons-list article,
+  .home-reasons-list article:nth-child(odd),
+  .home-reasons-list article:nth-child(even) {
+    min-height: 0;
+    padding: 1.4rem 0;
+    border-right: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-reasons-list article {
+    transition: none;
+  }
+}
