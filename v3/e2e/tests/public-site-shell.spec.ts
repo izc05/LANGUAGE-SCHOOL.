@@ -50,13 +50,13 @@ test('el menú compacto funciona con teclado, Escape y cierre tras navegación e
   await expect(navigation).toBeVisible()
   await expect(page.locator('.nav-backdrop')).toBeVisible()
   await expect(page.locator('.nav-links a').first()).toBeFocused()
-  await expect(page.evaluate(() => document.body.style.overflow)).toBe('hidden')
+  expect(await page.evaluate(() => document.body.style.overflow)).toBe('hidden')
 
   await page.keyboard.press('Escape')
   await expect(toggle).toHaveAttribute('aria-expanded', 'false')
   await expect(navigation).toBeHidden()
   await expect(toggle).toBeFocused()
-  await expect(page.evaluate(() => document.body.style.overflow)).toBe('')
+  expect(await page.evaluate(() => document.body.style.overflow)).toBe('')
 
   await toggle.click()
   await page.locator('.nav-links a', { hasText: 'Programas' }).click()
