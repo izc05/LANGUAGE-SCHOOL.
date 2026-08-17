@@ -3,6 +3,7 @@ import HomePage from './HomePage'
 import IntroSceneErrorBoundary from './intro/premium/IntroSceneErrorBoundary'
 import StaticIntroSky from './intro/premium/StaticIntroSky'
 import './intro/premium/premium-intro.css'
+import './intro/premium/bubble-globe.css'
 
 const IntroPage = lazy(() => import('./intro/IntroPage'))
 const INTRO_SESSION_KEY = 'language-school:intro-completed'
