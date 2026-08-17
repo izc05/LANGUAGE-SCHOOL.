@@ -2,6 +2,7 @@ import { type FormEvent, useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import SiteShell from '../../components/SiteShell'
 import { isDemoMode } from '../../config/environment'
+import { hasCookieConsent, requestCookieSettings, subscribeCookieConsent } from '../../services/cookieConsent'
 import { demoSiteSettings } from '../../services/pocketbase/siteManagement'
 import { getPublicSettings, submitContactRequest, type PublicSettings } from '../../services/pocketbase/publicAcademy'
 import { getPublishedHomeVisualUrl } from '../../services/pocketbase/siteContent'
@@ -12,6 +13,7 @@ export default function ContactPage() {
   const [searchParams] = useSearchParams()
   const [settings, setSettings] = useState<PublicSettings>({ ...demoSiteSettings, logoUrl: '' })
   const [heroPhoto, setHeroPhoto] = useState('')
+  const [externalContentAllowed, setExternalContentAllowed] = useState(() => hasCookieConsent('preferences'))
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
@@ -34,6 +36,8 @@ export default function ContactPage() {
     }).catch(() => undefined)
     return () => { mounted = false }
   }, [])
+
+  useEffect(() => subscribeCookieConsent(() => setExternalContentAllowed(hasCookieConsent('preferences'))), [])
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -64,6 +68,7 @@ export default function ContactPage() {
   const mapAddress = !configuredAddress || configuredAddress.toLowerCase() === 'jódar, jaén' ? DEFAULT_ACADEMY_ADDRESS : configuredAddress
   const mapEmbedUrl = `https://www.google.com/maps?q=${encodeURIComponent(mapAddress)}&output=embed`
   const directionsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapAddress)}`
+  const canLoadMap = !settings.cookieBannerEnabled || externalContentAllowed
 
   return (
     <SiteShell>
@@ -126,14 +131,25 @@ export default function ContactPage() {
         <section className="contact-v2-map-section" aria-labelledby="academy-location-title">
           <div className="container">
             <div className="contact-v2-map-heading"><div><span className="eyebrow">DÓNDE ESTAMOS</span><h2 id="academy-location-title">Ven a conocernos.</h2></div><p>Language School está en el centro de Jódar. Puedes abrir la ubicación directamente para calcular tu ruta.</p></div>
-            <div className="contact-v2-map-card">
-              <iframe title={`Mapa de Language School en ${mapAddress}`} src={mapEmbedUrl} loading="lazy" referrerPolicy="no-referrer-when-downgrade" allowFullScreen />
-              <div className="contact-v2-map-overlay">
-                <span className="contact-v2-map-pin" aria-hidden="true">⌖</span>
-                <div><small>LANGUAGE SCHOOL · ROCÍO RUIZ</small><strong>{mapAddress}</strong><span>Jódar · Jaén</span></div>
-                <a className="button button-primary" href={directionsUrl} target="_blank" rel="noreferrer">Cómo llegar ↗</a>
+            {canLoadMap ? (
+              <div className="contact-v2-map-card">
+                <iframe title={`Mapa de Language School en ${mapAddress}`} src={mapEmbedUrl} loading="lazy" referrerPolicy="no-referrer-when-downgrade" allowFullScreen />
+                <div className="contact-v2-map-overlay">
+                  <span className="contact-v2-map-pin" aria-hidden="true">⌖</span>
+                  <div><small>LANGUAGE SCHOOL · ROCÍO RUIZ</small><strong>{mapAddress}</strong><span>Jódar · Jaén</span></div>
+                  <a className="button button-primary" href={directionsUrl} target="_blank" rel="noreferrer">Cómo llegar ↗</a>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="external-consent-placeholder">
+                <div>
+                  <span className="eyebrow">CONTENIDO EXTERNO</span>
+                  <h3>El mapa espera tu permiso.</h3>
+                  <p>Google Maps solo se cargará si aceptas la categoría Preferencias. Mientras tanto puedes consultar la dirección sin enviar datos al servicio externo.</p>
+                  <button className="button button-primary" type="button" onClick={requestCookieSettings}>Configurar cookies</button>
+                </div>
+              </div>
+            )}
           </div>
         </section>
 
