@@ -42,11 +42,31 @@ test('WhatsApp usa número español internacional y mensaje administrable', asyn
   await expect(whatsapp).toHaveAttribute('href', /https:\/\/wa\.me\/34618218187\?text=Hola%20desde%20E2E/)
 })
 
-test('las rutas legales públicas existen y conservan el shell', async ({ page }) => {
-  for (const path of ['/cookies', '/privacidad', '/aviso-legal']) {
-    await page.goto(path)
-    await expect(page.locator('.legal-page')).toBeVisible()
-    await expect(page.locator('.site-header')).toBeVisible()
-    await expect(page.locator('.site-footer')).toBeVisible()
-  }
+test('contacto muestra información básica de privacidad junto al formulario', async ({ page }) => {
+  await page.goto('/contacto')
+  const notice = page.locator('.contact-privacy-layer')
+  await expect(notice).toBeVisible()
+  await expect(notice).toContainText('Responsable:')
+  await expect(notice).toContainText('Finalidad:')
+  await expect(notice).toContainText('Base:')
+  await expect(notice.getByRole('link', { name: /Política de privacidad completa/ })).toHaveAttribute('href', '/privacidad')
+})
+
+test('las rutas legales públicas contienen información estructurada y conservan el shell', async ({ page }) => {
+  await page.goto('/cookies')
+  await expect(page.locator('.legal-page')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Categorías disponibles' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Google Maps y terceros' })).toBeVisible()
+  await expect(page.locator('.site-header')).toBeVisible()
+  await expect(page.locator('.site-footer')).toBeVisible()
+
+  await page.goto('/privacidad')
+  await expect(page.getByRole('heading', { name: 'Responsable del tratamiento' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Finalidades y bases jurídicas' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Derechos' })).toBeVisible()
+
+  await page.goto('/aviso-legal')
+  await expect(page.getByRole('heading', { name: 'Identificación del titular' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Condiciones de uso' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Legislación aplicable' })).toBeVisible()
 })
