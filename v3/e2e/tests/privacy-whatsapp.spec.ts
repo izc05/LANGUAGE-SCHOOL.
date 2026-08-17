@@ -17,7 +17,7 @@ test('aceptar Preferencias permite cargar el mapa externo', async ({ page }) => 
   await page.goto('/contacto')
 
   await page.getByRole('button', { name: 'Configurar', exact: true }).click()
-  await page.getByLabel('Preferencias').check()
+  await page.getByRole('checkbox', { name: /^Preferencias/ }).check()
   await page.getByRole('button', { name: 'Guardar selección' }).click()
 
   await expect(page.locator('.cookie-consent-card')).toHaveCount(0)
