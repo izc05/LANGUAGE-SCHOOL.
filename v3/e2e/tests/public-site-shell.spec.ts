@@ -10,6 +10,7 @@ async function expectNoHorizontalOverflow(page: Page) {
 }
 
 async function expectMenuInsideViewport(page: Page, viewportWidth: number) {
+  await page.waitForTimeout(320)
   const box = await page.locator('#public-main-navigation').boundingBox()
   expect(box).not.toBeNull()
   if (!box) return
