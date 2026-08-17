@@ -6,7 +6,6 @@ import {
   demoHomeContent,
   getPublishedHomeContent,
   type HomePageContent,
-  type HomeVisualContent,
 } from '../../services/pocketbase/siteContent'
 
 const programs = [
@@ -31,7 +30,19 @@ const platformFeatures = [
   ['04', 'Progreso', 'Objetivos, evolución y próximos pasos.'],
 ]
 
-const emptyVisualUrls: Record<keyof HomeVisualContent, string> = {
+type HomeSectionVisualKey = 'kidsMediaId' | 'teensMediaId' | 'universityMediaId' | 'adultsMediaId' | 'examsMediaId' | 'methodMediaId' | 'journalMediaId'
+
+const homeVisualKeys: HomeSectionVisualKey[] = [
+  'kidsMediaId',
+  'teensMediaId',
+  'universityMediaId',
+  'adultsMediaId',
+  'examsMediaId',
+  'methodMediaId',
+  'journalMediaId',
+]
+
+const emptyVisualUrls: Record<HomeSectionVisualKey, string> = {
   kidsMediaId: '',
   teensMediaId: '',
   universityMediaId: '',
@@ -49,7 +60,7 @@ function cssPhotoVariable(name: string, url: string): CSSProperties | undefined 
 export default function HomePage() {
   const [homeContent, setHomeContent] = useState<HomePageContent>(demoHomeContent)
   const [heroImageUrl, setHeroImageUrl] = useState<string | null>(null)
-  const [visualUrls, setVisualUrls] = useState<Record<keyof HomeVisualContent, string>>({ ...emptyVisualUrls })
+  const [visualUrls, setVisualUrls] = useState<Record<HomeSectionVisualKey, string>>({ ...emptyVisualUrls })
   const visualBase = `${import.meta.env.BASE_URL}visuals/`
 
   useEffect(() => {
@@ -73,7 +84,7 @@ export default function HomePage() {
         }
 
         const visualEntries = await Promise.all(
-          (Object.keys(content.visuals) as Array<keyof HomeVisualContent>).map(async (key) => {
+          homeVisualKeys.map(async (key) => {
             const id = content.visuals[key]
             if (!id) return [key, ''] as const
             try {
