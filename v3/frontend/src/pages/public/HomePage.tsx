@@ -30,7 +30,7 @@ const platformFeatures = [
   ['04', 'Progreso', 'Objetivos, evolución y próximos pasos.'],
 ]
 
-type HomeSectionVisualKey = 'kidsMediaId' | 'teensMediaId' | 'universityMediaId' | 'adultsMediaId' | 'examsMediaId' | 'methodMediaId' | 'journalMediaId'
+type HomeSectionVisualKey = 'kidsMediaId' | 'teensMediaId' | 'universityMediaId' | 'adultsMediaId' | 'examsMediaId' | 'methodMediaId' | 'journalMediaId' | 'teachersHeroMediaId' | 'aboutHeroMediaId'
 
 const homeVisualKeys: HomeSectionVisualKey[] = [
   'kidsMediaId',
@@ -40,6 +40,8 @@ const homeVisualKeys: HomeSectionVisualKey[] = [
   'examsMediaId',
   'methodMediaId',
   'journalMediaId',
+  'teachersHeroMediaId',
+  'aboutHeroMediaId',
 ]
 
 const emptyVisualUrls: Record<HomeSectionVisualKey, string> = {
@@ -50,6 +52,8 @@ const emptyVisualUrls: Record<HomeSectionVisualKey, string> = {
   examsMediaId: '',
   methodMediaId: '',
   journalMediaId: '',
+  teachersHeroMediaId: '',
+  aboutHeroMediaId: '',
 }
 
 function cssPhotoVariable(name: string, url: string): CSSProperties | undefined {
@@ -154,6 +158,48 @@ export default function HomePage() {
                 <span className="program-symbol">{program.symbol}</span><span className="pill">{program.tag}</span><h3>{program.title}</h3><p>{program.text}</p><Link to="/programas">Ver programa →</Link>
               </article>
             ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="academy-real-premium" aria-labelledby="academy-real-title">
+        <div className="container academy-real-grid">
+          <div className="academy-real-copy">
+            <span className="eyebrow">LANGUAGE SCHOOL · ROCÍO RUIZ</span>
+            <h2 id="academy-real-title">Una academia donde aprender también significa sentirte <em>acompañado.</em></h2>
+            <p className="academy-real-lead">Una academia local, cercana y cuidada, donde cada etapa tiene su ritmo y el seguimiento no termina cuando acaba la clase.</p>
+            <p>Queremos que cada alumno sepa qué está trabajando, por qué lo está trabajando y cuál es su siguiente paso. Y que las familias tengan una referencia clara cuando necesitan orientación.</p>
+
+            <div className="academy-real-proof">
+              <article><span>01</span><div><strong>Personas antes que procesos</strong><p>Clases cercanas y comunicación directa para entender lo que necesita cada alumno.</p></div></article>
+              <article><span>02</span><div><strong>Objetivos que se entienden</strong><p>Una ruta clara para saber dónde estás, qué estás reforzando y hacia dónde avanzas.</p></div></article>
+              <article><span>03</span><div><strong>Continuidad entre clases</strong><p>Materiales, tareas y seguimiento siguen disponibles también fuera del aula.</p></div></article>
+            </div>
+
+            <div className="academy-real-actions">
+              <Link className="button button-primary" to="/sobre-nosotros">Conoce Language School</Link>
+              <Link className="text-link" to="/profesores">Conoce al equipo →</Link>
+            </div>
+          </div>
+
+          <div className="academy-real-visuals">
+            <figure
+              className={`academy-real-photo academy-real-main${visualUrls.aboutHeroMediaId ? ' has-photo' : ''}`}
+              style={visualUrls.aboutHeroMediaId ? { backgroundImage: `linear-gradient(180deg, rgba(45,28,36,.02), rgba(45,28,36,.18)), url(${visualUrls.aboutHeroMediaId})` } : undefined}
+            >
+              {!visualUrls.aboutHeroMediaId && <div className="academy-real-fallback"><span>LANGUAGE SCHOOL</span><strong>Una academia hecha de personas.</strong><small>Jódar · Jaén</small></div>}
+              <figcaption>Language School · Jódar</figcaption>
+            </figure>
+
+            <figure
+              className={`academy-real-photo academy-real-team${visualUrls.teachersHeroMediaId ? ' has-photo' : ''}`}
+              style={visualUrls.teachersHeroMediaId ? { backgroundImage: `linear-gradient(180deg, rgba(45,28,36,.02), rgba(45,28,36,.15)), url(${visualUrls.teachersHeroMediaId})` } : undefined}
+            >
+              {!visualUrls.teachersHeroMediaId && <div className="academy-real-fallback compact"><span>PROFESORES</span><strong>Acompañamiento real.</strong></div>}
+              <figcaption>Profesores · cercanía y seguimiento</figcaption>
+            </figure>
+
+            <div className="academy-real-note" aria-hidden="true"><span>LS</span><p><strong>Academia real.</strong> Personas, clases y progreso.</p></div>
           </div>
         </div>
       </section>
