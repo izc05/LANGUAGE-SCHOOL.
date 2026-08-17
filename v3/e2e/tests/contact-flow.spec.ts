@@ -6,7 +6,7 @@ function requiredEnv(name: string): string {
   return value
 }
 
-test('visitante envía solicitud y ADMIN completa su seguimiento', async ({ page }) => {
+test('visitante envía solicitud protegida y ADMIN completa su seguimiento', async ({ page }) => {
   const adminEmail = requiredEnv('E2E_ADMIN_EMAIL')
   const adminPassword = requiredEnv('E2E_ADMIN_PASSWORD')
   const visitorName = 'E2E Contact Flow'
@@ -16,7 +16,10 @@ test('visitante envía solicitud y ADMIN completa su seguimiento', async ({ page
   await page.getByLabel('Email').fill('contact-flow@example.com')
   await page.getByLabel('Teléfono').fill('611111111')
   await page.getByLabel('Mensaje').fill('Solicitud destinada a probar el circuito completo de seguimiento.')
-  await page.getByRole('button', { name: 'Enviar solicitud' }).click()
+
+  const submit = page.getByRole('button', { name: 'Enviar solicitud' })
+  await expect(submit).toBeEnabled({ timeout: 15_000 })
+  await submit.click()
   await expect(page.getByText('Solicitud enviada. Nos pondremos en contacto contigo.')).toBeVisible()
 
   await page.goto('/acceso')
