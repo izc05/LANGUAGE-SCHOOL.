@@ -63,9 +63,11 @@ export default function ProgramsPage() {
     return () => { mounted = false }
   }, [])
 
+  const heroVisualUrl = themeVisuals.university || themeVisuals.adults || themeVisuals.teens || themeVisuals.kids || themeVisuals.exams
+
   return (
     <SiteShell>
-      <section className="programs-v2-hero">
+      <section className="programs-v2-hero programs-v2-hero-editorial">
         <div className="container programs-v2-hero-grid">
           <div className="programs-v2-hero-copy">
             <span className="eyebrow">PROGRAMAS · LANGUAGE SCHOOL</span>
@@ -73,11 +75,12 @@ export default function ProgramsPage() {
             <p>Desde los primeros años de colegio hasta la universidad, la vida profesional o una certificación. El objetivo cambia; la atención personal y el seguimiento, no.</p>
             <div className="programs-v2-hero-actions"><a className="button button-primary" href="#catalogo-programas">Ver programas</a><Link className="button button-ghost" to="/contacto">Ayúdame a elegir</Link></div>
           </div>
-          <div className="programs-v2-route" aria-label="Etapas de aprendizaje">
-            <div className="programs-v2-route-orbit orbit-one" aria-hidden="true" /><div className="programs-v2-route-orbit orbit-two" aria-hidden="true" />
-            <div className="programs-v2-route-center"><span>YOUR</span><strong>English</strong><small>PATH</small></div>
-            <div className="programs-v2-route-note note-kids"><b>01</b><span>Kids</span></div><div className="programs-v2-route-note note-teens"><b>02</b><span>Teens</span></div><div className="programs-v2-route-note note-university"><b>03</b><span>Universidad</span></div><div className="programs-v2-route-note note-adults"><b>04</b><span>Adultos</span></div><div className="programs-v2-route-note note-exams"><b>05</b><span>Exámenes</span></div>
-          </div>
+          <figure
+            className={`programs-v2-hero-visual${heroVisualUrl ? ' has-photo' : ''}`}
+            style={heroVisualUrl ? { backgroundImage: `linear-gradient(180deg, rgba(45,25,35,.02), rgba(45,25,35,.22)), url(${heroVisualUrl})` } : undefined}
+          >
+            <figcaption><span>UNA ACADEMIA · DISTINTAS ETAPAS</span><strong>Tu objetivo cambia. El acompañamiento permanece.</strong><small>Kids · Teens · Universidad · Adultos · Exámenes</small></figcaption>
+          </figure>
         </div>
       </section>
 
