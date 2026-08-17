@@ -59,6 +59,13 @@ export async function listPublicCourses(): Promise<PublicCourseRecord[]> {
   })
 }
 
+export async function getPublicCourseBySlug(slug: string): Promise<PublicCourseRecord | null> {
+  const normalizedSlug = slug.trim().toLowerCase()
+  if (!normalizedSlug) return null
+  const courses = await listPublicCourses()
+  return courses.find((course) => course.slug.trim().toLowerCase() === normalizedSlug) ?? null
+}
+
 export async function listPublicPricing(): Promise<PublicPricingRecord[]> {
   if (isDemoMode) return demoPublicPricing
   const records = await pb.collection(collections.pricingPlans).getFullList<PublicPricingRecord>({
