@@ -9,6 +9,7 @@ import PricingPage from '../pages/public/PricingPage'
 import TeachersPage from '../pages/public/TeachersPage'
 import AboutPage from '../pages/public/AboutPage'
 import ContactPage from '../pages/public/ContactPage'
+import LegalPage from '../pages/public/LegalPage'
 import NotFoundPage from '../pages/public/NotFoundPage'
 import LoginPage from '../pages/auth/LoginPage'
 import AccountProfilePage from '../pages/account/AccountProfilePage'
@@ -52,6 +53,9 @@ export default function App() {
       <Route path="/blog" element={<BlogPage />} />
       <Route path="/blog/:slug" element={<BlogPostPage />} />
       <Route path="/contacto" element={<ContactPage />} />
+      <Route path="/cookies" element={<LegalPage kind="cookies" />} />
+      <Route path="/privacidad" element={<LegalPage kind="privacy" />} />
+      <Route path="/aviso-legal" element={<LegalPage kind="legal" />} />
       <Route path="/acceso" element={<LoginPage />} />
 
       <Route path="/alumno" element={<RequireRole allow={['STUDENT']}><StudentDashboard /></RequireRole>} />
