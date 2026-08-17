@@ -3,7 +3,7 @@
 # Private portals and administration must never be crawled.
 
 User-agent: *
-Content-signal: search=yes, ai-train=no, use=reference
+Content-signal: search=yes, ai-input=yes, ai-train=no, use=reference
 Allow: /
 Disallow: /acceso
 Disallow: /admin
