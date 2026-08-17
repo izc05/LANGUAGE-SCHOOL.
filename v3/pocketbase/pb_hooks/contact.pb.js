@@ -2,6 +2,10 @@ function readText(value) {
   return typeof value === 'string' ? value.trim() : ''
 }
 
+function logContactError(stage, error) {
+  $app.logger().error('[contact] protected contact request failed', 'stage', stage, 'error', error)
+}
+
 function invalidContactPayload(body) {
   const name = readText(body.name)
   const email = readText(body.email)
@@ -41,7 +45,7 @@ routerAdd('POST', '/api/language-school/contact', (e) => {
 
   const secret = readText($os.getenv('TURNSTILE_SECRET_KEY'))
   if (!secret) {
-    console.error('[contact] TURNSTILE_SECRET_KEY is not configured')
+    $app.logger().error('[contact] TURNSTILE_SECRET_KEY is not configured')
     return e.json(503, { message: 'La protección del formulario no está disponible temporalmente.' })
   }
 
@@ -56,39 +60,45 @@ routerAdd('POST', '/api/language-school/contact', (e) => {
     })
 
     if (response.statusCode !== 200 || !response.json) {
-      console.warn('[contact] Turnstile Siteverify returned an unexpected response')
+      $app.logger().warn('[contact] Turnstile Siteverify returned an unexpected response', 'status', response.statusCode)
       return e.json(503, { message: 'No se ha podido verificar el formulario. Inténtalo de nuevo.' })
     }
     verification = response.json
   } catch (error) {
-    console.error('[contact] Turnstile Siteverify request failed')
+    logContactError('siteverify', error)
     return e.json(503, { message: 'No se ha podido verificar el formulario. Inténtalo de nuevo.' })
   }
 
   if (verification.success !== true) {
+    $app.logger().warn('[contact] Turnstile rejected a contact request')
     return e.json(400, { message: 'No se ha podido validar la verificación de seguridad.' })
   }
 
   const expectedAction = readText($os.getenv('TURNSTILE_EXPECTED_ACTION'))
   if (expectedAction && readText(verification.action) !== expectedAction) {
-    console.warn('[contact] Turnstile action mismatch')
+    $app.logger().warn('[contact] Turnstile action mismatch')
     return e.json(400, { message: 'No se ha podido validar la verificación de seguridad.' })
   }
 
   if (!allowedTurnstileHostname(verification.hostname)) {
-    console.warn('[contact] Turnstile hostname mismatch')
+    $app.logger().warn('[contact] Turnstile hostname mismatch')
     return e.json(400, { message: 'No se ha podido validar la verificación de seguridad.' })
   }
 
-  const collection = e.app.findCollectionByNameOrId('contact_requests')
-  const record = new Record(collection)
-  record.set('name', readText(body.name))
-  record.set('email', readText(body.email))
-  record.set('phone', readText(body.phone))
-  record.set('interest', readText(body.interest))
-  record.set('message', readText(body.message))
-  record.set('status', 'NEW')
-  e.app.save(record)
+  try {
+    const collection = $app.findCollectionByNameOrId('contact_requests')
+    const record = new Record(collection)
+    record.set('name', readText(body.name))
+    record.set('email', readText(body.email))
+    record.set('phone', readText(body.phone))
+    record.set('interest', readText(body.interest))
+    record.set('message', readText(body.message))
+    record.set('status', 'NEW')
+    $app.save(record)
+  } catch (error) {
+    logContactError('persist', error)
+    return e.json(500, { message: 'No se ha podido registrar la solicitud. Inténtalo de nuevo.' })
+  }
 
   return e.json(201, { success: true })
 })
