@@ -11,7 +11,7 @@ function invalidContactPayload(body) {
 
   if (!name || !email || !message) return true
   if (name.length > 160 || email.length > 255 || phone.length > 30 || interest.length > 160 || message.length > 4000) return true
-  if (!email.includes('@')) return true
+  if (email.indexOf('@') === -1) return true
   return false
 }
 
@@ -19,7 +19,7 @@ function allowedTurnstileHostname(hostname) {
   const configured = readText($os.getenv('TURNSTILE_ALLOWED_HOSTNAMES'))
   if (!configured) return true
   const allowed = configured.split(',').map((item) => item.trim().toLowerCase()).filter(Boolean)
-  return allowed.includes(readText(hostname).toLowerCase())
+  return allowed.indexOf(readText(hostname).toLowerCase()) !== -1
 }
 
 routerAdd('POST', '/api/language-school/contact', (e) => {
