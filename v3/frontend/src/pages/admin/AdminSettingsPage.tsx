@@ -113,7 +113,7 @@ export default function AdminSettingsPage() {
             <label className="field-stack"><span>Nombre</span><input value={form.academyName} onChange={(event) => setField('academyName', event.target.value)} required /></label>
             <label className="field-stack"><span>Logo</span><input type="file" accept="image/png,image/jpeg,image/webp" onChange={handleLogo} /></label>
             <div className="settings-file-note"><strong>{logoName}</strong><small>PNG, JPG o WEBP · máximo 5 MB. El logo anterior se conserva si no seleccionas otro.</small></div>
-            <label className="field-stack"><span>Dirección</span><textarea rows={3} value={form.address} onChange={(event) => setField('address', event.target.value)} placeholder="Dirección o localidad" /></label>
+            <label className="field-stack"><span>Dirección</span><textarea rows={3} value={form.address} onChange={(event) => setField('address', event.target.value)} placeholder="Dirección o localidad" /><small>Esta dirección también actualiza automáticamente el mapa de la página Contacto.</small></label>
           </section>
 
           <section className="panel cms-form">
