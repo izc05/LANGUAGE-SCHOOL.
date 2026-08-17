@@ -2,6 +2,7 @@ import type { RecordModel } from 'pocketbase'
 import { isDemoMode } from '../../config/environment'
 import { collections } from './collections'
 import { pb } from './client'
+import { getMediaById, getMediaUrl } from './media'
 
 export type HomeHeroContent = {
   eyebrow: string
@@ -20,6 +21,11 @@ export type HomeVisualContent = {
   examsMediaId: string
   methodMediaId: string
   journalMediaId: string
+  teachersHeroMediaId: string
+  aboutHeroMediaId: string
+  pricingHeroMediaId: string
+  blogHeroMediaId: string
+  contactHeroMediaId: string
 }
 
 export type HomePageContent = {
@@ -58,6 +64,11 @@ const emptyHomeVisuals: HomeVisualContent = {
   examsMediaId: '',
   methodMediaId: '',
   journalMediaId: '',
+  teachersHeroMediaId: '',
+  aboutHeroMediaId: '',
+  pricingHeroMediaId: '',
+  blogHeroMediaId: '',
+  contactHeroMediaId: '',
 }
 
 export const demoHomeContent: HomePageContent = {
@@ -133,6 +144,11 @@ export function normalizeHomeContent(value: unknown): HomePageContent {
       examsMediaId: visualId(rawVisuals, 'examsMediaId'),
       methodMediaId: visualId(rawVisuals, 'methodMediaId'),
       journalMediaId: visualId(rawVisuals, 'journalMediaId'),
+      teachersHeroMediaId: visualId(rawVisuals, 'teachersHeroMediaId'),
+      aboutHeroMediaId: visualId(rawVisuals, 'aboutHeroMediaId'),
+      pricingHeroMediaId: visualId(rawVisuals, 'pricingHeroMediaId'),
+      blogHeroMediaId: visualId(rawVisuals, 'blogHeroMediaId'),
+      contactHeroMediaId: visualId(rawVisuals, 'contactHeroMediaId'),
     },
   }
 }
@@ -165,13 +181,26 @@ export function normalizeAboutContent(value: unknown): AboutPageContent {
 export async function getSitePage(key: string): Promise<SitePageRecord> {
   const safeKey = key.trim().toLowerCase()
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(safeKey)) throw new Error('Clave de página no válida.')
-  return pb.collection(collections.sitePages).getFirstListItem<SitePageRecord>(`key = "${safeKey}"`)
+  return pb.collection(collections.sitePages).getFirstListItem<SitePageRecord>(`key = \"${safeKey}\"`)
 }
 
 export async function getPublishedHomeContent(): Promise<HomePageContent> {
   if (isDemoMode) return demoHomeContent
-  const page = await pb.collection(collections.sitePages).getFirstListItem<SitePageRecord>('key = "home" && status = "PUBLISHED"')
+  const page = await pb.collection(collections.sitePages).getFirstListItem<SitePageRecord>('key = \"home\" && status = \"PUBLISHED\"')
   return normalizeHomeContent(page.content)
+}
+
+export async function getPublishedHomeVisualUrl(key: keyof HomeVisualContent, thumb = '1600x1000'): Promise<string> {
+  if (isDemoMode) return ''
+  try {
+    const content = await getPublishedHomeContent()
+    const mediaId = content.visuals[key]
+    if (!mediaId) return ''
+    const media = await getMediaById(mediaId)
+    return getMediaUrl(media, thumb)
+  } catch {
+    return ''
+  }
 }
 
 export async function getEditableHomeContent(): Promise<{ content: HomePageContent; status: SitePageRecord['status'] }> {
@@ -191,7 +220,7 @@ export async function saveHomeContent(content: HomePageContent, publish = true):
 
 export async function getPublishedAboutContent(): Promise<AboutPageContent> {
   if (isDemoMode) return demoAboutContent
-  const page = await pb.collection(collections.sitePages).getFirstListItem<SitePageRecord>('key = "about" && status = "PUBLISHED"')
+  const page = await pb.collection(collections.sitePages).getFirstListItem<SitePageRecord>('key = \"about\" && status = \"PUBLISHED\"')
   return normalizeAboutContent(page.content)
 }
 
