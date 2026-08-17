@@ -1,5 +1,11 @@
 import { expect, test } from '@playwright/test'
 
+function requiredEnv(name: string): string {
+  const value = process.env[name]
+  if (!value) throw new Error(`Missing E2E environment variable: ${name}`)
+  return value
+}
+
 test('rechazar cookies opcionales mantiene Google Maps sin cargar', async ({ page }) => {
   await page.goto('/contacto')
 
@@ -69,4 +75,25 @@ test('las rutas legales públicas contienen información estructurada y conserva
   await expect(page.getByRole('heading', { name: 'Identificación del titular' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Condiciones de uso' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Legislación aplicable' })).toBeVisible()
+})
+
+test('ADMIN configura identidad legal y se publica sin tocar código', async ({ page }) => {
+  await page.goto('/acceso')
+  await page.getByLabel('Email').fill(requiredEnv('E2E_ADMIN_EMAIL'))
+  await page.getByLabel('Contraseña').fill(requiredEnv('E2E_ADMIN_PASSWORD'))
+  await page.getByRole('button', { name: 'Entrar' }).click()
+  await expect(page).toHaveURL(/\/admin$/)
+
+  await page.goto('/admin/configuracion')
+  await page.getByLabel('Titular / responsable legal').fill('E2E Academia Responsable')
+  await page.getByLabel('NIF / CIF').fill('12345678Z')
+  await page.getByLabel('Datos registrales, si procede').fill('Registro E2E · hoja 123')
+  await page.getByRole('button', { name: 'Guardar configuración' }).click()
+  await expect(page.getByRole('status')).toContainText('Configuración general guardada correctamente.')
+
+  await page.goto('/aviso-legal')
+  await expect(page.getByText('E2E Academia Responsable')).toBeVisible()
+  await expect(page.getByText('12345678Z')).toBeVisible()
+  await expect(page.getByText('Registro E2E · hoja 123')).toBeVisible()
+  await expect(page.locator('.legal-completion-note')).toHaveCount(0)
 })
