@@ -20,7 +20,7 @@ async function loginAdmin(page: Page) {
 
 async function publishImages(page: Page) {
   await page.getByRole('button', { name: 'Publicar cambios de imágenes' }).click()
-  await expect(page.getByRole('status')).toContainText('Portada e imágenes publicadas correctamente.')
+  await expect(page.locator('.cms-notice.success-notice')).toContainText('Portada e imágenes publicadas correctamente.')
 }
 
 async function expectNoHorizontalPageOverflow(page: Page) {
