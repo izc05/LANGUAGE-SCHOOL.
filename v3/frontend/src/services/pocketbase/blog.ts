@@ -60,6 +60,23 @@ export async function listPublishedBlogPosts(): Promise<BlogPostRecord[]> {
   })
 }
 
+export async function getPublishedBlogPostBySlug(slug: string): Promise<BlogPostRecord> {
+  const safeSlug = slug.trim().toLowerCase()
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(safeSlug)) throw new Error('Slug de artículo no válido.')
+
+  const record = await pb.collection(collections.blogPosts).getFirstListItem<BlogPostRecord>(
+    `slug = "${safeSlug}" && status = "PUBLISHED"`,
+    { expand: 'category' },
+  )
+
+  const publishedAt = new Date(record.published_at)
+  if (!record.published_at || Number.isNaN(publishedAt.getTime()) || publishedAt.getTime() > Date.now()) {
+    throw new Error('El artículo todavía no está publicado.')
+  }
+
+  return record
+}
+
 export async function listAdminBlogPosts(): Promise<BlogPostRecord[]> {
   return pb.collection(collections.blogPosts).getFullList<BlogPostRecord>({
     sort: '-updated',

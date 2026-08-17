@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router'
 import SiteShell from '../../components/SiteShell'
 import { isDemoMode } from '../../config/environment'
 import { getBlogCoverUrl, listPublishedBlogPosts } from '../../services/pocketbase/blog'
@@ -6,6 +7,7 @@ import { getPublishedHomeVisualUrl } from '../../services/pocketbase/siteContent
 
 type ArticleItem = {
   id: string
+  slug: string
   category: string
   title: string
   meta: string
@@ -14,12 +16,12 @@ type ArticleItem = {
 }
 
 const demoArticles: ArticleItem[] = [
-  { id: 'demo-1', category: 'Speaking', title: '5 formas de ganar confianza al hablar inglés', meta: '7 min', description: 'Ideas prácticas para dejar de bloquearte y empezar a construir fluidez real.' },
-  { id: 'demo-2', category: 'Vocabulary', title: 'Aprender vocabulario sin listas infinitas', meta: '5 min', description: 'Cómo recordar palabras gracias al contexto, la repetición y el uso.' },
-  { id: 'demo-3', category: 'Exams', title: 'Qué debes dominar antes de preparar un B1', meta: '8 min', description: 'Una revisión sencilla de las bases que conviene tener antes de entrar en modo examen.' },
-  { id: 'demo-4', category: 'Listening', title: 'Escuchar inglés cada día sin saturarte', meta: '6 min', description: 'Una rutina corta y progresiva para entrenar el oído sin convertirlo en una obligación.' },
-  { id: 'demo-5', category: 'Grammar', title: 'Past Simple vs Present Perfect: una forma fácil de verlo', meta: '9 min', description: 'Menos reglas memorizadas y más ejemplos que realmente ayudan a decidir qué tiempo usar.' },
-  { id: 'demo-6', category: 'Parents', title: 'Cómo acompañar el inglés de tus hijos en casa', meta: '4 min', description: 'Pequeñas acciones que ayudan mucho sin convertir a las familias en profesores.' },
+  { id: 'demo-1', slug: '5-formas-de-ganar-confianza-al-hablar-ingles', category: 'Speaking', title: '5 formas de ganar confianza al hablar inglés', meta: '7 min', description: 'Ideas prácticas para dejar de bloquearte y empezar a construir fluidez real.' },
+  { id: 'demo-2', slug: 'aprender-vocabulario-sin-listas-infinitas', category: 'Vocabulary', title: 'Aprender vocabulario sin listas infinitas', meta: '5 min', description: 'Cómo recordar palabras gracias al contexto, la repetición y el uso.' },
+  { id: 'demo-3', slug: 'que-debes-dominar-antes-de-preparar-un-b1', category: 'Exams', title: 'Qué debes dominar antes de preparar un B1', meta: '8 min', description: 'Una revisión sencilla de las bases que conviene tener antes de entrar en modo examen.' },
+  { id: 'demo-4', slug: 'escuchar-ingles-cada-dia-sin-saturarte', category: 'Listening', title: 'Escuchar inglés cada día sin saturarte', meta: '6 min', description: 'Una rutina corta y progresiva para entrenar el oído sin convertirlo en una obligación.' },
+  { id: 'demo-5', slug: 'past-simple-vs-present-perfect', category: 'Grammar', title: 'Past Simple vs Present Perfect: una forma fácil de verlo', meta: '9 min', description: 'Menos reglas memorizadas y más ejemplos que realmente ayudan a decidir qué tiempo usar.' },
+  { id: 'demo-6', slug: 'como-acompanar-el-ingles-de-tus-hijos-en-casa', category: 'Parents', title: 'Cómo acompañar el inglés de tus hijos en casa', meta: '4 min', description: 'Pequeñas acciones que ayudan mucho sin convertir a las familias en profesores.' },
 ]
 
 function formatPublishedDate(value: string): string {
@@ -62,6 +64,7 @@ export default function BlogPage() {
         if (!isDemoMode) {
           setArticles(records.map((record) => ({
             id: record.id,
+            slug: record.slug,
             category: record.expand?.category?.name || 'English',
             title: record.title,
             meta: formatPublishedDate(record.published_at),
@@ -128,7 +131,7 @@ export default function BlogPage() {
                   <div className="blog-v2-meta"><span>{featuredArticle.category}</span><small>{featuredArticle.meta}</small></div>
                   <h2>{featuredArticle.title}</h2>
                   <p>{featuredArticle.description}</p>
-                  <button type="button" className="text-link button-reset">Leer artículo →</button>
+                  <Link className="text-link" to={`/blog/${featuredArticle.slug}`}>Leer artículo →</Link>
                 </div>
               </article>
             )}
@@ -143,7 +146,7 @@ export default function BlogPage() {
                     <div className="blog-v2-meta"><span>{article.category}</span><small>{article.meta}</small></div>
                     <h3>{article.title}</h3>
                     <p>{article.description}</p>
-                    <button type="button" className="text-link button-reset">Leer artículo →</button>
+                    <Link className="text-link" to={`/blog/${article.slug}`}>Leer artículo →</Link>
                   </div>
                 </article>
               ))}

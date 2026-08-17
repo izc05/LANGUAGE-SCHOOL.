@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router'
 import RequireRole from '../features/auth/RequireRole'
 import IntroGatePage from '../pages/public/IntroGatePage'
 import BlogPage from '../pages/public/BlogPage'
+import BlogPostPage from '../pages/public/BlogPostPage'
 import ProgramsPage from '../pages/public/ProgramsPage'
 import PricingPage from '../pages/public/PricingPage'
 import TeachersPage from '../pages/public/TeachersPage'
@@ -47,6 +48,7 @@ export default function App() {
       <Route path="/profesores" element={<TeachersPage />} />
       <Route path="/sobre-nosotros" element={<AboutPage />} />
       <Route path="/blog" element={<BlogPage />} />
+      <Route path="/blog/:slug" element={<BlogPostPage />} />
       <Route path="/contacto" element={<ContactPage />} />
       <Route path="/acceso" element={<LoginPage />} />
 

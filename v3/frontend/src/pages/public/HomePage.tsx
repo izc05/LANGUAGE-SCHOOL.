@@ -113,7 +113,7 @@ export default function HomePage() {
         <div className="container hero-grid-v3">
           <div className="hero-copy">
             <span className="eyebrow">{hero.eyebrow}</span>
-            <h1>Inglés para cada etapa de tu<span className="hero-accent">vida.</span></h1>
+            <h1>{hero.title}</h1>
             <p className="hero-lead">{hero.subtitle}</p>
             <div className="hero-actions">
               <a className="button button-primary" href="#programas">{hero.primaryCta}</a>

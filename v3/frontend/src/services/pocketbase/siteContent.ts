@@ -74,7 +74,7 @@ const emptyHomeVisuals: HomeVisualContent = {
 export const demoHomeContent: HomePageContent = {
   hero: {
     eyebrow: 'ACADEMIA DE INGLÉS · JÓDAR',
-    title: 'Tu inglés no necesita más teoría. Necesita confianza.',
+    title: 'Inglés para cada etapa de tu vida.',
     subtitle:
       'Clases cercanas, objetivos claros y una plataforma propia para que cada alumno tenga sus recursos, tareas y seguimiento siempre disponibles.',
     primaryCta: 'Descubrir programas',
