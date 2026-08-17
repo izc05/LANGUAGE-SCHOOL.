@@ -1,8 +1,11 @@
 import { type ReactNode, useEffect, useRef, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router'
 import BackendStatusBanner from './BackendStatusBanner'
+import CookieConsentBanner from './CookieConsentBanner'
 import PublicVisualMotion from './PublicVisualMotion'
+import PublicWhatsAppButton from './PublicWhatsAppButton'
 import { useBackendHealth } from '../hooks/useBackendHealth'
+import { requestCookieSettings } from '../services/cookieConsent'
 import { demoSiteSettings } from '../services/pocketbase/siteManagement'
 import { getPublicSettings, type PublicSettings } from '../services/pocketbase/publicAcademy'
 
@@ -17,6 +20,9 @@ const publicMeta: Record<string, PageMeta> = {
   '/tarifas': { title: 'Tarifas · Language School', description: 'Consulta los planes y tarifas publicados por Language School.' },
   '/blog': { title: 'Blog · Language School', description: 'Consejos, gramática, vocabulario, listening, exámenes y recursos para seguir mejorando tu inglés.' },
   '/contacto': { title: 'Contacto · Language School', description: 'Contacta con Language School y cuéntanos qué quieres conseguir con tu inglés.' },
+  '/cookies': { title: 'Política de cookies · Language School', description: 'Consulta y configura el uso de cookies y tecnologías similares en Language School.' },
+  '/privacidad': { title: 'Política de privacidad · Language School', description: 'Información sobre privacidad y tratamiento de datos en Language School.' },
+  '/aviso-legal': { title: 'Aviso legal · Language School', description: 'Información legal y condiciones de uso de Language School.' },
 }
 
 function applyPageMeta(pathname: string) {
@@ -210,8 +216,20 @@ export default function SiteShell({ children }: SiteShellProps) {
             {settings.instagram && <a href={settings.instagram} target="_blank" rel="noreferrer">Instagram ↗</a>}
           </div>
         </div>
-        <div className="container footer-bottom"><span>© {new Date().getFullYear()} {brandName}</span><Link to="/acceso">Área alumnos</Link></div>
+        <div className="container footer-bottom">
+          <span>© {new Date().getFullYear()} {brandName}</span>
+          <div className="footer-privacy-links">
+            <Link to="/aviso-legal">Aviso legal</Link>
+            <Link to="/privacidad">Privacidad</Link>
+            <Link to="/cookies">Cookies</Link>
+            {settings.cookieBannerEnabled && <button className="footer-cookie-settings" type="button" onClick={requestCookieSettings}>Configurar cookies</button>}
+            <Link to="/acceso">Área alumnos</Link>
+          </div>
+        </div>
       </footer>
+
+      <CookieConsentBanner enabled={settings.cookieBannerEnabled} intro={settings.cookieIntro} />
+      <PublicWhatsAppButton enabled={settings.whatsappEnabled} phone={settings.whatsapp} message={settings.whatsappMessage} />
     </div>
   )
 }
