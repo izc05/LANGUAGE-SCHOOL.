@@ -1,16 +1,24 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import SiteShell from '../../components/SiteShell'
-import { demoAboutContent, getPublishedAboutContent, type AboutPageContent } from '../../services/pocketbase/siteContent'
+import { demoAboutContent, getPublishedAboutContent, getPublishedHomeVisualUrl, type AboutPageContent } from '../../services/pocketbase/siteContent'
 
 export default function AboutPage() {
   const [content, setContent] = useState<AboutPageContent>(demoAboutContent)
+  const [heroPhoto, setHeroPhoto] = useState('')
   const journeyVisual = `${import.meta.env.BASE_URL}visuals/about-language-journey.svg`
   const continuityVisual = `${import.meta.env.BASE_URL}visuals/about-continuity.svg`
 
   useEffect(() => {
     let mounted = true
-    getPublishedAboutContent().then((value) => { if (mounted) setContent(value) }).catch(() => undefined)
+    Promise.all([
+      getPublishedAboutContent(),
+      getPublishedHomeVisualUrl('aboutHeroMediaId'),
+    ]).then(([value, photo]) => {
+      if (!mounted) return
+      setContent(value)
+      setHeroPhoto(photo)
+    }).catch(() => undefined)
     return () => { mounted = false }
   }, [])
 
@@ -30,7 +38,7 @@ export default function AboutPage() {
                 <span>Espacio digital</span>
               </div>
             </div>
-            <div className="about-v2-visual">
+            <div className={`about-v2-visual${heroPhoto ? ' has-cms-photo' : ''}`} style={heroPhoto ? { backgroundImage: `linear-gradient(180deg, rgba(52,24,38,.02), rgba(52,24,38,.18)), url(${heroPhoto})` } : undefined}>
               <img src={journeyVisual} alt="Ilustración del viaje de aprendizaje en Language School" />
               <div className="about-v2-visual-note">
                 <small>LANGUAGE SCHOOL</small>
