@@ -66,6 +66,7 @@ import './styles/public-heroes-phase7j1.css'
 import './styles/programs-phase7j2.css'
 import './styles/public-consent-whatsapp.css'
 import './styles/admin-privacy-settings.css'
+import './styles/white-canvas-phase7j6.css'
 
 const root = document.getElementById('root')
 if (!root) throw new Error('No se ha encontrado el elemento #root')
