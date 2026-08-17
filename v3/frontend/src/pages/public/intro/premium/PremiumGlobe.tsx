@@ -5,8 +5,8 @@ import * as THREE from 'three'
 
 const MAGENTA = '#d62974'
 const MAGENTA_LIGHT = '#f4a7c8'
-const ROSE_GLASS = '#ffd9e8'
-const ROSE_HIGHLIGHT = '#ffe8f1'
+const ROSE_GLASS = '#ffc9de'
+const ROSE_HIGHLIGHT = '#fff0f6'
 
 type PremiumGlobeProps = {
   introComplete: boolean
@@ -77,31 +77,31 @@ export default function PremiumGlobe({ introComplete, scaleRef }: PremiumGlobePr
         <sphereGeometry args={[1.5, 128, 128]} />
         <MeshTransmissionMaterial
           backside
-          backsideThickness={0.075}
-          thickness={0.13}
+          backsideThickness={0.038}
+          thickness={0.068}
           transmission={1}
-          color="#fff9fc"
+          color="#fffefe"
           attenuationColor={ROSE_GLASS}
-          attenuationDistance={4.8}
-          roughness={hovered && introComplete ? 0.012 : 0.018}
-          chromaticAberration={hovered && introComplete ? 0.014 : 0.009}
-          anisotropicBlur={0.032}
+          attenuationDistance={8.5}
+          roughness={hovered && introComplete ? 0.004 : 0.008}
+          chromaticAberration={hovered && introComplete ? 0.008 : 0.005}
+          anisotropicBlur={0.012}
           clearcoat={1}
-          clearcoatRoughness={0.012}
-          envMapIntensity={1.5}
-          ior={1.18}
+          clearcoatRoughness={0.006}
+          envMapIntensity={1.34}
+          ior={1.105}
           resolution={resolution}
         />
       </mesh>
 
-      <mesh scale={0.989}>
+      <mesh scale={0.991}>
         <sphereGeometry args={[1.5, 96, 96]} />
         <meshPhysicalMaterial
-          color={ROSE_GLASS}
+          color="#fffafd"
           transparent
-          opacity={0.009}
+          opacity={0.0035}
           transmission={1}
-          thickness={0.012}
+          thickness={0.006}
           roughness={0}
           clearcoat={1}
           clearcoatRoughness={0}
@@ -112,32 +112,37 @@ export default function PremiumGlobe({ introComplete, scaleRef }: PremiumGlobePr
 
       <group ref={highlightRef}>
         <mesh position={[-0.48, 0.62, 1.27]} rotation={[0.08, 0.32, -0.82]}>
-          <torusGeometry args={[0.54, 0.016, 16, 120, Math.PI * 0.64]} />
-          <meshBasicMaterial color={ROSE_HIGHLIGHT} transparent opacity={0.68} depthWrite={false} />
+          <torusGeometry args={[0.54, 0.014, 16, 120, Math.PI * 0.64]} />
+          <meshBasicMaterial color={ROSE_HIGHLIGHT} transparent opacity={0.76} depthWrite={false} />
         </mesh>
         <mesh position={[-0.42, 0.55, 1.31]} rotation={[0.06, 0.30, -0.80]}>
-          <torusGeometry args={[0.63, 0.007, 12, 120, Math.PI * 0.52]} />
-          <meshBasicMaterial color={MAGENTA_LIGHT} transparent opacity={0.46} depthWrite={false} />
+          <torusGeometry args={[0.63, 0.006, 12, 120, Math.PI * 0.52]} />
+          <meshBasicMaterial color={MAGENTA_LIGHT} transparent opacity={0.58} depthWrite={false} />
         </mesh>
 
         <mesh position={[0.88, -0.72, 1.02]} rotation={[0.08, -0.24, 2.36]}>
-          <torusGeometry args={[0.27, 0.008, 12, 72, Math.PI * 0.58]} />
-          <meshBasicMaterial color={MAGENTA_LIGHT} transparent opacity={0.36} depthWrite={false} />
+          <torusGeometry args={[0.27, 0.007, 12, 72, Math.PI * 0.58]} />
+          <meshBasicMaterial color={MAGENTA_LIGHT} transparent opacity={0.48} depthWrite={false} />
+        </mesh>
+
+        <mesh position={[0.98, 0.18, 1.08]} rotation={[-0.12, -0.38, 1.92]}>
+          <torusGeometry args={[0.42, 0.0045, 10, 88, Math.PI * 0.42]} />
+          <meshBasicMaterial color={MAGENTA} transparent opacity={0.22} depthWrite={false} />
         </mesh>
 
         <mesh position={[-0.96, 0.47, 1.11]}>
           <sphereGeometry args={[0.025, 20, 20]} />
-          <meshBasicMaterial color={ROSE_HIGHLIGHT} transparent opacity={0.88} depthWrite={false} />
+          <meshBasicMaterial color={ROSE_HIGHLIGHT} transparent opacity={0.94} depthWrite={false} />
         </mesh>
         <mesh position={[-0.86, 0.36, 1.20]}>
           <sphereGeometry args={[0.014, 16, 16]} />
-          <meshBasicMaterial color={MAGENTA_LIGHT} transparent opacity={0.82} depthWrite={false} />
+          <meshBasicMaterial color={MAGENTA_LIGHT} transparent opacity={0.9} depthWrite={false} />
         </mesh>
       </group>
 
-      <pointLight position={[-1.7, 1.5, 2.5]} color={ROSE_HIGHLIGHT} intensity={4.8} distance={7} />
-      <pointLight position={[1.55, -0.95, 2.2]} color={MAGENTA_LIGHT} intensity={3.2} distance={6} />
-      <pointLight position={[0.2, -0.1, -0.35]} color="#ffe8f2" intensity={2.8} distance={3.8} />
+      <pointLight position={[-1.7, 1.5, 2.5]} color={ROSE_HIGHLIGHT} intensity={5.4} distance={7} />
+      <pointLight position={[1.55, -0.95, 2.2]} color={MAGENTA_LIGHT} intensity={3.8} distance={6} />
+      <pointLight position={[0.2, -0.1, -0.35]} color="#ffd7e8" intensity={2.2} distance={3.8} />
     </group>
   )
 }
