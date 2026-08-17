@@ -48,7 +48,7 @@ test('H1 de Home se publica desde Admin y recupera el fallback premium', async (
   await expect(page.locator('.hero-copy h1')).toHaveText('Inglés para cada etapa de tu vida.')
 })
 
-test('un curso existente se edita, persiste y controla su visibilidad pública', async ({ page }) => {
+test('un curso existente se edita, persiste y controla listado y ficha pública', async ({ page }) => {
   await loginAdmin(page)
   await page.goto('/admin/cursos')
 
@@ -71,6 +71,8 @@ test('un curso existente se edita, persiste y controla su visibilidad pública',
 
   await page.goto('/programas')
   await expect(page.getByText('E2E English B1 Updated', { exact: true })).toHaveCount(0)
+  await page.goto('/programas/e2e-english-b1-updated')
+  await expect(page.getByRole('heading', { level: 1, name: 'No hemos encontrado este programa.' })).toBeVisible()
 
   await page.goto('/admin/cursos')
   courseCard = cardByText(page, '.course-admin-card', 'E2E English B1 Updated')
@@ -84,6 +86,17 @@ test('un curso existente se edita, persiste y controla su visibilidad pública',
   await expect(page.getByText('E2E English B1 Updated', { exact: true })).toBeVisible()
   await expect(page.getByText('B1+', { exact: true })).toBeVisible()
   await expect(page.getByText('Browser test course updated', { exact: true })).toBeVisible()
+  const publicCourse = cardByText(page, '.programs-v2-course', 'E2E English B1 Updated')
+  await publicCourse.getByRole('link', { name: 'Ver ficha del programa' }).click()
+  await expect(page).toHaveURL(/\/programas\/e2e-english-b1-updated$/)
+  await expect(page.getByRole('heading', { level: 1, name: 'E2E English B1 Updated' })).toBeVisible()
+  await expect(page.getByText('B1+', { exact: true }).first()).toBeVisible()
+  await expect(page.getByText('Browser test course updated', { exact: true })).toBeVisible()
+
+  await page.setViewportSize({ width: 390, height: 844 })
+  await expect(page.getByRole('link', { name: 'Quiero información' })).toBeVisible()
+  await expectNoHorizontalPageOverflow(page)
+  await page.setViewportSize({ width: 1280, height: 900 })
 
   await page.goto('/admin/cursos')
   courseCard = cardByText(page, '.course-admin-card', 'E2E English B1 Updated')
