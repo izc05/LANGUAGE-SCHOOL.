@@ -1,0 +1,180 @@
+/* FASE 7E.3 · Limpieza final Profesores
+ * Las personas mandan. Método y filosofía quedan como apoyo editorial,
+ * sin ilustraciones ni superficies que compitan con los retratos reales.
+ */
+
+.teachers-premium-v2 .teachers-v2-method-section {
+  padding: clamp(4.4rem, 6vw, 6rem) 0;
+  background: linear-gradient(180deg, #fff9f6 0%, #fffdfb 100%);
+}
+
+.teachers-premium-v2 .teachers-v2-method-intro {
+  grid-template-columns: minmax(0, 1.05fr) minmax(260px, .55fr);
+  gap: clamp(2rem, 5vw, 5rem);
+  margin-bottom: 2.3rem;
+}
+
+.teachers-premium-v2 .teachers-v2-method-intro h2 {
+  max-width: 760px;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(2.6rem, 4vw, 4.25rem);
+  line-height: .98;
+  letter-spacing: -.05em;
+}
+
+.teachers-premium-v2 .teachers-v2-method-intro p {
+  color: #76646e;
+  font-size: .94rem;
+  line-height: 1.72;
+}
+
+.teachers-premium-v2 .teachers-v2-method-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0;
+  overflow: visible;
+  border-top: 1px solid rgba(98, 61, 77, .12);
+  border-bottom: 1px solid rgba(98, 61, 77, .12);
+}
+
+.teachers-premium-v2 .teachers-v2-method-card {
+  display: block;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent !important;
+  box-shadow: none;
+}
+
+.teachers-premium-v2 .teachers-v2-method-card::before {
+  display: none;
+}
+
+.teachers-premium-v2 .teachers-v2-method-card + .teachers-v2-method-card {
+  border-left: 1px solid rgba(98, 61, 77, .12);
+}
+
+.teachers-premium-v2 .teachers-v2-method-copy {
+  padding: clamp(2rem, 4vw, 3.2rem);
+}
+
+.teachers-premium-v2 .teachers-v2-method-card h3 {
+  max-width: 520px;
+  margin: .75rem 0 1rem;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(2rem, 3vw, 3.15rem);
+  line-height: 1;
+  letter-spacing: -.04em;
+}
+
+.teachers-premium-v2 .teachers-v2-method-card p {
+  max-width: 560px;
+  color: #76646e;
+  font-size: .92rem;
+  line-height: 1.7;
+}
+
+.teachers-premium-v2 .teachers-v2-method-tags {
+  gap: .5rem .9rem;
+  margin-top: 1.4rem;
+}
+
+.teachers-premium-v2 .teachers-v2-method-tags span {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #a44165;
+  font-size: .72rem;
+  letter-spacing: .04em;
+}
+
+.teachers-premium-v2 .teachers-v2-method-tags span + span::before {
+  content: '·';
+  margin-right: .9rem;
+  color: #d07c97;
+}
+
+.teachers-premium-v2 .teachers-v2-method-visual {
+  display: none;
+}
+
+.teachers-premium-v2 .teachers-v2-philosophy-section {
+  padding: 0 0 clamp(4.4rem, 6vw, 6rem);
+  background: #fffdfb;
+}
+
+.teachers-premium-v2 .teachers-v2-philosophy {
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, .55fr);
+  gap: clamp(2.5rem, 6vw, 6rem);
+  padding: clamp(2.3rem, 4vw, 3.5rem) 0;
+  border: 0;
+  border-top: 1px solid rgba(98, 61, 77, .12);
+  border-bottom: 1px solid rgba(98, 61, 77, .12);
+  border-radius: 0;
+  background: transparent;
+}
+
+.teachers-premium-v2 .teachers-v2-philosophy-mark {
+  display: none;
+}
+
+.teachers-premium-v2 .teachers-v2-philosophy-copy h2 {
+  max-width: 760px;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(2.45rem, 3.8vw, 4rem);
+  line-height: .98;
+  letter-spacing: -.05em;
+}
+
+.teachers-premium-v2 .teachers-v2-philosophy-copy p {
+  max-width: 670px;
+}
+
+.teachers-premium-v2 .teachers-v2-values {
+  gap: 0;
+  border-top: 1px solid rgba(98, 61, 77, .10);
+}
+
+.teachers-premium-v2 .teachers-v2-values span {
+  padding: .8rem 0;
+  font-size: .84rem;
+}
+
+.teachers-premium-v2 .teachers-v2-cta-section {
+  padding: 0 0 clamp(5rem, 7vw, 7rem);
+  background: #fffdfb;
+}
+
+@media (max-width: 820px) {
+  .teachers-premium-v2 .teachers-v2-method-intro,
+  .teachers-premium-v2 .teachers-v2-philosophy {
+    grid-template-columns: 1fr;
+  }
+
+  .teachers-premium-v2 .teachers-v2-method-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .teachers-premium-v2 .teachers-v2-method-card + .teachers-v2-method-card {
+    border-left: 0;
+    border-top: 1px solid rgba(98, 61, 77, .12);
+  }
+
+  .teachers-premium-v2 .teachers-v2-philosophy {
+    gap: 2rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .teachers-premium-v2 .teachers-v2-method-copy {
+    padding: 1.8rem 0;
+  }
+
+  .teachers-premium-v2 .teachers-v2-method-tags span + span::before {
+    display: none;
+  }
+
+  .teachers-premium-v2 .teachers-v2-method-tags {
+    display: grid;
+  }
+}
