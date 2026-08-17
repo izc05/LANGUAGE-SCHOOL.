@@ -31,6 +31,8 @@ jobs:
       E2E_TEACHER_PASSWORD: E2eTeacherPass123!
       E2E_STUDENT_EMAIL: e2e-student@example.com
       E2E_STUDENT_PASSWORD: E2eStudentPass123!
+      VITE_TURNSTILE_SITE_KEY: 1x00000000000000000000AA
+      TURNSTILE_SECRET_KEY: 1x0000000000000000000000000000000AA
 
     steps:
       - name: Checkout
@@ -78,6 +80,7 @@ jobs:
             --http=127.0.0.1:8090 \
             --dir="$RUNNER_TEMP/language-school-e2e-pb-data" \
             --migrationsDir="$GITHUB_WORKSPACE/v3/pocketbase/pb_migrations" \
+            --hooksDir="$GITHUB_WORKSPACE/v3/pocketbase/pb_hooks" \
             >"$RUNNER_TEMP/e2e-pocketbase.log" 2>&1 &
           echo $! > "$RUNNER_TEMP/e2e-pocketbase.pid"
           for attempt in {1..30}; do
@@ -95,6 +98,7 @@ jobs:
         env:
           VITE_APP_MODE: connected
           VITE_POCKETBASE_URL: http://127.0.0.1:8090
+          VITE_TURNSTILE_SITE_KEY: ${{ env.VITE_TURNSTILE_SITE_KEY }}
         run: |
           npm ci
           npm run build
