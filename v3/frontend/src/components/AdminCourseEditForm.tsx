@@ -1,6 +1,6 @@
 import { type FormEvent, useState } from 'react'
-import { updateAdminCourse } from '../../services/pocketbase/adminAcademic'
-import type { CourseRecord } from '../../services/pocketbase/studentPortal'
+import { updateAdminCourse } from '../services/pocketbase/adminAcademic'
+import type { CourseRecord } from '../services/pocketbase/studentPortal'
 
 type Props = {
   course: CourseRecord

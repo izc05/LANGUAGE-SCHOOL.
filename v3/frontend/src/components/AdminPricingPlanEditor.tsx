@@ -3,7 +3,7 @@ import {
   updatePricingPlan,
   type PricingPlanInput,
   type PricingPlanRecord,
-} from '../../services/pocketbase/siteManagement'
+} from '../services/pocketbase/siteManagement'
 
 type Props = {
   plan: PricingPlanRecord

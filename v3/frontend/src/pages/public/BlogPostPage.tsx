@@ -93,8 +93,8 @@ function formatPublishedDate(value: string): string {
 export default function BlogPostPage() {
   const { slug = '' } = useParams()
   const [article, setArticle] = useState<ArticleDetail | null>(isDemoMode ? demoArticles[slug] || null : null)
-  const [loading, setLoading] = useState(!isDemoMode)
-  const [notFound, setNotFound] = useState(isDemoMode && !demoArticles[slug])
+  const [loading, setLoading] = useState<boolean>(!isDemoMode)
+  const [notFound, setNotFound] = useState<boolean>(isDemoMode && !demoArticles[slug])
 
   useEffect(() => {
     if (isDemoMode) {
