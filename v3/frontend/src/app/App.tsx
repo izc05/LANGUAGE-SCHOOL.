@@ -4,6 +4,7 @@ import IntroGatePage from '../pages/public/IntroGatePage'
 import BlogPage from '../pages/public/BlogPage'
 import BlogPostPage from '../pages/public/BlogPostPage'
 import ProgramsPage from '../pages/public/ProgramsPage'
+import CourseDetailPage from '../pages/public/CourseDetailPage'
 import PricingPage from '../pages/public/PricingPage'
 import TeachersPage from '../pages/public/TeachersPage'
 import AboutPage from '../pages/public/AboutPage'
@@ -44,6 +45,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<IntroGatePage />} />
       <Route path="/programas" element={<ProgramsPage />} />
+      <Route path="/programas/:slug" element={<CourseDetailPage />} />
       <Route path="/tarifas" element={<PricingPage />} />
       <Route path="/profesores" element={<TeachersPage />} />
       <Route path="/sobre-nosotros" element={<AboutPage />} />
