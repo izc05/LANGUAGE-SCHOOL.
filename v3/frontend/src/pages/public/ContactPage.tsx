@@ -68,22 +68,27 @@ export default function ContactPage() {
   return (
     <SiteShell>
       <div className="contact-premium-v2">
-        <section className="contact-v2-hero">
+        <section className="contact-v2-hero contact-v2-hero-editorial">
           <div className="container contact-v2-hero-grid">
             <div className="contact-v2-hero-copy">
-              <span className="eyebrow">CONTACTO</span>
+              <span className="eyebrow">CONTACTO · LANGUAGE SCHOOL</span>
               <h1>Cuéntanos qué quieres conseguir.</h1>
-              <p>Déjanos tus datos y tu objetivo. La academia podrá revisar tu solicitud y ponerse en contacto contigo.</p>
-              <div className="contact-v2-hero-tags"><span>Kids</span><span>Teens</span><span>Universidad</span><span>Adultos</span><span>Exámenes</span></div>
+              <p>Edad, nivel aproximado, objetivo o simplemente una duda. Con esa información podemos darte una primera orientación útil.</p>
+              <div className="contact-v2-direct" aria-label="Datos de contacto de la academia">
+                {settings.phone && <a href={`tel:${settings.phone}`}><small>TELÉFONO</small><strong>{settings.phone}</strong></a>}
+                {settings.email && <a href={`mailto:${settings.email}`}><small>EMAIL</small><strong>{settings.email}</strong></a>}
+                <a href={directionsUrl} target="_blank" rel="noreferrer"><small>ACADEMIA</small><strong>{mapAddress}</strong></a>
+              </div>
+              <a className="button button-primary contact-v2-hero-cta" href="#solicitud-contacto">Enviar una consulta</a>
             </div>
-            <div className={`contact-v2-hero-visual${heroPhoto ? ' has-cms-photo' : ''}`} style={heroPhoto ? { backgroundImage: `linear-gradient(180deg, rgba(53,25,39,.03), rgba(53,25,39,.21)), url(${heroPhoto})` } : undefined}>
-              <img src={contactVisual} alt="Ilustración de una profesora orientando a una estudiante" />
-              <div className="contact-v2-floating-note"><small>PRIMER PASO</small><strong>Cuéntanos tu objetivo.</strong></div>
+            <div className={`contact-v2-hero-visual${heroPhoto ? ' has-cms-photo' : ''}`} style={heroPhoto ? { backgroundImage: `linear-gradient(180deg, rgba(53,25,39,.03), rgba(53,25,39,.19)), url(${heroPhoto})` } : undefined}>
+              {!heroPhoto && <img src={contactVisual} alt="Ilustración editorial de una conversación en Language School" />}
+              <div className="contact-v2-floating-note"><small>LANGUAGE SCHOOL · JÓDAR</small><strong>Una primera conversación sencilla.</strong></div>
             </div>
           </div>
         </section>
 
-        <section className="section contact-v2-main-section">
+        <section className="section contact-v2-main-section" id="solicitud-contacto">
           <div className="container contact-v2-grid">
             <form className="contact-v2-form" onSubmit={handleSubmit}>
               <div className="contact-v2-form-heading">
