@@ -89,9 +89,9 @@ export default function CookieConsentBanner({ enabled, intro }: CookieConsentBan
         )}
 
         <div className="cookie-consent-actions">
-          <button className="button cookie-choice" type="button" onClick={() => save(emptyPreferences)}>Rechazar opcionales</button>
+          <button className="button button-primary cookie-choice" type="button" onClick={() => save(emptyPreferences)}>Rechazar opcionales</button>
           {configuring ? (
-            <button className="button button-primary cookie-choice" type="button" onClick={() => save(preferences)}>Guardar selección</button>
+            <button className="button cookie-choice" type="button" onClick={() => save(preferences)}>Guardar selección</button>
           ) : (
             <button className="button cookie-choice" type="button" onClick={() => setConfiguring(true)}>Configurar</button>
           )}
