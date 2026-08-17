@@ -97,8 +97,8 @@ export default function AdminSettingsPage() {
         <header className="cms-page-heading">
           <div>
             <span className="eyebrow">CMS · CONFIGURACIÓN</span>
-            <h2>Identidad y contacto</h2>
-            <p>Centraliza aquí los datos que reutilizan la cabecera, el acceso, los portales, el contacto y el pie de la web.</p>
+            <h2>Identidad, contacto y privacidad</h2>
+            <p>Centraliza aquí los datos públicos de la academia, los canales de contacto y las preferencias legales de la web.</p>
           </div>
           <span className="status info">Configuración global</span>
         </header>
@@ -121,14 +121,33 @@ export default function AdminSettingsPage() {
             <label className="field-stack"><span>Email</span><input type="email" autoComplete="email" value={form.email} onChange={(event) => setField('email', event.target.value)} placeholder="info@..." /></label>
             <div className="field-row">
               <label className="field-stack"><span>Teléfono</span><input type="tel" autoComplete="tel" value={form.phone} onChange={(event) => setField('phone', event.target.value)} /></label>
-              <label className="field-stack"><span>WhatsApp</span><input type="tel" value={form.whatsapp} onChange={(event) => setField('whatsapp', event.target.value)} /></label>
+              <label className="field-stack"><span>WhatsApp</span><input type="tel" value={form.whatsapp} onChange={(event) => setField('whatsapp', event.target.value)} placeholder="34618218187" /></label>
             </div>
+            <label className="settings-toggle-row"><span><strong>Botón flotante de WhatsApp</strong><small>Permite mostrar u ocultar el acceso rápido en toda la web pública.</small></span><input type="checkbox" checked={form.whatsappEnabled} onChange={(event) => setField('whatsappEnabled', event.target.checked)} /></label>
+            <label className="field-stack"><span>Mensaje inicial de WhatsApp</span><textarea rows={3} value={form.whatsappMessage} onChange={(event) => setField('whatsappMessage', event.target.value)} placeholder="Hola, quiero información..." /></label>
             <label className="field-stack"><span>Instagram</span><input type="url" value={form.instagram} onChange={(event) => setField('instagram', event.target.value)} placeholder="https://instagram.com/..." /></label>
             <label className="field-stack"><span>Facebook</span><input type="url" value={form.facebook} onChange={(event) => setField('facebook', event.target.value)} /></label>
             <label className="field-stack"><span>YouTube</span><input type="url" value={form.youtube} onChange={(event) => setField('youtube', event.target.value)} /></label>
+          </section>
+
+          <section className="panel cms-form admin-settings-privacy-panel">
+            <div className="panel-heading"><div><span className="eyebrow">COOKIES</span><h3>Consentimiento y servicios externos</h3></div></div>
+            <label className="settings-toggle-row"><span><strong>Mostrar panel de cookies</strong><small>Si está activo, Google Maps y futuros servicios opcionales esperan el consentimiento correspondiente.</small></span><input type="checkbox" checked={form.cookieBannerEnabled} onChange={(event) => setField('cookieBannerEnabled', event.target.checked)} /></label>
+            <label className="field-stack"><span>Texto breve del panel</span><textarea rows={4} value={form.cookieIntro} onChange={(event) => setField('cookieIntro', event.target.value)} /></label>
+            <div className="settings-legal-note"><strong>Importante</strong><p>El mecanismo técnico queda preparado, pero los textos legales definitivos deben revisarse antes de publicar la web en producción.</p></div>
+          </section>
+
+          <section className="panel cms-form admin-settings-legal-panel">
+            <div className="panel-heading"><div><span className="eyebrow">LEGAL</span><h3>Textos públicos</h3></div></div>
+            <label className="field-stack"><span>Política de cookies</span><textarea rows={8} value={form.cookiePolicyText} onChange={(event) => setField('cookiePolicyText', event.target.value)} placeholder="Texto definitivo de la política de cookies..." /></label>
+            <label className="field-stack"><span>Política de privacidad</span><textarea rows={8} value={form.privacyPolicyText} onChange={(event) => setField('privacyPolicyText', event.target.value)} placeholder="Texto definitivo de privacidad..." /></label>
+            <label className="field-stack"><span>Aviso legal</span><textarea rows={8} value={form.legalNoticeText} onChange={(event) => setField('legalNoticeText', event.target.value)} placeholder="Identificación del titular, condiciones de uso..." /></label>
+          </section>
+
+          <div className="admin-settings-submit-row">
             <button className="button button-primary" type="submit" disabled={saving}>{saving ? 'Guardando…' : 'Guardar configuración'}</button>
             {isDemoMode && <small className="muted">Vista de demostración: no se guardan cambios reales.</small>}
-          </section>
+          </div>
         </form>
       </div>
     </DashboardShell>
