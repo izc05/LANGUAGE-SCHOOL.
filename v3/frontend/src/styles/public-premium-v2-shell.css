@@ -450,7 +450,7 @@
     font: 700 .78rem/1 var(--ls-font-ui);
     cursor: pointer;
     position: relative;
-    z-index: 83;
+    z-index: 80;
   }
 
   .public-premium-v2 .nav-toggle-lines {
