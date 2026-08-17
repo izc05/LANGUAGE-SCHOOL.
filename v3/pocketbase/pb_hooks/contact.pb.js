@@ -2,8 +2,17 @@ function readText(value) {
   return typeof value === 'string' ? value.trim() : ''
 }
 
+function traceContact(stage, detail) {
+  if (detail === undefined || detail === '') {
+    console.log('[contact] stage=' + stage)
+    return
+  }
+  console.log('[contact] stage=' + stage + ' ' + detail)
+}
+
 function logContactError(stage, error) {
   $app.logger().error('[contact] protected contact request failed', 'stage', stage, 'error', error)
+  traceContact(stage + '-error')
 }
 
 function invalidContactPayload(body) {
@@ -46,11 +55,13 @@ routerAdd('POST', '/api/language-school/contact', (e) => {
   const secret = readText($os.getenv('TURNSTILE_SECRET_KEY'))
   if (!secret) {
     $app.logger().error('[contact] TURNSTILE_SECRET_KEY is not configured')
+    traceContact('secret-missing')
     return e.json(503, { message: 'La protección del formulario no está disponible temporalmente.' })
   }
 
   let verification
   try {
+    traceContact('siteverify-start')
     const response = $http.send({
       url: 'https://challenges.cloudflare.com/turnstile/v0/siteverify',
       method: 'POST',
@@ -59,11 +70,13 @@ routerAdd('POST', '/api/language-school/contact', (e) => {
       timeout: 10,
     })
 
+    traceContact('siteverify-response', 'status=' + response.statusCode + ' json=' + Boolean(response.json))
     if (response.statusCode !== 200 || !response.json) {
       $app.logger().warn('[contact] Turnstile Siteverify returned an unexpected response', 'status', response.statusCode)
       return e.json(503, { message: 'No se ha podido verificar el formulario. Inténtalo de nuevo.' })
     }
     verification = response.json
+    traceContact('siteverify-json', 'success=' + String(verification.success))
   } catch (error) {
     logContactError('siteverify', error)
     return e.json(503, { message: 'No se ha podido verificar el formulario. Inténtalo de nuevo.' })
@@ -71,21 +84,26 @@ routerAdd('POST', '/api/language-school/contact', (e) => {
 
   if (verification.success !== true) {
     $app.logger().warn('[contact] Turnstile rejected a contact request')
+    traceContact('siteverify-rejected')
     return e.json(400, { message: 'No se ha podido validar la verificación de seguridad.' })
   }
 
+  traceContact('siteverify-accepted')
   const expectedAction = readText($os.getenv('TURNSTILE_EXPECTED_ACTION'))
   if (expectedAction && readText(verification.action) !== expectedAction) {
     $app.logger().warn('[contact] Turnstile action mismatch')
+    traceContact('action-mismatch')
     return e.json(400, { message: 'No se ha podido validar la verificación de seguridad.' })
   }
 
   if (!allowedTurnstileHostname(verification.hostname)) {
     $app.logger().warn('[contact] Turnstile hostname mismatch')
+    traceContact('hostname-mismatch')
     return e.json(400, { message: 'No se ha podido validar la verificación de seguridad.' })
   }
 
   try {
+    traceContact('persist-start')
     const collection = $app.findCollectionByNameOrId('contact_requests')
     const record = new Record(collection)
     record.set('name', readText(body.name))
@@ -95,6 +113,7 @@ routerAdd('POST', '/api/language-school/contact', (e) => {
     record.set('message', readText(body.message))
     record.set('status', 'NEW')
     $app.save(record)
+    traceContact('persist-success')
   } catch (error) {
     logContactError('persist', error)
     return e.json(500, { message: 'No se ha podido registrar la solicitud. Inténtalo de nuevo.' })
