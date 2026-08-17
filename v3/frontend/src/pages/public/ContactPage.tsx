@@ -4,12 +4,14 @@ import SiteShell from '../../components/SiteShell'
 import { isDemoMode } from '../../config/environment'
 import { demoSiteSettings } from '../../services/pocketbase/siteManagement'
 import { getPublicSettings, submitContactRequest, type PublicSettings } from '../../services/pocketbase/publicAcademy'
+import { getPublishedHomeVisualUrl } from '../../services/pocketbase/siteContent'
 
 const DEFAULT_ACADEMY_ADDRESS = 'Calle Luis Carvajal, 23, Jódar, Jaén'
 
 export default function ContactPage() {
   const [searchParams] = useSearchParams()
   const [settings, setSettings] = useState<PublicSettings>({ ...demoSiteSettings, logoUrl: '' })
+  const [heroPhoto, setHeroPhoto] = useState('')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
@@ -22,7 +24,14 @@ export default function ContactPage() {
 
   useEffect(() => {
     let mounted = true
-    getPublicSettings().then((value) => { if (mounted) setSettings(value) }).catch(() => undefined)
+    Promise.all([
+      getPublicSettings(),
+      getPublishedHomeVisualUrl('contactHeroMediaId'),
+    ]).then(([value, photo]) => {
+      if (!mounted) return
+      setSettings(value)
+      setHeroPhoto(photo)
+    }).catch(() => undefined)
     return () => { mounted = false }
   }, [])
 
@@ -67,7 +76,7 @@ export default function ContactPage() {
               <p>Déjanos tus datos y tu objetivo. La academia podrá revisar tu solicitud y ponerse en contacto contigo.</p>
               <div className="contact-v2-hero-tags"><span>Kids</span><span>Teens</span><span>Universidad</span><span>Adultos</span><span>Exámenes</span></div>
             </div>
-            <div className="contact-v2-hero-visual">
+            <div className={`contact-v2-hero-visual${heroPhoto ? ' has-cms-photo' : ''}`} style={heroPhoto ? { backgroundImage: `linear-gradient(180deg, rgba(53,25,39,.03), rgba(53,25,39,.21)), url(${heroPhoto})` } : undefined}>
               <img src={contactVisual} alt="Ilustración de una profesora orientando a una estudiante" />
               <div className="contact-v2-floating-note"><small>PRIMER PASO</small><strong>Cuéntanos tu objetivo.</strong></div>
             </div>
