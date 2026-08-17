@@ -9,6 +9,14 @@ async function expectNoHorizontalOverflow(page: Page) {
   expect(overflow.scrollWidth).toBeLessThanOrEqual(overflow.clientWidth + 1)
 }
 
+async function expectMenuInsideViewport(page: Page, viewportWidth: number) {
+  const box = await page.locator('#public-main-navigation').boundingBox()
+  expect(box).not.toBeNull()
+  if (!box) return
+  expect(box.x).toBeGreaterThanOrEqual(-1)
+  expect(box.x + box.width).toBeLessThanOrEqual(viewportWidth + 1)
+}
+
 async function expectShell(page: Page) {
   await expect(page.locator('.site-header')).toBeVisible()
   await expect(page.locator('.site-footer')).toBeVisible()
@@ -48,7 +56,9 @@ test('el menú compacto funciona con teclado, Escape y cierre tras navegación e
   await toggle.click()
   await expect(toggle).toHaveAttribute('aria-expanded', 'true')
   await expect(navigation).toBeVisible()
+  await expectMenuInsideViewport(page, 820)
   await expect(page.locator('.nav-backdrop')).toBeVisible()
+  await expect(page.locator('.nav-panel-close')).toBeInViewport()
   await expect(page.locator('.nav-links a').first()).toBeFocused()
   expect(await page.evaluate(() => document.body.style.overflow)).toBe('hidden')
 
@@ -76,10 +86,12 @@ test('el shell móvil a 390 mantiene controles táctiles y cero overflow', async
 
   const navigation = page.locator('#public-main-navigation')
   await expect(navigation).toBeVisible()
+  await expectMenuInsideViewport(page, 390)
   const navBox = await navigation.boundingBox()
   expect(navBox?.width ?? 9999).toBeLessThanOrEqual(390)
 
   const close = page.locator('.nav-panel-close')
+  await expect(close).toBeInViewport()
   const closeBox = await close.boundingBox()
   expect(closeBox?.width ?? 0).toBeGreaterThanOrEqual(44)
   expect(closeBox?.height ?? 0).toBeGreaterThanOrEqual(44)
