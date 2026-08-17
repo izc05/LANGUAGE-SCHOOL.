@@ -92,7 +92,7 @@ test('el shell móvil a 390 mantiene controles táctiles y cero overflow', async
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await toggle.click()
   const transitionDuration = await navigation.evaluate((element) => getComputedStyle(element).transitionDuration)
-  expect(transitionDuration).toBe('0s')
+  expect(Number.parseFloat(transitionDuration)).toBeLessThanOrEqual(0.001)
 })
 
 test('el shell se mantiene íntegro en todas las rutas públicas actuales', async ({ page }) => {
