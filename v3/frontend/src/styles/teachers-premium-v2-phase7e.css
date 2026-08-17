@@ -1,0 +1,265 @@
+/* FASE 7E.1 · Profesores
+ * Personas reales > decoración. Foto, nombre, bio y especialidad mandan.
+ */
+
+.teachers-premium-v2 .teachers-v2-hero-editorial {
+  min-height: 0;
+  background:
+    radial-gradient(circle at 84% 13%, rgba(208, 78, 119, .08), transparent 24rem),
+    linear-gradient(180deg, #fffdfb 0%, #fff8f5 100%);
+}
+
+.teachers-premium-v2 .teachers-v2-hero-grid {
+  grid-template-columns: minmax(0, .9fr) minmax(470px, 1.1fr);
+  gap: clamp(3rem, 7vw, 7rem);
+  padding-top: clamp(4.8rem, 7vw, 7rem);
+  padding-bottom: clamp(5rem, 8vw, 8rem);
+}
+
+.teachers-premium-v2 .teachers-v2-hero-copy h1 {
+  max-width: 720px;
+  font-size: clamp(3.45rem, 5.7vw, 5.9rem);
+  line-height: .94;
+  letter-spacing: -.058em;
+}
+
+.teachers-premium-v2 .teachers-v2-hero-copy h1 span {
+  font-weight: 500;
+}
+
+.teachers-premium-v2 .teachers-v2-hero-copy > p {
+  max-width: 620px;
+  line-height: 1.76;
+}
+
+.teachers-premium-v2 .teachers-v2-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .75rem;
+  margin-top: 1.9rem;
+}
+
+.teachers-premium-v2 .teachers-v2-hero-visual {
+  min-height: clamp(500px, 46vw, 650px);
+  border-radius: 34px 34px 92px 34px;
+  background-position: center;
+  background-size: cover;
+  box-shadow: 0 31px 76px rgba(78, 37, 55, .12);
+}
+
+.teachers-premium-v2 .teachers-v2-hero-visual.has-cms-photo > img {
+  display: none;
+}
+
+.teachers-premium-v2 .teachers-v2-floating-note {
+  left: 1.5rem;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  width: auto;
+  max-width: 520px;
+  padding: 1.15rem 1.25rem;
+  border-radius: 20px;
+  background: rgba(255,251,249,.84);
+  backdrop-filter: blur(18px);
+}
+
+.teachers-premium-v2 .teachers-v2-floating-note small {
+  letter-spacing: .13em;
+}
+
+.teachers-premium-v2 .teachers-v2-team-section {
+  padding: clamp(5.8rem, 8vw, 8rem) 0;
+  background: #fffdfb;
+}
+
+.teachers-premium-v2 .teachers-v2-section-head {
+  grid-template-columns: minmax(0, 1.15fr) minmax(280px, .55fr);
+  gap: clamp(2.8rem, 7vw, 7rem);
+  margin-bottom: clamp(3rem, 6vw, 5rem);
+}
+
+.teachers-premium-v2 .teachers-v2-section-head h2 {
+  max-width: 780px;
+  font-size: clamp(2.8rem, 4.5vw, 4.7rem);
+  line-height: .98;
+  letter-spacing: -.052em;
+}
+
+.teachers-premium-v2 .teachers-v2-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(1.5rem, 3vw, 2.4rem);
+}
+
+.teachers-premium-v2 .teachers-v2-card {
+  min-height: 520px;
+  display: grid;
+  grid-template-columns: minmax(230px, .95fr) minmax(0, 1.05fr);
+  overflow: hidden;
+  border: 1px solid rgba(108, 64, 82, .09);
+  border-radius: 28px 28px 62px 28px;
+  background: #fff;
+  box-shadow: 0 22px 58px rgba(75, 36, 52, .065);
+}
+
+.teachers-premium-v2 .teachers-v2-photo-wrap {
+  min-height: 100%;
+  border-radius: 0;
+}
+
+.teachers-premium-v2 .teachers-v2-photo-wrap > img,
+.teachers-premium-v2 .teachers-v2-photo-fallback {
+  width: 100%;
+  height: 100%;
+  min-height: 520px;
+  object-fit: cover;
+}
+
+.teachers-premium-v2 .teachers-v2-card-index {
+  top: 1rem;
+  right: 1rem;
+  left: auto;
+  bottom: auto;
+  background: rgba(255,251,249,.86);
+  backdrop-filter: blur(10px);
+}
+
+.teachers-premium-v2 .teachers-v2-card-copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(2rem, 4vw, 3.2rem);
+}
+
+.teachers-premium-v2 .teachers-v2-card-copy h3 {
+  margin: .75rem 0 1rem;
+  font-size: clamp(2rem, 3vw, 3.1rem);
+  line-height: 1;
+  letter-spacing: -.04em;
+}
+
+.teachers-premium-v2 .teachers-v2-card-copy > p {
+  margin: 0;
+  color: #796671;
+  font-size: .94rem;
+  line-height: 1.7;
+}
+
+.teachers-premium-v2 .teachers-v2-specialties {
+  margin-top: 1.5rem;
+}
+
+.teachers-premium-v2 .teachers-v2-card-copy blockquote {
+  display: none;
+}
+
+.teachers-premium-v2 .teachers-v2-method-section {
+  padding: clamp(5.4rem, 7vw, 7rem) 0;
+  background: linear-gradient(180deg, #fff9f6, #fffdfb);
+}
+
+.teachers-premium-v2 .teachers-v2-method-intro {
+  margin-bottom: clamp(2.5rem, 5vw, 4rem);
+}
+
+.teachers-premium-v2 .teachers-v2-method-grid {
+  gap: 1px;
+  overflow: hidden;
+  border-top: 1px solid rgba(99,62,79,.11);
+  border-bottom: 1px solid rgba(99,62,79,.11);
+}
+
+.teachers-premium-v2 .teachers-v2-method-card {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.teachers-premium-v2 .teachers-v2-method-card + .teachers-v2-method-card {
+  border-left: 1px solid rgba(99,62,79,.11);
+}
+
+.teachers-premium-v2 .teachers-v2-method-visual {
+  opacity: .72;
+}
+
+.teachers-premium-v2 .teachers-v2-philosophy-section,
+.teachers-premium-v2 .teachers-v2-cta-section {
+  padding-top: clamp(4.8rem, 7vw, 6.5rem);
+  padding-bottom: clamp(4.8rem, 7vw, 6.5rem);
+}
+
+@media (max-width: 1100px) {
+  .teachers-premium-v2 .teachers-v2-hero-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .teachers-premium-v2 .teachers-v2-hero-visual {
+    min-height: 520px;
+  }
+
+  .teachers-premium-v2 .teachers-v2-card {
+    grid-template-columns: 1fr;
+  }
+
+  .teachers-premium-v2 .teachers-v2-photo-wrap > img,
+  .teachers-premium-v2 .teachers-v2-photo-fallback {
+    min-height: 390px;
+    max-height: 460px;
+  }
+}
+
+@media (max-width: 780px) {
+  .teachers-premium-v2 .teachers-v2-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .teachers-premium-v2 .teachers-v2-section-head {
+    grid-template-columns: 1fr;
+    gap: 1.2rem;
+  }
+
+  .teachers-premium-v2 .teachers-v2-method-grid {
+    display: block;
+  }
+
+  .teachers-premium-v2 .teachers-v2-method-card + .teachers-v2-method-card {
+    border-left: 0;
+    border-top: 1px solid rgba(99,62,79,.11);
+  }
+}
+
+@media (max-width: 600px) {
+  .teachers-premium-v2 .teachers-v2-hero-grid {
+    padding-top: 3.4rem;
+    padding-bottom: 4.6rem;
+  }
+
+  .teachers-premium-v2 .teachers-v2-hero-copy h1 {
+    font-size: clamp(3rem, 15vw, 4.7rem);
+  }
+
+  .teachers-premium-v2 .teachers-v2-hero-visual {
+    min-height: 380px;
+    border-radius: 26px 26px 56px 26px;
+  }
+
+  .teachers-premium-v2 .teachers-v2-hero-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .teachers-premium-v2 .teachers-v2-hero-actions .button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .teachers-premium-v2 .teachers-v2-card {
+    border-radius: 24px 24px 48px 24px;
+  }
+
+  .teachers-premium-v2 .teachers-v2-card-copy {
+    padding: 1.7rem 1.4rem 2rem;
+  }
+}
