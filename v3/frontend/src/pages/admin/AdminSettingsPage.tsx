@@ -98,7 +98,7 @@ export default function AdminSettingsPage() {
           <div>
             <span className="eyebrow">CMS · CONFIGURACIÓN</span>
             <h2>Identidad y contacto</h2>
-            <p>Centraliza aquí los datos públicos de la academia, los canales de contacto y las preferencias legales de la web.</p>
+            <p>Centraliza aquí los datos públicos de la academia, los canales de contacto, el consentimiento y la identificación legal.</p>
           </div>
           <span className="status info">Configuración global</span>
         </header>
@@ -134,14 +134,21 @@ export default function AdminSettingsPage() {
             <div className="panel-heading"><div><span className="eyebrow">COOKIES</span><h3>Consentimiento y servicios externos</h3></div></div>
             <label className="settings-toggle-row"><span><strong>Mostrar panel de cookies</strong><small>Si está activo, Google Maps y futuros servicios opcionales esperan el consentimiento correspondiente.</small></span><input type="checkbox" checked={form.cookieBannerEnabled} onChange={(event) => setField('cookieBannerEnabled', event.target.checked)} /></label>
             <label className="field-stack"><span>Texto breve del panel</span><textarea rows={4} value={form.cookieIntro} onChange={(event) => setField('cookieIntro', event.target.value)} /></label>
-            <div className="settings-legal-note"><strong>Importante</strong><p>El mecanismo técnico queda preparado, pero los textos legales definitivos deben revisarse antes de publicar la web en producción.</p></div>
+            <div className="settings-legal-note"><strong>Consentimiento real</strong><p>Las categorías opcionales permanecen bloqueadas hasta que el visitante decida. Google Maps depende de Preferencias y el usuario puede cambiar su decisión desde el footer.</p></div>
           </section>
 
           <section className="panel cms-form admin-settings-legal-panel">
-            <div className="panel-heading"><div><span className="eyebrow">LEGAL</span><h3>Textos públicos</h3></div></div>
-            <label className="field-stack"><span>Política de cookies</span><textarea rows={8} value={form.cookiePolicyText} onChange={(event) => setField('cookiePolicyText', event.target.value)} placeholder="Texto definitivo de la política de cookies..." /></label>
-            <label className="field-stack"><span>Política de privacidad</span><textarea rows={8} value={form.privacyPolicyText} onChange={(event) => setField('privacyPolicyText', event.target.value)} placeholder="Texto definitivo de privacidad..." /></label>
-            <label className="field-stack"><span>Aviso legal</span><textarea rows={8} value={form.legalNoticeText} onChange={(event) => setField('legalNoticeText', event.target.value)} placeholder="Identificación del titular, condiciones de uso..." /></label>
+            <div className="panel-heading"><div><span className="eyebrow">LEGAL Y PRIVACIDAD</span><h3>Identificación y textos públicos</h3></div></div>
+            <p className="muted">Estos datos alimentan automáticamente el Aviso legal y la Política de privacidad. Completa los datos reales del titular antes de publicar en producción.</p>
+            <label className="field-stack"><span>Titular / responsable legal</span><input value={form.legalOwnerName} onChange={(event) => setField('legalOwnerName', event.target.value)} placeholder="Nombre y apellidos o razón social" /><small>No confundas la marca comercial con el titular jurídico si son distintos.</small></label>
+            <div className="field-row">
+              <label className="field-stack"><span>NIF / CIF</span><input value={form.legalTaxId} onChange={(event) => setField('legalTaxId', event.target.value)} placeholder="NIF o CIF real" /></label>
+              <label className="field-stack"><span>Datos registrales, si procede</span><input value={form.legalRegistryDetails} onChange={(event) => setField('legalRegistryDetails', event.target.value)} placeholder="Registro, tomo, folio, hoja..." /></label>
+            </div>
+            <div className="settings-legal-note"><strong>Plantillas estructuradas incluidas</strong><p>La web ya presenta responsable, finalidades, bases jurídicas, conservación, destinatarios, derechos, cookies y condiciones de uso. Los campos siguientes sirven para añadir particularidades propias de la academia.</p></div>
+            <label className="field-stack"><span>Texto adicional · Política de cookies</span><textarea rows={6} value={form.cookiePolicyText} onChange={(event) => setField('cookiePolicyText', event.target.value)} placeholder="Información adicional específica sobre cookies o proveedores..." /></label>
+            <label className="field-stack"><span>Texto adicional · Política de privacidad</span><textarea rows={6} value={form.privacyPolicyText} onChange={(event) => setField('privacyPolicyText', event.target.value)} placeholder="Cláusulas o tratamientos específicos de la academia..." /></label>
+            <label className="field-stack"><span>Texto adicional · Aviso legal</span><textarea rows={6} value={form.legalNoticeText} onChange={(event) => setField('legalNoticeText', event.target.value)} placeholder="Autorizaciones, datos profesionales u otras condiciones específicas..." /></label>
           </section>
 
           <div className="admin-settings-submit-row">
