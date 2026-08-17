@@ -5,6 +5,8 @@ import { isDemoMode } from '../../config/environment'
 import { demoSiteSettings } from '../../services/pocketbase/siteManagement'
 import { getPublicSettings, submitContactRequest, type PublicSettings } from '../../services/pocketbase/publicAcademy'
 
+const DEFAULT_ACADEMY_ADDRESS = 'Calle Luis Carvajal, 23, Jódar, Jaén'
+
 export default function ContactPage() {
   const [searchParams] = useSearchParams()
   const [settings, setSettings] = useState<PublicSettings>({ ...demoSiteSettings, logoUrl: '' })
@@ -49,6 +51,11 @@ export default function ContactPage() {
     }
   }
 
+  const configuredAddress = settings.address.trim()
+  const mapAddress = !configuredAddress || configuredAddress.toLowerCase() === 'jódar, jaén' ? DEFAULT_ACADEMY_ADDRESS : configuredAddress
+  const mapEmbedUrl = `https://www.google.com/maps?q=${encodeURIComponent(mapAddress)}&output=embed`
+  const directionsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapAddress)}`
+
   return (
     <SiteShell>
       <div className="contact-premium-v2">
@@ -71,9 +78,7 @@ export default function ContactPage() {
           <div className="container contact-v2-grid">
             <form className="contact-v2-form" onSubmit={handleSubmit}>
               <div className="contact-v2-form-heading">
-                <span className="eyebrow">SOLICITUD</span>
-                <h2>Quiero información</h2>
-                <p>Cuanto mejor conozcamos tu objetivo, más útil será la primera respuesta.</p>
+                <span className="eyebrow">SOLICITUD</span><h2>Quiero información</h2><p>Cuanto mejor conozcamos tu objetivo, más útil será la primera respuesta.</p>
               </div>
               {notice && <div className="cms-notice success-notice" role="status">{notice}</div>}
               {error && <div className="cms-notice" role="alert">{error}</div>}
@@ -91,13 +96,9 @@ export default function ContactPage() {
             </form>
 
             <aside className="contact-v2-info">
-              <div className="contact-v2-info-heading">
-                <span className="eyebrow">{settings.academyName || 'ACADEMIA'}</span>
-                <h2>También puedes encontrarnos aquí.</h2>
-                <p>Elige el canal que te resulte más cómodo.</p>
-              </div>
+              <div className="contact-v2-info-heading"><span className="eyebrow">{settings.academyName || 'ACADEMIA'}</span><h2>También puedes encontrarnos aquí.</h2><p>Elige el canal que te resulte más cómodo.</p></div>
               <div className="contact-v2-info-list">
-                {settings.address && <div><span>01</span><strong>Ubicación</strong><p>{settings.address}</p></div>}
+                <div><span>01</span><strong>Ubicación</strong><p>{mapAddress}</p></div>
                 {settings.email && <div><span>02</span><strong>Email</strong><a href={`mailto:${settings.email}`}>{settings.email}</a></div>}
                 {settings.phone && <div><span>03</span><strong>Teléfono</strong><a href={`tel:${settings.phone}`}>{settings.phone}</a></div>}
                 {settings.whatsapp && <div><span>04</span><strong>WhatsApp</strong><p>{settings.whatsapp}</p></div>}
@@ -105,6 +106,20 @@ export default function ContactPage() {
               </div>
               <div className="contact-v2-info-footer"><span aria-hidden="true">↗</span><p>Escríbenos por el canal que prefieras y te responderemos lo antes posible.</p></div>
             </aside>
+          </div>
+        </section>
+
+        <section className="contact-v2-map-section" aria-labelledby="academy-location-title">
+          <div className="container">
+            <div className="contact-v2-map-heading"><div><span className="eyebrow">DÓNDE ESTAMOS</span><h2 id="academy-location-title">Ven a conocernos.</h2></div><p>Language School está en el centro de Jódar. Puedes abrir la ubicación directamente para calcular tu ruta.</p></div>
+            <div className="contact-v2-map-card">
+              <iframe title={`Mapa de Language School en ${mapAddress}`} src={mapEmbedUrl} loading="lazy" referrerPolicy="no-referrer-when-downgrade" allowFullScreen />
+              <div className="contact-v2-map-overlay">
+                <span className="contact-v2-map-pin" aria-hidden="true">⌖</span>
+                <div><small>LANGUAGE SCHOOL · ROCÍO RUIZ</small><strong>{mapAddress}</strong><span>Jódar · Jaén</span></div>
+                <a className="button button-primary" href={directionsUrl} target="_blank" rel="noreferrer">Cómo llegar ↗</a>
+              </div>
+            </div>
           </div>
         </section>
 
