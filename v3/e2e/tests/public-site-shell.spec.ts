@@ -40,6 +40,39 @@ test('el shell desktop mantiene marca, navegación y acceso sin compresión en 1
   }
 })
 
+test('la Home completa mantiene sus siete bloques y cero overflow en 1440 1180 820 y 390', async ({ page }) => {
+  const sections = [
+    '.hero-v3',
+    '.programs-premium',
+    '.academy-real-premium',
+    '.method-premium',
+    '.platform-premium',
+    '.blog-premium',
+    '.home-final-cta',
+  ]
+
+  for (const width of [1440, 1180, 820, 390]) {
+    await page.setViewportSize({ width, height: width <= 390 ? 844 : 900 })
+    await enterHome(page)
+
+    for (const selector of sections) {
+      const section = page.locator(selector)
+      await expect(section).toHaveCount(1)
+      const box = await section.boundingBox()
+      expect(box, `${selector} debe tener geometría en ${width}px`).not.toBeNull()
+      if (!box) continue
+      expect(box.x, `${selector} empieza fuera del viewport en ${width}px`).toBeGreaterThanOrEqual(-1)
+      expect(box.x + box.width, `${selector} desborda el viewport en ${width}px`).toBeLessThanOrEqual(width + 1)
+    }
+
+    await expect(page.locator('.program-card-premium')).toHaveCount(5)
+    await expect(page.locator('.method-premium-step')).toHaveCount(4)
+    await expect(page.locator('.platform-dashboard-card')).toHaveCount(1)
+    await expect(page.locator('.blog-featured-card')).toHaveCount(1)
+    await expectNoHorizontalOverflow(page)
+  }
+})
+
 test('el menú compacto funciona con teclado, Escape y cierre tras navegación en 820', async ({ page }) => {
   await page.setViewportSize({ width: 820, height: 900 })
   await enterHome(page)
