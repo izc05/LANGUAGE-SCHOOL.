@@ -1,0 +1,203 @@
+.premium-static-sky {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.premium-static-cloud,
+.premium-cloud-wipe {
+  position: absolute;
+  filter: drop-shadow(0 18px 28px rgba(198, 92, 132, .08));
+}
+
+.premium-static-cloud::before,
+.premium-static-cloud i,
+.premium-cloud-wipe::before,
+.premium-cloud-wipe i {
+  content: '';
+  position: absolute;
+  display: block;
+  border-radius: 999px;
+  background: radial-gradient(circle at 42% 32%, #fff 0 38%, #fff7fa 72%, #f8e7ed 100%);
+}
+
+.premium-static-cloud::before {
+  width: 160px;
+  height: 54px;
+  left: 0;
+  top: 34px;
+}
+
+.premium-static-cloud i:nth-child(1) { width: 76px; height: 76px; left: 28px; top: 6px; }
+.premium-static-cloud i:nth-child(2) { width: 94px; height: 94px; left: 73px; top: 0; }
+.premium-static-cloud i:nth-child(3) { width: 68px; height: 68px; left: 124px; top: 22px; }
+
+.premium-static-cloud.cloud-a {
+  left: 5vw;
+  top: 17vh;
+  transform: scale(.82);
+  opacity: .72;
+  animation: premiumCloudDriftA 16s ease-in-out infinite alternate;
+}
+
+.premium-static-cloud.cloud-b {
+  right: 2vw;
+  top: 26vh;
+  transform: scale(.64) scaleX(-1);
+  opacity: .56;
+  animation: premiumCloudDriftB 18s ease-in-out infinite alternate;
+}
+
+.premium-static-cloud.cloud-c {
+  left: 12vw;
+  bottom: 16vh;
+  transform: scale(.48);
+  opacity: .42;
+  animation: premiumCloudDriftB 19s ease-in-out infinite alternate-reverse;
+}
+
+.premium-static-cloud.cloud-d {
+  right: 14vw;
+  bottom: 12vh;
+  transform: scale(.54);
+  opacity: .48;
+  animation: premiumCloudDriftA 17s ease-in-out infinite alternate-reverse;
+}
+
+.premium-static-plane-wrap {
+  position: absolute;
+  left: 50%;
+  top: 45%;
+  width: clamp(110px, 12vw, 185px);
+  transform-origin: -155px 20px;
+  animation: premiumPlaneOrbit 11s cubic-bezier(.45,.05,.48,.95) infinite;
+  filter: drop-shadow(0 18px 18px rgba(82, 49, 64, .16));
+}
+
+.premium-static-plane {
+  width: 100%;
+  height: auto;
+  transform: rotate(-8deg);
+}
+
+.premium-cloud-wipe {
+  z-index: 30;
+  width: min(54vw, 720px);
+  height: min(34vw, 430px);
+  opacity: 0;
+  transition: transform .95s cubic-bezier(.2,.74,.2,1), opacity .22s ease;
+}
+
+.premium-cloud-wipe::before {
+  width: 82%;
+  height: 42%;
+  left: 9%;
+  top: 42%;
+}
+
+.premium-cloud-wipe i:nth-child(1) { width: 42%; height: 72%; left: 8%; top: 17%; }
+.premium-cloud-wipe i:nth-child(2) { width: 52%; height: 88%; left: 31%; top: 2%; }
+.premium-cloud-wipe i:nth-child(3) { width: 38%; height: 66%; right: 2%; top: 27%; }
+
+.premium-cloud-wipe.wipe-left {
+  left: -58vw;
+  top: 12vh;
+  transform: scale(1.1);
+}
+
+.premium-cloud-wipe.wipe-right {
+  right: -58vw;
+  bottom: 8vh;
+  transform: scale(1.12) scaleX(-1);
+}
+
+.premium-cloud-wipe.wipe-center {
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) scale(.35);
+}
+
+.premium-static-sky.is-transitioning .premium-cloud-wipe {
+  opacity: 1;
+}
+
+.premium-static-sky.is-transitioning .wipe-left {
+  transform: translateX(52vw) scale(1.75);
+}
+
+.premium-static-sky.is-transitioning .wipe-right {
+  transform: translateX(-52vw) scale(1.75) scaleX(-1);
+}
+
+.premium-static-sky.is-transitioning .wipe-center {
+  transform: translate(-50%, -50%) scale(2.2);
+  transition-delay: .13s;
+}
+
+.premium-static-sky.is-transitioning .premium-static-plane-wrap {
+  animation-play-state: paused;
+  opacity: .34;
+  transition: opacity .28s ease;
+}
+
+@keyframes premiumPlaneOrbit {
+  0% { transform: translate(-320px, 115px) rotate(-16deg) scale(.78); }
+  18% { transform: translate(-185px, -118px) rotate(3deg) scale(.9); }
+  42% { transform: translate(95px, -176px) rotate(11deg) scale(1); }
+  64% { transform: translate(292px, -44px) rotate(18deg) scale(.93); }
+  82% { transform: translate(150px, 142px) rotate(192deg) scale(.82); }
+  100% { transform: translate(-320px, 115px) rotate(344deg) scale(.78); }
+}
+
+@keyframes premiumCloudDriftA {
+  from { margin-left: -18px; margin-top: 0; }
+  to { margin-left: 26px; margin-top: -10px; }
+}
+
+@keyframes premiumCloudDriftB {
+  from { margin-right: -14px; margin-top: -6px; }
+  to { margin-right: 25px; margin-top: 10px; }
+}
+
+@media (max-width: 760px) {
+  .premium-static-cloud.cloud-a { left: -7vw; top: 13vh; transform: scale(.58); }
+  .premium-static-cloud.cloud-b { right: -10vw; top: 29vh; transform: scale(.5) scaleX(-1); }
+  .premium-static-cloud.cloud-c { left: -4vw; bottom: 14vh; transform: scale(.4); }
+  .premium-static-cloud.cloud-d { right: -3vw; bottom: 13vh; transform: scale(.42); }
+
+  .premium-static-plane-wrap {
+    width: clamp(92px, 27vw, 128px);
+    top: 44%;
+  }
+
+  @keyframes premiumPlaneOrbit {
+    0% { transform: translate(-150px, 86px) rotate(-14deg) scale(.72); }
+    24% { transform: translate(-88px, -122px) rotate(5deg) scale(.86); }
+    50% { transform: translate(95px, -135px) rotate(14deg) scale(.92); }
+    76% { transform: translate(145px, 78px) rotate(190deg) scale(.76); }
+    100% { transform: translate(-150px, 86px) rotate(346deg) scale(.72); }
+  }
+
+  .premium-cloud-wipe { width: 92vw; height: 60vw; }
+  .premium-cloud-wipe.wipe-left { left: -100vw; }
+  .premium-cloud-wipe.wipe-right { right: -100vw; }
+  .premium-static-sky.is-transitioning .wipe-left { transform: translateX(84vw) scale(1.8); }
+  .premium-static-sky.is-transitioning .wipe-right { transform: translateX(-84vw) scale(1.8) scaleX(-1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .premium-static-cloud,
+  .premium-static-plane-wrap {
+    animation: none !important;
+  }
+
+  .premium-static-plane-wrap {
+    transform: translate(125px, -105px) rotate(10deg) scale(.88);
+  }
+
+  .premium-cloud-wipe {
+    transition-duration: .01ms !important;
+  }
+}
