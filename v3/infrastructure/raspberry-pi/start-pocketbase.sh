@@ -6,14 +6,15 @@ PB_BIN="${PB_BIN:-/opt/language-school/pocketbase/pocketbase}"
 PB_DATA="${PB_DATA:-/var/lib/language-school/pb_data}"
 PB_MIGRATIONS="${PB_MIGRATIONS:-/opt/language-school/pocketbase/pb_migrations}"
 PB_HOOKS="${PB_HOOKS:-/opt/language-school/pocketbase/pb_hooks}"
+TURNSTILE_SECRET_KEY="${TURNSTILE_SECRET_KEY:-}"
 
 if [[ ! "$PB_URL" =~ ^http://127\.0\.0\.1:([0-9]{1,5})$ ]]; then
   echo 'PB_URL must use http://127.0.0.1:<port> with no path.' >&2
   exit 1
 fi
 
-if [[ -z "${TURNSTILE_SECRET_KEY:-}" ]]; then
-  echo 'TURNSTILE_SECRET_KEY is required for the protected contact endpoint.' >&2
+if [[ -z "$TURNSTILE_SECRET_KEY" || "$TURNSTILE_SECRET_KEY" == 'replace-with-real-secret-key' ]]; then
+  echo 'TURNSTILE_SECRET_KEY must contain the real server-side Turnstile secret before PocketBase can start.' >&2
   exit 1
 fi
 
