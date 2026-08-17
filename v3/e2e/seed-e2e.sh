@@ -47,7 +47,7 @@ ADMIN_TOKEN="$(jq -r '.token' <<<"$ADMIN_AUTH")"
 echo 'E2E seed: setting academy public identity'
 SITE_SETTINGS="$(curl -fsS "$PB_URL/api/collections/site_settings/records?perPage=1" -H "Authorization: $ADMIN_TOKEN")"
 SITE_SETTINGS_ID="$(jq -r '.items[0].id' <<<"$SITE_SETTINGS")"
-patch_json "$PB_URL/api/collections/site_settings/records/$SITE_SETTINGS_ID" "$ADMIN_TOKEN" '{"academy_name":"E2E Language Academy","phone":"","email":"","whatsapp":"","address":"Test Academy Address","social_links":{},"legal_texts":{}}' >/dev/null
+patch_json "$PB_URL/api/collections/site_settings/records/$SITE_SETTINGS_ID" "$ADMIN_TOKEN" '{"academy_name":"E2E Language Academy","phone":"","email":"","whatsapp":"618218187","address":"Test Academy Address","social_links":{"whatsapp_enabled":"true","whatsapp_message":"Hola desde E2E"},"legal_texts":{"cookie_banner_enabled":"true","cookie_intro":"E2E cookie preferences"}}' >/dev/null
 
 echo 'E2E seed: creating teacher and safe public teacher profile'
 TEACHER="$(create_record 'users' "$ADMIN_TOKEN" "$(jq -nc --arg email "$TEACHER_EMAIL" --arg password "$TEACHER_PASSWORD" '{email:$email,password:$password,passwordConfirm:$password,name:"E2E",surname:"Teacher",role:"TEACHER",status:"ACTIVE",phone:""}')")"
