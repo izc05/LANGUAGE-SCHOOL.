@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import SiteShell from '../../components/SiteShell'
 import { isDemoMode } from '../../config/environment'
+import { getMediaById, getMediaUrl } from '../../services/pocketbase/media'
 import { demoPublicCourses, getPublicCourseCoverUrl, listPublicCourses, type PublicCourseRecord } from '../../services/pocketbase/publicAcademy'
+import { getPublishedHomeContent, type HomeVisualContent } from '../../services/pocketbase/siteContent'
 
 const audienceStages = [
   ['01', 'Kids', '6–12', 'Primeros pasos con una base sólida y mucha confianza.'],
@@ -14,6 +16,11 @@ const audienceStages = [
 
 type CourseTheme = 'kids' | 'teens' | 'university' | 'adults' | 'exams'
 
+const themeVisualKeys: Record<CourseTheme, keyof HomeVisualContent> = {
+  kids: 'kidsMediaId', teens: 'teensMediaId', university: 'universityMediaId', adults: 'adultsMediaId', exams: 'examsMediaId',
+}
+const emptyThemeVisuals: Record<CourseTheme, string> = { kids: '', teens: '', university: '', adults: '', exams: '' }
+
 function getCourseTheme(course: PublicCourseRecord): CourseTheme {
   const value = `${course.slug} ${course.title} ${course.level}`.toLowerCase()
   if (/(kid|niñ|primaria|6–12|6-12)/.test(value)) return 'kids'
@@ -23,30 +30,36 @@ function getCourseTheme(course: PublicCourseRecord): CourseTheme {
   return 'adults'
 }
 
-function getThemeSymbol(theme: CourseTheme) {
-  if (theme === 'kids') return '✦'
-  if (theme === 'teens') return '★'
-  if (theme === 'university') return 'U'
-  if (theme === 'exams') return '✓'
-  return '∞'
-}
-
-function getThemeLabel(theme: CourseTheme) {
-  if (theme === 'kids') return 'BUILD CONFIDENCE'
-  if (theme === 'teens') return 'FIND YOUR VOICE'
-  if (theme === 'university') return 'OPEN YOUR WORLD'
-  if (theme === 'exams') return 'REACH YOUR GOAL'
-  return 'ENGLISH FOR LIFE'
-}
+function getThemeSymbol(theme: CourseTheme) { if (theme === 'kids') return '✦'; if (theme === 'teens') return '★'; if (theme === 'university') return 'U'; if (theme === 'exams') return '✓'; return '∞' }
+function getThemeLabel(theme: CourseTheme) { if (theme === 'kids') return 'BUILD CONFIDENCE'; if (theme === 'teens') return 'FIND YOUR VOICE'; if (theme === 'university') return 'OPEN YOUR WORLD'; if (theme === 'exams') return 'REACH YOUR GOAL'; return 'ENGLISH FOR LIFE' }
 
 export default function ProgramsPage() {
   const [courses, setCourses] = useState<PublicCourseRecord[]>(isDemoMode ? demoPublicCourses : [])
   const [loading, setLoading] = useState(!isDemoMode)
+  const [themeVisuals, setThemeVisuals] = useState<Record<CourseTheme, string>>({ ...emptyThemeVisuals })
   const visualBase = `${import.meta.env.BASE_URL}visuals/`
 
   useEffect(() => {
     let mounted = true
     listPublicCourses().then((records) => { if (mounted) setCourses(records) }).catch(() => undefined).finally(() => { if (mounted) setLoading(false) })
+    return () => { mounted = false }
+  }, [])
+
+  useEffect(() => {
+    let mounted = true
+    async function loadThemeVisuals() {
+      try {
+        const content = await getPublishedHomeContent()
+        const entries = await Promise.all((Object.keys(themeVisualKeys) as CourseTheme[]).map(async (theme) => {
+          const id = content.visuals[themeVisualKeys[theme]]
+          if (!id) return [theme, ''] as const
+          try { const media = await getMediaById(id); return [theme, getMediaUrl(media, '1400x900')] as const }
+          catch { return [theme, ''] as const }
+        }))
+        if (mounted) setThemeVisuals({ ...emptyThemeVisuals, ...Object.fromEntries(entries) })
+      } catch { /* fallback visuals remain available */ }
+    }
+    void loadThemeVisuals()
     return () => { mounted = false }
   }, [])
 
@@ -80,10 +93,12 @@ export default function ProgramsPage() {
             {courses.map((course, index) => {
               const theme = getCourseTheme(course)
               const coverUrl = getPublicCourseCoverUrl(course)
+              const adminFallbackUrl = themeVisuals[theme]
+              const imageUrl = coverUrl || adminFallbackUrl
               return (
                 <article className={`programs-v2-course ${theme}`} key={course.id}>
-                  <div className={`programs-v2-course-visual${coverUrl ? ' has-image' : ' has-artwork'}`} style={coverUrl ? { backgroundImage: `linear-gradient(160deg, rgba(44,24,34,.06), rgba(44,24,34,.28)), url(${coverUrl})` } : undefined}>
-                    {!coverUrl && <img className="programs-v2-course-fallback" src={`${visualBase}program-${theme}.svg`} alt="" loading="lazy" />}
+                  <div className={`programs-v2-course-visual${coverUrl ? ' has-image' : ' has-artwork'}`} style={imageUrl ? { backgroundImage: `linear-gradient(160deg, rgba(44,24,34,.05), rgba(44,24,34,.29)), url(${imageUrl})` } : undefined}>
+                    {!imageUrl && <img className="programs-v2-course-fallback" src={`${visualBase}program-${theme}.svg`} alt="" loading="lazy" />}
                     <span className="programs-v2-course-symbol" aria-hidden="true">{getThemeSymbol(theme)}</span><span className="programs-v2-course-visual-label">{getThemeLabel(theme)}</span><strong aria-hidden="true">{String(index + 1).padStart(2, '0')}</strong>
                   </div>
                   <div className="programs-v2-course-copy">
