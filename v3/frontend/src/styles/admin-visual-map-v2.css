@@ -10,6 +10,7 @@
 .contact-v2-map-pin{width:52px;height:52px;display:grid;place-items:center;border-radius:17px;color:#b62c61;background:linear-gradient(145deg,#fde8ee,#f6d6df);font-size:1.55rem;font-weight:800}
 .contact-v2-map-overlay div{display:grid;gap:3px;min-width:0}.contact-v2-map-overlay small{color:#b65175;font-size:.62rem;font-weight:800;letter-spacing:.14em}.contact-v2-map-overlay strong{color:#3d2e36;font-size:1rem}.contact-v2-map-overlay div span{color:#846d78;font-size:.78rem}.contact-v2-map-overlay .button{white-space:nowrap}
 .home-visual-admin-panel{margin-top:26px}.home-visual-admin-panel .panel-heading{align-items:flex-start}.home-visual-admin-panel .panel-heading p{max-width:620px;margin:7px 0 0}
+.public-page-visual-admin-panel{background:linear-gradient(145deg,#fffdfc,#fff8fa)}
 .home-visual-admin-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;margin-top:22px}
 .home-visual-admin-card{display:grid;grid-template-columns:76px minmax(0,1fr);grid-template-rows:auto auto auto;gap:2px 13px;align-items:center;padding:12px;border:1px solid rgba(108,67,83,.12);border-radius:18px;background:#fffdfc;cursor:default;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
 .home-visual-admin-card:hover{transform:translateY(-2px);border-color:rgba(196,48,104,.22);box-shadow:0 14px 30px rgba(73,36,52,.07)}
@@ -19,6 +20,9 @@
 .admin-course-cover::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 42%,rgba(51,24,36,.16));pointer-events:none}
 .admin-course-cover-action{position:absolute;z-index:2;right:10px;bottom:10px;padding:8px 10px;border:1px solid rgba(255,255,255,.76);border-radius:10px;background:rgba(255,252,250,.90);color:#a82c5c;font-size:.68rem;font-weight:800;cursor:pointer;box-shadow:0 8px 22px rgba(57,26,39,.12);backdrop-filter:blur(12px)}
 .admin-course-cover-action input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}.admin-course-cover-action:hover{background:#fff}
+.teachers-v2-hero-visual.has-cms-photo,.about-v2-visual.has-cms-photo,.pricing-v2-hero-visual.has-cms-photo,.blog-v2-hero-visual.has-cms-photo,.contact-v2-hero-visual.has-cms-photo{background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important}
+.teachers-v2-hero-visual.has-cms-photo>img,.about-v2-visual.has-cms-photo>img,.pricing-v2-hero-visual.has-cms-photo>img,.blog-v2-hero-visual.has-cms-photo>img,.contact-v2-hero-visual.has-cms-photo>img{opacity:0!important;visibility:hidden}
+.teachers-v2-hero-visual.has-cms-photo,.about-v2-visual.has-cms-photo,.pricing-v2-hero-visual.has-cms-photo,.blog-v2-hero-visual.has-cms-photo,.contact-v2-hero-visual.has-cms-photo{filter:saturate(.96) contrast(1.01)}
 @media(max-width:980px){.contact-v2-map-heading{grid-template-columns:1fr;gap:12px}.home-visual-admin-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:700px){.contact-v2-map-section{padding:68px 0 76px}.contact-v2-map-card,.contact-v2-map-card iframe{min-height:480px;height:480px}.contact-v2-map-overlay{left:14px;right:14px;bottom:14px;grid-template-columns:44px 1fr;padding:14px}.contact-v2-map-pin{width:44px;height:44px;border-radius:14px}.contact-v2-map-overlay .button{grid-column:1/-1;width:100%;justify-content:center}.home-visual-admin-grid{grid-template-columns:1fr}.admin-course-cover{height:118px}}
 @media(prefers-reduced-motion:reduce){.home-visual-admin-card{transition:none}}
