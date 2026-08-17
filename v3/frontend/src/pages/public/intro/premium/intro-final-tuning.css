@@ -1,0 +1,99 @@
+/* M0.3 · Final intro tuning
+ * Keeps the bubble, airplane and clouds elegant and secondary to the brand.
+ */
+
+.premium-static-globe {
+  width: min(43vw, 22rem);
+  top: 45.5%;
+}
+
+.premium-static-cloud.cloud-a {
+  opacity: .54;
+  transform: scale(.72);
+}
+
+.premium-static-cloud.cloud-b {
+  opacity: .42;
+  transform: scale(.56) scaleX(-1);
+}
+
+.premium-static-cloud.cloud-c {
+  opacity: .3;
+  transform: scale(.42);
+}
+
+.premium-static-cloud.cloud-d {
+  opacity: .34;
+  transform: scale(.46);
+}
+
+.premium-static-plane-wrap {
+  width: clamp(104px, 10vw, 158px);
+  animation-duration: 12.5s;
+  filter: drop-shadow(0 14px 16px rgba(82, 49, 64, .13));
+}
+
+.premium-entry-actions {
+  bottom: clamp(1.8rem, 6vh, 4.4rem);
+}
+
+.premium-instruction {
+  color: #927f88;
+  letter-spacing: .095em;
+}
+
+.premium-cloud-wipe {
+  transition-duration: 1.08s, .24s;
+}
+
+.premium-static-sky.is-transitioning .wipe-center {
+  transition-delay: .1s;
+}
+
+@media (max-height: 760px) and (min-width: 761px) {
+  .premium-static-globe {
+    width: min(38vw, 19rem);
+    top: 44%;
+  }
+
+  .premium-static-plane-wrap {
+    width: clamp(96px, 9vw, 136px);
+  }
+}
+
+@media (max-width: 760px) {
+  .premium-static-globe {
+    width: min(66vw, 19rem);
+    top: 43.5%;
+  }
+
+  .premium-static-cloud.cloud-a {
+    opacity: .45;
+    transform: scale(.5);
+  }
+
+  .premium-static-cloud.cloud-b {
+    opacity: .34;
+    transform: scale(.43) scaleX(-1);
+  }
+
+  .premium-static-cloud.cloud-c,
+  .premium-static-cloud.cloud-d {
+    opacity: .24;
+  }
+
+  .premium-static-plane-wrap {
+    width: clamp(86px, 24vw, 116px);
+    animation-duration: 11.5s;
+  }
+
+  .premium-entry-actions {
+    bottom: max(2rem, calc(env(safe-area-inset-bottom) + 1.15rem));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .premium-static-plane-wrap {
+    opacity: .76;
+  }
+}
