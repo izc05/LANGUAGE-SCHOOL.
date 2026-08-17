@@ -21,6 +21,16 @@ body {
   color: #33282e;
 }
 
+/* Contrato global: toda sección pública parte de blanco.
+ * La plataforma del alumno se conserva como único bloque de contraste fuerte.
+ * Las reglas posteriores reintroducen únicamente halos suaves de marca.
+ */
+.public-premium-v2 main > section:not(.platform-premium),
+.public-premium-v2 main > div > section {
+  background-color: #fff !important;
+  background-image: none !important;
+}
+
 /* HOME · un solo lienzo blanco con pequeñas zonas de luz rosa. */
 .home-premium-v2 .hero-v3 {
   background:
