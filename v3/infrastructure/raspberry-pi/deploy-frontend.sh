@@ -17,6 +17,8 @@ elif command -v sudo >/dev/null && sudo test -r "$PRODUCTION_ENV"; then
 fi
 
 PUBLIC_ORIGIN="${PUBLIC_ORIGIN:-}"
+TURNSTILE_SITE_KEY="${TURNSTILE_SITE_KEY:-}"
+
 if [[ -z "$PUBLIC_ORIGIN" ]]; then
   echo 'PUBLIC_ORIGIN is required, for example https://english.example.com' >&2
   exit 1
@@ -24,6 +26,11 @@ fi
 
 if [[ ! "$PUBLIC_ORIGIN" =~ ^https?://[^/]+$ ]]; then
   echo 'PUBLIC_ORIGIN must be an origin without a trailing path.' >&2
+  exit 1
+fi
+
+if [[ -z "$TURNSTILE_SITE_KEY" || "$TURNSTILE_SITE_KEY" == 'replace-with-real-site-key' ]]; then
+  echo 'TURNSTILE_SITE_KEY must contain the real public Turnstile site key before production deployment.' >&2
   exit 1
 fi
 
@@ -74,6 +81,7 @@ fi
 
 VITE_APP_MODE=connected \
 VITE_POCKETBASE_URL="$PUBLIC_ORIGIN" \
+VITE_TURNSTILE_SITE_KEY="$TURNSTILE_SITE_KEY" \
 npm run build
 
 if [[ ! -f dist/index.html ]]; then
@@ -89,3 +97,4 @@ fi
 
 printf 'Frontend deployed to %s\n' "$FRONTEND_TARGET"
 printf 'PocketBase public origin compiled as %s\n' "$PUBLIC_ORIGIN"
+echo 'Turnstile public site key compiled into the frontend.'
