@@ -5,10 +5,12 @@ import * as THREE from 'three'
 import PremiumAirplane from './premium/PremiumAirplane'
 import PremiumAtmosphere from './premium/PremiumAtmosphere'
 import PremiumGlobe from './premium/PremiumGlobe'
+import StaticIntroSky from './premium/StaticIntroSky'
 import { runPremiumCloudTransition } from './premium/cloudTransition'
 import './premium/premium-intro.css'
 
 const INTRO_DURATION = 8
+const SAFE_CLOUD_TRANSITION_MS = 1050
 
 type IntroPageProps = {
   onEnter: () => void
@@ -244,8 +246,14 @@ export default function IntroPage({ onEnter }: IntroPageProps) {
   function enterAcademy() {
     if (!settled || transitioning) return
 
-    if (!webGlAvailable || reducedMotion) {
+    if (reducedMotion) {
       onEnter()
+      return
+    }
+
+    if (!webGlAvailable) {
+      setTransitioning(true)
+      window.setTimeout(onEnter, SAFE_CLOUD_TRANSITION_MS)
       return
     }
 
@@ -282,7 +290,10 @@ export default function IntroPage({ onEnter }: IntroPageProps) {
           />
         </div>
       ) : (
-        <div className="premium-static-globe" aria-hidden="true" />
+        <>
+          <div className="premium-static-globe" aria-hidden="true" />
+          <StaticIntroSky transitioning={transitioning} />
+        </>
       )}
 
       <div className="premium-intro-glow" aria-hidden="true" />
