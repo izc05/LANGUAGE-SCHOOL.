@@ -28,7 +28,6 @@ body {
 .public-premium-v2 main > section:not(.platform-premium),
 .public-premium-v2 main > div > section {
   background-color: #fff !important;
-  background-image: none !important;
 }
 
 /* HOME · un solo lienzo blanco con pequeñas zonas de luz rosa. */
