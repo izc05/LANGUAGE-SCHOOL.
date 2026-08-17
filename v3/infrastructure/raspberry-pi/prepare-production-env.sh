@@ -25,4 +25,4 @@ else
   echo "Created $TARGET_ENV from the repository example."
 fi
 
-echo 'Edit PUBLIC_ORIGIN and BACKUP_MOUNT before production deployment.'
+echo 'Before production, edit PUBLIC_ORIGIN, TURNSTILE_SITE_KEY, TURNSTILE_SECRET_KEY, TURNSTILE_ALLOWED_HOSTNAMES and BACKUP_MOUNT.'
