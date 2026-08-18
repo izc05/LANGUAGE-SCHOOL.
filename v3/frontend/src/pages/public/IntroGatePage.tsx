@@ -1,14 +1,13 @@
 import { lazy, Suspense, useState } from 'react'
 import HomePage from './HomePage'
 import IntroSceneErrorBoundary from './intro/premium/IntroSceneErrorBoundary'
-import StaticIntroSky from './intro/premium/StaticIntroSky'
+import IntroOrbitArtwork from './intro/premium/IntroOrbitArtwork'
 import './intro/premium/premium-intro.css'
-import './intro/premium/bubble-globe.css'
-import './intro/premium/intro-final-tuning.css'
+import './intro/premium/intro-orbit-refresh.css'
 
 const IntroPage = lazy(() => import('./intro/IntroPage'))
 const INTRO_SESSION_KEY = 'language-school:intro-completed'
-const SAFE_CLOUD_TRANSITION_MS = 1200
+const SAFE_ENTER_TRANSITION_MS = 520
 
 function introAlreadyCompleted(): boolean {
   try {
@@ -24,30 +23,37 @@ function StaticIntroFallback({ onEnter }: { onEnter: () => void }) {
   function startEnter() {
     if (transitioning) return
     setTransitioning(true)
-    window.setTimeout(onEnter, SAFE_CLOUD_TRANSITION_MS)
+    window.setTimeout(onEnter, SAFE_ENTER_TRANSITION_MS)
   }
 
+  const classes = [
+    'premium-intro',
+    'intro-orbit-refresh',
+    'brand-visible',
+    'actions-visible',
+    'settled',
+    transitioning ? 'is-transitioning' : '',
+  ].filter(Boolean).join(' ')
+
   return (
-    <main className="premium-intro brand-visible actions-visible settled">
-      <div className="premium-static-globe" aria-hidden="true" />
-      <StaticIntroSky transitioning={transitioning} />
-      <div className="premium-intro-glow" aria-hidden="true" />
-      <div className="premium-intro-vignette" aria-hidden="true" />
-      <div className="premium-intro-ui">
-        <section className="premium-brand-lockup" aria-label="Language School Rocío Ruiz">
-          <span className="premium-brand-language">LANGUAGE</span>
-          <strong className="premium-brand-school">School</strong>
-          <div className="premium-brand-divider" aria-hidden="true" />
-          <span className="premium-brand-rocio">ROCÍO RUIZ</span>
-        </section>
-        <div className="premium-entry-actions">
-          <p className="premium-instruction">Bienvenido a Language School</p>
-          <button className="premium-enter-button intro-enter-button" type="button" onClick={startEnter} disabled={transitioning}>
-            <span>{transitioning ? 'ENTRANDO…' : 'ENTRAR'}</span>
-            {!transitioning && <span aria-hidden="true" className="premium-enter-arrow">↗</span>}
-          </button>
-        </div>
+    <main className={classes}>
+      <div className="intro-orbit-ambient" aria-hidden="true" />
+      <IntroOrbitArtwork />
+
+      <div className="premium-entry-actions intro-orbit-actions">
+        <p className="premium-instruction">Bienvenido a Language School</p>
+        <button
+          className="premium-enter-button intro-enter-button"
+          type="button"
+          onClick={startEnter}
+          disabled={transitioning}
+        >
+          <span>{transitioning ? 'ENTRANDO…' : 'ENTRAR'}</span>
+          {!transitioning && <span aria-hidden="true" className="premium-enter-arrow">↗</span>}
+        </button>
       </div>
+
+      <div className="intro-orbit-transition" aria-hidden="true" />
     </main>
   )
 }
