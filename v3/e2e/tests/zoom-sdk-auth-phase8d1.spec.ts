@@ -136,7 +136,7 @@ test('8D.2: alumno entra desde Campus al aula y el SDK se carga solo al solicita
   await page.goto(`/alumno/aula/${encodeURIComponent(String(classId))}`)
   await expect(page).toHaveURL(new RegExp(`/alumno/aula/${String(classId)}$`))
   await expect(page.getByText('AULA ONLINE')).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'E2E Speaking class' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'E2E Speaking class', level: 1 })).toBeVisible()
   await expect(page.locator('script[data-language-school-zoom-src]')).toHaveCount(0)
   await expect(page.locator('link[data-language-school-zoom-style]')).toHaveCount(0)
 
