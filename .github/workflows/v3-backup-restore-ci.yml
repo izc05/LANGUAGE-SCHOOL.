@@ -1,0 +1,170 @@
+name: V3 Backup Restore CI
+
+on:
+  pull_request:
+    paths:
+      - 'v3/infrastructure/backups/**'
+      - '.github/workflows/v3-backup-restore-ci.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'v3/infrastructure/backups/**'
+      - '.github/workflows/v3-backup-restore-ci.yml'
+
+jobs:
+  drill:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate backup scripts and units
+        run: |
+          bash -n v3/infrastructure/backups/backup.sh
+          bash -n v3/infrastructure/backups/restore.sh
+          bash -n v3/infrastructure/backups/install-backup.sh
+          grep -Fq 'OnCalendar=*-*-* 03:30:00' v3/infrastructure/backups/language-school-backup.timer
+          grep -Fq 'Persistent=true' v3/infrastructure/backups/language-school-backup.timer
+          systemd-analyze calendar '*-*-* 03:30:00'
+
+      - name: Run backup and restore drill
+        run: |
+          set -euo pipefail
+          ROOT="$RUNNER_TEMP/language-school-backup-drill"
+          DATA_PARENT="$ROOT/data"
+          MOCK_BIN="$ROOT/mock-bin"
+          PROD_ENV="$ROOT/production.env"
+          BACKUP_DIR='/language-school'
+
+          cleanup() {
+            sudo rm -rf "$BACKUP_DIR" "$ROOT"
+          }
+          trap cleanup EXIT
+          cleanup
+          mkdir -p "$DATA_PARENT/pb_data" "$MOCK_BIN"
+          printf 'original-state\n' > "$DATA_PARENT/pb_data/state.txt"
+
+          cat > "$MOCK_BIN/systemctl" <<'SH'
+          #!/usr/bin/env bash
+          set -euo pipefail
+          case "${1:-}" in
+            is-active) exit 1 ;;
+            stop|start) exit 0 ;;
+            *) exit 0 ;;
+          esac
+          SH
+          chmod +x "$MOCK_BIN/systemctl"
+
+          cat > "$MOCK_BIN/curl" <<'SH'
+          #!/usr/bin/env bash
+          exit 0
+          SH
+          chmod +x "$MOCK_BIN/curl"
+
+          cat > "$PROD_ENV" <<EOF
+          PB_URL=http://127.0.0.1:8091
+          BACKUP_MOUNT=/
+          BACKUP_RETENTION_DAYS=14
+          EOF
+
+          sudo env \
+            PRODUCTION_ENV="$PROD_ENV" \
+            DATA_PARENT="$DATA_PARENT" \
+            SYSTEMCTL_BIN="$MOCK_BIN/systemctl" \
+            bash v3/infrastructure/backups/backup.sh
+
+          ARCHIVE="$(sudo find "$BACKUP_DIR" -maxdepth 1 -type f -name 'language-school-*.tar.gz' -print -quit)"
+          test -n "$ARCHIVE"
+          sudo test -f "$ARCHIVE.sha256"
+          (
+            cd "$BACKUP_DIR"
+            sudo sha256sum -c "$(basename "$ARCHIVE.sha256")"
+          )
+
+          printf 'changed-after-backup\n' > "$DATA_PARENT/pb_data/state.txt"
+          printf 'new-data\n' > "$DATA_PARENT/pb_data/new.txt"
+
+          sudo env \
+            PRODUCTION_ENV="$PROD_ENV" \
+            DATA_PARENT="$DATA_PARENT" \
+            SYSTEMCTL_BIN="$MOCK_BIN/systemctl" \
+            CURL_BIN="$MOCK_BIN/curl" \
+            PB_OWNER=root:root \
+            bash v3/infrastructure/backups/restore.sh "$ARCHIVE"
+
+          test "$(sudo cat "$DATA_PARENT/pb_data/state.txt")" = 'original-state'
+          sudo test ! -e "$DATA_PARENT/pb_data/new.txt"
+          PREVIOUS="$(sudo find "$DATA_PARENT" -maxdepth 1 -type d -name 'pb_data.before-restore-*' -print -quit)"
+          test -n "$PREVIOUS"
+          test "$(sudo cat "$PREVIOUS/state.txt")" = 'changed-after-backup'
+
+          cp "$ARCHIVE" "$ROOT/no-checksum.tar.gz"
+          if sudo env \
+            PRODUCTION_ENV="$PROD_ENV" \
+            DATA_PARENT="$DATA_PARENT" \
+            SYSTEMCTL_BIN="$MOCK_BIN/systemctl" \
+            CURL_BIN="$MOCK_BIN/curl" \
+            PB_OWNER=root:root \
+            bash v3/infrastructure/backups/restore.sh "$ROOT/no-checksum.tar.gz"; then
+            echo 'Restore accepted an archive without checksum.' >&2
+            exit 1
+          fi
+
+          mkdir -p "$ROOT/unsafe-src/pb_data"
+          printf 'safe\n' > "$ROOT/unsafe-src/pb_data/state.txt"
+          printf 'must-not-extract\n' > "$ROOT/unsafe-src/unexpected.txt"
+          tar -C "$ROOT/unsafe-src" -czf "$ROOT/unsafe.tar.gz" pb_data unexpected.txt
+          (
+            cd "$ROOT"
+            sha256sum unsafe.tar.gz > unsafe.tar.gz.sha256
+          )
+          if sudo env \
+            PRODUCTION_ENV="$PROD_ENV" \
+            DATA_PARENT="$DATA_PARENT" \
+            SYSTEMCTL_BIN="$MOCK_BIN/systemctl" \
+            CURL_BIN="$MOCK_BIN/curl" \
+            PB_OWNER=root:root \
+            bash v3/infrastructure/backups/restore.sh "$ROOT/unsafe.tar.gz"; then
+            echo 'Restore accepted an archive containing paths outside pb_data/.' >&2
+            exit 1
+          fi
+          sudo test ! -e "$DATA_PARENT/unexpected.txt"
+
+          mkdir -p "$ROOT/not-a-mount"
+          cat > "$ROOT/no-mount.env" <<EOF
+          PB_URL=http://127.0.0.1:8091
+          BACKUP_MOUNT=$ROOT/not-a-mount
+          BACKUP_RETENTION_DAYS=14
+          EOF
+          if sudo env \
+            PRODUCTION_ENV="$ROOT/no-mount.env" \
+            DATA_PARENT="$DATA_PARENT" \
+            SYSTEMCTL_BIN="$MOCK_BIN/systemctl" \
+            bash v3/infrastructure/backups/backup.sh; then
+            echo 'Backup accepted a directory that is not a mountpoint.' >&2
+            exit 1
+          fi
+
+      - name: Reject unsafe retention values
+        run: |
+          ROOT="$RUNNER_TEMP/retention-check"
+          mkdir -p "$ROOT/data/pb_data" "$ROOT/mock-bin"
+          cat > "$ROOT/mock-bin/systemctl" <<'SH'
+          #!/usr/bin/env bash
+          exit 1
+          SH
+          chmod +x "$ROOT/mock-bin/systemctl"
+          cat > "$ROOT/production.env" <<EOF
+          PB_URL=http://127.0.0.1:8091
+          BACKUP_MOUNT=/
+          BACKUP_RETENTION_DAYS=not-a-number
+          EOF
+          if sudo env \
+            PRODUCTION_ENV="$ROOT/production.env" \
+            DATA_PARENT="$ROOT/data" \
+            SYSTEMCTL_BIN="$ROOT/mock-bin/systemctl" \
+            bash v3/infrastructure/backups/backup.sh; then
+            echo 'Backup accepted an invalid retention value.' >&2
+            exit 1
+          fi
