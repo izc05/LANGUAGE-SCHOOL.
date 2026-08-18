@@ -6,6 +6,11 @@ PB_BIN="${PB_BIN:-/opt/language-school/pocketbase/pocketbase}"
 PB_DATA="${PB_DATA:-/var/lib/language-school/pb_data}"
 PB_MIGRATIONS="${PB_MIGRATIONS:-/opt/language-school/pocketbase/pb_migrations}"
 PB_HOOKS="${PB_HOOKS:-/opt/language-school/pocketbase/pb_hooks}"
+PUBLIC_ORIGIN="${PUBLIC_ORIGIN:-}"
+TURNSTILE_SECRET_KEY="${TURNSTILE_SECRET_KEY:-}"
+TURNSTILE_EXPECTED_ACTION="${TURNSTILE_EXPECTED_ACTION:-}"
+TURNSTILE_ALLOWED_HOSTNAMES="${TURNSTILE_ALLOWED_HOSTNAMES:-}"
+TURNSTILE_TEST_SECRET_KEY='1x0000000000000000000000000000000AA'
 
 if [[ ! "$PB_URL" =~ ^http://127\.0\.0\.1:([0-9]{1,5})$ ]]; then
   echo 'PB_URL must use http://127.0.0.1:<port> with no path.' >&2
@@ -15,6 +20,45 @@ fi
 PB_PORT="${BASH_REMATCH[1]}"
 if (( PB_PORT < 1 || PB_PORT > 65535 )); then
   echo "PB_URL contains an invalid TCP port: $PB_PORT" >&2
+  exit 1
+fi
+
+if [[ ! "$PUBLIC_ORIGIN" =~ ^https://[^/]+$ ]]; then
+  echo 'PUBLIC_ORIGIN must be the final HTTPS origin before PocketBase starts.' >&2
+  exit 1
+fi
+PUBLIC_HOST="${PUBLIC_ORIGIN#https://}"
+PUBLIC_HOST="${PUBLIC_HOST%%:*}"
+PUBLIC_HOST="${PUBLIC_HOST,,}"
+
+if [[ -z "$TURNSTILE_SECRET_KEY" || "$TURNSTILE_SECRET_KEY" == REPLACE_* || "$TURNSTILE_SECRET_KEY" == "$TURNSTILE_TEST_SECRET_KEY" ]]; then
+  echo 'A real TURNSTILE_SECRET_KEY is required before PocketBase can start in production.' >&2
+  exit 1
+fi
+if [[ "$TURNSTILE_EXPECTED_ACTION" != 'contact' ]]; then
+  echo 'TURNSTILE_EXPECTED_ACTION must be exactly contact in production.' >&2
+  exit 1
+fi
+if [[ -z "$TURNSTILE_ALLOWED_HOSTNAMES" ]]; then
+  echo 'TURNSTILE_ALLOWED_HOSTNAMES is required in production.' >&2
+  exit 1
+fi
+
+HOSTNAME_ALLOWED=false
+IFS=',' read -ra TURNSTILE_HOSTS <<< "$TURNSTILE_ALLOWED_HOSTNAMES"
+for host in "${TURNSTILE_HOSTS[@]}"; do
+  host="${host//[[:space:]]/}"
+  host="${host,,}"
+  case "$host" in
+    localhost|127.*|0.0.0.0|*.local|*.test|*.invalid)
+      echo "TURNSTILE_ALLOWED_HOSTNAMES contains a local/test hostname: $host" >&2
+      exit 1
+      ;;
+  esac
+  if [[ "$host" == "$PUBLIC_HOST" ]]; then HOSTNAME_ALLOWED=true; fi
+done
+if [[ "$HOSTNAME_ALLOWED" != true ]]; then
+  echo 'TURNSTILE_ALLOWED_HOSTNAMES must include the hostname from PUBLIC_ORIGIN.' >&2
   exit 1
 fi
 
