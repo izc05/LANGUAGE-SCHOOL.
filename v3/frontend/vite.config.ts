@@ -8,6 +8,7 @@ export default defineConfig(({ command, mode }) => {
   const env = loadEnv(mode, '.', 'VITE_')
   const appMode = (env.VITE_APP_MODE ?? '').trim().toLowerCase()
   const pocketBaseUrl = (env.VITE_POCKETBASE_URL ?? '').trim()
+  const turnstileSiteKey = (env.VITE_TURNSTILE_SITE_KEY ?? '').trim()
 
   if (command === 'build') {
     if (appMode !== 'demo' && appMode !== 'connected') {
@@ -16,6 +17,10 @@ export default defineConfig(({ command, mode }) => {
 
     if (appMode === 'connected' && !pocketBaseUrl) {
       throw new Error('Connected production build requires VITE_POCKETBASE_URL.')
+    }
+
+    if (appMode === 'connected' && !turnstileSiteKey) {
+      throw new Error('Connected production build requires VITE_TURNSTILE_SITE_KEY.')
     }
   }
 
