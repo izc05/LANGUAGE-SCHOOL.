@@ -146,6 +146,13 @@ export async function listMyUpcomingClasses(limit = 10): Promise<ClassRecord[]> 
   return result.items
 }
 
+export async function getMyClass(classId: string): Promise<ClassRecord> {
+  requireStudentUser()
+  const normalizedClassId = classId.trim()
+  if (!normalizedClassId) throw new Error('Falta la clase que quieres consultar.')
+  return pb.collection(collections.classes).getOne<ClassRecord>(normalizedClassId, { expand: 'group,group.course' })
+}
+
 export async function listMyRecentClasses(limit = 20): Promise<ClassRecord[]> { requireStudentUser(); const result = await pb.collection(collections.classes).getList<ClassRecord>(1, limit, { filter: 'status = "COMPLETED"', sort: '-starts_at', expand: 'group,group.course' }); return result.items }
 export async function listMyAttendance(limit = 40): Promise<AttendanceRecord[]> { const user = requireStudentUser(); const result = await pb.collection(collections.attendance).getList<AttendanceRecord>(1, limit, { filter: `student = "${quote(user.id)}"`, sort: '-created' }); return result.items }
 export async function listMyFiles(limit = 50): Promise<StudentFileRecord[]> { const user = requireStudentUser(); const result = await pb.collection(collections.studentFiles).getList<StudentFileRecord>(1, limit, { filter: `student = "${quote(user.id)}" && status = "ACTIVE"`, sort: '-created' }); return result.items }
