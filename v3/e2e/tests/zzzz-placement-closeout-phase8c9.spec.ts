@@ -135,6 +135,7 @@ test('8C.9: cierre transversal conserva responsive, roles y privacidad con Liste
   await expectNoHorizontalOverflow(page)
 
   await page.goto('/test-de-nivel')
+  await expect(page.getByRole('heading', { name: /Descubre tu punto de partida/i })).toBeVisible()
   await page.keyboard.press('Tab')
   const focusOutline = await page.evaluate(() => {
     const active = document.activeElement as HTMLElement | null
