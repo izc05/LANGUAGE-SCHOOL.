@@ -40,6 +40,7 @@ test('todas las rutas públicas cargan sin errores runtime', async ({ page }) =>
   await visitRoutes(page, [
     '/',
     '/programas',
+    '/test-de-nivel',
     '/profesores',
     '/sobre-nosotros',
     '/tarifas',
