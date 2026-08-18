@@ -38,6 +38,48 @@ case "$PUBLIC_HOST" in
     ;;
 esac
 
+TURNSTILE_SITE_KEY="${TURNSTILE_SITE_KEY:-}"
+TURNSTILE_SECRET_KEY="${TURNSTILE_SECRET_KEY:-}"
+TURNSTILE_EXPECTED_ACTION="${TURNSTILE_EXPECTED_ACTION:-}"
+TURNSTILE_ALLOWED_HOSTNAMES="${TURNSTILE_ALLOWED_HOSTNAMES:-}"
+TURNSTILE_TEST_SITE_KEY='1x00000000000000000000AA'
+TURNSTILE_TEST_SECRET_KEY='1x0000000000000000000000000000000AA'
+
+if [[ -z "$TURNSTILE_SITE_KEY" || "$TURNSTILE_SITE_KEY" == REPLACE_* || "$TURNSTILE_SITE_KEY" == "$TURNSTILE_TEST_SITE_KEY" ]]; then
+  echo 'A real TURNSTILE_SITE_KEY is required for production deployment.' >&2
+  exit 1
+fi
+if [[ -z "$TURNSTILE_SECRET_KEY" || "$TURNSTILE_SECRET_KEY" == REPLACE_* || "$TURNSTILE_SECRET_KEY" == "$TURNSTILE_TEST_SECRET_KEY" ]]; then
+  echo 'A real TURNSTILE_SECRET_KEY is required for production deployment.' >&2
+  exit 1
+fi
+if [[ "$TURNSTILE_EXPECTED_ACTION" != 'contact' ]]; then
+  echo 'TURNSTILE_EXPECTED_ACTION must be exactly contact in production.' >&2
+  exit 1
+fi
+if [[ -z "$TURNSTILE_ALLOWED_HOSTNAMES" ]]; then
+  echo 'TURNSTILE_ALLOWED_HOSTNAMES must contain the public hostname.' >&2
+  exit 1
+fi
+
+HOSTNAME_ALLOWED=false
+IFS=',' read -ra TURNSTILE_HOSTS <<< "$TURNSTILE_ALLOWED_HOSTNAMES"
+for host in "${TURNSTILE_HOSTS[@]}"; do
+  host="${host//[[:space:]]/}"
+  host="${host,,}"
+  case "$host" in
+    localhost|127.*|0.0.0.0|*.local|*.test|*.invalid)
+      echo "TURNSTILE_ALLOWED_HOSTNAMES contains a local/test hostname: $host" >&2
+      exit 1
+      ;;
+  esac
+  if [[ "$host" == "$PUBLIC_HOST" ]]; then HOSTNAME_ALLOWED=true; fi
+done
+if [[ "$HOSTNAME_ALLOWED" != true ]]; then
+  echo 'TURNSTILE_ALLOWED_HOSTNAMES must include the hostname from PUBLIC_ORIGIN.' >&2
+  exit 1
+fi
+
 for command in node npm rsync; do
   command -v "$command" >/dev/null || {
     echo "Missing required command: $command" >&2
@@ -85,6 +127,7 @@ fi
 
 VITE_APP_MODE=connected \
 VITE_POCKETBASE_URL="$PUBLIC_ORIGIN" \
+VITE_TURNSTILE_SITE_KEY="$TURNSTILE_SITE_KEY" \
 npm run build
 
 if [[ ! -f dist/index.html ]]; then
@@ -100,3 +143,4 @@ fi
 
 printf 'Frontend deployed to %s\n' "$FRONTEND_TARGET"
 printf 'PocketBase public origin compiled as %s\n' "$PUBLIC_ORIGIN"
+printf 'Turnstile public sitekey compiled without exposing its secret.\n'
