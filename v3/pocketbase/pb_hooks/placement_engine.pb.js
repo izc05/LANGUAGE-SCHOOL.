@@ -1,7 +1,7 @@
 /// <reference path="../pb_data/types.d.ts" />
 
 routerAdd('POST', '/api/language-school/placement/start', (e) => {
-  const placement = require(`${__hooks}/placement_service.js`)
+  const placement = require(`${__hooks}/placement_dispatch.js`)
   return placement.start(e)
 })
 
@@ -70,24 +70,69 @@ routerAdd('POST', '/api/language-school/placement/admin/tests/{id}/publish', (e)
   return placementAdmin.publish(e)
 })
 
+routerAdd('POST', '/api/language-school/placement/admin/listening/tests', (e) => {
+  const listeningAdmin = require(`${__hooks}/placement_listening_admin.js`)
+  return listeningAdmin.createVersion(e)
+})
+
+routerAdd('GET', '/api/language-school/placement/admin/listening/tests/{id}', (e) => {
+  const listeningAdmin = require(`${__hooks}/placement_listening_admin.js`)
+  return listeningAdmin.status(e)
+})
+
+routerAdd('POST', '/api/language-school/placement/admin/listening/tests/{id}/questions', (e) => {
+  const listeningAdmin = require(`${__hooks}/placement_listening_admin.js`)
+  return listeningAdmin.createQuestion(e)
+})
+
+routerAdd('PATCH', '/api/language-school/placement/admin/listening/questions/{id}', (e) => {
+  const listeningAdmin = require(`${__hooks}/placement_listening_admin.js`)
+  return listeningAdmin.updateQuestion(e)
+})
+
+routerAdd('POST', '/api/language-school/placement/admin/listening/questions/{id}/audio', (e) => {
+  const listeningAdmin = require(`${__hooks}/placement_listening_admin.js`)
+  return listeningAdmin.uploadAudio(e)
+})
+
+routerAdd('GET', '/api/language-school/placement/admin/listening/questions/{id}/audio', (e) => {
+  const listeningAdmin = require(`${__hooks}/placement_listening_admin.js`)
+  return listeningAdmin.previewAudio(e)
+})
+
+routerAdd('DELETE', '/api/language-school/placement/admin/listening/questions/{id}/audio', (e) => {
+  const listeningAdmin = require(`${__hooks}/placement_listening_admin.js`)
+  return listeningAdmin.deleteAudio(e)
+})
+
+routerAdd('POST', '/api/language-school/placement/admin/listening/tests/{id}/publish', (e) => {
+  const listeningAdmin = require(`${__hooks}/placement_listening_admin.js`)
+  return listeningAdmin.publish(e)
+})
+
 routerAdd('GET', '/api/language-school/placement/attempts/{id}/question', (e) => {
-  const placement = require(`${__hooks}/placement_service.js`)
+  const placement = require(`${__hooks}/placement_dispatch.js`)
   return placement.nextQuestion(e)
 })
 
 routerAdd('POST', '/api/language-school/placement/attempts/{id}/answer', (e) => {
-  const placement = require(`${__hooks}/placement_service.js`)
+  const placement = require(`${__hooks}/placement_dispatch.js`)
   return placement.answer(e)
 })
 
 routerAdd('POST', '/api/language-school/placement/attempts/{id}/finish', (e) => {
-  const placement = require(`${__hooks}/placement_service.js`)
+  const placement = require(`${__hooks}/placement_dispatch.js`)
   return placement.finish(e)
 })
 
 routerAdd('GET', '/api/language-school/placement/attempts/{id}/result', (e) => {
-  const placement = require(`${__hooks}/placement_service.js`)
+  const placement = require(`${__hooks}/placement_dispatch.js`)
   return placement.result(e)
+})
+
+routerAdd('GET', '/api/language-school/placement/attempts/{id}/questions/{questionId}/audio', (e) => {
+  const listening = require(`${__hooks}/placement_listening_service.js`)
+  return listening.audio(e)
 })
 
 routerAdd('GET', '/api/language-school/placement/attempts/{id}/recommendations', (e) => {
