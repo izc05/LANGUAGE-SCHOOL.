@@ -1,3 +1,4 @@
+import { pocketBaseUrl } from '../../config/environment'
 import { pb } from './client'
 import type { CefrLevel, PlacementSkill, PlacementSkillScore } from './placementTest'
 
@@ -15,6 +16,11 @@ export type PlacementAdminValidation = {
   requirements: PlacementAdminValidationRequirement[]
   questionCount: number
   activeQuestionCount: number
+}
+
+export type PlacementListeningValidation = PlacementAdminValidation & {
+  listeningCount: number
+  listeningWithAudio: number
 }
 
 export type PlacementAdminTest = {
@@ -48,6 +54,16 @@ export type PlacementAdminQuestion = {
   weight: number
   active: boolean
   adminOrder: number
+  hasAudio?: boolean
+  audioName?: string
+}
+
+export type PlacementAdminQuestionInput = Omit<PlacementAdminQuestion, 'id' | 'testId' | 'hasAudio' | 'audioName'>
+
+export type PlacementListeningStatus = {
+  testId: string
+  validation: PlacementListeningValidation
+  listeningQuestions: PlacementAdminQuestion[]
 }
 
 export type PlacementAdminAttempt = {
@@ -109,6 +125,27 @@ export type PlacementAdminOverview = {
 
 const jsonHeaders = { 'Content-Type': 'application/json' }
 
+function apiUrl(path: string): string {
+  return `${pocketBaseUrl.replace(/\/$/, '')}${path}`
+}
+
+async function checkedResponse(response: Response): Promise<Response> {
+  if (response.ok) return response
+  let message = 'No se ha podido completar la operación.'
+  try {
+    const body = await response.json() as { message?: string }
+    if (body.message) message = body.message
+  } catch {
+    // Keep the safe generic message when the response is not JSON.
+  }
+  throw new Error(message)
+}
+
+function adminAuthHeaders(): Record<string, string> {
+  if (!pb.authStore.token) throw new Error('La sesión de Administración ha caducado.')
+  return { Authorization: pb.authStore.token }
+}
+
 export async function getPlacementAdminOverview(): Promise<PlacementAdminOverview> {
   return pb.send<PlacementAdminOverview>('/api/language-school/placement/admin/overview', { method: 'GET' })
 }
@@ -123,6 +160,12 @@ export async function createPlacementAdminDraft(input: { name: string; version: 
     method: 'POST', headers: jsonHeaders, body: JSON.stringify(input),
   })
   return response.test
+}
+
+export async function createPlacementListeningDraft(input: { name: string; version: string; sourceTestId: string }): Promise<{ testId: string; algorithmVersion: string; validation: PlacementListeningValidation }> {
+  return pb.send('/api/language-school/placement/admin/listening/tests', {
+    method: 'POST', headers: jsonHeaders, body: JSON.stringify(input),
+  })
 }
 
 export async function updatePlacementAdminDraft(testId: string, input: { name?: string; version?: string; campusRetakeDays?: number }): Promise<PlacementAdminTest> {
@@ -140,14 +183,14 @@ export async function listPlacementAdminQuestions(testId: string): Promise<{ tes
   return pb.send(`/api/language-school/placement/admin/tests/${encodeURIComponent(testId)}/questions`, { method: 'GET' })
 }
 
-export async function createPlacementAdminQuestion(testId: string, input: Omit<PlacementAdminQuestion, 'id' | 'testId'>): Promise<PlacementAdminQuestion> {
+export async function createPlacementAdminQuestion(testId: string, input: PlacementAdminQuestionInput): Promise<PlacementAdminQuestion> {
   const response = await pb.send<{ question: PlacementAdminQuestion }>(`/api/language-school/placement/admin/tests/${encodeURIComponent(testId)}/questions`, {
     method: 'POST', headers: jsonHeaders, body: JSON.stringify(input),
   })
   return response.question
 }
 
-export async function updatePlacementAdminQuestion(questionId: string, input: Omit<PlacementAdminQuestion, 'id' | 'testId'>): Promise<PlacementAdminQuestion> {
+export async function updatePlacementAdminQuestion(questionId: string, input: PlacementAdminQuestionInput): Promise<PlacementAdminQuestion> {
   const response = await pb.send<{ question: PlacementAdminQuestion }>(`/api/language-school/placement/admin/questions/${encodeURIComponent(questionId)}`, {
     method: 'PATCH', headers: jsonHeaders, body: JSON.stringify(input),
   })
@@ -163,4 +206,58 @@ export async function publishPlacementAdminTest(testId: string): Promise<Placeme
     method: 'POST', headers: jsonHeaders, body: '{}',
   })
   return response.test
+}
+
+export async function getPlacementListeningStatus(testId: string): Promise<PlacementListeningStatus> {
+  return pb.send(`/api/language-school/placement/admin/listening/tests/${encodeURIComponent(testId)}`, { method: 'GET' })
+}
+
+export async function createPlacementListeningQuestion(testId: string, input: PlacementAdminQuestionInput): Promise<PlacementAdminQuestion> {
+  const response = await pb.send<{ question: PlacementAdminQuestion }>(`/api/language-school/placement/admin/listening/tests/${encodeURIComponent(testId)}/questions`, {
+    method: 'POST', headers: jsonHeaders, body: JSON.stringify(input),
+  })
+  return response.question
+}
+
+export async function updatePlacementListeningQuestion(questionId: string, input: PlacementAdminQuestionInput): Promise<PlacementAdminQuestion> {
+  const response = await pb.send<{ question: PlacementAdminQuestion }>(`/api/language-school/placement/admin/listening/questions/${encodeURIComponent(questionId)}`, {
+    method: 'PATCH', headers: jsonHeaders, body: JSON.stringify(input),
+  })
+  return response.question
+}
+
+export async function uploadPlacementListeningAudio(questionId: string, file: File): Promise<{ question: PlacementAdminQuestion; validation: PlacementListeningValidation }> {
+  const form = new FormData()
+  form.set('audio', file)
+  const response = await checkedResponse(await fetch(apiUrl(`/api/language-school/placement/admin/listening/questions/${encodeURIComponent(questionId)}/audio`), {
+    method: 'POST',
+    headers: adminAuthHeaders(),
+    body: form,
+    cache: 'no-store',
+  }))
+  return response.json()
+}
+
+export async function deletePlacementListeningAudio(questionId: string): Promise<{ question: PlacementAdminQuestion; validation: PlacementListeningValidation }> {
+  const response = await checkedResponse(await fetch(apiUrl(`/api/language-school/placement/admin/listening/questions/${encodeURIComponent(questionId)}/audio`), {
+    method: 'DELETE',
+    headers: adminAuthHeaders(),
+    cache: 'no-store',
+  }))
+  return response.json()
+}
+
+export async function fetchPlacementListeningAdminAudio(questionId: string): Promise<Blob> {
+  const response = await checkedResponse(await fetch(apiUrl(`/api/language-school/placement/admin/listening/questions/${encodeURIComponent(questionId)}/audio`), {
+    method: 'GET',
+    headers: adminAuthHeaders(),
+    cache: 'no-store',
+  }))
+  return response.blob()
+}
+
+export async function publishPlacementListeningTest(testId: string): Promise<{ testId: string; status: 'PUBLISHED'; validation: PlacementListeningValidation }> {
+  return pb.send(`/api/language-school/placement/admin/listening/tests/${encodeURIComponent(testId)}/publish`, {
+    method: 'POST', headers: jsonHeaders, body: '{}',
+  })
 }
