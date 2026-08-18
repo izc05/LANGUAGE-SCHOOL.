@@ -38,7 +38,7 @@ test('10.3: Tareas prioriza acción, seguimiento y correcciones sin romper estad
     await expect(taskButtons.first()).toBeVisible()
     await expect(page.locator('.student-task-detail10 h3')).toBeVisible()
   } else {
-    await expect(page.getByText('Todo al día', { exact: true })).toBeVisible()
+    await expect(page.locator('.student-task-list10').getByText('Todo al día', { exact: true })).toBeVisible()
   }
 
   await page.setViewportSize({ width: 390, height: 844 })
