@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useParams } from 'react-router'
+import { Link, useParams } from 'react-router'
 import { useAuth } from '../../features/auth/AuthProvider'
 import { getMyClass, type ClassRecord } from '../../services/pocketbase/studentPortal'
 import { getStudentZoomSdkAuthorization } from '../../services/pocketbase/studentZoomMeeting'
@@ -119,68 +119,78 @@ export default function StudentOnlineClassPage() {
   }
 
   return (
-    <main className="student-online-class-document">
+    <main className="student-online-class-document student-online-class-phase10b">
       <div className="student-online-class-page">
-        <header className="student-online-class-heading">
+        <header className="student-online-class-heading student-online-class-heading10">
           <div className="student-online-class-heading-copy">
-            <a className="student-online-class-brand" href="/alumno/clases" aria-label="Volver a Language School">
+            <Link className="student-online-class-brand" to="/alumno/clases" aria-label="Volver a Language School">
               <strong>LANGUAGE</strong><span>School</span><small>ROCÍO RUIZ</small>
-            </a>
+            </Link>
             <span className="eyebrow">AULA ONLINE</span>
             <h1>{classRecord?.topic || 'Tu clase online'}</h1>
-            <p>Accede a tu sesión Zoom sin compartir credenciales privadas. La autorización se genera en el servidor y caduca automáticamente.</p>
+            <p>Esta es la antesala de tu sesión. Comprueba la clase y entra desde aquí; Language School prepara el acceso de forma segura.</p>
           </div>
-          <a className="button secondary" href="/alumno/clases">← Volver a Mis clases</a>
+          <Link className="button secondary" to="/alumno/clases">← Volver a Mis clases</Link>
         </header>
 
         {loading && <div className="cms-notice" role="status">Cargando aula…</div>}
         {pageError && <div className="cms-notice auth-error" role="alert">{pageError}</div>}
 
         {classRecord && (
-          <section className="panel student-online-class-card" aria-labelledby="online-class-title">
-            <div className="student-online-class-summary">
-              <div>
-                <span className="eyebrow">PRÓXIMA SESIÓN</span>
-                <h2 id="online-class-title">{classRecord.topic || 'Clase de inglés'}</h2>
-                <p>{courseTitle} · {groupName}</p>
-              </div>
-              <div className="student-online-class-time">
-                <strong>{formatDateTime(classRecord.starts_at)}</strong>
-                <span>{mode === 'HYBRID' ? 'Clase híbrida' : mode === 'ONLINE' ? 'Clase online' : 'Clase presencial'}</span>
-              </div>
-            </div>
-
-            {canUseOnlineClass ? (
-              <div className="student-online-class-actions">
-                <div className="student-online-class-explainer">
-                  <strong>Entrar dentro de Language School</strong>
-                  <p>Zoom se abrirá en esta misma pestaña. Al salir de la reunión volverás automáticamente a Mis clases.</p>
+          <section className="student-online-session10" aria-labelledby="online-class-title">
+            <div className="student-online-session10-main">
+              <div className="student-online-class-summary student-online-class-summary10">
+                <div>
+                  <span className="eyebrow">TU SESIÓN</span>
+                  <h2 id="online-class-title">{classRecord.topic || 'Clase de inglés'}</h2>
+                  <p>{courseTitle} · {groupName}</p>
                 </div>
-                <button className="button primary" type="button" onClick={handleJoin} disabled={busy || joinState === 'joined'}>
-                  {joinLabel}
-                </button>
-                {classRecord.online_join_url && (
-                  <a className="button secondary" href={classRecord.online_join_url} target="_blank" rel="noreferrer">
-                    Abrir con Zoom ↗
-                  </a>
-                )}
+                <div className="student-online-class-time">
+                  <strong>{formatDateTime(classRecord.starts_at)}</strong>
+                  <span>{mode === 'HYBRID' ? 'Clase híbrida' : mode === 'ONLINE' ? 'Clase online' : 'Clase presencial'}</span>
+                </div>
               </div>
-            ) : (
-              <div className="cms-notice">Esta sesión no está disponible como aula online.</div>
-            )}
 
-            {joinError && (
-              <div className="cms-notice auth-error student-online-class-error" role="alert">
-                <strong>No hemos podido abrir el aula dentro de Language School.</strong>
-                <span>{joinError}</span>
-                {classRecord.online_join_url && <span>Puedes usar el botón «Abrir con Zoom» como alternativa.</span>}
-              </div>
-            )}
+              {canUseOnlineClass ? (
+                <div className="student-online-class-actions student-online-class-actions10">
+                  <div className="student-online-class-explainer">
+                    <span className="eyebrow">CUANDO QUIERAS ENTRAR</span>
+                    <strong>Tu aula se abre dentro de Language School</strong>
+                    <p>Al pulsar el botón prepararemos Zoom en esta misma pestaña. Al salir volverás a Mis clases.</p>
+                  </div>
+                  <button className="button primary student-online-join10" type="button" onClick={handleJoin} disabled={busy || joinState === 'joined'}>
+                    {joinLabel}
+                  </button>
+                  {classRecord.online_join_url && (
+                    <a className="button secondary student-online-fallback10" href={classRecord.online_join_url} target="_blank" rel="noreferrer">
+                      Abrir con Zoom ↗
+                    </a>
+                  )}
+                </div>
+              ) : (
+                <div className="cms-notice">Esta sesión no está disponible como aula online.</div>
+              )}
 
-            <div className="student-online-class-privacy">
-              <strong>Privacidad y seguridad</strong>
-              <p>Language School no envía el Client Secret de Zoom al navegador. La firma de acceso es temporal y solo se entrega a un alumno con matrícula activa para esta clase.</p>
+              {joinError && (
+                <div className="cms-notice auth-error student-online-class-error" role="alert">
+                  <strong>No hemos podido abrir el aula dentro de Language School.</strong>
+                  <span>{joinError}</span>
+                  {classRecord.online_join_url && <span>Puedes usar el botón «Abrir con Zoom» como alternativa.</span>}
+                </div>
+              )}
             </div>
+
+            <aside className="student-online-session10-side" aria-label="Información del aula">
+              <span className="student-online-session10-number">AULA</span>
+              <div><small>CURSO</small><strong>{courseTitle}</strong></div>
+              <div><small>GRUPO</small><strong>{groupName}</strong></div>
+              <div><small>MODALIDAD</small><strong>{mode === 'HYBRID' ? 'Híbrida' : mode === 'ONLINE' ? 'Online' : 'Presencial'}</strong></div>
+              {mode === 'HYBRID' && classRecord.location_text && <div><small>AULA FÍSICA</small><strong>{classRecord.location_text}</strong></div>}
+              <div className="student-online-class-privacy student-online-class-privacy10">
+                <strong>Acceso protegido</strong>
+                <p>Tu autorización es temporal y personal. Las credenciales privadas de Zoom permanecen en el servidor.</p>
+              </div>
+            </aside>
           </section>
         )}
       </div>
