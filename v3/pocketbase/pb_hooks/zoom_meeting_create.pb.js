@@ -19,10 +19,14 @@ function zoomMeetingCreateBase64Ascii(value) {
 }
 
 function zoomMeetingCreateExisting(app, classId) {
-  // The relation field is literally named `class`. Avoid the text filter parser and use
-  // a DB expression so the identifier is quoted safely by PocketBase/DBX.
-  const records = app.findAllRecords("zoom_meetings", $dbx.hashExp({ "class": classId }))
-  return records.length ? records[0] : null
+  // Keep this lookup independent from SQL/filter parsing because the relation field is
+  // literally named `class`. The collection is technical/admin-only and one record per
+  // class is enforced by a unique index, so a direct in-memory match is deterministic.
+  const records = app.findAllRecords("zoom_meetings")
+  for (let index = 0; index < records.length; index += 1) {
+    if (records[index].getString("class") === classId) return records[index]
+  }
+  return null
 }
 
 function zoomMeetingCreateSafeResult(record, existing) {
@@ -66,37 +70,43 @@ routerAdd("POST", "/api/language-school/zoom/classes/{classId}/meeting", (e) => 
     throw new ForbiddenError("Solo Administración puede crear reuniones Zoom.")
   }
 
-  const classId = String(e.request.pathValue("classId") || "").trim()
-  if (!classId) throw new BadRequestError("Falta la clase que se quiere conectar con Zoom.")
-
-  // Resolve the class first. Besides guaranteeing it exists, this constrains classId to a
-  // canonical PocketBase record id before it is used by zoomMeetingCreateExisting().
-  const classRecord = e.app.findRecordById("classes", classId)
-
-  const existingMeeting = zoomMeetingCreateExisting(e.app, classId)
-  if (existingMeeting && existingMeeting.getString("status") === "READY" && existingMeeting.getString("join_url")) {
-    return e.json(200, zoomMeetingCreateSafeResult(existingMeeting, true))
-  }
-
-  const mode = classRecord.getString("delivery_mode") || "IN_PERSON"
-  if (mode !== "ONLINE" && mode !== "HYBRID") {
-    throw new BadRequestError("Solo las clases online o híbridas pueden tener una reunión Zoom.")
-  }
-  if (classRecord.getString("status") !== "SCHEDULED") {
-    throw new BadRequestError("Solo se pueden preparar reuniones para clases programadas.")
-  }
-
-  const transport = zoomMeetingCreateTransport()
-  if (!transport.accountId || !transport.clientId || !transport.clientSecret || !transport.hostUserId) {
-    return e.json(409, {
-      provider: "zoom",
-      created: false,
-      reason: "missing_credentials",
-      message: "Falta configurar la cuenta anfitriona de Zoom en el servidor.",
-    })
-  }
+  const debugE2E = $os.getenv("LANGUAGE_SCHOOL_E2E") === "1"
+  let stage = "path"
 
   try {
+    const classId = String(e.request.pathValue("classId") || "").trim()
+    if (!classId) throw new BadRequestError("Falta la clase que se quiere conectar con Zoom.")
+
+    stage = "class_lookup"
+    const classRecord = e.app.findRecordById("classes", classId)
+
+    stage = "meeting_lookup"
+    const existingMeeting = zoomMeetingCreateExisting(e.app, classId)
+    if (existingMeeting && existingMeeting.getString("status") === "READY" && existingMeeting.getString("join_url")) {
+      return e.json(200, zoomMeetingCreateSafeResult(existingMeeting, true))
+    }
+
+    stage = "class_validation"
+    const mode = classRecord.getString("delivery_mode") || "IN_PERSON"
+    if (mode !== "ONLINE" && mode !== "HYBRID") {
+      throw new BadRequestError("Solo las clases online o híbridas pueden tener una reunión Zoom.")
+    }
+    if (classRecord.getString("status") !== "SCHEDULED") {
+      throw new BadRequestError("Solo se pueden preparar reuniones para clases programadas.")
+    }
+
+    stage = "transport"
+    const transport = zoomMeetingCreateTransport()
+    if (!transport.accountId || !transport.clientId || !transport.clientSecret || !transport.hostUserId) {
+      return e.json(409, {
+        provider: "zoom",
+        created: false,
+        reason: "missing_credentials",
+        message: "Falta configurar la cuenta anfitriona de Zoom en el servidor.",
+      })
+    }
+
+    stage = "oauth"
     const authorization = "Basic " + zoomMeetingCreateBase64Ascii(transport.clientId + ":" + transport.clientSecret)
     const tokenResponse = $http.send({
       url: transport.oauthBase + "/oauth/token?grant_type=account_credentials&account_id=" + encodeURIComponent(transport.accountId),
@@ -112,12 +122,14 @@ routerAdd("POST", "/api/language-school/zoom/classes/{classId}/meeting", (e) => 
       return e.json(502, { provider: "zoom", created: false, reason: "oauth_failed" })
     }
 
+    stage = "schedule"
     const startsAt = new Date(classRecord.getString("starts_at").replace(" ", "T"))
     const endsAt = new Date(classRecord.getString("ends_at").replace(" ", "T"))
     if (Number.isNaN(startsAt.getTime()) || Number.isNaN(endsAt.getTime()) || endsAt <= startsAt) {
       throw new BadRequestError("La clase no tiene un horario válido para programar Zoom.")
     }
 
+    stage = "meeting_create"
     const topic = ("Language School · " + classRecord.getString("topic")).slice(0, 200)
     const duration = Math.max(1, Math.ceil((endsAt.getTime() - startsAt.getTime()) / 60000))
     const meetingResponse = $http.send({
@@ -152,6 +164,7 @@ routerAdd("POST", "/api/language-school/zoom/classes/{classId}/meeting", (e) => 
       })
     }
 
+    stage = "persist"
     let savedMeeting = null
     e.app.runInTransaction((txApp) => {
       let meetingRecord = zoomMeetingCreateExisting(txApp, classId)
@@ -172,10 +185,19 @@ routerAdd("POST", "/api/language-school/zoom/classes/{classId}/meeting", (e) => 
       savedMeeting = meetingRecord
     })
 
+    stage = "response"
     return e.json(201, zoomMeetingCreateSafeResult(savedMeeting, false))
   } catch (error) {
-    if (error instanceof BadRequestError) throw error
-    e.app.logger().error("Zoom meeting creation failed", "error", String(error), "class", classId)
-    return e.json(502, { provider: "zoom", created: false, reason: "network_error" })
+    console.log("Zoom meeting creation error", stage, String(error))
+    if (debugE2E) {
+      return e.json(500, {
+        provider: "zoom",
+        created: false,
+        reason: "e2e_debug",
+        stage,
+        error: String(error),
+      })
+    }
+    throw error
   }
 }, $apis.requireAuth("users"))
