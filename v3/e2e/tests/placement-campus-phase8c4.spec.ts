@@ -73,7 +73,7 @@ test('8C.4: Mi nivel reanuda, completa 30 preguntas, conserva histórico y aplic
   await expect(page.getByText('Pregunta 2 de 30')).toBeVisible()
 
   await page.goto('/alumno')
-  await expect(page.getByText('Nivel del curso')).toBeVisible()
+  await expect(page.getByText('Nivel del curso', { exact: true })).toBeVisible()
   await expect(page.getByText('Nivel actual')).toHaveCount(0)
   await page.goto('/alumno/nivel')
   await expect(page.getByText('Has respondido 1 de 30 preguntas.')).toBeVisible()
