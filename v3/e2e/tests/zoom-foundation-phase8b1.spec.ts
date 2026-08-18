@@ -12,6 +12,8 @@ const credentials = {
   student: { email: requiredEnv('E2E_STUDENT_EMAIL'), password: requiredEnv('E2E_STUDENT_PASSWORD') },
 }
 
+type BackendMethod = 'GET' | 'POST' | 'PATCH' | 'DELETE'
+
 async function login(page: Page, email: string, password: string, expectedPath: RegExp) {
   await page.goto('/acceso')
   await page.getByLabel('Email').fill(email)
@@ -25,17 +27,20 @@ async function logout(page: Page) {
   await expect(page).toHaveURL(/\/acceso$/)
 }
 
-async function backendRequest(page: Page, path: string, method: 'GET' | 'POST' = 'GET') {
-  return page.evaluate(async ({ path, method }) => {
+async function backendRequest(page: Page, path: string, method: BackendMethod = 'GET', body?: unknown) {
+  return page.evaluate(async ({ path, method, body }) => {
     const stored = JSON.parse(localStorage.getItem('pocketbase_auth') || '{}') as { token?: string }
+    const headers: Record<string, string> = stored.token ? { Authorization: stored.token } : {}
+    if (body !== undefined) headers['Content-Type'] = 'application/json'
     const response = await fetch(`http://127.0.0.1:8090${path}`, {
       method,
-      headers: stored.token ? { Authorization: stored.token } : {},
+      headers,
+      body: body === undefined ? undefined : JSON.stringify(body),
     })
     let responseBody: unknown = null
     try { responseBody = await response.json() } catch { responseBody = null }
     return { status: response.status, body: responseBody }
-  }, { path, method })
+  }, { path, method, body })
 }
 
 test('8B: Zoom permanece server-side y solo Administración puede comprobarlo', async ({ page, request }) => {
@@ -123,9 +128,24 @@ test('8C.2: una clase nueva recorre la creación Zoom y entrega solo el acceso d
   expect(classList.status).toBe(200)
   const targetClass = (classList.body as { items?: Array<{ id?: string; online_join_url?: string }> })?.items?.[0]
   expect(targetClass?.id).toBeTruthy()
-  expect(targetClass?.online_join_url || '').toBe('')
+  const targetClassId = String(targetClass?.id)
 
-  const firstCreate = await backendRequest(page, `/api/language-school/zoom/classes/${encodeURIComponent(String(targetClass?.id))}/meeting`, 'POST')
+  // Make this flow retry-safe. A previous failed assertion may already have completed the
+  // mocked Zoom creation, so reset only this dedicated E2E class before exercising it again.
+  const technicalMeetings = await backendRequest(page, '/api/collections/zoom_meetings/records?page=1&perPage=50')
+  expect(technicalMeetings.status).toBe(200)
+  const targetMeetings = ((technicalMeetings.body as { items?: Array<{ id?: string; class?: string }> })?.items || [])
+    .filter((item) => item.class === targetClassId)
+  for (const item of targetMeetings) {
+    expect(item.id).toBeTruthy()
+    const deleted = await backendRequest(page, `/api/collections/zoom_meetings/records/${encodeURIComponent(String(item.id))}`, 'DELETE')
+    expect(deleted.status).toBe(204)
+  }
+  const resetClass = await backendRequest(page, `/api/collections/classes/records/${encodeURIComponent(targetClassId)}`, 'PATCH', { online_join_url: '' })
+  expect(resetClass.status).toBe(200)
+  expect(resetClass.body).toMatchObject({ online_join_url: '' })
+
+  const firstCreate = await backendRequest(page, `/api/language-school/zoom/classes/${encodeURIComponent(targetClassId)}/meeting`, 'POST')
   expect(firstCreate.status, JSON.stringify(firstCreate.body)).toBe(201)
   expect(firstCreate.body).toMatchObject({
     provider: 'zoom',
@@ -139,7 +159,7 @@ test('8C.2: una clase nueva recorre la creación Zoom y entrega solo el acceso d
   expect(firstPayload).not.toContain('start_url')
   expect(firstPayload).not.toContain('meeting_password')
 
-  const secondCreate = await backendRequest(page, `/api/language-school/zoom/classes/${encodeURIComponent(String(targetClass?.id))}/meeting`, 'POST')
+  const secondCreate = await backendRequest(page, `/api/language-school/zoom/classes/${encodeURIComponent(targetClassId)}/meeting`, 'POST')
   expect(secondCreate.status).toBe(200)
   expect(secondCreate.body).toMatchObject({
     provider: 'zoom',
@@ -148,13 +168,14 @@ test('8C.2: una clase nueva recorre la creación Zoom y entrega solo el acceso d
     externalMeetingId: '12345678901',
   })
 
-  const updatedClass = await backendRequest(page, `/api/collections/classes/records/${encodeURIComponent(String(targetClass?.id))}`)
+  const updatedClass = await backendRequest(page, `/api/collections/classes/records/${encodeURIComponent(targetClassId)}`)
   expect(updatedClass.status).toBe(200)
   expect(updatedClass.body).toMatchObject({ online_join_url: 'https://zoom.example/j/12345678901?pwd=participant' })
 
-  const meetingList = await backendRequest(page, `/api/collections/zoom_meetings/records?page=1&perPage=5&filter=${encodeURIComponent(`class = "${targetClass?.id}"`)}`)
+  const meetingList = await backendRequest(page, '/api/collections/zoom_meetings/records?page=1&perPage=50')
   expect(meetingList.status).toBe(200)
-  const persisted = (meetingList.body as { items?: Array<Record<string, unknown>> })?.items?.[0]
+  const persisted = ((meetingList.body as { items?: Array<Record<string, unknown> & { class?: string }> })?.items || [])
+    .find((item) => item.class === targetClassId)
   expect(persisted).toMatchObject({
     external_meeting_id: '12345678901',
     external_uuid: 'e2e-created-zoom-uuid',
@@ -172,7 +193,8 @@ test('8C.2: una clase nueva recorre la creación Zoom y entrega solo el acceso d
   expect(directTechnicalRecords.body).toMatchObject({ items: [] })
 
   await page.getByRole('navigation', { name: 'Menú de Alumno' }).getByRole('link', { name: 'Mis clases' }).click()
-  const createdClassCard = page.locator('.student-class-list-delivery').filter({ hasText: 'E2E Zoom create class' })
+  const createdClassCard = page.locator('.student-class-list-delivery article').filter({ hasText: 'E2E Zoom create class' })
+  await expect(createdClassCard).toHaveCount(1)
   await expect(createdClassCard).toBeVisible()
   await expect(createdClassCard.getByRole('link', { name: /Entrar en clase online/ })).toHaveAttribute('href', 'https://zoom.example/j/12345678901?pwd=participant')
 })
