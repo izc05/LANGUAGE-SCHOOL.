@@ -78,6 +78,7 @@ jobs:
             --http=127.0.0.1:8090 \
             --dir="$RUNNER_TEMP/language-school-e2e-pb-data" \
             --migrationsDir="$GITHUB_WORKSPACE/v3/pocketbase/pb_migrations" \
+            --hooksDir="$GITHUB_WORKSPACE/v3/pocketbase/pb_hooks" \
             >"$RUNNER_TEMP/e2e-pocketbase.log" 2>&1 &
           echo $! > "$RUNNER_TEMP/e2e-pocketbase.pid"
           for attempt in {1..30}; do
