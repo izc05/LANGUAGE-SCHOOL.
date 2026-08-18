@@ -32,19 +32,71 @@ jobs:
             bash -n "$script"
           done
 
-      - name: Validate PocketBase loopback start wrapper
+      - name: Validate PocketBase loopback and Turnstile production scope
         run: |
           OUTPUT=$(PB_URL=http://127.0.0.1:8090 \
             PB_BIN=/usr/bin/echo \
             PB_DATA=/tmp/pb_data \
             PB_MIGRATIONS=/tmp/pb_migrations \
+            PB_HOOKS=/tmp/pb_hooks \
+            PUBLIC_ORIGIN=https://academy.test \
+            TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA \
+            TURNSTILE_EXPECTED_ACTION=contact \
+            TURNSTILE_ALLOWED_HOSTNAMES=academy.test \
             bash v3/infrastructure/raspberry-pi/start-pocketbase.sh)
           printf '%s' "$OUTPUT" | grep -q -- '--http=127.0.0.1:8090'
+          printf '%s' "$OUTPUT" | grep -q -- '--hooksDir=/tmp/pb_hooks'
 
           if PB_URL=http://0.0.0.0:8090 \
             PB_BIN=/usr/bin/echo \
+            PUBLIC_ORIGIN=https://academy.test \
+            TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA \
+            TURNSTILE_EXPECTED_ACTION=contact \
+            TURNSTILE_ALLOWED_HOSTNAMES=academy.test \
             bash v3/infrastructure/raspberry-pi/start-pocketbase.sh; then
             echo 'PocketBase start wrapper accepted a non-loopback origin.' >&2
+            exit 1
+          fi
+
+          if PB_URL=http://127.0.0.1:8090 \
+            PB_BIN=/usr/bin/echo \
+            PUBLIC_ORIGIN=https://academy.test \
+            TURNSTILE_SECRET_KEY=replace-with-real-secret-key \
+            TURNSTILE_EXPECTED_ACTION=contact \
+            TURNSTILE_ALLOWED_HOSTNAMES=academy.test \
+            bash v3/infrastructure/raspberry-pi/start-pocketbase.sh; then
+            echo 'PocketBase start wrapper accepted a placeholder Turnstile secret.' >&2
+            exit 1
+          fi
+
+          if PB_URL=http://127.0.0.1:8090 \
+            PB_BIN=/usr/bin/echo \
+            PUBLIC_ORIGIN=https://academy.test \
+            TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA \
+            TURNSTILE_ALLOWED_HOSTNAMES=academy.test \
+            bash v3/infrastructure/raspberry-pi/start-pocketbase.sh; then
+            echo 'PocketBase start wrapper accepted a missing Turnstile action.' >&2
+            exit 1
+          fi
+
+          if PB_URL=http://127.0.0.1:8090 \
+            PB_BIN=/usr/bin/echo \
+            PUBLIC_ORIGIN=https://academy.test \
+            TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA \
+            TURNSTILE_EXPECTED_ACTION=contact \
+            TURNSTILE_ALLOWED_HOSTNAMES=other.test \
+            bash v3/infrastructure/raspberry-pi/start-pocketbase.sh; then
+            echo 'PocketBase start wrapper accepted a Turnstile hostname mismatch.' >&2
+            exit 1
+          fi
+
+      - name: Require HTTPS for frontend production origin
+        run: |
+          if PUBLIC_ORIGIN=http://academy.test \
+            TURNSTILE_SITE_KEY=real-looking-public-site-key \
+            PRODUCTION_ENV=/tmp/language-school-ci-no-env \
+            bash v3/infrastructure/raspberry-pi/deploy-frontend.sh; then
+            echo 'Frontend deployment accepted a non-HTTPS PUBLIC_ORIGIN.' >&2
             exit 1
           fi
 
@@ -73,17 +125,41 @@ jobs:
             echo "$EXPECTED  $RUNNER_TEMP/$ARCHIVE" | sha256sum --check
           done
 
-      - name: Validate Nginx configuration
+      - name: Validate Nginx configuration and security headers
         run: |
           sudo apt-get update -qq
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y nginx
-          sudo install -d -m 0755 /opt/language-school/frontend
+          sudo systemctl stop nginx || true
+          sudo install -d -m 0755 /opt/language-school/frontend/assets
+          printf '%s\n' '<!doctype html><title>Language School CI</title>' \
+            | sudo tee /opt/language-school/frontend/index.html >/dev/null
+          printf '%s\n' 'console.log("asset")' \
+            | sudo tee /opt/language-school/frontend/assets/app.js >/dev/null
           sed \
             -e 's|__PROXY_LISTEN__|127.0.0.1:8080|g' \
             -e 's|__PB_URL__|http://127.0.0.1:8090|g' \
             v3/infrastructure/reverse-proxy/language-school.nginx.conf \
             | sudo tee /etc/nginx/conf.d/language-school.conf >/dev/null
           sudo nginx -t
+          sudo nginx
+          trap 'sudo nginx -s stop || true' EXIT
+
+          PUBLIC_HEADERS=$(curl -fsSI http://127.0.0.1:8080/ | tr -d '\r')
+          PRIVATE_HEADERS=$(curl -fsSI http://127.0.0.1:8080/admin | tr -d '\r')
+          ASSET_HEADERS=$(curl -fsSI http://127.0.0.1:8080/assets/app.js | tr -d '\r')
+
+          for headers in "$PUBLIC_HEADERS" "$PRIVATE_HEADERS" "$ASSET_HEADERS"; do
+            printf '%s\n' "$headers" | grep -Eqi '^X-Content-Type-Options: nosniff$'
+            printf '%s\n' "$headers" | grep -Eqi '^X-Frame-Options: SAMEORIGIN$'
+            printf '%s\n' "$headers" | grep -Eqi '^Content-Signal: search=yes, ai-input=yes, ai-train=no$'
+          done
+
+          printf '%s\n' "$PRIVATE_HEADERS" \
+            | grep -Eqi '^X-Robots-Tag: noindex, nofollow, noarchive, nosnippet$'
+          if printf '%s\n' "$PUBLIC_HEADERS" | grep -Eqi '^X-Robots-Tag:'; then
+            echo 'Public pages must not inherit the private X-Robots-Tag header.' >&2
+            exit 1
+          fi
 
       - name: Validate Cloudflare ingress catch-all
         run: |
