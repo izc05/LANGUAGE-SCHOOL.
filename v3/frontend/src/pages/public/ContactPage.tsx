@@ -1,7 +1,8 @@
 import { type FormEvent, useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import SiteShell from '../../components/SiteShell'
-import { isDemoMode } from '../../config/environment'
+import TurnstileWidget from '../../components/TurnstileWidget'
+import { isDemoMode, turnstileSiteKey } from '../../config/environment'
 import { hasCookieConsent, requestCookieSettings, subscribeCookieConsent } from '../../services/cookieConsent'
 import { demoSiteSettings } from '../../services/pocketbase/siteManagement'
 import { getPublicSettings, submitContactRequest, type PublicSettings } from '../../services/pocketbase/publicAcademy'
@@ -19,6 +20,10 @@ export default function ContactPage() {
   const [phone, setPhone] = useState('')
   const [interest, setInterest] = useState(searchParams.get('interes') || '')
   const [message, setMessage] = useState('')
+  const [website, setWebsite] = useState('')
+  const [turnstileToken, setTurnstileToken] = useState('')
+  const [turnstileCycle, setTurnstileCycle] = useState(0)
+  const [turnstileUnavailable, setTurnstileUnavailable] = useState(false)
   const [sending, setSending] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -39,6 +44,12 @@ export default function ContactPage() {
 
   useEffect(() => subscribeCookieConsent(() => setExternalContentAllowed(hasCookieConsent('preferences'))), [])
 
+  function resetTurnstile() {
+    setTurnstileToken('')
+    setTurnstileUnavailable(false)
+    setTurnstileCycle((value) => value + 1)
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setNotice(null)
@@ -49,15 +60,28 @@ export default function ContactPage() {
       return
     }
 
+    if (!isDemoMode && turnstileUnavailable) {
+      setError('La verificación de seguridad no está disponible. Inténtalo de nuevo en unos minutos.')
+      return
+    }
+
+    if (!isDemoMode && !turnstileToken) {
+      setError('Completa la verificación de seguridad antes de enviar la solicitud.')
+      return
+    }
+
     setSending(true)
     try {
-      await submitContactRequest({ name, email, phone, interest, message })
+      await submitContactRequest({ name, email, phone, interest, message, website, turnstileToken })
       setNotice(isDemoMode ? 'Modo demo: solicitud simulada correctamente.' : 'Solicitud enviada. Nos pondremos en contacto contigo.')
       setName('')
       setEmail('')
       setPhone('')
       setMessage('')
+      setWebsite('')
+      if (!isDemoMode) resetTurnstile()
     } catch {
+      if (!isDemoMode) resetTurnstile()
       setError('No se ha podido enviar la solicitud. Inténtalo de nuevo más tarde.')
     } finally {
       setSending(false)
@@ -70,6 +94,7 @@ export default function ContactPage() {
   const directionsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapAddress)}`
   const canLoadMap = !settings.cookieBannerEnabled || externalContentAllowed
   const privacyOwner = settings.legalOwnerName.trim() || settings.academyName.trim() || 'Language School'
+  const securityReady = isDemoMode || (Boolean(turnstileToken) && !turnstileUnavailable)
 
   return (
     <SiteShell>
@@ -110,13 +135,32 @@ export default function ContactPage() {
                 </div>
                 <label className="field-stack"><span>Me interesa</span><input value={interest} onChange={(event) => setInterest(event.target.value)} placeholder="Kids, B1, conversación..." /></label>
                 <label className="field-stack"><span>Mensaje</span><textarea rows={6} value={message} onChange={(event) => setMessage(event.target.value)} required /></label>
+                <label className="contact-honeypot" aria-hidden="true">
+                  <span>Sitio web</span>
+                  <input tabIndex={-1} autoComplete="off" value={website} onChange={(event) => setWebsite(event.target.value)} />
+                </label>
               </div>
               <div className="contact-privacy-layer" role="note">
                 <strong>Información básica de privacidad</strong>
                 <p><b>Responsable:</b> {privacyOwner}. <b>Finalidad:</b> atender tu consulta y orientarte sobre los servicios solicitados. <b>Base:</b> medidas precontractuales a petición de la persona interesada. <b>Derechos:</b> acceso, rectificación, supresión, oposición, limitación y portabilidad cuando proceda.</p>
                 <Link to="/privacidad">Ver Política de privacidad completa →</Link>
               </div>
-              <button className="button button-primary" type="submit" disabled={sending}>{sending ? 'Enviando…' : 'Enviar solicitud'}</button>
+              {!isDemoMode && (
+                <div className="contact-security-layer">
+                  <TurnstileWidget
+                    key={turnstileCycle}
+                    siteKey={turnstileSiteKey}
+                    onToken={(token) => {
+                      setTurnstileToken(token)
+                      if (token) setTurnstileUnavailable(false)
+                    }}
+                    onUnavailable={() => setTurnstileUnavailable(true)}
+                  />
+                  <small>Protección anti-spam mediante Cloudflare Turnstile.</small>
+                  {turnstileUnavailable && <span className="contact-security-error" role="alert">No se ha podido cargar la verificación de seguridad.</span>}
+                </div>
+              )}
+              <button className="button button-primary" type="submit" disabled={sending || !securityReady}>{sending ? 'Enviando…' : 'Enviar solicitud'}</button>
               <small className="contact-v2-form-note">{isDemoMode ? 'Modo demo: el envío se simula y no genera una solicitud real.' : 'La academia recibirá esta solicitud para poder ponerse en contacto contigo.'}</small>
             </form>
 
