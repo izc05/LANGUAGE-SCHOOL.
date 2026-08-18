@@ -59,7 +59,7 @@ test('8C.8 UI: visitante escucha Listening sin autoplay y Admin ve el banco prot
   const listeningVersion = page.locator('.placement-version-list button').filter({ hasText: 'Listening' }).first()
   await expect(listeningVersion).toBeVisible()
   await listeningVersion.click()
-  await expect(page.getByRole('heading', { name: 'Comprensión oral' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Comprensión oral', exact: true })).toBeVisible()
   await expect(page.getByText('24/24 audios')).toBeVisible()
   await expect(page.getByText(/Los guiones y respuestas son internos/i)).toBeVisible()
   await expect(page.locator('.placement-listening-level')).toHaveCount(6)
