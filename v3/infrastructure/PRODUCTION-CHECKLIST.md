@@ -38,7 +38,7 @@ Los puertos de esta lista corresponden a la plantilla actual (`PROXY_URL=127.0.0
 - [ ] `systemctl is-active language-school-pocketbase` = active.
 - [ ] `curl http://127.0.0.1:8091/api/health` responde correctamente.
 
-## D. Frontend y Nginx
+## D. Frontend, Nginx y observabilidad local
 
 - [ ] `install-nginx.sh` supera `nginx -t`.
 - [ ] Nginx escucha en `127.0.0.1:8083`.
@@ -50,6 +50,11 @@ Los puertos de esta lista corresponden a la plantilla actual (`PROXY_URL=127.0.0
 - [ ] `http://127.0.0.1:8083/api/health` devuelve PocketBase.
 - [ ] `http://127.0.0.1:8083/_/` NO muestra el panel PocketBase.
 - [ ] `health-check.sh` = SUCCESS.
+- [ ] `install-health-monitor.sh` instala y habilita `language-school-health.timer`.
+- [ ] `systemctl list-timers language-school-health.timer` muestra la siguiente ejecución.
+- [ ] `sudo systemctl start language-school-health.service` finaliza correctamente.
+- [ ] `journalctl -u language-school-health.service` muestra solo estados técnicos, sin PII ni secretos.
+- [ ] Admin → Sistema muestra Backend, Zoom y Test de nivel sin exponer credenciales.
 
 ## E. Cloudflare
 
