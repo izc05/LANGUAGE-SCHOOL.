@@ -12,6 +12,7 @@ export const adminNav = [
   { label: 'Cursos', to: '/admin/cursos' },
   { label: 'Clases', to: '/admin/clases' },
   { label: 'Aula online', to: '/admin/aula-online' },
+  { label: 'Zoom', to: '/admin/zoom' },
   { label: 'Tarifas', to: '/admin/tarifas' },
   { label: 'Configuración', to: '/admin/configuracion' },
   { label: 'Sistema', to: '/admin/sistema' },
