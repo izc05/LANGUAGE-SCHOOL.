@@ -1,12 +1,12 @@
 // @ts-nocheck
 import * as THREE from 'three'
 
-const C_ROSE = new THREE.Color('#e99fbd')
-const C_BLUSH = new THREE.Color('#f5cedd')
-const C_HAZE = new THREE.Color('#fdebf2')
-const C_PEARL = new THREE.Color('#fff9fb')
+const C_ROSE = new THREE.Color('#df6f9e')
+const C_BLUSH = new THREE.Color('#efb0ca')
+const C_HAZE = new THREE.Color('#f9dce8')
+const C_PEARL = new THREE.Color('#fff7fa')
 const C_WHITE = new THREE.Color('#ffffff')
-const C_BG = new THREE.Color('#fffdfd')
+const C_BG = new THREE.Color('#fffafc')
 const DURATION = 2600
 
 let transitionRunning = false
@@ -67,9 +67,9 @@ const cloudFrag = /* glsl */ `
   float fbm(vec2 p) {
     float v = 0.0;
     float a = 0.5;
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < 5; i++) {
       v += a * noise(p);
-      p = p * 2.05 + vec2(1.7, 9.2);
+      p = p * 2.04 + vec2(1.7, 9.2);
       a *= 0.5;
     }
     return v;
@@ -80,26 +80,39 @@ const cloudFrag = /* glsl */ `
     float t = uTime * 0.018 + vDepth * 4.7;
 
     vec2 warp = vec2(
-      fbm(uv * 1.25 + vec2(t, t * 0.35)),
-      fbm(uv * 1.35 + vec2(-t * 0.45, t + 2.6))
+      fbm(uv * 1.3 + vec2(t, t * 0.35)),
+      fbm(uv * 1.42 + vec2(-t * 0.45, t + 2.6))
     ) - 0.5;
-    warp *= 0.11;
+    warp *= 0.10;
 
     vec2 q = uv + warp;
     float ellipse = length(q * vec2(0.82, 1.72));
-    float veil = 1.0 - smoothstep(0.23, 0.5, ellipse);
 
-    float texture = fbm(q * 2.45 + vec2(t * 0.55, -t * 0.24));
-    float wisps = smoothstep(0.22, 0.84, texture);
-    float innerGlow = 1.0 - smoothstep(0.02, 0.48, ellipse);
+    float edgeNoise = fbm(q * vec2(4.2, 6.8) + vec2(t * 0.22, -t * 0.12));
+    float edgeRadius = mix(0.43, 0.49, edgeNoise);
+    float veil = 1.0 - smoothstep(0.27, edgeRadius, ellipse);
 
-    float alpha = veil * mix(0.48, 0.82, wisps) * vAlpha;
+    float broad = fbm(q * 2.8 + vec2(t * 0.48, -t * 0.22));
+    float streaks = fbm(q * vec2(3.4, 8.2) + vec2(-t * 0.18, t * 0.14));
+    float fine = fbm(q * vec2(7.5, 11.0) + vec2(t * 0.08, -t * 0.06));
+
+    float wisps = smoothstep(0.28, 0.78, broad);
+    float detail = smoothstep(0.36, 0.72, streaks) * 0.65 + fine * 0.35;
+    float innerGlow = 1.0 - smoothstep(0.03, 0.46, ellipse);
+
+    float density = mix(0.58, 0.96, wisps) * mix(0.82, 1.08, detail);
+    float alpha = veil * density * vAlpha;
     alpha *= 1.0 - uFade;
-    if (alpha < 0.012) discard;
+    if (alpha < 0.014) discard;
 
-    float tint = clamp(texture * 0.42 + innerGlow * 0.18 + vDepth * 0.08, 0.0, 1.0);
+    float tint = clamp(
+      broad * 0.28 + streaks * 0.34 + fine * 0.12 + innerGlow * 0.14 + vDepth * 0.12,
+      0.0,
+      1.0
+    );
+
     vec3 col = mix(uColorA, uColorB, tint);
-    col = mix(col, vec3(1.0), 0.22 + uFade * 0.72);
+    col = mix(col, vec3(1.0), 0.10 + uFade * 0.78);
 
     gl_FragColor = vec4(col, alpha);
   }
@@ -143,17 +156,20 @@ function makeCloudMaterial(colorA: THREE.Color, colorB: THREE.Color) {
 function buildScene() {
   const scene = new THREE.Scene()
   scene.background = C_BG.clone()
-  scene.fog = new THREE.FogExp2(C_HAZE, 0.026)
+  scene.fog = new THREE.FogExp2(C_HAZE, 0.024)
 
   const cloudMeshes: THREE.Mesh[] = []
-  const count = 46
+  const count = 48
   const layers = 4
 
   for (let i = 0; i < count; i += 1) {
     const layer = i % layers
     const depth = layer / (layers - 1)
-    const alpha = THREE.MathUtils.randFloat(0.18, 0.42) * (0.9 + depth * 0.1)
-    const material = makeCloudMaterial(C_PEARL, depth > 0.55 ? C_BLUSH : C_HAZE)
+    const alpha = THREE.MathUtils.randFloat(0.24, 0.52) * (0.9 + depth * 0.12)
+    const material = makeCloudMaterial(
+      depth > 0.55 ? C_HAZE : C_PEARL,
+      depth > 0.4 ? C_BLUSH : C_HAZE,
+    )
     const mesh = new THREE.Mesh(createCloudGeometry(depth, alpha), material)
 
     const angle = (i / count) * Math.PI * 2 * 2.35 + layer * 0.28
@@ -167,7 +183,7 @@ function buildScene() {
     )
 
     const width = THREE.MathUtils.randFloat(5.0, 10.5) * (0.72 + depth * 0.48)
-    const height = width * THREE.MathUtils.randFloat(0.28, 0.48)
+    const height = width * THREE.MathUtils.randFloat(0.28, 0.46)
     mesh.scale.set(width, height, 1)
     mesh.rotation.z = THREE.MathUtils.randFloat(-0.2, 0.2)
 
@@ -175,31 +191,32 @@ function buildScene() {
     scene.add(mesh)
   }
 
-  // A few very soft rose veils provide depth without becoming dense cotton clouds.
-  for (let i = 0; i < 7; i += 1) {
-    const depth = THREE.MathUtils.randFloat(0.45, 0.9)
-    const material = makeCloudMaterial(C_HAZE, C_ROSE)
+  // Rose veils are deliberately few and elongated: they bring colour and depth
+  // without returning to the dense cotton-ball look of the previous transition.
+  for (let i = 0; i < 9; i += 1) {
+    const depth = THREE.MathUtils.randFloat(0.45, 0.92)
+    const material = makeCloudMaterial(C_BLUSH, C_ROSE)
     const mesh = new THREE.Mesh(
-      createCloudGeometry(depth, THREE.MathUtils.randFloat(0.1, 0.22)),
+      createCloudGeometry(depth, THREE.MathUtils.randFloat(0.16, 0.30)),
       material,
     )
 
     mesh.position.set(
       THREE.MathUtils.randFloatSpread(8),
       THREE.MathUtils.randFloatSpread(4.5),
-      -5 - Math.random() * 11,
+      -4 - Math.random() * 12,
     )
 
-    const width = THREE.MathUtils.randFloat(6.5, 11)
-    mesh.scale.set(width, width * THREE.MathUtils.randFloat(0.24, 0.38), 1)
+    const width = THREE.MathUtils.randFloat(6.3, 10.8)
+    mesh.scale.set(width, width * THREE.MathUtils.randFloat(0.24, 0.36), 1)
     mesh.rotation.z = THREE.MathUtils.randFloat(-0.16, 0.16)
 
     cloudMeshes.push(mesh)
     scene.add(mesh)
   }
 
-  scene.add(new THREE.AmbientLight(C_WHITE, 1.3))
-  const directional = new THREE.DirectionalLight(C_BLUSH, 0.7)
+  scene.add(new THREE.AmbientLight(C_WHITE, 1.25))
+  const directional = new THREE.DirectionalLight(C_BLUSH, 0.9)
   directional.position.set(5, 5, 5)
   scene.add(directional)
 
@@ -254,7 +271,7 @@ export function runPremiumCloudTransition(onComplete: () => void) {
     powerPreference: 'high-performance',
   })
 
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75))
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.85))
   renderer.setSize(width, height)
   renderer.sortObjects = true
 
@@ -293,7 +310,7 @@ export function runPremiumCloudTransition(onComplete: () => void) {
       const material = mesh.material as THREE.ShaderMaterial
       material.uniforms.uTime.value = elapsed
       material.uniforms.uProgress.value = progress
-      material.uniforms.uFade.value = Math.max(0, (progress - 0.73) / 0.27)
+      material.uniforms.uFade.value = Math.max(0, (progress - 0.74) / 0.26)
       mesh.quaternion.copy(camera.quaternion)
     }
 
@@ -307,9 +324,9 @@ export function runPremiumCloudTransition(onComplete: () => void) {
     camera.position.x = Math.sin(ease * Math.PI * 0.72) * 0.12
     camera.rotation.z = Math.sin(ease * Math.PI) * 0.005
 
-    const exitP = Math.max(0, (progress - 0.58) / 0.42)
-    const currentA = C_PEARL.clone().lerp(C_WHITE, exitP)
-    const currentB = C_BLUSH.clone().lerp(C_WHITE, exitP)
+    const exitP = Math.max(0, (progress - 0.60) / 0.40)
+    const currentA = C_HAZE.clone().lerp(C_WHITE, exitP)
+    const currentB = C_ROSE.clone().lerp(C_WHITE, exitP)
 
     for (const mesh of cloudMeshes) {
       const material = mesh.material as THREE.ShaderMaterial
@@ -319,14 +336,14 @@ export function runPremiumCloudTransition(onComplete: () => void) {
 
     if (scene.fog instanceof THREE.FogExp2) {
       scene.fog.color.lerpColors(C_HAZE, C_WHITE, exitP)
-      scene.fog.density = THREE.MathUtils.lerp(0.026, 0.012, exitP)
+      scene.fog.density = THREE.MathUtils.lerp(0.024, 0.011, exitP)
     }
 
     if (scene.background instanceof THREE.Color) {
-      scene.background.lerpColors(C_BG, C_WHITE, Math.max(0, (progress - 0.76) / 0.24))
+      scene.background.lerpColors(C_BG, C_WHITE, Math.max(0, (progress - 0.78) / 0.22))
     }
 
-    const finalFade = Math.max(0, (progress - 0.86) / 0.14)
+    const finalFade = Math.max(0, (progress - 0.87) / 0.13)
     fsMat.uniforms.uColor.value.copy(C_WHITE)
     fsMat.uniforms.uOpacity.value = finalFade
 
