@@ -23,9 +23,24 @@
   transform: translate(-50%, -50%);
 }
 
+.intro-orbit-plane-canvas {
+  position: absolute;
+  inset: -23%;
+  z-index: 2;
+  pointer-events: none;
+  filter: drop-shadow(0 13px 18px rgba(81, 48, 63, .08));
+}
+
+.intro-orbit-plane-canvas canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
 .intro-orbit-sphere {
   position: absolute;
   inset: 0;
+  z-index: 3;
   border: 1px solid rgba(214, 41, 116, .22);
   border-radius: 50%;
   background:
@@ -67,61 +82,9 @@
   filter: blur(1px);
 }
 
-.intro-orbit-track {
-  position: absolute;
-  inset: -10%;
-  border-radius: 50%;
-  pointer-events: none;
-}
-
-.intro-orbit-arm {
-  position: absolute;
-  inset: 0;
-  transform-origin: 50% 50%;
-  animation: introOrbitPlane 12s linear 1 forwards;
-}
-
-.intro-orbit-plane {
-  position: absolute;
-  right: -3.5%;
-  top: 50%;
-  width: clamp(2.8rem, 4.2vw, 4.1rem);
-  transform: translateY(-50%) rotate(90deg);
-  filter: drop-shadow(0 11px 12px rgba(81, 48, 63, .16));
-}
-
-.intro-orbit-plane svg {
-  display: block;
-  width: 100%;
-  height: auto;
-  overflow: visible;
-}
-
-.intro-orbit-plane-body {
-  fill: #fffdfd;
-  stroke: rgba(87, 61, 73, .48);
-  stroke-width: 1.35;
-  stroke-linejoin: round;
-}
-
-.intro-orbit-plane-tail {
-  fill: #d62974;
-  stroke: rgba(158, 22, 79, .34);
-  stroke-width: .7;
-}
-
-.intro-orbit-plane-stripe {
-  fill: #d62974;
-  opacity: .9;
-}
-
-.intro-orbit-plane-window {
-  fill: #523a45;
-  opacity: .9;
-}
-
 .intro-orbit-refresh .intro-orbit-brand {
   top: 50%;
+  z-index: 4;
   width: 82%;
   transform: translate(-50%, -50%);
   opacity: 1;
@@ -191,15 +154,14 @@
   opacity: 0;
 }
 
-@keyframes introOrbitPlane {
-  from { transform: rotate(-38deg); }
-  to { transform: rotate(1042deg); }
-}
-
 @media (max-height: 760px) and (min-width: 761px) {
   .intro-orbit-stage {
     top: 43%;
     width: clamp(17.5rem, 27vw, 24rem);
+  }
+
+  .intro-orbit-plane-canvas {
+    inset: -25%;
   }
 
   .intro-orbit-refresh .premium-brand-school {
@@ -222,13 +184,8 @@
     width: min(78vw, 20rem);
   }
 
-  .intro-orbit-track {
-    inset: -9%;
-  }
-
-  .intro-orbit-plane {
-    right: -5%;
-    width: clamp(2.45rem, 11vw, 3.15rem);
+  .intro-orbit-plane-canvas {
+    inset: -24%;
   }
 
   .intro-orbit-refresh .intro-orbit-brand {
@@ -266,11 +223,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .intro-orbit-arm {
-    animation: none !important;
-    transform: rotate(-38deg);
-  }
-
   .intro-orbit-refresh .intro-orbit-actions,
   .intro-orbit-transition {
     transition: none !important;
