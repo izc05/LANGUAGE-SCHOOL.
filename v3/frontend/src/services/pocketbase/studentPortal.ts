@@ -146,103 +146,33 @@ export async function listMyUpcomingClasses(limit = 10): Promise<ClassRecord[]> 
   return result.items
 }
 
-export async function listMyRecentClasses(limit = 20): Promise<ClassRecord[]> {
-  requireStudentUser()
-  const result = await pb.collection(collections.classes).getList<ClassRecord>(1, limit, { filter: 'status = "COMPLETED"', sort: '-starts_at', expand: 'group,group.course' })
-  return result.items
+export async function listMyRecentClasses(limit = 20): Promise<ClassRecord[]> { requireStudentUser(); const result = await pb.collection(collections.classes).getList<ClassRecord>(1, limit, { filter: 'status = "COMPLETED"', sort: '-starts_at', expand: 'group,group.course' }); return result.items }
+export async function listMyAttendance(limit = 40): Promise<AttendanceRecord[]> { const user = requireStudentUser(); const result = await pb.collection(collections.attendance).getList<AttendanceRecord>(1, limit, { filter: `student = "${quote(user.id)}"`, sort: '-created' }); return result.items }
+export async function listMyFiles(limit = 50): Promise<StudentFileRecord[]> { const user = requireStudentUser(); const result = await pb.collection(collections.studentFiles).getList<StudentFileRecord>(1, limit, { filter: `student = "${quote(user.id)}" && status = "ACTIVE"`, sort: '-created' }); return result.items }
+
+export async function uploadMyFile(input: { title: string; file: File; category: StudentFileCategory; description?: string }): Promise<StudentFileRecord> {
+  const user = requireStudentUser(); const data = new FormData(); data.set('title', input.title.trim() || input.file.name); data.set('file', input.file); data.set('student', user.id); data.set('uploaded_by', user.id); data.set('category', input.category); data.set('description', input.description?.trim() || ''); data.set('status', 'ACTIVE'); return pb.collection(collections.studentFiles).create<StudentFileRecord>(data)
 }
 
-export async function listMyMaterials(limit = 20): Promise<MaterialRecord[]> {
-  requireStudentUser()
-  const result = await pb.collection(collections.materials).getList<MaterialRecord>(1, limit, { filter: 'published = true', sort: '-created' })
-  return result.items
+export async function archiveMyFile(record: StudentFileRecord): Promise<StudentFileRecord> { const user = requireStudentUser(); if (record.student !== user.id) throw new Error('No puedes modificar archivos de otro alumno.'); return pb.collection(collections.studentFiles).update<StudentFileRecord>(record.id, { status: 'ARCHIVED' }) }
+export async function deleteMyFile(record: StudentFileRecord): Promise<boolean> { const user = requireStudentUser(); if (record.student !== user.id) throw new Error('No puedes eliminar archivos de otro alumno.'); return pb.collection(collections.studentFiles).delete(record.id) }
+
+async function getProtectedFileUrl(record: RecordModel, filename: string, download = false): Promise<string> { if (!filename) return ''; const token = await pb.files.getToken(); return pb.files.getURL(record, filename, { token, ...(download ? { download: true } : {}) }) }
+export function getMyFileDownloadUrl(record: StudentFileRecord): Promise<string> { const user = requireStudentUser(); if (record.student !== user.id) return Promise.reject(new Error('No puedes descargar archivos de otro alumno.')); return getProtectedFileUrl(record, record.file, true) }
+export async function listMyMaterials(limit = 30): Promise<MaterialRecord[]> { requireStudentUser(); const result = await pb.collection(collections.materials).getList<MaterialRecord>(1, limit, { filter: 'published = true', sort: '-created' }); return result.items }
+export function getMaterialDownloadUrl(record: MaterialRecord): Promise<string> { requireStudentUser(); return getProtectedFileUrl(record, record.file, true) }
+export async function listMyAssignments(limit = 30): Promise<AssignmentRecord[]> { requireStudentUser(); const result = await pb.collection(collections.assignments).getList<AssignmentRecord>(1, limit, { filter: 'status != "DRAFT"', sort: 'due_at,-created' }); return result.items }
+export async function listMySubmissions(limit = 50): Promise<SubmissionRecord[]> { const user = requireStudentUser(); const result = await pb.collection(collections.assignmentSubmissions).getList<SubmissionRecord>(1, limit, { filter: `student = "${quote(user.id)}"`, sort: '-submitted_at' }); return result.items }
+
+export async function submitAssignment(input: { assignmentId: string; file?: File; textAnswer?: string }): Promise<SubmissionRecord> {
+  const user = requireStudentUser(); const data = new FormData(); data.set('assignment', input.assignmentId); data.set('student', user.id); data.set('text_answer', input.textAnswer?.trim() || ''); data.set('submitted_at', new Date().toISOString()); data.set('status', 'SUBMITTED'); if (input.file) data.set('file', input.file); return pb.collection(collections.assignmentSubmissions).create<SubmissionRecord>(data)
 }
 
-export async function listMyAssignments(limit = 20): Promise<AssignmentRecord[]> {
-  requireStudentUser()
-  const result = await pb.collection(collections.assignments).getList<AssignmentRecord>(1, limit, { filter: 'status = "PUBLISHED" || status = "CLOSED"', sort: '-created' })
-  return result.items
-}
-
-export async function listMySubmissions(limit = 50): Promise<SubmissionRecord[]> {
-  requireStudentUser()
-  const result = await pb.collection(collections.assignmentSubmissions).getList<SubmissionRecord>(1, limit, { sort: '-submitted_at' })
-  return result.items
-}
-
-export async function listMyStudentFiles(limit = 30): Promise<StudentFileRecord[]> {
-  const user = requireStudentUser()
-  const result = await pb.collection(collections.studentFiles).getList<StudentFileRecord>(1, limit, { filter: `student = "${quote(user.id)}" && status = "ACTIVE"`, sort: '-created' })
-  return result.items
-}
-
-export async function listMyNotifications(limit = 30): Promise<NotificationRecord[]> {
-  const user = requireStudentUser()
-  const result = await pb.collection(collections.notifications).getList<NotificationRecord>(1, limit, { filter: `recipient = "${quote(user.id)}"`, sort: '-created' })
-  return result.items
-}
-
-export async function listMyAttendance(limit = 100): Promise<AttendanceRecord[]> {
-  requireStudentUser()
-  const result = await pb.collection(collections.attendance).getList<AttendanceRecord>(1, limit, { sort: '-created' })
-  return result.items
-}
+export async function listMyNotifications(limit = 30): Promise<NotificationRecord[]> { const user = requireStudentUser(); const result = await pb.collection(collections.notifications).getList<NotificationRecord>(1, limit, { filter: `recipient = "${quote(user.id)}"`, sort: '-created' }); return result.items }
+export async function markMyNotificationRead(record: NotificationRecord): Promise<NotificationRecord> { const user = requireStudentUser(); if (record.recipient !== user.id) throw new Error('No puedes modificar avisos de otro usuario.'); return pb.collection(collections.notifications).update<NotificationRecord>(record.id, { read_at: new Date().toISOString() }) }
 
 export async function getStudentDashboardSnapshot() {
   requireStudentUser()
-  const [profile, enrollments, upcomingClasses, recentClasses, materials, assignments, submissions, files, notifications] = await Promise.all([
-    getMyStudentProfile(),
-    listMyEnrollments(),
-    listMyUpcomingClasses(5),
-    listMyRecentClasses(5),
-    listMyMaterials(8),
-    listMyAssignments(8),
-    listMySubmissions(20),
-    listMyStudentFiles(8),
-    listMyNotifications(8),
-  ])
-  return { profile, enrollments, upcomingClasses, recentClasses, materials, assignments, submissions, files, notifications }
+  const [profile, enrollments, upcomingClasses, recentClasses, files, materials, assignments, submissions, notifications] = await Promise.all([getMyStudentProfile(), listMyEnrollments(), listMyUpcomingClasses(6), listMyRecentClasses(20), listMyFiles(8), listMyMaterials(8), listMyAssignments(12), listMySubmissions(30), listMyNotifications(10)])
+  return { profile, enrollments, upcomingClasses, recentClasses, files, materials, assignments, submissions, notifications }
 }
-
-export async function markNotificationRead(record: NotificationRecord): Promise<NotificationRecord> {
-  const user = requireStudentUser()
-  if (record.recipient !== user.id) throw new Error('La notificación no pertenece al alumno autenticado.')
-  return pb.collection(collections.notifications).update<NotificationRecord>(record.id, { read_at: new Date().toISOString() })
-}
-
-export async function createSubmission(input: { assignmentId: string; file?: File; textAnswer?: string }): Promise<SubmissionRecord> {
-  const user = requireStudentUser()
-  const data = new FormData()
-  data.set('assignment', input.assignmentId)
-  data.set('student', user.id)
-  data.set('text_answer', input.textAnswer?.trim() || '')
-  data.set('submitted_at', new Date().toISOString())
-  data.set('status', 'SUBMITTED')
-  if (input.file) data.set('file', input.file)
-  return pb.collection(collections.assignmentSubmissions).create<SubmissionRecord>(data)
-}
-
-export async function createStudentFile(input: { title: string; file: File; category: StudentFileCategory; description?: string }): Promise<StudentFileRecord> {
-  const user = requireStudentUser()
-  const data = new FormData()
-  data.set('title', input.title.trim() || input.file.name)
-  data.set('file', input.file)
-  data.set('student', user.id)
-  data.set('uploaded_by', user.id)
-  data.set('category', input.category)
-  data.set('description', input.description?.trim() || '')
-  data.set('status', 'ACTIVE')
-  return pb.collection(collections.studentFiles).create<StudentFileRecord>(data)
-}
-
-async function protectedFileUrl(record: RecordModel, filename: string): Promise<string> {
-  requireStudentUser()
-  if (!filename) throw new Error('El archivo no está disponible.')
-  const token = await pb.files.getToken()
-  return pb.files.getURL(record, filename, { token, download: true })
-}
-
-export function getMaterialDownloadUrl(record: MaterialRecord): Promise<string> { return protectedFileUrl(record, record.file) }
-export function getAssignmentAttachmentUrl(record: AssignmentRecord): Promise<string> { return protectedFileUrl(record, record.attachment) }
-export function getSubmissionFileUrl(record: SubmissionRecord): Promise<string> { return protectedFileUrl(record, record.file) }
-export function getStudentFileDownloadUrl(record: StudentFileRecord): Promise<string> { return protectedFileUrl(record, record.file) }
