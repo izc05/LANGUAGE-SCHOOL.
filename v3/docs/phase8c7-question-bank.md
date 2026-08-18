@@ -28,6 +28,10 @@ Cada intento conserva `selection_snapshot` con los IDs exactos y el orden de opc
 
 El banco base se instala como versión `DRAFT` (`ls-cefr-2026-v1`) al disponer del primer usuario ADMIN en una instalación sin versiones de placement existentes. Administración debe revisarlo y publicarlo mediante el flujo seguro de 8C.6; nunca se sobrescribe una versión existente.
 
+## Integración PocketBase
+
+Los callbacks diferidos de PocketBase (`onBootstrap`, `onRecordAfterCreateSuccess` y `onRecordCreate`) se mantienen como wrappers mínimos. La lógica de siembra del banco y de diversidad vive en módulos CommonJS cargados con `require(...)` dentro del callback. Esta separación evita depender del alcance léxico de funciones declaradas en archivos `.pb.js` cuando el runtime ejecuta el hook posteriormente.
+
 ## Fuera de alcance de 8C.7
 
 - Listening (8C.8).
