@@ -1,7 +1,12 @@
 import { useEffect, useState } from 'react'
 import DashboardShell from '../../components/DashboardShell'
 import { useAuth } from '../../features/auth/AuthProvider'
-import { getZoomIntegrationStatus, type ZoomIntegrationStatus } from '../../services/pocketbase/zoomIntegration'
+import {
+  checkZoomApiConnection,
+  getZoomIntegrationStatus,
+  type ZoomConnectionCheck,
+  type ZoomIntegrationStatus,
+} from '../../services/pocketbase/zoomIntegration'
 import { adminNav } from './adminNav'
 
 const demoStatus: ZoomIntegrationStatus = {
@@ -15,7 +20,9 @@ const demoStatus: ZoomIntegrationStatus = {
 export default function AdminZoomIntegrationPage() {
   const { isDemoMode } = useAuth()
   const [status, setStatus] = useState<ZoomIntegrationStatus | null>(isDemoMode ? demoStatus : null)
+  const [connection, setConnection] = useState<ZoomConnectionCheck | null>(null)
   const [loading, setLoading] = useState(!isDemoMode)
+  const [checking, setChecking] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -27,6 +34,20 @@ export default function AdminZoomIntegrationPage() {
       .finally(() => { if (mounted) setLoading(false) })
     return () => { mounted = false }
   }, [isDemoMode])
+
+  async function handleConnectionCheck() {
+    if (isDemoMode || !status?.apiConfigured) return
+    setChecking(true)
+    setError(null)
+    setConnection(null)
+    try {
+      setConnection(await checkZoomApiConnection())
+    } catch {
+      setError('No se ha podido completar la prueba de conexión con Zoom.')
+    } finally {
+      setChecking(false)
+    }
+  }
 
   return (
     <DashboardShell role="Administrador" name="Admin" nav={[...adminNav]}>
@@ -54,18 +75,31 @@ export default function AdminZoomIntegrationPage() {
             </section>
 
             <section className="zoom-capability-grid" aria-label="Estado técnico de Zoom">
-              <article><span>01</span><div><small>ZOOM API</small><strong>{status.apiConfigured ? 'Configurada' : 'Pendiente'}</strong><p>Creación y gestión de reuniones desde el servidor.</p></div></article>
-              <article><span>02</span><div><small>MEETING SDK</small><strong>{status.meetingSdkConfigured ? 'Configurado' : 'Pendiente'}</strong><p>Videoclase incrustada dentro del Campus.</p></div></article>
-              <article><span>03</span><div><small>SEGURIDAD</small><strong>Servidor</strong><p>Los secretos permanecen fuera de React y del CMS.</p></div></article>
+              <article><span>01</span><div><small>ZOOM API</small><strong>{status.apiConfigured ? 'Configurada' : 'Pendiente'}</strong><p>Server-to-Server OAuth para crear y gestionar reuniones desde el backend.</p></div></article>
+              <article><span>02</span><div><small>MEETING SDK</small><strong>{status.meetingSdkConfigured ? 'Configurado' : 'Pendiente'}</strong><p>Autorización de la videoclase incrustada dentro del Campus.</p></div></article>
+              <article><span>03</span><div><small>SEGURIDAD</small><strong>Servidor</strong><p>Los secretos permanecen fuera de React, PocketBase records y el CMS.</p></div></article>
+            </section>
+
+            <section className="panel zoom-api-check-panel">
+              <div className="panel-heading"><div><span className="eyebrow">SERVER-TO-SERVER OAUTH</span><h3>Comprobar conexión con la cuenta Zoom</h3></div></div>
+              <div className="zoom-api-check-copy">
+                <p>La prueba solicita un token temporal directamente desde PocketBase y consulta la identidad de la cuenta. El token y las credenciales no se devuelven al navegador.</p>
+                <button className="button button-primary" type="button" onClick={() => void handleConnectionCheck()} disabled={!status.apiConfigured || checking || isDemoMode}>
+                  {checking ? 'Comprobando…' : status.apiConfigured ? 'Probar conexión API' : 'Añade primero las credenciales'}
+                </button>
+                {connection?.connected && <div className="zoom-check-result success" role="status"><strong>Conexión correcta.</strong><span>{connection.accountUser?.displayName || 'Cuenta Zoom'} · {connection.accountUser?.id || 'ID verificado'}</span></div>}
+                {connection && !connection.connected && <div className="zoom-check-result warning" role="status"><strong>No se ha conectado.</strong><span>{connection.reason === 'missing_credentials' ? 'Faltan credenciales en el servidor.' : connection.reason === 'oauth_failed' ? 'Zoom ha rechazado la autenticación OAuth.' : connection.reason === 'api_failed' ? 'OAuth funciona, pero la llamada a la API ha fallado.' : 'No se ha podido contactar con Zoom.'}</span></div>}
+                {!status.apiConfigured && <small className="muted">Esta comprobación se habilitará cuando `ZOOM_ACCOUNT_ID`, `ZOOM_CLIENT_ID` y `ZOOM_CLIENT_SECRET` estén definidos en el servidor.</small>}
+              </div>
             </section>
 
             <section className="panel zoom-next-step-panel">
-              <div className="panel-heading"><div><span className="eyebrow">SIGUIENTE PASO</span><h3>Conectar la cuenta de la academia</h3></div></div>
+              <div className="panel-heading"><div><span className="eyebrow">CONFIGURACIÓN PRIVADA</span><h3>Credenciales que necesita el servidor</h3></div></div>
               <div className="zoom-next-step-copy">
-                <p>Cuando dispongamos de las credenciales de la cuenta Zoom de Language School, se añadirán únicamente al entorno del servidor.</p>
+                <p>Las credenciales de la cuenta Zoom de Language School se añaden únicamente al entorno del servidor.</p>
                 <code>ZOOM_ACCOUNT_ID · ZOOM_CLIENT_ID · ZOOM_CLIENT_SECRET</code>
                 <code>ZOOM_MEETING_SDK_CLIENT_ID · ZOOM_MEETING_SDK_CLIENT_SECRET</code>
-                <p className="muted">Admin solo consulta si están configuradas; nunca puede leer sus valores.</p>
+                <p className="muted">Admin solo consulta su estado y puede probar la conexión. Nunca puede leer sus valores.</p>
               </div>
             </section>
           </>
