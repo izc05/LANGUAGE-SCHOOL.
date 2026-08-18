@@ -69,6 +69,9 @@ test('8D.1: Meeting SDK autoriza solo al alumno matriculado con firma temporal r
   const outsiderAttempt = await backendRequest(page, `/api/language-school/zoom/classes/${encodeURIComponent(String(classId))}/sdk-auth`, 'POST')
   expect(outsiderAttempt.status).toBe(403)
   expect(JSON.stringify(outsiderAttempt.body)).not.toContain('e2e-meeting-sdk-secret')
+  await page.goto(`/alumno/aula/${encodeURIComponent(String(classId))}`)
+  await expect(page.getByText('No hemos podido cargar esta clase o ya no pertenece a tu calendario activo.')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'E2E Speaking class' })).toHaveCount(0)
   await logout(page)
 
   await login(page, credentials.student.email, credentials.student.password, /\/alumno$/)
