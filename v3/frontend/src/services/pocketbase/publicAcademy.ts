@@ -118,14 +118,21 @@ export async function submitContactRequest(input: {
   phone: string
   interest: string
   message: string
+  website: string
+  turnstileToken: string
 }): Promise<void> {
   if (isDemoMode) return
-  await pb.collection(collections.contactRequests).create({
-    name: input.name.trim(),
-    email: input.email.trim(),
-    phone: input.phone.trim(),
-    interest: input.interest.trim(),
-    message: input.message.trim(),
-    status: 'NEW',
+  await pb.send('/api/language-school/contact', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      name: input.name.trim(),
+      email: input.email.trim(),
+      phone: input.phone.trim(),
+      interest: input.interest.trim(),
+      message: input.message.trim(),
+      website: input.website.trim(),
+      turnstileToken: input.turnstileToken,
+    }),
   })
 }
