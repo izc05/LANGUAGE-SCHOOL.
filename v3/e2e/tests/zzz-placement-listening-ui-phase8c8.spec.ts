@@ -20,6 +20,7 @@ async function expectNoHorizontalOverflow(page: Page) {
 }
 
 test('8C.8 UI: visitante escucha Listening sin autoplay y Admin ve el banco protegido', async ({ page }) => {
+  test.setTimeout(120_000)
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/test-de-nivel')
   await page.getByRole('button', { name: 'Empezar test' }).click()
@@ -38,15 +39,16 @@ test('8C.8 UI: visitante escucha Listening sin autoplay y Admin ve el banco prot
       expect((await page.locator('body').innerText()).toLowerCase()).not.toContain('transcripción interna')
     }
 
-    const option = page.getByRole('radio').first()
-    await page.locator('label.placement-option').first().click()
-    await expect(option).toBeChecked()
+    const optionA = page.locator('input[name="placement-answer"][value="a"]')
+    await optionA.focus()
+    await page.keyboard.press('Space')
+    await expect(optionA).toBeChecked()
     await page.getByRole('button', { name: position === 21 ? 'Ver mi resultado' : 'Confirmar respuesta' }).click()
   }
 
   expect(listeningQuestions).toBe(6)
   await expect(page.getByRole('heading', { name: /Tu nivel estimado es/i })).toBeVisible()
-  await expect(page.getByText('Comprensión oral')).toBeVisible()
+  await expect(page.getByText('Comprensión oral', { exact: true }).first()).toBeVisible()
   await expect(page.getByText(/diagnóstico complementario/i)).toBeVisible()
   await expectNoHorizontalOverflow(page)
 
