@@ -19,27 +19,37 @@ async function login(page: Page, email: string, password: string, expectedPath: 
   await expect(page).toHaveURL(expectedPath)
 }
 
-async function backendZoomStatus(page: Page): Promise<number> {
-  return page.evaluate(async () => {
+async function backendZoomRequest(page: Page, path: string, method: 'GET' | 'POST' = 'GET') {
+  return page.evaluate(async ({ path, method }) => {
     const stored = JSON.parse(localStorage.getItem('pocketbase_auth') || '{}') as { token?: string }
-    const response = await fetch('http://127.0.0.1:8090/api/language-school/zoom/status', {
+    const response = await fetch(`http://127.0.0.1:8090${path}`, {
+      method,
       headers: stored.token ? { Authorization: stored.token } : {},
     })
-    return response.status
-  })
+    let body: unknown = null
+    try { body = await response.json() } catch { body = null }
+    return { status: response.status, body }
+  }, { path, method })
 }
 
-test('8B.1: estado Zoom es server-side y solo Administración puede consultarlo', async ({ page, request }) => {
-  const anonymous = await request.get('http://127.0.0.1:8090/api/language-school/zoom/status')
-  expect(anonymous.status()).toBe(401)
+test('8B: Zoom permanece server-side y solo Administración puede comprobarlo', async ({ page, request }) => {
+  const anonymousStatus = await request.get('http://127.0.0.1:8090/api/language-school/zoom/status')
+  expect(anonymousStatus.status()).toBe(401)
+  const anonymousCheck = await request.post('http://127.0.0.1:8090/api/language-school/zoom/check')
+  expect(anonymousCheck.status()).toBe(401)
 
   await login(page, credentials.teacher.email, credentials.teacher.password, /\/profesor$/)
-  expect(await backendZoomStatus(page)).toBe(403)
+  expect((await backendZoomRequest(page, '/api/language-school/zoom/status')).status).toBe(403)
+  expect((await backendZoomRequest(page, '/api/language-school/zoom/check', 'POST')).status).toBe(403)
 
   await page.getByRole('button', { name: 'Cerrar sesión' }).click()
   await expect(page).toHaveURL(/\/acceso$/)
 
   await login(page, credentials.admin.email, credentials.admin.password, /\/admin$/)
+  const adminCheck = await backendZoomRequest(page, '/api/language-school/zoom/check', 'POST')
+  expect(adminCheck.status).toBe(200)
+  expect(adminCheck.body).toMatchObject({ provider: 'zoom', configured: false, connected: false, reason: 'missing_credentials' })
+
   const nav = page.getByRole('navigation', { name: 'Menú de Administrador' })
   await nav.getByRole('link', { name: 'Zoom', exact: true }).click()
   await expect(page).toHaveURL(/\/admin\/zoom$/)
@@ -47,5 +57,7 @@ test('8B.1: estado Zoom es server-side y solo Administración puede consultarlo'
   await expect(page.getByRole('heading', { name: 'Credenciales de Zoom pendientes.' })).toBeVisible()
   await expect(page.getByText('ZOOM API', { exact: true })).toBeVisible()
   await expect(page.getByText('MEETING SDK', { exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Añade primero las credenciales' })).toBeDisabled()
   await expect(page.getByText('Client Secret', { exact: false })).toHaveCount(0)
+  await expect(page.getByText('access_token', { exact: false })).toHaveCount(0)
 })
