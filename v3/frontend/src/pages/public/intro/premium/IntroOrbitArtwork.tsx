@@ -1,5 +1,6 @@
 import PremiumOrbitAirplane from './PremiumOrbitAirplane'
 import PremiumRotatingGlobe from './PremiumRotatingGlobe'
+import './intro-rotating-globe.css'
 
 type IntroOrbitArtworkProps = {
   withPlane?: boolean
