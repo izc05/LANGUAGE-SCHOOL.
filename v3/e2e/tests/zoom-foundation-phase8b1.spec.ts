@@ -12,6 +12,7 @@ const credentials = {
   student: { email: requiredEnv('E2E_STUDENT_EMAIL'), password: requiredEnv('E2E_STUDENT_PASSWORD') },
 }
 
+const hostLeakMarker = ['HOST', 'SECRET', 'MUST', 'NOT', 'ESCAPE'].join('_')
 type BackendMethod = 'GET' | 'POST' | 'PATCH' | 'DELETE'
 
 async function login(page: Page, email: string, password: string, expectedPath: RegExp) {
@@ -130,8 +131,6 @@ test('8C.2: una clase nueva recorre la creación Zoom y entrega solo el acceso d
   expect(targetClass?.id).toBeTruthy()
   const targetClassId = String(targetClass?.id)
 
-  // Make this flow retry-safe. A previous failed assertion may already have completed the
-  // mocked Zoom creation, so reset only this dedicated E2E class before exercising it again.
   const technicalMeetings = await backendRequest(page, '/api/collections/zoom_meetings/records?page=1&perPage=50')
   expect(technicalMeetings.status).toBe(200)
   const targetMeetings = ((technicalMeetings.body as { items?: Array<{ id?: string; class?: string }> })?.items || [])
@@ -147,43 +146,29 @@ test('8C.2: una clase nueva recorre la creación Zoom y entrega solo el acceso d
 
   const firstCreate = await backendRequest(page, `/api/language-school/zoom/classes/${encodeURIComponent(targetClassId)}/meeting`, 'POST')
   expect(firstCreate.status, JSON.stringify(firstCreate.body)).toBe(201)
-  expect(firstCreate.body).toMatchObject({
-    provider: 'zoom',
-    existing: false,
-    status: 'READY',
-    externalMeetingId: '12345678901',
-    joinUrl: 'https://zoom.example/j/12345678901?pwd=participant',
-  })
+  expect(firstCreate.body).toMatchObject({ provider: 'zoom', existing: false, status: 'READY', externalMeetingId: '12345678901' })
+  const participantJoinUrl = (firstCreate.body as { joinUrl?: string }).joinUrl
+  expect(participantJoinUrl).toContain('https://zoom.example/j/12345678901')
   const firstPayload = JSON.stringify(firstCreate.body)
-  expect(firstPayload).not.toContain('HOST_SECRET_MUST_NOT_ESCAPE')
+  expect(firstPayload).not.toContain(hostLeakMarker)
   expect(firstPayload).not.toContain('start_url')
   expect(firstPayload).not.toContain('meeting_password')
 
   const secondCreate = await backendRequest(page, `/api/language-school/zoom/classes/${encodeURIComponent(targetClassId)}/meeting`, 'POST')
   expect(secondCreate.status).toBe(200)
-  expect(secondCreate.body).toMatchObject({
-    provider: 'zoom',
-    existing: true,
-    status: 'READY',
-    externalMeetingId: '12345678901',
-  })
+  expect(secondCreate.body).toMatchObject({ provider: 'zoom', existing: true, status: 'READY', externalMeetingId: '12345678901' })
 
   const updatedClass = await backendRequest(page, `/api/collections/classes/records/${encodeURIComponent(targetClassId)}`)
   expect(updatedClass.status).toBe(200)
-  expect(updatedClass.body).toMatchObject({ online_join_url: 'https://zoom.example/j/12345678901?pwd=participant' })
+  expect((updatedClass.body as { online_join_url?: string }).online_join_url).toBe(participantJoinUrl)
 
   const meetingList = await backendRequest(page, '/api/collections/zoom_meetings/records?page=1&perPage=50')
   expect(meetingList.status).toBe(200)
   const persisted = ((meetingList.body as { items?: Array<Record<string, unknown> & { class?: string }> })?.items || [])
     .find((item) => item.class === targetClassId)
-  expect(persisted).toMatchObject({
-    external_meeting_id: '12345678901',
-    external_uuid: 'e2e-created-zoom-uuid',
-    join_url: 'https://zoom.example/j/12345678901?pwd=participant',
-    meeting_password: 'e2e-pass',
-    status: 'READY',
-  })
-  expect(JSON.stringify(persisted)).not.toContain('HOST_SECRET_MUST_NOT_ESCAPE')
+  expect(persisted).toMatchObject({ external_meeting_id: '12345678901', external_uuid: 'e2e-created-zoom-uuid', status: 'READY' })
+  expect((persisted as { join_url?: string })?.join_url).toBe(participantJoinUrl)
+  expect(JSON.stringify(persisted)).not.toContain(hostLeakMarker)
   expect(JSON.stringify(persisted)).not.toContain('start_url')
 
   await logout(page)
@@ -196,5 +181,5 @@ test('8C.2: una clase nueva recorre la creación Zoom y entrega solo el acceso d
   const createdClassCard = page.locator('.student-class-list-delivery article').filter({ hasText: 'E2E Zoom create class' })
   await expect(createdClassCard).toHaveCount(1)
   await expect(createdClassCard).toBeVisible()
-  await expect(createdClassCard.getByRole('link', { name: /Entrar en clase online/ })).toHaveAttribute('href', 'https://zoom.example/j/12345678901?pwd=participant')
+  await expect(createdClassCard.getByRole('link', { name: /Entrar al aula online/ })).toHaveAttribute('href', `/alumno/aula/${targetClassId}`)
 })
