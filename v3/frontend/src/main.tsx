@@ -70,6 +70,7 @@ import './styles/white-canvas-phase7j6.css'
 import './styles/home-structure-phase7j7.css'
 import './styles/student-campus-phase8a1.css'
 import './styles/class-delivery-phase8a2.css'
+import './styles/zoom-integration-phase8b1.css'
 
 const root = document.getElementById('root')
 if (!root) throw new Error('No se ha encontrado el elemento #root')
