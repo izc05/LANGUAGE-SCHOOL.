@@ -6,17 +6,27 @@ function noStore(e) {
   e.response.header().set('Cache-Control', 'no-store')
 }
 
-function cloneJson(value, fallback) {
+function requestBody(e) {
+  const info = e.requestInfo()
+  return info && info.body ? info.body : {}
+}
+
+function recordJson(record, field, fallback) {
+  const raw = record.get(field)
+  if (raw === null || raw === undefined) return fallback
+
   try {
-    if (value === null || value === undefined) return fallback
-    return JSON.parse(JSON.stringify(value))
+    const text = toString(raw)
+    if (text) return JSON.parse(text)
+  } catch {
+    // JSONRaw may not be represented as a string in every JSVM context.
+  }
+
+  try {
+    return JSON.parse(JSON.stringify(raw))
   } catch {
     return fallback
   }
-}
-
-function requestBody(e) {
-  return cloneJson(e.requestInfo().body, {}) || {}
 }
 
 function placementHeader(e) {
@@ -39,18 +49,20 @@ function blueprintFor(test, mode) {
   const field = mode === 'CAMPUS' ? 'campus_blueprint' : 'public_blueprint'
   const fallback = mode === 'CAMPUS' ? placementCore.CAMPUS_BLUEPRINT : placementCore.PUBLIC_BLUEPRINT
   const expected = mode === 'CAMPUS' ? test.getInt('campus_question_count') : test.getInt('public_question_count')
-  const blueprint = cloneJson(test.get(field), fallback)
+  const blueprint = recordJson(test, field, fallback)
 
   if (!Array.isArray(blueprint) || !blueprint.length) {
     throw new InternalServerError('El test publicado no tiene un blueprint válido.')
   }
 
   blueprint.forEach((cell) => {
+    const count = Number(cell && cell.count)
     if (
+      !cell ||
       placementCore.SKILLS.indexOf(String(cell.skill || '')) === -1 ||
       placementCore.LEVELS.indexOf(String(cell.level || '')) === -1 ||
-      !Number.isInteger(Number(cell.count)) ||
-      Number(cell.count) < 1
+      Math.floor(count) !== count ||
+      count < 1
     ) {
       throw new InternalServerError('El test publicado no tiene un blueprint válido.')
     }
@@ -64,7 +76,7 @@ function blueprintFor(test, mode) {
 }
 
 function questionOptions(question) {
-  const options = cloneJson(question.get('options'), [])
+  const options = recordJson(question, 'options', [])
   if (!Array.isArray(options) || options.length < 2) {
     throw new InternalServerError('Una pregunta publicada no tiene opciones válidas.')
   }
@@ -157,7 +169,7 @@ function authorizeAttempt(e, attempt) {
 }
 
 function snapshot(attempt) {
-  const value = cloneJson(attempt.get('selection_snapshot'), [])
+  const value = recordJson(attempt, 'selection_snapshot', [])
   if (!Array.isArray(value) || !value.length) {
     throw new InternalServerError('El intento no contiene una selección válida.')
   }
@@ -210,7 +222,7 @@ function resultDto(attempt) {
     rawScore: attempt.getInt('raw_score'),
     maxScore: attempt.getInt('max_score'),
     scorePercent: attempt.getFloat('score_percent'),
-    skillScores: cloneJson(attempt.get('skill_scores'), {}),
+    skillScores: recordJson(attempt, 'skill_scores', {}),
     completedAt: attempt.getString('completed_at'),
     notice: 'Resultado orientativo basado en el MCER; la academia puede validarlo posteriormente.',
   }
@@ -221,7 +233,7 @@ function rejectComputedFields(body) {
     'score', 'rawScore', 'raw_score', 'maxScore', 'max_score', 'scorePercent', 'score_percent',
     'level', 'estimatedLevel', 'estimated_level', 'skillScores', 'skill_scores', 'student', 'test', 'mode',
   ]
-  const attempted = forbidden.some((key) => Object.prototype.hasOwnProperty.call(body, key))
+  const attempted = forbidden.some((key) => body[key] !== undefined)
   if (attempted) {
     throw new BadRequestError('La puntuación, el nivel y la identidad del intento se calculan exclusivamente en el servidor.')
   }
@@ -249,21 +261,22 @@ routerAdd('POST', '/api/language-school/placement/start', (e) => {
   const attempt = new Record(collection)
   attempt.set('test', test.id)
   attempt.set('mode', mode)
-  attempt.set('student', mode === 'CAMPUS' ? e.auth.id : '')
-  attempt.set('public_token_hash', mode === 'PUBLIC' ? $security.sha256(publicToken) : '')
+  if (mode === 'CAMPUS') attempt.set('student', e.auth.id)
+  if (mode === 'PUBLIC') attempt.set('public_token_hash', $security.sha256(publicToken))
   attempt.set('status', 'IN_PROGRESS')
   attempt.set('algorithm_version', algorithmVersion)
   attempt.set('selection_snapshot', selection)
   attempt.set('started_at', nowIso())
   e.app.save(attempt)
 
-  return e.json(201, {
+  const response = {
     attemptId: attempt.id,
     mode,
     totalQuestions: selection.length,
     algorithmVersion,
-    token: mode === 'PUBLIC' ? publicToken : undefined,
-  })
+  }
+  if (mode === 'PUBLIC') response.token = publicToken
+  return e.json(201, response)
 })
 
 routerAdd('GET', '/api/language-school/placement/attempts/{id}/question', (e) => {
