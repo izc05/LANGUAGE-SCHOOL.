@@ -102,8 +102,16 @@ Los puertos de esta lista corresponden a la plantilla actual (`PROXY_URL=127.0.0
 
 - [ ] Zoom Server-to-Server OAuth configurado y verificado desde Admin, si se activa.
 - [ ] Zoom Meeting SDK configurado y verificado desde Admin, si se activa.
+- [ ] Crear una clase ONLINE/HYBRID de prueba y generar su reunión desde Admin → Aula online.
+- [ ] Confirmar que el enlace de participante queda asociado a la clase sin exponer el enlace de anfitrión.
+- [ ] Entrar como alumno con matrícula ACTIVE desde Mis clases → Aula online y completar una unión real con cámara/micrófono.
+- [ ] Confirmar que un alumno de otro grupo no puede abrir el contenido de la clase ni obtener firma Meeting SDK.
+- [ ] Confirmar por HTTPS que `Permissions-Policy` habilita cámara/micrófono únicamente en `/alumno/aula/...` y los bloquea en el resto de la web.
+- [ ] Salir del aula y confirmar retorno a `/alumno/clases` con cámara/micrófono de nuevo bloqueados para el documento normal.
+- [ ] Probar también el fallback `Abrir con Zoom` cuando el SDK no pueda cargarse o el navegador no sea compatible.
 - [ ] Ningún secreto Zoom aparece en navegador, logs evitables o CMS.
 - [ ] Audios Listening académicos definitivos cargados antes de publicar la versión real del test con Listening.
+- [ ] Reproducir una pregunta Listening real como visitante y como alumno, verificando que transcripción y answer key no aparecen en el cliente.
 
 ## J. Piloto
 
