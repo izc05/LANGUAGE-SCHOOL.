@@ -1,3 +1,4 @@
+// Coverage matrix: v3/docs/phase8c9-functional-closeout.md
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
 
 const PB_URL = 'http://127.0.0.1:8090'
