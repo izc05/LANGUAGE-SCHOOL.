@@ -73,6 +73,12 @@ function sourceLabel(source: CampusLevelSummary['currentLevelSource']): string {
   return 'Pendiente de evaluación'
 }
 
+function sourceExplanation(source: CampusLevelSummary['currentLevelSource']): string {
+  if (source === 'VALIDATED') return 'Es tu referencia académica actual. La academia la ha revisado y prevalece sobre una estimación automática.'
+  if (source === 'AUTOMATIC') return 'Es una orientación obtenida con tu último test. La academia puede validarla posteriormente sin borrar el resultado.'
+  return 'Completa la evaluación Campus para obtener una primera estimación de tu punto de partida.'
+}
+
 function resultSkills(result: CampusPlacementResult | null | undefined): PlacementSkill[] {
   return skillOrder.filter((skill) => Boolean(result?.skillScores[skill]))
 }
@@ -147,19 +153,22 @@ export default function StudentLevelPage() {
   }
 
   const currentLevel = summary?.currentLevel || ''
+  const currentSource = summary?.currentLevelSource || 'NONE'
   const progress = question ? Math.round((question.position / question.total) * 100) : 0
   const canStart = Boolean(summary && !summary.activeAttempt && summary.retake.allowed)
   const canResume = Boolean(summary?.activeAttempt)
   const nextRetake = summary?.retake.nextAvailableAt ? formatDate(summary.retake.nextAvailableAt) : ''
   const hasListening = Boolean(summary && (summary.campusQuestionCount > 30 || summary.latestAttempt?.skillScores.LISTENING))
   const competenceCount = hasListening ? 4 : 3
+  const latestAutomatic = summary?.latestAttempt?.estimatedLevel || '—'
+  const latestValidated = summary?.latestAssessment?.validatedLevel || '—'
 
   return (
     <DashboardShell role="Alumno" name="Alumno" nav={[...studentNav]}>
-      <div className="dashboard-content student-level-page">
-        <header className="student-level-heading">
-          <div><span className="eyebrow">CAMPUS · MI NIVEL</span><h2>Tu evolución en inglés, con <em>histórico real.</em></h2><p>Consulta tu última evaluación, revisa cada competencia y repite el test cuando vuelva a estar disponible.</p></div>
-          <div className={`student-level-current source-${(summary?.currentLevelSource || 'NONE').toLowerCase()}`}><small>{sourceLabel(summary?.currentLevelSource || 'NONE')}</small><strong>{currentLevel || '—'}</strong><span>{currentLevel ? levelCopy[currentLevel] : 'Aún no tienes un nivel evaluado'}</span></div>
+      <div className="dashboard-content student-level-page student-level-phase10e">
+        <header className="student-level-heading student-level-heading10">
+          <div><span className="eyebrow">CAMPUS · MI NIVEL</span><h2>Tu evolución en inglés, con <em>histórico real.</em></h2><p>Tu referencia académica y los resultados de tus tests se muestran por separado para que siempre sepas qué significa cada nivel.</p></div>
+          <div className={`student-level-current student-level-current10 source-${currentSource.toLowerCase()}`}><small>{sourceLabel(currentSource)}</small><strong>{currentLevel || '—'}</strong><span>{currentLevel ? levelCopy[currentLevel] : 'Aún no tienes un nivel evaluado'}</span><p>{sourceExplanation(currentSource)}</p></div>
         </header>
 
         {loading && <div className="cms-notice" role="status">Cargando tu historial de nivel…</div>}
@@ -167,9 +176,15 @@ export default function StudentLevelPage() {
 
         {!loading && summary && !question && (
           <>
-            <section className="student-level-overview">
-              <article className="panel student-level-action-card">
-                <div><span className="eyebrow">EVALUACIÓN CAMPUS</span><h3>{canResume ? 'Tienes una evaluación empezada.' : summary.latestAttempt ? 'Tu evaluación está al día.' : 'Haz tu primera evaluación completa.'}</h3><p>{canResume ? `Has respondido ${summary.activeAttempt?.answered || 0} de ${summary.activeAttempt?.totalQuestions || summary.campusQuestionCount} preguntas. Puedes continuar exactamente donde lo dejaste.` : `La evaluación Campus utiliza ${summary.campusQuestionCount} preguntas de gramática, vocabulario, comprensión lectora${hasListening ? ' y comprensión oral diagnóstica' : ''}.`}</p></div>
+            <section className="student-level-reference10" aria-label="Cómo leer tu nivel">
+              <div className={currentSource === 'VALIDATED' ? 'is-primary' : ''}><small>REFERENCIA ACTUAL</small><strong>{currentLevel || '—'}</strong><span>{sourceLabel(currentSource)}</span></div>
+              <div><small>ÚLTIMO TEST</small><strong>{latestAutomatic}</strong><span>{summary.latestAttempt ? 'Estimación automática' : 'Sin test completado'}</span></div>
+              <div><small>VALIDADO POR LA ACADEMIA</small><strong>{latestValidated}</strong><span>{summary.latestAssessment ? `Valorado · ${formatDate(summary.latestAssessment.assessedAt)}` : 'Pendiente de valoración'}</span></div>
+            </section>
+
+            <section className="student-level-overview student-level-overview10">
+              <article className="panel student-level-action-card student-level-action-card10">
+                <div><span className="eyebrow">TU SIGUIENTE PASO</span><h3>{canResume ? 'Tienes una evaluación empezada.' : summary.latestAttempt ? 'Tu evaluación está al día.' : 'Haz tu primera evaluación completa.'}</h3><p>{canResume ? `Has respondido ${summary.activeAttempt?.answered || 0} de ${summary.activeAttempt?.totalQuestions || summary.campusQuestionCount} preguntas. Puedes continuar exactamente donde lo dejaste.` : currentSource === 'VALIDATED' ? 'Tu nivel validado sigue siendo la referencia académica. Los nuevos tests añaden información a tu histórico sin sustituir esa validación automáticamente.' : `La evaluación Campus utiliza ${summary.campusQuestionCount} preguntas de gramática, vocabulario, comprensión lectora${hasListening ? ' y comprensión oral diagnóstica' : ''}.`}</p></div>
                 <div className="student-level-action-meta"><span><strong>{summary.campusQuestionCount}</strong> preguntas</span><span><strong>{competenceCount}</strong> competencias</span><span><strong>A1–C2</strong> estimación</span></div>
                 {canResume && <button className="button button-primary" type="button" onClick={() => void beginOrResume()} disabled={busy}>{busy ? 'Abriendo…' : 'Continuar evaluación'}</button>}
                 {canStart && <button className="button button-primary" type="button" onClick={() => void beginOrResume()} disabled={busy}>{busy ? 'Preparando…' : summary.latestAttempt ? 'Repetir evaluación' : 'Empezar evaluación'}</button>}
@@ -177,18 +192,18 @@ export default function StudentLevelPage() {
                 {isDemoMode && <small className="muted">Modo demo: la evaluación interactiva está disponible en el Campus conectado.</small>}
               </article>
 
-              <article className="panel student-level-latest">
+              <article className="panel student-level-latest student-level-latest10">
                 <div className="panel-heading"><div><span className="eyebrow">ÚLTIMA EVALUACIÓN</span><h3>{summary.latestAttempt ? formatDate(summary.latestAttempt.completedAt) : 'Sin evaluaciones'}</h3></div>{summary.latestAttempt && <span className="status info">{summary.latestAttempt.estimatedLevel}</span>}</div>
-                {summary.latestAttempt ? <><div className="student-level-score"><strong>{Math.round(summary.latestAttempt.scorePercent)}%</strong><span>{summary.latestAttempt.rawScore} de {summary.latestAttempt.maxScore} respuestas correctas</span></div><div className="student-level-skill-list">{resultSkills(summary.latestAttempt).map((skill) => { const score = summary.latestAttempt?.skillScores[skill]; if (!score) return null; return <div className={score.diagnosticOnly ? 'is-diagnostic' : ''} key={skill}><span>{skillLabels[skill]}{score.diagnosticOnly ? ' · diagnóstico' : ''}</span><div className="student-level-skill-track"><i style={{ width: `${score.percent}%` }} /></div><strong>{Math.round(score.percent)}%</strong></div> })}</div></> : <p className="muted">Cuando completes tu primera evaluación, aquí aparecerán el nivel estimado y el detalle por competencias.</p>}
+                {summary.latestAttempt ? <><div className="student-level-score"><strong>{Math.round(summary.latestAttempt.scorePercent)}%</strong><span>{summary.latestAttempt.rawScore} de {summary.latestAttempt.maxScore} respuestas correctas</span></div><div className="student-level-skill-list">{resultSkills(summary.latestAttempt).map((skill) => { const score = summary.latestAttempt?.skillScores[skill]; if (!score) return null; return <div className={score.diagnosticOnly ? 'is-diagnostic' : ''} key={skill}><span>{skillLabels[skill]}{score.diagnosticOnly ? ' · diagnóstico' : ''}</span><div className="student-level-skill-track"><i style={{ width: `${score.percent}%` }} /></div><strong>{Math.round(score.percent)}%</strong></div> })}</div><p className="student-level-diagnostic-note10">Este resultado describe tu desempeño en el test. Solo pasa a ser referencia académica principal cuando la academia lo valida.</p></> : <p className="muted">Cuando completes tu primera evaluación, aquí aparecerán el nivel estimado y el detalle por competencias.</p>}
               </article>
             </section>
 
-            {summary.latestAssessment && <section className="panel student-level-validation"><div><span className="eyebrow">VALORACIÓN ACADÉMICA</span><h3>Nivel validado: {summary.latestAssessment.validatedLevel}</h3><p>Valoración registrada el {formatDate(summary.latestAssessment.assessedAt)}. La validación docente prevalece como referencia académica sin borrar tus resultados automáticos.</p></div><div className="student-level-validation-values"><span>Automático <strong>{summary.latestAssessment.automaticLevel || '—'}</strong></span><span>Speaking <strong>{summary.latestAssessment.speakingLevel || '—'}</strong></span><span>Validado <strong>{summary.latestAssessment.validatedLevel}</strong></span></div></section>}
+            {summary.latestAssessment && <section className="panel student-level-validation student-level-validation10"><div><span className="eyebrow">VALORACIÓN ACADÉMICA</span><h3>Nivel validado: {summary.latestAssessment.validatedLevel}</h3><p>Valoración registrada el {formatDate(summary.latestAssessment.assessedAt)}. La validación docente prevalece como referencia académica sin borrar tus resultados automáticos.</p></div><div className="student-level-validation-values"><span>Automático <strong>{summary.latestAssessment.automaticLevel || '—'}</strong></span><span>Speaking <strong>{summary.latestAssessment.speakingLevel || '—'}</strong></span><span>Validado <strong>{summary.latestAssessment.validatedLevel}</strong></span></div></section>}
 
             {completedResult && <div className="student-level-complete" role="status"><strong>Evaluación completada · {completedResult.estimatedLevel}</strong><span>{Math.round(completedResult.scorePercent)}% de puntuación global. El resultado ya forma parte de tu histórico.{completedResult.skillScores.LISTENING ? ' Listening queda registrado como diagnóstico complementario.' : ''}</span></div>}
 
-            <section className="student-level-history" aria-labelledby="student-level-history-title">
-              <div className="student-level-history-heading"><div><span className="eyebrow">HISTÓRICO</span><h3 id="student-level-history-title">Tus evaluaciones Campus</h3></div><p>Los intentos completados se conservan; una nueva evaluación nunca sobrescribe la anterior.</p></div>
+            <section className="student-level-history student-level-history10" aria-labelledby="student-level-history-title">
+              <div className="student-level-history-heading"><div><span className="eyebrow">HISTÓRICO</span><h3 id="student-level-history-title">Tus evaluaciones Campus</h3></div><p>Cada test conserva su fecha y resultado. El histórico sirve para ver tu evolución; no sustituye por sí solo una validación académica.</p></div>
               {summary.history.length === 0 && <div className="panel student-level-empty">Todavía no hay evaluaciones completadas.</div>}
               {summary.history.length > 0 && <div className="student-level-history-list">{summary.history.map((attempt) => <article className="panel" key={attempt.attemptId}><div><small>{formatDate(attempt.completedAt)}</small><strong>{attempt.estimatedLevel}</strong><span>{Math.round(attempt.scorePercent)}%</span></div><div>{resultSkills(attempt).map((skill) => { const score = attempt.skillScores[skill]; if (!score) return null; return <span className={score.diagnosticOnly ? 'is-diagnostic' : ''} key={skill}>{skillLabels[skill]} <strong>{Math.round(score.percent)}%</strong>{score.diagnosticOnly ? ' · diagnóstico' : ''}</span> })}</div></article>)}</div>}
             </section>
