@@ -1,73 +1,72 @@
 /// <reference path="../pb_data/types.d.ts" />
 
-function zoomMeetingCreateBase64Ascii(value) {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
-  let output = ""
-  let index = 0
-  while (index < value.length) {
-    const byte1 = value.charCodeAt(index++) & 255
-    const hasByte2 = index < value.length
-    const byte2 = hasByte2 ? value.charCodeAt(index++) & 255 : 0
-    const hasByte3 = index < value.length
-    const byte3 = hasByte3 ? value.charCodeAt(index++) & 255 : 0
-    output += chars.charAt(byte1 >> 2)
-    output += chars.charAt(((byte1 & 3) << 4) | (byte2 >> 4))
-    output += hasByte2 ? chars.charAt(((byte2 & 15) << 2) | (byte3 >> 6)) : "="
-    output += hasByte3 ? chars.charAt(byte3 & 63) : "="
-  }
-  return output
-}
-
-function zoomMeetingCreateExisting(app, classId) {
-  // Keep this lookup independent from SQL/filter parsing because the relation field is
-  // literally named `class`. The collection is technical/admin-only and one record per
-  // class is enforced by a unique index, so a direct in-memory match is deterministic.
-  const records = app.findAllRecords("zoom_meetings")
-  for (let index = 0; index < records.length; index += 1) {
-    if (records[index].getString("class") === classId) return records[index]
-  }
-  return null
-}
-
-function zoomMeetingCreateSafeResult(record, existing) {
-  return {
-    provider: "zoom",
-    existing: Boolean(existing),
-    status: record.getString("status"),
-    externalMeetingId: record.getString("external_meeting_id"),
-    joinUrl: record.getString("join_url"),
-  }
-}
-
-function zoomMeetingCreateTransport() {
-  const e2eMode = $os.getenv("LANGUAGE_SCHOOL_E2E") === "1"
-  const e2eBase = String($os.getenv("LANGUAGE_SCHOOL_E2E_ZOOM_BASE_URL") || "").replace(/\/+$/, "")
-  if (e2eMode && e2eBase) {
-    return {
-      accountId: "e2e-account",
-      clientId: "e2e-client",
-      clientSecret: "e2e-secret",
-      hostUserId: "e2e-host",
-      oauthBase: e2eBase,
-      apiBase: e2eBase,
-      e2e: true,
-    }
-  }
-
-  return {
-    accountId: $os.getenv("ZOOM_ACCOUNT_ID"),
-    clientId: $os.getenv("ZOOM_CLIENT_ID"),
-    clientSecret: $os.getenv("ZOOM_CLIENT_SECRET"),
-    hostUserId: $os.getenv("ZOOM_HOST_USER_ID"),
-    oauthBase: "https://zoom.us",
-    apiBase: "https://api.zoom.us",
-    e2e: false,
-  }
-}
-
 routerAdd("POST", "/api/language-school/zoom/classes/{classId}/meeting", (e) => {
   if (!e.auth || e.auth.get("role") !== "ADMIN") {
     throw new ForbiddenError("Solo Administración puede crear reuniones Zoom.")
+  }
+
+  function base64Ascii(value) {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+    let output = ""
+    let index = 0
+    while (index < value.length) {
+      const byte1 = value.charCodeAt(index++) & 255
+      const hasByte2 = index < value.length
+      const byte2 = hasByte2 ? value.charCodeAt(index++) & 255 : 0
+      const hasByte3 = index < value.length
+      const byte3 = hasByte3 ? value.charCodeAt(index++) & 255 : 0
+      output += chars.charAt(byte1 >> 2)
+      output += chars.charAt(((byte1 & 3) << 4) | (byte2 >> 4))
+      output += hasByte2 ? chars.charAt(((byte2 & 15) << 2) | (byte3 >> 6)) : "="
+      output += hasByte3 ? chars.charAt(byte3 & 63) : "="
+    }
+    return output
+  }
+
+  function findExisting(app, classId) {
+    // Avoid filter parser ambiguity around the relation field literally named `class`.
+    // One meeting per class is still enforced at DB level by the unique index.
+    const records = app.findAllRecords("zoom_meetings")
+    for (let index = 0; index < records.length; index += 1) {
+      if (records[index].getString("class") === classId) return records[index]
+    }
+    return null
+  }
+
+  function safeResult(record, existing) {
+    return {
+      provider: "zoom",
+      existing: Boolean(existing),
+      status: record.getString("status"),
+      externalMeetingId: record.getString("external_meeting_id"),
+      joinUrl: record.getString("join_url"),
+    }
+  }
+
+  function transportConfig() {
+    const e2eMode = $os.getenv("LANGUAGE_SCHOOL_E2E") === "1"
+    const e2eBase = String($os.getenv("LANGUAGE_SCHOOL_E2E_ZOOM_BASE_URL") || "").replace(/\/+$/, "")
+    if (e2eMode && e2eBase) {
+      return {
+        accountId: "e2e-account",
+        clientId: "e2e-client",
+        clientSecret: "e2e-secret",
+        hostUserId: "e2e-host",
+        oauthBase: e2eBase,
+        apiBase: e2eBase,
+        e2e: true,
+      }
+    }
+
+    return {
+      accountId: $os.getenv("ZOOM_ACCOUNT_ID"),
+      clientId: $os.getenv("ZOOM_CLIENT_ID"),
+      clientSecret: $os.getenv("ZOOM_CLIENT_SECRET"),
+      hostUserId: $os.getenv("ZOOM_HOST_USER_ID"),
+      oauthBase: "https://zoom.us",
+      apiBase: "https://api.zoom.us",
+      e2e: false,
+    }
   }
 
   const debugE2E = $os.getenv("LANGUAGE_SCHOOL_E2E") === "1"
@@ -81,9 +80,9 @@ routerAdd("POST", "/api/language-school/zoom/classes/{classId}/meeting", (e) => 
     const classRecord = e.app.findRecordById("classes", classId)
 
     stage = "meeting_lookup"
-    const existingMeeting = zoomMeetingCreateExisting(e.app, classId)
+    const existingMeeting = findExisting(e.app, classId)
     if (existingMeeting && existingMeeting.getString("status") === "READY" && existingMeeting.getString("join_url")) {
-      return e.json(200, zoomMeetingCreateSafeResult(existingMeeting, true))
+      return e.json(200, safeResult(existingMeeting, true))
     }
 
     stage = "class_validation"
@@ -96,7 +95,7 @@ routerAdd("POST", "/api/language-school/zoom/classes/{classId}/meeting", (e) => 
     }
 
     stage = "transport"
-    const transport = zoomMeetingCreateTransport()
+    const transport = transportConfig()
     if (!transport.accountId || !transport.clientId || !transport.clientSecret || !transport.hostUserId) {
       return e.json(409, {
         provider: "zoom",
@@ -107,7 +106,7 @@ routerAdd("POST", "/api/language-school/zoom/classes/{classId}/meeting", (e) => 
     }
 
     stage = "oauth"
-    const authorization = "Basic " + zoomMeetingCreateBase64Ascii(transport.clientId + ":" + transport.clientSecret)
+    const authorization = "Basic " + base64Ascii(transport.clientId + ":" + transport.clientSecret)
     const tokenResponse = $http.send({
       url: transport.oauthBase + "/oauth/token?grant_type=account_credentials&account_id=" + encodeURIComponent(transport.accountId),
       method: "POST",
@@ -167,7 +166,7 @@ routerAdd("POST", "/api/language-school/zoom/classes/{classId}/meeting", (e) => 
     stage = "persist"
     let savedMeeting = null
     e.app.runInTransaction((txApp) => {
-      let meetingRecord = zoomMeetingCreateExisting(txApp, classId)
+      let meetingRecord = findExisting(txApp, classId)
       if (!meetingRecord) meetingRecord = new Record(txApp.findCollectionByNameOrId("zoom_meetings"))
       meetingRecord.set("class", classId)
       meetingRecord.set("provider", "ZOOM")
@@ -186,7 +185,7 @@ routerAdd("POST", "/api/language-school/zoom/classes/{classId}/meeting", (e) => 
     })
 
     stage = "response"
-    return e.json(201, zoomMeetingCreateSafeResult(savedMeeting, false))
+    return e.json(201, safeResult(savedMeeting, false))
   } catch (error) {
     console.log("Zoom meeting creation error", stage, String(error))
     if (debugE2E) {
