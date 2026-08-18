@@ -32,21 +32,27 @@ jobs:
             bash -n "$script"
           done
 
-      - name: Validate PocketBase loopback start wrapper
+      - name: Validate PocketBase loopback and Turnstile production scope
         run: |
           OUTPUT=$(PB_URL=http://127.0.0.1:8090 \
             PB_BIN=/usr/bin/echo \
             PB_DATA=/tmp/pb_data \
             PB_MIGRATIONS=/tmp/pb_migrations \
             PB_HOOKS=/tmp/pb_hooks \
+            PUBLIC_ORIGIN=https://academy.test \
             TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA \
+            TURNSTILE_EXPECTED_ACTION=contact \
+            TURNSTILE_ALLOWED_HOSTNAMES=academy.test \
             bash v3/infrastructure/raspberry-pi/start-pocketbase.sh)
           printf '%s' "$OUTPUT" | grep -q -- '--http=127.0.0.1:8090'
           printf '%s' "$OUTPUT" | grep -q -- '--hooksDir=/tmp/pb_hooks'
 
           if PB_URL=http://0.0.0.0:8090 \
             PB_BIN=/usr/bin/echo \
+            PUBLIC_ORIGIN=https://academy.test \
             TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA \
+            TURNSTILE_EXPECTED_ACTION=contact \
+            TURNSTILE_ALLOWED_HOSTNAMES=academy.test \
             bash v3/infrastructure/raspberry-pi/start-pocketbase.sh; then
             echo 'PocketBase start wrapper accepted a non-loopback origin.' >&2
             exit 1
@@ -54,9 +60,43 @@ jobs:
 
           if PB_URL=http://127.0.0.1:8090 \
             PB_BIN=/usr/bin/echo \
+            PUBLIC_ORIGIN=https://academy.test \
             TURNSTILE_SECRET_KEY=replace-with-real-secret-key \
+            TURNSTILE_EXPECTED_ACTION=contact \
+            TURNSTILE_ALLOWED_HOSTNAMES=academy.test \
             bash v3/infrastructure/raspberry-pi/start-pocketbase.sh; then
             echo 'PocketBase start wrapper accepted a placeholder Turnstile secret.' >&2
+            exit 1
+          fi
+
+          if PB_URL=http://127.0.0.1:8090 \
+            PB_BIN=/usr/bin/echo \
+            PUBLIC_ORIGIN=https://academy.test \
+            TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA \
+            TURNSTILE_ALLOWED_HOSTNAMES=academy.test \
+            bash v3/infrastructure/raspberry-pi/start-pocketbase.sh; then
+            echo 'PocketBase start wrapper accepted a missing Turnstile action.' >&2
+            exit 1
+          fi
+
+          if PB_URL=http://127.0.0.1:8090 \
+            PB_BIN=/usr/bin/echo \
+            PUBLIC_ORIGIN=https://academy.test \
+            TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA \
+            TURNSTILE_EXPECTED_ACTION=contact \
+            TURNSTILE_ALLOWED_HOSTNAMES=other.test \
+            bash v3/infrastructure/raspberry-pi/start-pocketbase.sh; then
+            echo 'PocketBase start wrapper accepted a Turnstile hostname mismatch.' >&2
+            exit 1
+          fi
+
+      - name: Require HTTPS for frontend production origin
+        run: |
+          if PUBLIC_ORIGIN=http://academy.test \
+            TURNSTILE_SITE_KEY=real-looking-public-site-key \
+            PRODUCTION_ENV=/tmp/language-school-ci-no-env \
+            bash v3/infrastructure/raspberry-pi/deploy-frontend.sh; then
+            echo 'Frontend deployment accepted a non-HTTPS PUBLIC_ORIGIN.' >&2
             exit 1
           fi
 
