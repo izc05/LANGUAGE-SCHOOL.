@@ -24,8 +24,8 @@ if [[ -z "$PUBLIC_ORIGIN" ]]; then
   exit 1
 fi
 
-if [[ ! "$PUBLIC_ORIGIN" =~ ^https?://[^/]+$ ]]; then
-  echo 'PUBLIC_ORIGIN must be an origin without a trailing path.' >&2
+if [[ ! "$PUBLIC_ORIGIN" =~ ^https://[A-Za-z0-9.-]+$ ]]; then
+  echo 'PUBLIC_ORIGIN must use HTTPS with a hostname and no trailing path or port.' >&2
   exit 1
 fi
 
