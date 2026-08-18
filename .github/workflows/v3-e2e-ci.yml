@@ -122,6 +122,15 @@ jobs:
         working-directory: v3/e2e
         run: npm test
 
+      - name: Print backend diagnostics
+        if: failure()
+        run: |
+          echo '--- PocketBase E2E log ---'
+          cat "$RUNNER_TEMP/e2e-pocketbase.log" || true
+          echo '--- Frontend E2E log ---'
+          cat "$RUNNER_TEMP/e2e-frontend.log" || true
+          cp "$RUNNER_TEMP/e2e-pocketbase.log" "$GITHUB_WORKSPACE/v3/e2e/test-results/pocketbase.log" 2>/dev/null || true
+
       - name: Upload Playwright diagnostics
         if: failure()
         uses: actions/upload-artifact@v4
