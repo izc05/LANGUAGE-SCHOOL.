@@ -4,6 +4,8 @@ export type ZoomIntegrationStatus = {
   provider: 'zoom'
   source: 'server_environment'
   apiConfigured: boolean
+  hostUserConfigured: boolean
+  meetingCreationConfigured: boolean
   meetingSdkConfigured: boolean
   configured: boolean
 }
