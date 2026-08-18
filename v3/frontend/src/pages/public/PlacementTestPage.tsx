@@ -91,7 +91,8 @@ export default function PlacementTestPage() {
     setResult(null)
     setSelectedOption('')
     setError('')
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    window.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' })
   }
 
   const progress = question ? Math.round((question.position / question.total) * 100) : 0
