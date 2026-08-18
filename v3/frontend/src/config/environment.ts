@@ -17,10 +17,15 @@ function resolveAppMode(): AppMode {
 export const appMode: AppMode = resolveAppMode()
 
 const configuredPocketBaseUrl = import.meta.env.VITE_POCKETBASE_URL?.trim() || ''
+const configuredTurnstileSiteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY?.trim() || ''
 
 if (appMode === 'connected' && !configuredPocketBaseUrl) {
   throw new Error('VITE_POCKETBASE_URL is required when VITE_APP_MODE=connected.')
 }
+if (appMode === 'connected' && !configuredTurnstileSiteKey) {
+  throw new Error('VITE_TURNSTILE_SITE_KEY is required when VITE_APP_MODE=connected.')
+}
 
 export const pocketBaseUrl = configuredPocketBaseUrl || 'http://127.0.0.1:8090'
+export const turnstileSiteKey = configuredTurnstileSiteKey
 export const isDemoMode = appMode === 'demo'
