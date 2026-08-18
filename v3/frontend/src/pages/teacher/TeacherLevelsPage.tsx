@@ -16,7 +16,9 @@ const skillLabels: Record<PlacementSkill, string> = {
   GRAMMAR: 'Gramática',
   VOCABULARY: 'Vocabulario',
   READING: 'Comprensión lectora',
+  LISTENING: 'Comprensión oral',
 }
+const skillOrder: PlacementSkill[] = ['GRAMMAR', 'VOCABULARY', 'READING', 'LISTENING']
 
 function formatDate(value: string): string {
   const date = new Date(value)
@@ -140,9 +142,10 @@ export default function TeacherLevelsPage() {
 
               <article className="teacher-level-attempt">
                 <div className="panel-heading"><div><span className="eyebrow">ÚLTIMO TEST CAMPUS</span><h3>{summary.latestAttempt ? `${summary.latestAttempt.estimatedLevel} · ${Math.round(summary.latestAttempt.scorePercent)}%` : 'Sin test completado'}</h3></div>{summary.latestAttempt && <small>{formatDate(summary.latestAttempt.completedAt)}</small>}</div>
-                {summary.latestAttempt && <div className="teacher-level-skill-grid">{(['GRAMMAR', 'VOCABULARY', 'READING'] as PlacementSkill[]).map((skill) => {
+                {summary.latestAttempt && <div className="teacher-level-skill-grid">{skillOrder.filter((skill) => Boolean(summary.latestAttempt?.skillScores[skill])).map((skill) => {
                   const score = summary.latestAttempt?.skillScores[skill]
-                  return <div key={skill}><span>{skillLabels[skill]}</span><strong>{Math.round(score?.percent ?? 0)}%</strong><small>{score?.correct ?? 0}/{score?.total ?? 0}</small></div>
+                  if (!score) return null
+                  return <div className={score.diagnosticOnly ? 'is-diagnostic' : ''} key={skill}><span>{skillLabels[skill]}{score.diagnosticOnly ? ' · diagnóstico' : ''}</span><strong>{Math.round(score.percent)}%</strong><small>{score.correct}/{score.total}</small></div>
                 })}</div>}
               </article>
 
