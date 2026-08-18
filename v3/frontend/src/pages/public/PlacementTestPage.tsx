@@ -1,5 +1,6 @@
 import { type FormEvent, useState } from 'react'
 import { Link } from 'react-router'
+import PlacementAudioPlayer from '../../components/PlacementAudioPlayer'
 import SiteShell from '../../components/SiteShell'
 import {
   answerPublicPlacementQuestion,
@@ -20,6 +21,7 @@ const skillLabels: Record<PlacementSkill, string> = {
   GRAMMAR: 'Gramática',
   VOCABULARY: 'Vocabulario',
   READING: 'Comprensión lectora',
+  LISTENING: 'Comprensión oral',
 }
 
 const levelCopy: Record<CefrLevel, { title: string; description: string }> = {
@@ -31,7 +33,7 @@ const levelCopy: Record<CefrLevel, { title: string; description: string }> = {
   C2: { title: 'Dominio muy avanzado', description: 'Tu rendimiento en este test es muy alto. Una valoración docente puede afinar especialmente la expresión oral.' },
 }
 
-const skillOrder: PlacementSkill[] = ['GRAMMAR', 'VOCABULARY', 'READING']
+const skillOrder: PlacementSkill[] = ['GRAMMAR', 'VOCABULARY', 'READING', 'LISTENING']
 
 function toPlainText(value: string): string {
   if (!value) return ''
@@ -169,6 +171,7 @@ export default function PlacementTestPage() {
 
   const progress = question ? Math.round((question.position / question.total) * 100) : 0
   const resultCopy = result ? levelCopy[result.estimatedLevel] : null
+  const hasListeningResult = Boolean(result?.skillScores.LISTENING)
 
   return (
     <SiteShell>
@@ -177,13 +180,13 @@ export default function PlacementTestPage() {
           <section className="placement-test-intro" aria-labelledby="placement-test-title">
             <div className="container placement-test-intro-grid">
               <div className="placement-test-intro-copy">
-                <span className="eyebrow">TEST DE NIVEL · 5–8 MINUTOS</span>
+                <span className="eyebrow">TEST DE NIVEL · BREVE Y GUIADO</span>
                 <h1 id="placement-test-title">Descubre tu punto de partida en <em>inglés.</em></h1>
-                <p className="placement-test-lead">15 preguntas breves para estimar tu nivel MCER de A1 a C2. No necesitas registrarte ni dejar tus datos para conocer el resultado.</p>
+                <p className="placement-test-lead">Una evaluación breve para estimar tu nivel MCER de A1 a C2. No necesitas registrarte ni dejar tus datos para conocer el resultado.</p>
                 <div className="placement-test-facts" aria-label="Características del test">
-                  <span><strong>15</strong> preguntas</span>
-                  <span><strong>3</strong> competencias</span>
-                  <span><strong>A1–C2</strong> resultado orientativo</span>
+                  <span><strong>A1–C2</strong> estimación</span>
+                  <span><strong>Sin registro</strong> previo</span>
+                  <span><strong>Listening</strong> cuando la academia lo publica</span>
                 </div>
                 <button className="button button-primary placement-test-start" type="button" onClick={() => void begin()} disabled={busy}>
                   {busy ? 'Preparando test…' : 'Empezar test'}
@@ -199,6 +202,7 @@ export default function PlacementTestPage() {
                   <li><span aria-hidden="true">01</span><div><strong>Grammar</strong><small>Estructuras y uso del idioma</small></div></li>
                   <li><span aria-hidden="true">02</span><div><strong>Vocabulary</strong><small>Vocabulario en contexto</small></div></li>
                   <li><span aria-hidden="true">03</span><div><strong>Reading</strong><small>Comprensión de textos</small></div></li>
+                  <li><span aria-hidden="true">04</span><div><strong>Listening</strong><small>Diagnóstico oral cuando está activado</small></div></li>
                 </ul>
                 <small className="placement-test-privacy-note">Sin nombre · sin email · sin registro previo</small>
               </aside>
@@ -228,6 +232,9 @@ export default function PlacementTestPage() {
               </div>
 
               <article className="placement-question-card">
+                {question.question.hasAudio && (
+                  <PlacementAudioPlayer attemptId={session.attemptId} questionId={question.question.id} publicToken={session.token} />
+                )}
                 {question.question.passage && (
                   <div className="placement-question-passage">
                     <span>LEE ESTE TEXTO</span>
@@ -247,6 +254,7 @@ export default function PlacementTestPage() {
                             value={option.id}
                             checked={selectedOption === option.id}
                             onChange={() => setSelectedOption(option.id)}
+                            aria-label={`Option ${String.fromCharCode(65 + index)}`}
                           />
                           <span className="placement-option-key" aria-hidden="true">{String.fromCharCode(65 + index)}</span>
                           <span>{toPlainText(option.label)}</span>
@@ -284,11 +292,12 @@ export default function PlacementTestPage() {
                 <div className="placement-result-skills">
                   {skillOrder.map((skill) => {
                     const score = result.skillScores[skill]
+                    if (!score) return null
                     return (
-                      <article key={skill}>
-                        <div><span>{skillLabels[skill]}</span><strong>{Math.round(score?.percent ?? 0)}%</strong></div>
-                        <div className="placement-skill-bar" aria-label={`${skillLabels[skill]} ${Math.round(score?.percent ?? 0)}%`}><span style={{ width: `${score?.percent ?? 0}%` }} /></div>
-                        <small>{score?.correct ?? 0} de {score?.total ?? 0}</small>
+                      <article className={score.diagnosticOnly ? 'is-diagnostic' : ''} key={skill}>
+                        <div><span>{skillLabels[skill]}</span><strong>{Math.round(score.percent)}%</strong></div>
+                        <div className="placement-skill-bar" aria-label={`${skillLabels[skill]} ${Math.round(score.percent)}%`}><span style={{ width: `${score.percent}%` }} /></div>
+                        <small>{score.correct} de {score.total}{score.diagnosticOnly ? ' · diagnóstico' : ''}</small>
                       </article>
                     )
                   })}
@@ -297,7 +306,9 @@ export default function PlacementTestPage() {
                 <div className="placement-result-notice">
                   <strong>¿Qué significa este resultado?</strong>
                   <p>{result.notice}</p>
-                  <p>Esta prueba rápida evalúa gramática, vocabulario y comprensión lectora. No evalúa todavía speaking ni listening, así que no sustituye una valoración completa de la academia.</p>
+                  {hasListeningResult
+                    ? <p>La comprensión oral aparece como diagnóstico independiente. Todavía no modifica por sí sola tu nivel automático; speaking y la valoración docente completan la fotografía académica.</p>
+                    : <p>Esta versión rápida evalúa gramática, vocabulario y comprensión lectora. No evalúa todavía speaking ni listening, así que no sustituye una valoración completa de la academia.</p>}
                 </div>
 
                 <section className="placement-recommendations" aria-labelledby="placement-recommendations-title">
