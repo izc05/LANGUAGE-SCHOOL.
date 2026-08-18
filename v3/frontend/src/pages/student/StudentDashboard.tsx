@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router'
 import DashboardShell from '../../components/DashboardShell'
 import { useAuth } from '../../features/auth/AuthProvider'
-import { getStudentDashboardSnapshot, type AssignmentRecord, type ClassRecord, type EnrollmentRecord, type MaterialRecord, type NotificationRecord, type StudentFileRecord, type SubmissionRecord } from '../../services/pocketbase/studentPortal'
+import { getStudentDashboardSnapshot, type AssignmentRecord, type ClassDeliveryMode, type ClassRecord, type EnrollmentRecord, type MaterialRecord, type NotificationRecord, type StudentFileRecord, type SubmissionRecord } from '../../services/pocketbase/studentPortal'
 import { studentNav } from './studentNav'
 
 type Snapshot = Awaited<ReturnType<typeof getStudentDashboardSnapshot>>
@@ -18,6 +18,16 @@ function formatShortDate(value: string): string {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return 'Sin fecha'
   return new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: 'short' }).format(date)
+}
+
+function classMode(record?: ClassRecord): ClassDeliveryMode {
+  return record?.delivery_mode || 'IN_PERSON'
+}
+
+function classModeLabel(mode: ClassDeliveryMode): string {
+  if (mode === 'ONLINE') return 'Online'
+  if (mode === 'HYBRID') return 'Híbrida'
+  return 'Presencial'
 }
 
 function extensionLabel(filename: string): string { return filename.split('.').pop()?.slice(0, 4).toUpperCase() || 'FILE' }
@@ -67,7 +77,8 @@ function DemoStudentDashboard() {
             <strong>Jueves · 18:00</strong>
             <h3>Travel & experiences</h3>
             <p>Adult English B1 · B1 Evening</p>
-            <Link to="/alumno/clases">Abrir agenda →</Link>
+            <div className="campus-next-delivery"><span className="class-mode class-mode-hybrid">Híbrida</span><span>📍 Aula 2</span></div>
+            <a className="campus-online-entry" href="https://example.com/language-school-class" target="_blank" rel="noreferrer">Entrar en clase online ↗</a>
           </article>
         </section>
 
@@ -106,6 +117,7 @@ function ConnectedStudentDashboard() {
   const submittedAssignmentIds = useMemo(() => new Set((snapshot?.submissions || []).map((submission: SubmissionRecord) => submission.assignment)), [snapshot?.submissions])
   const activeEnrollments = (snapshot?.enrollments || []).filter((enrollment: EnrollmentRecord) => enrollment.status === 'ACTIVE')
   const nextClass: ClassRecord | undefined = snapshot?.upcomingClasses[0]
+  const nextMode = classMode(nextClass)
   const currentEnrollment = activeEnrollments[0]
   const currentCourse = currentEnrollment?.expand?.group?.expand?.course
   const currentGroup = currentEnrollment?.expand?.group
@@ -139,7 +151,12 @@ function ConnectedStudentDashboard() {
                 <strong>{nextClass ? formatClassDate(nextClass.starts_at) : 'Sin clases programadas'}</strong>
                 <h3>{nextClass?.topic || currentCourseTitle}</h3>
                 <p>{nextClass ? `${nextClass.expand?.group?.expand?.course?.title || currentCourseTitle} · ${nextClass.expand?.group?.name || currentGroupName}` : enrollmentSummary}</p>
-                <Link to="/alumno/clases">Abrir agenda →</Link>
+                {nextClass && <div className="campus-next-delivery"><span className={`class-mode class-mode-${nextMode.toLowerCase()}`}>{classModeLabel(nextMode)}</span>{nextMode !== 'ONLINE' && <span>📍 {nextClass.location_text || 'Aula pendiente'}</span>}</div>}
+                {nextClass && nextMode !== 'IN_PERSON' && nextClass.online_join_url
+                  ? <a className="campus-online-entry" href={nextClass.online_join_url} target="_blank" rel="noreferrer">Entrar en clase online ↗</a>
+                  : nextClass && nextMode !== 'IN_PERSON'
+                    ? <span className="campus-online-pending">Acceso online pendiente</span>
+                    : <Link to="/alumno/clases">Abrir agenda →</Link>}
               </article>
             </section>
 
