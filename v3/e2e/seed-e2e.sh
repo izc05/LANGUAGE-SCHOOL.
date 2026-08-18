@@ -78,7 +78,46 @@ create_record 'zoom_meetings' "$ADMIN_TOKEN" "$(jq -nc --arg classId "$CLASS_ID"
 ZOOM_CREATE_CLASS="$(create_record 'classes' "$ADMIN_TOKEN" "$(jq -nc --arg group "$GROUP_ID" --arg teacher "$TEACHER_ID" '{group:$group,teacher:$teacher,starts_at:"2026-12-17 18:00:00.000Z",ends_at:"2026-12-17 19:15:00.000Z",topic:"E2E Zoom create class",description:"Forces the complete mocked Zoom creation path",status:"SCHEDULED",delivery_mode:"ONLINE",location_text:"",online_join_url:""}')")"
 ZOOM_CREATE_CLASS_ID="$(jq -r '.id' <<<"$ZOOM_CREATE_CLASS")"
 
+echo 'E2E seed: creating placement-test version and question pool'
+PUBLIC_BLUEPRINT='[{"skill":"GRAMMAR","level":"A1","count":1},{"skill":"GRAMMAR","level":"A2","count":1},{"skill":"GRAMMAR","level":"B1","count":1},{"skill":"GRAMMAR","level":"B2","count":1},{"skill":"GRAMMAR","level":"C1","count":1},{"skill":"VOCABULARY","level":"A1","count":1},{"skill":"VOCABULARY","level":"A2","count":1},{"skill":"VOCABULARY","level":"B1","count":1},{"skill":"VOCABULARY","level":"C1","count":1},{"skill":"VOCABULARY","level":"C2","count":1},{"skill":"READING","level":"B1","count":1},{"skill":"READING","level":"B2","count":2},{"skill":"READING","level":"C1","count":1},{"skill":"READING","level":"C2","count":1}]'
+CAMPUS_BLUEPRINT='[{"skill":"GRAMMAR","level":"A1","count":2},{"skill":"GRAMMAR","level":"A2","count":2},{"skill":"GRAMMAR","level":"B1","count":2},{"skill":"GRAMMAR","level":"B2","count":1},{"skill":"GRAMMAR","level":"C1","count":1},{"skill":"GRAMMAR","level":"C2","count":2},{"skill":"VOCABULARY","level":"A1","count":2},{"skill":"VOCABULARY","level":"A2","count":1},{"skill":"VOCABULARY","level":"B1","count":1},{"skill":"VOCABULARY","level":"B2","count":2},{"skill":"VOCABULARY","level":"C1","count":2},{"skill":"VOCABULARY","level":"C2","count":2},{"skill":"READING","level":"A1","count":1},{"skill":"READING","level":"A2","count":2},{"skill":"READING","level":"B1","count":2},{"skill":"READING","level":"B2","count":2},{"skill":"READING","level":"C1","count":2},{"skill":"READING","level":"C2","count":1}]'
+PLACEMENT_TEST="$(create_record 'placement_tests' "$ADMIN_TOKEN" "$(jq -nc --arg admin "$ADMIN_ID" --argjson publicBlueprint "$PUBLIC_BLUEPRINT" --argjson campusBlueprint "$CAMPUS_BLUEPRINT" '{name:"E2E Placement Test",version:"e2e-8c1-v1",status:"PUBLISHED",algorithm_version:"cefr-v1",public_question_count:15,campus_question_count:30,public_blueprint:$publicBlueprint,campus_blueprint:$campusBlueprint,campus_retake_days:30,published_at:"2026-08-18 10:00:00.000Z",created_by:$admin}')")"
+PLACEMENT_TEST_ID="$(jq -r '.id' <<<"$PLACEMENT_TEST")"
+PLACEMENT_ORDER=0
+
+seed_placement_pool() {
+  local skill="$1" level="$2" count="$3"
+  local ordinal
+  for ((ordinal=1; ordinal<=count; ordinal++)); do
+    PLACEMENT_ORDER=$((PLACEMENT_ORDER + 1))
+    local code="e2e-${skill,,}-${level,,}-${ordinal}"
+    local prompt="E2E ${skill} ${level} question ${ordinal}"
+    create_record 'placement_questions' "$ADMIN_TOKEN" "$(jq -nc \
+      --arg test "$PLACEMENT_TEST_ID" --arg code "$code" --arg skill "$skill" --arg level "$level" --arg prompt "$prompt" --argjson order "$PLACEMENT_ORDER" \
+      '{test:$test,code:$code,skill:$skill,cefr_level:$level,prompt:$prompt,passage:"",options:[{id:"a",label:"Option A"},{id:"b",label:"Option B"},{id:"c",label:"Option C"}],correct_option_id:"a",internal_explanation:"E2E-only answer key.",weight:1,active:true,admin_order:$order}')" >/dev/null
+  done
+}
+
+seed_placement_pool GRAMMAR A1 2
+seed_placement_pool GRAMMAR A2 2
+seed_placement_pool GRAMMAR B1 2
+seed_placement_pool GRAMMAR B2 1
+seed_placement_pool GRAMMAR C1 1
+seed_placement_pool GRAMMAR C2 2
+seed_placement_pool VOCABULARY A1 2
+seed_placement_pool VOCABULARY A2 1
+seed_placement_pool VOCABULARY B1 1
+seed_placement_pool VOCABULARY B2 2
+seed_placement_pool VOCABULARY C1 2
+seed_placement_pool VOCABULARY C2 2
+seed_placement_pool READING A1 1
+seed_placement_pool READING A2 2
+seed_placement_pool READING B1 2
+seed_placement_pool READING B2 2
+seed_placement_pool READING C1 2
+seed_placement_pool READING C2 1
+
 echo 'E2E seed: publishing a real pricing plan'
 create_record 'pricing_plans' "$ADMIN_TOKEN" '{"name":"E2E Monthly","description":"Tarifa publicada por la prueba de navegador.","price":45,"billing_text":"al mes","features":["Clases","Material","Seguimiento"],"sort_order":10,"active":true,"featured":true}' >/dev/null
 
-echo "E2E seed complete: admin=$ADMIN_ID teacher=$TEACHER_ID student=$STUDENT_ID outsider=$OUTSIDER_ID group=$GROUP_ID zoom_create_class=$ZOOM_CREATE_CLASS_ID"
+echo "E2E seed complete: admin=$ADMIN_ID teacher=$TEACHER_ID student=$STUDENT_ID outsider=$OUTSIDER_ID group=$GROUP_ID zoom_create_class=$ZOOM_CREATE_CLASS_ID placement_test=$PLACEMENT_TEST_ID"
