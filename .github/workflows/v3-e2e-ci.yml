@@ -31,6 +31,8 @@ jobs:
       E2E_TEACHER_PASSWORD: E2eTeacherPass123!
       E2E_STUDENT_EMAIL: e2e-student@example.com
       E2E_STUDENT_PASSWORD: E2eStudentPass123!
+      LANGUAGE_SCHOOL_E2E: '1'
+      LANGUAGE_SCHOOL_E2E_ZOOM_BASE_URL: http://127.0.0.1:8092
 
     steps:
       - name: Checkout
@@ -40,6 +42,17 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '24'
+
+      - name: Start local Zoom E2E mock
+        run: |
+          nohup node "$GITHUB_WORKSPACE/v3/e2e/zoom-mock.mjs" >"$RUNNER_TEMP/e2e-zoom-mock.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/e2e-zoom-mock.pid"
+          for attempt in {1..30}; do
+            curl -fsS "$LANGUAGE_SCHOOL_E2E_ZOOM_BASE_URL/health" >/dev/null && exit 0
+            sleep 1
+          done
+          cat "$RUNNER_TEMP/e2e-zoom-mock.log" >&2
+          exit 1
 
       - name: Download PocketBase 0.39.9
         run: |
@@ -127,9 +140,12 @@ jobs:
         run: |
           echo '--- PocketBase E2E log ---'
           cat "$RUNNER_TEMP/e2e-pocketbase.log" || true
+          echo '--- Zoom mock E2E log ---'
+          cat "$RUNNER_TEMP/e2e-zoom-mock.log" || true
           echo '--- Frontend E2E log ---'
           cat "$RUNNER_TEMP/e2e-frontend.log" || true
           cp "$RUNNER_TEMP/e2e-pocketbase.log" "$GITHUB_WORKSPACE/v3/e2e/test-results/pocketbase.log" 2>/dev/null || true
+          cp "$RUNNER_TEMP/e2e-zoom-mock.log" "$GITHUB_WORKSPACE/v3/e2e/test-results/zoom-mock.log" 2>/dev/null || true
 
       - name: Upload Playwright diagnostics
         if: failure()
@@ -145,7 +161,7 @@ jobs:
       - name: Stop temporary services
         if: always()
         run: |
-          for pid_file in "$RUNNER_TEMP/e2e-frontend.pid" "$RUNNER_TEMP/e2e-pocketbase.pid"; do
+          for pid_file in "$RUNNER_TEMP/e2e-frontend.pid" "$RUNNER_TEMP/e2e-pocketbase.pid" "$RUNNER_TEMP/e2e-zoom-mock.pid"; do
             if [ -f "$pid_file" ]; then
               kill "$(cat "$pid_file")" 2>/dev/null || true
             fi
