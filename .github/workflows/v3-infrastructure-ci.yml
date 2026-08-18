@@ -85,17 +85,41 @@ jobs:
             echo "$EXPECTED  $RUNNER_TEMP/$ARCHIVE" | sha256sum --check
           done
 
-      - name: Validate Nginx configuration
+      - name: Validate Nginx configuration and security headers
         run: |
           sudo apt-get update -qq
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y nginx
-          sudo install -d -m 0755 /opt/language-school/frontend
+          sudo systemctl stop nginx || true
+          sudo install -d -m 0755 /opt/language-school/frontend/assets
+          printf '%s\n' '<!doctype html><title>Language School CI</title>' \
+            | sudo tee /opt/language-school/frontend/index.html >/dev/null
+          printf '%s\n' 'console.log("asset")' \
+            | sudo tee /opt/language-school/frontend/assets/app.js >/dev/null
           sed \
             -e 's|__PROXY_LISTEN__|127.0.0.1:8080|g' \
             -e 's|__PB_URL__|http://127.0.0.1:8090|g' \
             v3/infrastructure/reverse-proxy/language-school.nginx.conf \
             | sudo tee /etc/nginx/conf.d/language-school.conf >/dev/null
           sudo nginx -t
+          sudo nginx
+          trap 'sudo nginx -s stop || true' EXIT
+
+          PUBLIC_HEADERS=$(curl -fsSI http://127.0.0.1:8080/ | tr -d '\r')
+          PRIVATE_HEADERS=$(curl -fsSI http://127.0.0.1:8080/admin | tr -d '\r')
+          ASSET_HEADERS=$(curl -fsSI http://127.0.0.1:8080/assets/app.js | tr -d '\r')
+
+          for headers in "$PUBLIC_HEADERS" "$PRIVATE_HEADERS" "$ASSET_HEADERS"; do
+            printf '%s\n' "$headers" | grep -Eqi '^X-Content-Type-Options: nosniff$'
+            printf '%s\n' "$headers" | grep -Eqi '^X-Frame-Options: SAMEORIGIN$'
+            printf '%s\n' "$headers" | grep -Eqi '^Content-Signal: search=yes, ai-input=yes, ai-train=no$'
+          done
+
+          printf '%s\n' "$PRIVATE_HEADERS" \
+            | grep -Eqi '^X-Robots-Tag: noindex, nofollow, noarchive, nosnippet$'
+          if printf '%s\n' "$PUBLIC_HEADERS" | grep -Eqi '^X-Robots-Tag:'; then
+            echo 'Public pages must not inherit the private X-Robots-Tag header.' >&2
+            exit 1
+          fi
 
       - name: Validate Cloudflare ingress catch-all
         run: |
