@@ -1,4 +1,6 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
+import AdminPlacementListeningPanel from '../../components/AdminPlacementListeningPanel'
+import AdminPlacementListeningSetup from '../../components/AdminPlacementListeningSetup'
 import DashboardShell from '../../components/DashboardShell'
 import PortalEmptyState from '../../components/PortalEmptyState'
 import { useAuth } from '../../features/auth/AuthProvider'
@@ -19,7 +21,7 @@ import type { CefrLevel, PlacementSkill } from '../../services/pocketbase/placem
 import { adminNav } from './adminNav'
 
 const LEVELS: CefrLevel[] = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
-const SKILLS: Array<{ value: PlacementSkill; label: string }> = [
+const CORE_SKILLS: Array<{ value: Exclude<PlacementSkill, 'LISTENING'>; label: string }> = [
   { value: 'GRAMMAR', label: 'Gramática' },
   { value: 'VOCABULARY', label: 'Vocabulario' },
   { value: 'READING', label: 'Comprensión lectora' },
@@ -47,7 +49,8 @@ function dateLabel(value: string): string {
 }
 
 function skillLabel(value: PlacementSkill): string {
-  return SKILLS.find((item) => item.value === value)?.label || value
+  if (value === 'LISTENING') return 'Comprensión oral'
+  return CORE_SKILLS.find((item) => item.value === value)?.label || value
 }
 
 function emptyOptions() { return { a: '', b: '', c: '', d: '' } }
@@ -72,7 +75,7 @@ export default function AdminPlacementTestPage() {
 
   const [editingQuestionId, setEditingQuestionId] = useState('')
   const [qCode, setQCode] = useState('')
-  const [qSkill, setQSkill] = useState<PlacementSkill>('GRAMMAR')
+  const [qSkill, setQSkill] = useState<Exclude<PlacementSkill, 'LISTENING'>>('GRAMMAR')
   const [qLevel, setQLevel] = useState<CefrLevel>('A1')
   const [qPrompt, setQPrompt] = useState('')
   const [qPassage, setQPassage] = useState('')
@@ -84,6 +87,8 @@ export default function AdminPlacementTestPage() {
   const [qActive, setQActive] = useState(true)
 
   const selected = useMemo(() => tests.find((test) => test.id === selectedId) || null, [tests, selectedId])
+  const genericSources = useMemo(() => tests.filter((test) => test.algorithmVersion === 'cefr-v1'), [tests])
+  const selectedIsListening = selected?.algorithmVersion === 'cefr-v2-listening'
 
   async function refreshTests(preferredId?: string) {
     if (isDemoMode) return
@@ -93,7 +98,10 @@ export default function AdminPlacementTestPage() {
       ? preferredId
       : selectedId && records.some((record) => record.id === selectedId) ? selectedId : records[0]?.id || ''
     setSelectedId(target)
-    if (!cloneSourceId && records[0]) setCloneSourceId(records.find((record) => record.status === 'PUBLISHED')?.id || records[0].id)
+    const genericPublished = records.find((record) => record.status === 'PUBLISHED' && record.algorithmVersion === 'cefr-v1')
+    if (!cloneSourceId || !records.some((record) => record.id === cloneSourceId && record.algorithmVersion === 'cefr-v1')) {
+      setCloneSourceId(genericPublished?.id || records.find((record) => record.algorithmVersion === 'cefr-v1')?.id || '')
+    }
   }
 
   useEffect(() => {
@@ -105,8 +113,9 @@ export default function AdminPlacementTestPage() {
         if (!mounted) return
         setTests(records)
         if (records[0]) setSelectedId(records[0].id)
-        const published = records.find((record) => record.status === 'PUBLISHED')
+        const published = records.find((record) => record.status === 'PUBLISHED' && record.algorithmVersion === 'cefr-v1')
         if (published) setCloneSourceId(published.id)
+        else setCloneSourceId(records.find((record) => record.algorithmVersion === 'cefr-v1')?.id || '')
       })
       .catch((cause) => { if (mounted) setError(messageFrom(cause)) })
       .finally(() => { if (mounted) setLoading(false) })
@@ -118,6 +127,7 @@ export default function AdminPlacementTestPage() {
     setEditName(selected.name)
     setEditVersion(selected.version)
     setRetakeDays(selected.campusRetakeDays)
+    setEditingQuestionId('')
   }, [selected])
 
   useEffect(() => {
@@ -141,6 +151,7 @@ export default function AdminPlacementTestPage() {
   }
 
   function editQuestion(question: PlacementAdminQuestion) {
+    if (question.skill === 'LISTENING') return
     const options = emptyOptions()
     question.options.forEach((option) => { if (option.id in options) options[option.id as keyof typeof options] = option.label })
     setEditingQuestionId(question.id); setQCode(question.code); setQSkill(question.skill); setQLevel(question.cefrLevel)
@@ -182,7 +193,7 @@ export default function AdminPlacementTestPage() {
   }
 
   async function handlePublish() {
-    if (!selected?.canEdit || !selected.validation.ready || isDemoMode) return
+    if (!selected?.canEdit || selected.algorithmVersion !== 'cefr-v1' || !selected.validation.ready || isDemoMode) return
     if (!window.confirm(`Publicar ${selected.version}? La versión publicada anterior quedará archivada y esta versión pasará a ser inmutable.`)) return
     setBusy(true); setError(''); setMessage('')
     try {
@@ -209,6 +220,7 @@ export default function AdminPlacementTestPage() {
   }
 
   async function handleDeleteQuestion(question: PlacementAdminQuestion) {
+    if (question.skill === 'LISTENING') return
     if (!selected?.canEdit || isDemoMode || !window.confirm(`Eliminar ${question.code}?`)) return
     setBusy(true); setError(''); setMessage('')
     try {
@@ -224,38 +236,40 @@ export default function AdminPlacementTestPage() {
   return (
     <DashboardShell role="Administrador" name="Admin" nav={[...adminNav]}>
       <div className="dashboard-content cms-page placement-admin-page">
-        <header className="cms-page-heading"><div><span className="eyebrow">EVALUACIÓN · MCER</span><h2>Test de nivel</h2><p>Gestiona versiones y banco de preguntas. Solo los borradores se pueden editar; una versión publicada queda congelada para conservar la trazabilidad de los resultados.</p></div></header>
+        <header className="cms-page-heading"><div><span className="eyebrow">EVALUACIÓN · MCER</span><h2>Test de nivel</h2><p>Gestiona versiones, banco de preguntas y comprensión oral. Solo los borradores se pueden editar; una versión publicada queda congelada para conservar la trazabilidad de los resultados.</p></div></header>
         {loading && <div className="cms-notice" role="status">Cargando versiones…</div>}
         {message && <div className="cms-notice success-notice" role="status">{message}</div>}
         {error && <div className="cms-notice auth-error" role="alert">{error}</div>}
 
         <section className="panel placement-admin-new-version">
-          <div className="panel-heading"><div><span className="eyebrow">NUEVA REVISIÓN</span><h3>Crear versión DRAFT</h3></div></div>
+          <div className="panel-heading"><div><span className="eyebrow">NUEVA REVISIÓN · MOTOR BASE</span><h3>Crear versión DRAFT cefr-v1</h3></div></div>
           <form onSubmit={(event) => void handleCreateVersion(event)}>
             <label>Nombre<input value={newName} onChange={(event) => setNewName(event.target.value)} required disabled={isDemoMode || busy} /></label>
             <label>Versión<input value={newVersion} onChange={(event) => setNewVersion(event.target.value)} placeholder="2026.09-v2" required disabled={isDemoMode || busy} /></label>
-            <label>Partir de<select value={cloneSourceId} onChange={(event) => setCloneSourceId(event.target.value)} disabled={isDemoMode || busy}><option value="">Banco vacío</option>{tests.map((test) => <option key={test.id} value={test.id}>{test.version} · {test.status}</option>)}</select></label>
-            <button className="button button-primary" type="submit" disabled={isDemoMode || busy}>Crear versión</button>
+            <label>Partir de<select value={cloneSourceId} onChange={(event) => setCloneSourceId(event.target.value)} disabled={isDemoMode || busy}><option value="">Banco vacío</option>{genericSources.map((test) => <option key={test.id} value={test.id}>{test.version} · {test.status}</option>)}</select></label>
+            <button className="button button-primary" type="submit" disabled={isDemoMode || busy}>Crear versión base</button>
           </form>
-          <small className="muted">Clonar una versión copia configuración y preguntas, pero la nueva revisión siempre nace como DRAFT.</small>
+          <small className="muted">Este flujo mantiene el motor cefr-v1. Para comprensión oral usa el bloque Listening siguiente.</small>
         </section>
+
+        <AdminPlacementListeningSetup tests={tests} disabled={isDemoMode} onCreated={async (testId) => { setMessage('Versión Listening creada. Añade los audios para poder publicarla.'); await refreshTests(testId) }} />
 
         <div className="placement-admin-layout">
           <aside className="panel placement-admin-versions">
             <div className="panel-heading"><div><span className="eyebrow">VERSIONES</span><h3>Histórico</h3></div><span className="status info">{tests.length}</span></div>
-            <div className="placement-version-list">{tests.map((test) => <button key={test.id} type="button" className={selectedId === test.id ? 'active' : ''} onClick={() => setSelectedId(test.id)}><span><strong>{test.version}</strong><small>{test.name}</small></span><b className={`placement-status ${test.status.toLowerCase()}`}>{test.status}</b></button>)}</div>
+            <div className="placement-version-list">{tests.map((test) => <button key={test.id} type="button" className={selectedId === test.id ? 'active' : ''} onClick={() => setSelectedId(test.id)}><span><strong>{test.version}</strong><small>{test.name}{test.algorithmVersion === 'cefr-v2-listening' ? ' · Listening' : ''}</small></span><b className={`placement-status ${test.status.toLowerCase()}`}>{test.status}</b></button>)}</div>
           </aside>
 
           <main className="placement-admin-main">
             {!selected && !loading && <PortalEmptyState title="Sin versiones" description="Crea la primera versión DRAFT para empezar el banco de preguntas." />}
             {selected && <>
               <section className="panel placement-version-summary">
-                <div className="panel-heading"><div><span className="eyebrow">VERSIÓN {selected.version}</span><h3>{selected.name}</h3></div><span className={`placement-status ${selected.status.toLowerCase()}`}>{selected.status}</span></div>
+                <div className="panel-heading"><div><span className="eyebrow">VERSIÓN {selected.version}</span><h3>{selected.name}</h3><small>{selected.algorithmVersion === 'cefr-v2-listening' ? 'cefr-v2-listening · Listening diagnóstico' : 'cefr-v1 · Grammar + Vocabulary + Reading'}</small></div><span className={`placement-status ${selected.status.toLowerCase()}`}>{selected.status}</span></div>
                 <div className="placement-summary-grid">
                   <div><small>Público</small><strong>{selected.publicQuestionCount}</strong><span>preguntas</span></div>
                   <div><small>Campus</small><strong>{selected.campusQuestionCount}</strong><span>preguntas</span></div>
                   <div><small>Banco activo</small><strong>{selected.validation.activeQuestionCount}</strong><span>de {selected.validation.questionCount}</span></div>
-                  <div><small>Publicación</small><strong>{selected.validation.ready ? 'Listo' : 'Incompleto'}</strong><span>{dateLabel(selected.publishedAt)}</span></div>
+                  <div><small>Publicación</small><strong>{selectedIsListening ? 'Ver Listening' : selected.validation.ready ? 'Listo' : 'Incompleto'}</strong><span>{dateLabel(selected.publishedAt)}</span></div>
                 </div>
                 {selected.canEdit ? <form className="placement-version-edit" onSubmit={(event) => void handleSaveTest(event)}>
                   <label>Nombre<input value={editName} onChange={(event) => setEditName(event.target.value)} /></label>
@@ -263,29 +277,33 @@ export default function AdminPlacementTestPage() {
                   <label>Repetición Campus (días)<input type="number" min={0} max={3650} value={retakeDays} onChange={(event) => setRetakeDays(Number(event.target.value))} /></label>
                   <div className="placement-version-actions"><button className="button button-secondary" type="submit" disabled={busy}>Guardar datos</button><button className="button button-danger" type="button" onClick={() => void handleDeleteVersion()} disabled={busy}>Eliminar DRAFT</button></div>
                 </form> : <div className="placement-immutable-note"><strong>Versión inmutable.</strong><span>Para cambiar cualquier contenido crea una nueva revisión DRAFT.</span></div>}
-                <div className={`placement-validation ${selected.validation.ready ? 'ready' : 'pending'}`}>
+
+                {!selectedIsListening && <div className={`placement-validation ${selected.validation.ready ? 'ready' : 'pending'}`}>
                   <div><strong>{selected.validation.ready ? 'Banco preparado para publicar' : 'Faltan requisitos para publicar'}</strong><span>El servidor valida el blueprint antes de permitir la publicación.</span></div>
                   {!selected.validation.ready && <ul>{selected.validation.errors.slice(0, 8).map((item) => <li key={item}>{item}</li>)}</ul>}
                   {selected.canEdit && <button className="button button-primary" type="button" onClick={() => void handlePublish()} disabled={busy || !selected.validation.ready}>Publicar versión</button>}
-                </div>
+                </div>}
+                {selectedIsListening && <div className="placement-immutable-note"><strong>Publicación protegida por Listening.</strong><span>La disponibilidad real se calcula en el panel de comprensión oral y exige audio en las 24 preguntas del banco.</span></div>}
               </section>
+
+              {selectedIsListening && <AdminPlacementListeningPanel testId={selected.id} canEdit={selected.canEdit && !isDemoMode} version={selected.version} onPublished={async () => { await refreshTests(selected.id) }} />}
 
               <section className="panel placement-question-bank">
                 <div className="panel-heading"><div><span className="eyebrow">BANCO DE PREGUNTAS</span><h3>{questions.length} preguntas</h3></div></div>
                 {questionsLoading && <div className="cms-notice" role="status">Cargando preguntas…</div>}
                 <div className="placement-question-list">{questions.map((question) => <article key={question.id} className={!question.active ? 'inactive' : ''}>
                   <div className="placement-question-meta"><span>{skillLabel(question.skill)}</span><b>{question.cefrLevel}</b><small>#{question.adminOrder}</small></div>
-                  <div><strong>{question.code}</strong><p>{question.prompt}</p><small>{question.options.length} opciones · correcta: {question.correctOptionId.toUpperCase()}</small></div>
-                  {selected.canEdit && <div className="placement-question-actions"><button type="button" onClick={() => editQuestion(question)}>Editar</button><button type="button" onClick={() => void handleDeleteQuestion(question)}>Eliminar</button></div>}
+                  <div><strong>{question.code}</strong><p>{question.prompt}</p><small>{question.options.length} opciones · correcta: {question.correctOptionId.toUpperCase()}{question.skill === 'LISTENING' ? ' · gestión en panel Listening' : ''}</small></div>
+                  {selected.canEdit && question.skill !== 'LISTENING' && <div className="placement-question-actions"><button type="button" onClick={() => editQuestion(question)}>Editar</button><button type="button" onClick={() => void handleDeleteQuestion(question)}>Eliminar</button></div>}
                 </article>)}{!questionsLoading && questions.length === 0 && <PortalEmptyState compact title="Banco vacío" description={selected.canEdit ? 'Añade preguntas para cubrir el blueprint público y Campus.' : 'Esta versión no contiene preguntas.'} />}</div>
               </section>
 
               {selected.canEdit && <section className="panel placement-question-editor" id="placement-question-editor">
-                <div className="panel-heading"><div><span className="eyebrow">{editingQuestionId ? 'EDITAR PREGUNTA' : 'NUEVA PREGUNTA'}</span><h3>{editingQuestionId ? qCode : 'Añadir al banco'}</h3></div>{editingQuestionId && <button type="button" className="button button-secondary" onClick={clearQuestionForm}>Cancelar edición</button>}</div>
+                <div className="panel-heading"><div><span className="eyebrow">{editingQuestionId ? 'EDITAR PREGUNTA BASE' : 'NUEVA PREGUNTA BASE'}</span><h3>{editingQuestionId ? qCode : 'Añadir Grammar, Vocabulary o Reading'}</h3></div>{editingQuestionId && <button type="button" className="button button-secondary" onClick={clearQuestionForm}>Cancelar edición</button>}</div>
                 <form onSubmit={(event) => void handleSaveQuestion(event)}>
                   <div className="placement-question-fields">
                     <label>Código<input value={qCode} onChange={(event) => setQCode(event.target.value)} placeholder="grammar-b1-01" required /></label>
-                    <label>Competencia<select value={qSkill} onChange={(event) => setQSkill(event.target.value as PlacementSkill)}>{SKILLS.map((skill) => <option key={skill.value} value={skill.value}>{skill.label}</option>)}</select></label>
+                    <label>Competencia<select value={qSkill} onChange={(event) => setQSkill(event.target.value as Exclude<PlacementSkill, 'LISTENING'>)}>{CORE_SKILLS.map((skill) => <option key={skill.value} value={skill.value}>{skill.label}</option>)}</select></label>
                     <label>Nivel MCER<select value={qLevel} onChange={(event) => setQLevel(event.target.value as CefrLevel)}>{LEVELS.map((level) => <option key={level}>{level}</option>)}</select></label>
                     <label>Orden<input type="number" min={0} value={qOrder} onChange={(event) => setQOrder(Number(event.target.value))} /></label>
                     <label>Peso<input type="number" min={0.1} max={100} step={0.1} value={qWeight} onChange={(event) => setQWeight(Number(event.target.value))} /></label>
