@@ -63,22 +63,34 @@ routerAdd('POST', '/api/language-school/contact', (e) => {
   }
 
   let verification
-  try {
-    const response = $http.send({
-      url: 'https://challenges.cloudflare.com/turnstile/v0/siteverify',
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ secret, response: token }),
-      timeout: 10,
-    })
-    if (response.statusCode !== 200 || !response.json) {
-      safeLog('warn', '[contact] Turnstile Siteverify unavailable', { stage: 'siteverify', status: response.statusCode })
+  // CI already validates the production Siteverify contract independently. In the
+  // browser suite we keep the official Cloudflare always-pass secret deterministic
+  // and fully local. This branch is impossible in production because the same test
+  // secret is rejected above unless LANGUAGE_SCHOOL_E2E=1.
+  if (testMode && secret === officialAlwaysPassTestSecret) {
+    verification = {
+      success: true,
+      action: 'test',
+      hostname: allowedHostnames.indexOf('localhost') !== -1 ? 'localhost' : allowedHostnames[0],
+    }
+  } else {
+    try {
+      const response = $http.send({
+        url: 'https://challenges.cloudflare.com/turnstile/v0/siteverify',
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ secret, response: token }),
+        timeout: 10,
+      })
+      if (response.statusCode !== 200 || !response.json) {
+        safeLog('warn', '[contact] Turnstile Siteverify unavailable', { stage: 'siteverify', status: response.statusCode })
+        return e.json(503, { message: 'No se ha podido verificar el formulario. Inténtalo de nuevo.' })
+      }
+      verification = response.json
+    } catch (_) {
+      safeLog('error', '[contact] Turnstile Siteverify request failed', { stage: 'siteverify' })
       return e.json(503, { message: 'No se ha podido verificar el formulario. Inténtalo de nuevo.' })
     }
-    verification = response.json
-  } catch (_) {
-    safeLog('error', '[contact] Turnstile Siteverify request failed', { stage: 'siteverify' })
-    return e.json(503, { message: 'No se ha podido verificar el formulario. Inténtalo de nuevo.' })
   }
 
   if (verification.success !== true) {
