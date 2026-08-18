@@ -1,10 +1,12 @@
 # Language School V3 · Checklist de producción
 
-No marcar una casilla hasta comprobar el resultado en la Raspberry real.
+No marcar una casilla hasta comprobar el resultado en la Raspberry/host real.
+
+Los puertos de esta lista corresponden a la plantilla actual (`PROXY_URL=127.0.0.1:8083`, `PB_URL=127.0.0.1:8091`). Si se cambian en `/etc/language-school/production.env`, sustituirlos también en las comprobaciones manuales, manteniendo ambos exclusivamente en loopback.
 
 ## A. Hardware y sistema
 
-- [ ] Raspberry Pi 4 con sistema ARM64 actualizado.
+- [ ] Raspberry Pi 4/host Linux ARM64 o amd64 actualizado.
 - [ ] Arranque desde SSD principal confirmado.
 - [ ] Fuente de alimentación estable.
 - [ ] Ethernet operativo.
@@ -15,43 +17,49 @@ No marcar una casilla hasta comprobar el resultado en la Raspberry real.
 ## B. Configuración local
 
 - [ ] `/etc/language-school/production.env` creado desde `.env.example`.
-- [ ] `PUBLIC_ORIGIN` apunta al dominio/subdominio definitivo.
-- [ ] Ninguna contraseña/token está en el repositorio.
+- [ ] El archivo sigue siendo `root:root` y modo `0640`.
+- [ ] `PUBLIC_ORIGIN` usa HTTPS y apunta al dominio/subdominio definitivo, no a un placeholder.
+- [ ] `PB_URL` y `PROXY_URL` continúan en `127.0.0.1`.
+- [ ] Ninguna contraseña/token está en el repositorio ni en `VITE_*`.
+- [ ] Variables privadas Zoom, si se usan, existen solo en el host según `PRIVATE-VARIABLES.md`.
 - [ ] `BACKUP_MOUNT` coincide con un mountpoint real.
 
 ## C. PocketBase
 
 - [ ] `install-pocketbase.sh` finaliza sin errores.
-- [ ] SHA-256 ARM64 verificado.
+- [ ] SHA-256 de la arquitectura del host verificado.
 - [ ] Usuario `languageschool` creado.
 - [ ] `/var/lib/language-school/pb_data` pertenece a `languageschool` y no es legible por otros usuarios.
+- [ ] `/opt/language-school/pocketbase/pb_migrations` existe y contiene las migraciones de la revisión desplegada.
+- [ ] `/opt/language-school/pocketbase/pb_hooks` existe y contiene los hooks server-side de la misma revisión.
 - [ ] `migrate.sh` aplica todas las migraciones.
 - [ ] Primer superuser creado localmente.
 - [ ] Primer ADMIN de aplicación creado.
 - [ ] `systemctl is-active language-school-pocketbase` = active.
-- [ ] `curl http://127.0.0.1:8090/api/health` responde correctamente.
+- [ ] `curl http://127.0.0.1:8091/api/health` responde correctamente.
 
 ## D. Frontend y Nginx
 
 - [ ] `install-nginx.sh` supera `nginx -t`.
-- [ ] Nginx escucha en `127.0.0.1:8080`.
-- [ ] PocketBase escucha en `127.0.0.1:8090`.
+- [ ] Nginx escucha en `127.0.0.1:8083`.
+- [ ] PocketBase escucha en `127.0.0.1:8091`.
 - [ ] `deploy-frontend.sh` compila en modo `connected`.
+- [ ] Un `PUBLIC_ORIGIN` HTTP/local/placeholder es rechazado por el deploy.
 - [ ] `/opt/language-school/frontend/index.html` existe.
-- [ ] `http://127.0.0.1:8080/` devuelve la web.
-- [ ] `http://127.0.0.1:8080/api/health` devuelve PocketBase.
-- [ ] `http://127.0.0.1:8080/_/` NO muestra el panel PocketBase.
+- [ ] `http://127.0.0.1:8083/` devuelve la web.
+- [ ] `http://127.0.0.1:8083/api/health` devuelve PocketBase.
+- [ ] `http://127.0.0.1:8083/_/` NO muestra el panel PocketBase.
 - [ ] `health-check.sh` = SUCCESS.
 
 ## E. Cloudflare
 
 - [ ] Tunnel creado.
-- [ ] Origen configurado exclusivamente a `http://127.0.0.1:8080`.
+- [ ] Origen configurado exclusivamente a `http://127.0.0.1:8083` (o al `PROXY_URL` loopback configurado).
 - [ ] Dominio/subdominio resuelve por HTTPS.
 - [ ] Web pública carga por HTTPS.
 - [ ] Login ADMIN funciona por HTTPS.
 - [ ] `/api/health` funciona por HTTPS.
-- [ ] No hay puertos 8080/8090 abiertos en el router.
+- [ ] No hay puertos 8083/8091 abiertos en el router (ni los equivalentes configurados si se cambiaron).
 - [ ] PocketBase `/_/` no está publicado.
 
 ## F. Seguridad funcional
@@ -64,6 +72,7 @@ No marcar una casilla hasta comprobar el resultado en la Raspberry real.
 - [ ] Probar archivo privado + token protegido.
 - [ ] Pausar matrícula y confirmar revocación inmediata del profesor.
 - [ ] Probar rechazo de asistencia fuera del grupo.
+- [ ] Verificar reglas Cloudflare de bots/rate limiting previstas en FASE 9.3.
 
 ## G. Backup
 
@@ -84,13 +93,21 @@ No marcar una casilla hasta comprobar el resultado en la Raspberry real.
 - [ ] Los datos vuelven al estado de la copia.
 - [ ] Se conserva temporalmente `pb_data.before-restore-*` hasta verificar todo.
 
-## I. Piloto
+## I. Integraciones reales
+
+- [ ] Zoom Server-to-Server OAuth configurado y verificado desde Admin, si se activa.
+- [ ] Zoom Meeting SDK configurado y verificado desde Admin, si se activa.
+- [ ] Ningún secreto Zoom aparece en navegador, logs evitables o CMS.
+- [ ] Audios Listening académicos definitivos cargados antes de publicar la versión real del test con Listening.
+
+## J. Piloto
 
 - [ ] 2–3 alumnos reales de prueba.
 - [ ] 1–2 profesores de prueba.
 - [ ] Flujo ADMIN completo.
 - [ ] Flujo PROFESOR completo.
 - [ ] Flujo ALUMNO completo.
+- [ ] Test de nivel público y Campus.
 - [ ] Prueba móvil.
 - [ ] Subida/descarga de PDF, Word, imagen y audio.
 - [ ] Tarea → entrega → corrección.
@@ -99,4 +116,4 @@ No marcar una casilla hasta comprobar el resultado en la Raspberry real.
 
 ## Criterio final
 
-La V3 solo sustituye la web anterior cuando todas las secciones A–H estén verificadas y el piloto I no tenga incidencias críticas.
+La V3 solo sustituye la web anterior cuando A–I estén verificadas en el entorno real y el piloto J no tenga incidencias críticas.
