@@ -36,6 +36,32 @@ function zoomMeetingCreateSafeResult(record, existing) {
   }
 }
 
+function zoomMeetingCreateTransport() {
+  const e2eMode = $os.getenv("LANGUAGE_SCHOOL_E2E") === "1"
+  const e2eBase = String($os.getenv("LANGUAGE_SCHOOL_E2E_ZOOM_BASE_URL") || "").replace(/\/+$/, "")
+  if (e2eMode && e2eBase) {
+    return {
+      accountId: "e2e-account",
+      clientId: "e2e-client",
+      clientSecret: "e2e-secret",
+      hostUserId: "e2e-host",
+      oauthBase: e2eBase,
+      apiBase: e2eBase,
+      e2e: true,
+    }
+  }
+
+  return {
+    accountId: $os.getenv("ZOOM_ACCOUNT_ID"),
+    clientId: $os.getenv("ZOOM_CLIENT_ID"),
+    clientSecret: $os.getenv("ZOOM_CLIENT_SECRET"),
+    hostUserId: $os.getenv("ZOOM_HOST_USER_ID"),
+    oauthBase: "https://zoom.us",
+    apiBase: "https://api.zoom.us",
+    e2e: false,
+  }
+}
+
 routerAdd("POST", "/api/language-school/zoom/classes/{classId}/meeting", (e) => {
   if (!e.auth || e.auth.get("role") !== "ADMIN") {
     throw new ForbiddenError("Solo Administración puede crear reuniones Zoom.")
@@ -61,11 +87,8 @@ routerAdd("POST", "/api/language-school/zoom/classes/{classId}/meeting", (e) => 
     throw new BadRequestError("Solo se pueden preparar reuniones para clases programadas.")
   }
 
-  const accountId = $os.getenv("ZOOM_ACCOUNT_ID")
-  const clientId = $os.getenv("ZOOM_CLIENT_ID")
-  const clientSecret = $os.getenv("ZOOM_CLIENT_SECRET")
-  const hostUserId = $os.getenv("ZOOM_HOST_USER_ID")
-  if (!accountId || !clientId || !clientSecret || !hostUserId) {
+  const transport = zoomMeetingCreateTransport()
+  if (!transport.accountId || !transport.clientId || !transport.clientSecret || !transport.hostUserId) {
     return e.json(409, {
       provider: "zoom",
       created: false,
@@ -75,9 +98,9 @@ routerAdd("POST", "/api/language-school/zoom/classes/{classId}/meeting", (e) => 
   }
 
   try {
-    const authorization = "Basic " + zoomMeetingCreateBase64Ascii(clientId + ":" + clientSecret)
+    const authorization = "Basic " + zoomMeetingCreateBase64Ascii(transport.clientId + ":" + transport.clientSecret)
     const tokenResponse = $http.send({
-      url: "https://zoom.us/oauth/token?grant_type=account_credentials&account_id=" + encodeURIComponent(accountId),
+      url: transport.oauthBase + "/oauth/token?grant_type=account_credentials&account_id=" + encodeURIComponent(transport.accountId),
       method: "POST",
       headers: {
         "Authorization": authorization,
@@ -99,7 +122,7 @@ routerAdd("POST", "/api/language-school/zoom/classes/{classId}/meeting", (e) => 
     const topic = ("Language School · " + classRecord.getString("topic")).slice(0, 200)
     const duration = Math.max(1, Math.ceil((endsAt.getTime() - startsAt.getTime()) / 60000))
     const meetingResponse = $http.send({
-      url: "https://api.zoom.us/v2/users/" + encodeURIComponent(hostUserId) + "/meetings",
+      url: transport.apiBase + "/v2/users/" + encodeURIComponent(transport.hostUserId) + "/meetings",
       method: "POST",
       headers: {
         "Authorization": "Bearer " + tokenResponse.json.access_token,
@@ -121,7 +144,7 @@ routerAdd("POST", "/api/language-school/zoom/classes/{classId}/meeting", (e) => 
     })
 
     if (meetingResponse.statusCode !== 201 || !meetingResponse.json || !meetingResponse.json.id || !meetingResponse.json.join_url) {
-      e.app.logger().warn("Zoom create meeting failed", "status", meetingResponse.statusCode)
+      e.app.logger().warn("Zoom create meeting failed", "status", meetingResponse.statusCode, "e2e", transport.e2e)
       return e.json(502, {
         provider: "zoom",
         created: false,
