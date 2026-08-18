@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router'
 import DashboardShell from '../../components/DashboardShell'
 import PortalEmptyState from '../../components/PortalEmptyState'
 import { useAuth } from '../../features/auth/AuthProvider'
@@ -68,14 +69,16 @@ function formatTime(value: string): string {
   return new Intl.DateTimeFormat('es-ES', { hour: '2-digit', minute: '2-digit' }).format(date)
 }
 
-function ClassDelivery({ item, upcoming = false }: { item: ClassView; upcoming?: boolean }) {
+function ClassDelivery({ item, upcoming = false, isDemoMode = false }: { item: ClassView; upcoming?: boolean; isDemoMode?: boolean }) {
   return (
     <div className="student-class-delivery">
       <span className={`class-mode class-mode-${item.deliveryMode.toLowerCase()}`}>{modeLabel(item.deliveryMode)}</span>
       {item.deliveryMode !== 'ONLINE' && <span className="student-class-location">📍 {item.locationText || 'Aula pendiente'}</span>}
       {upcoming && item.deliveryMode !== 'IN_PERSON' && (
         item.onlineJoinUrl
-          ? <a className="student-online-class-link" href={item.onlineJoinUrl} target="_blank" rel="noreferrer">Entrar en clase online ↗</a>
+          ? isDemoMode
+            ? <a className="student-online-class-link" href={item.onlineJoinUrl} target="_blank" rel="noreferrer">Entrar en clase online ↗</a>
+            : <Link className="student-online-class-link" to={`/alumno/aula/${item.id}`}>Entrar al aula online →</Link>
           : <span className="student-online-pending">Acceso online pendiente</span>
       )}
     </div>
@@ -128,7 +131,7 @@ export default function StudentClassesPage() {
             {upcoming.map((item) => (
               <article key={item.id}>
                 <div className="student-class-date"><strong>{formatDate(item.startsAt)}</strong><span>{formatTime(item.startsAt)} – {formatTime(item.endsAt)}</span></div>
-                <div className="student-class-main"><h4>{item.topic}</h4><p>{item.courseTitle} · {item.groupName}</p><ClassDelivery item={item} upcoming /></div>
+                <div className="student-class-main"><h4>{item.topic}</h4><p>{item.courseTitle} · {item.groupName}</p><ClassDelivery item={item} upcoming isDemoMode={isDemoMode} /></div>
                 <span className="status info">Programada</span>
               </article>
             ))}
