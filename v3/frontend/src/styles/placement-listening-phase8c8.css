@@ -1,0 +1,67 @@
+.placement-listening-player {
+  display: grid;
+  gap: 0.9rem;
+  margin-bottom: 1.4rem;
+  padding: 1.15rem 1.2rem;
+  border: 1px solid color-mix(in srgb, var(--color-brand, #d97b9a) 26%, transparent);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--color-brand-soft, #fcebf1) 56%, white);
+}
+
+.placement-listening-player-copy {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.placement-listening-player-copy strong {
+  font-size: 1rem;
+  color: var(--color-text, #242124);
+}
+
+.placement-listening-player-copy small,
+.placement-listening-status {
+  color: var(--color-muted, #6f6870);
+  line-height: 1.5;
+}
+
+.placement-listening-player audio {
+  width: 100%;
+  min-height: 44px;
+}
+
+.placement-listening-error {
+  margin: 0;
+  color: #9f273d;
+  font-weight: 650;
+}
+
+.placement-result-skills article.is-diagnostic,
+.student-level-skill-list .is-diagnostic,
+.student-level-history-list .is-diagnostic {
+  position: relative;
+}
+
+.placement-result-skills article.is-diagnostic::after {
+  content: 'Diagnóstico';
+  display: inline-flex;
+  margin-top: 0.55rem;
+  padding: 0.22rem 0.55rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-brand-soft, #fcebf1) 70%, white);
+  color: var(--color-brand-deep, #98435f);
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 640px) {
+  .placement-listening-player {
+    padding: 1rem;
+    border-radius: 15px;
+  }
+
+  .placement-listening-player audio {
+    min-width: 0;
+  }
+}
