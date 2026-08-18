@@ -17,7 +17,9 @@ test('8C.2: visitante completa el test público desde la UI y recibe C2 sin expo
 
   for (let position = 1; position <= 15; position += 1) {
     await expect(page.getByText(`Pregunta ${position} de 15`)).toBeVisible()
-    await page.getByLabel('Option A').check()
+    const optionA = page.getByLabel('Option A')
+    await page.locator('label.placement-option', { has: optionA }).click()
+    await expect(optionA).toBeChecked()
     await page.getByRole('button', { name: position === 15 ? 'Ver mi resultado' : 'Confirmar respuesta' }).click()
   }
 
