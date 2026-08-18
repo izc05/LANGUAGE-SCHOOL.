@@ -176,6 +176,18 @@ function authorizeAttempt(e, attempt) {
   }
 }
 
+function publicCompletedAttempt(e) {
+  const attempt = e.app.findRecordById('placement_attempts', String(e.request.pathValue('id') || ''))
+  authorizeAttempt(e, attempt)
+  if (attempt.getString('mode') !== 'PUBLIC') {
+    throw new ForbiddenError('Esta operación solo está disponible para un resultado público.')
+  }
+  if (attempt.getString('status') !== 'COMPLETED') {
+    throw new BadRequestError('Completa el test antes de continuar.')
+  }
+  return attempt
+}
+
 function snapshot(attempt) {
   const value = recordJson(attempt, 'selection_snapshot', [])
   if (!Array.isArray(value) || !value.length) {
@@ -244,6 +256,17 @@ function rejectComputedFields(body) {
   const attempted = forbidden.some((key) => body[key] !== undefined)
   if (attempted) {
     throw new BadRequestError('La puntuación, el nivel y la identidad del intento se calculan exclusivamente en el servidor.')
+  }
+}
+
+function rejectContactComputedFields(body) {
+  const forbidden = [
+    'status', 'placement_attempt', 'placementAttempt', 'attemptId',
+    'placement_level', 'placementLevel', 'estimated_level', 'estimatedLevel',
+    'placement_score', 'placementScore', 'score_percent', 'scorePercent',
+  ]
+  if (forbidden.some((key) => body[key] !== undefined)) {
+    throw new BadRequestError('El resultado asociado a la solicitud se obtiene exclusivamente del intento validado por el servidor.')
   }
 }
 
@@ -400,10 +423,67 @@ function result(e) {
   return e.json(200, resultDto(attempt))
 }
 
+function recommendations(e) {
+  noStore(e)
+  const attempt = publicCompletedAttempt(e)
+  const level = attempt.getString('estimated_level')
+  const courses = e.app.findAllRecords('courses')
+    .filter((course) => (
+      course.getString('status') === 'ACTIVE' &&
+      course.getBool('public_visible') &&
+      course.getStringSlice('cefr_levels').indexOf(level) !== -1
+    ))
+    .sort((a, b) => a.getString('title').localeCompare(b.getString('title')))
+    .map((course) => ({
+      id: course.id,
+      title: course.getString('title'),
+      slug: course.getString('slug'),
+      level: course.getString('level'),
+      description: course.getString('description'),
+      cefrLevels: course.getStringSlice('cefr_levels'),
+    }))
+
+  return e.json(200, { estimatedLevel: level, courses })
+}
+
+function contact(e) {
+  noStore(e)
+  const attempt = publicCompletedAttempt(e)
+  const body = requestBody(e)
+  rejectContactComputedFields(body)
+
+  const name = String(body.name || '').trim()
+  const email = String(body.email || '').trim().toLowerCase()
+  const phone = String(body.phone || '').trim()
+  const interest = String(body.interest || '').trim()
+  const message = String(body.message || '').trim()
+
+  if (!name || !email || !message) throw new BadRequestError('Nombre, email y mensaje son obligatorios.')
+  if (name.length > 160 || email.length > 240 || phone.length > 30 || interest.length > 160 || message.length > 4000) {
+    throw new BadRequestError('La solicitud supera la longitud permitida.')
+  }
+
+  const request = new Record(e.app.findCollectionByNameOrId('contact_requests'))
+  request.set('name', name)
+  request.set('email', email)
+  request.set('phone', phone)
+  request.set('interest', interest || `Test de nivel ${attempt.getString('estimated_level')}`)
+  request.set('message', message)
+  request.set('status', 'NEW')
+  request.set('placement_attempt', attempt.id)
+  request.set('placement_level', attempt.getString('estimated_level'))
+  request.set('placement_score', attempt.getFloat('score_percent'))
+  e.app.save(request)
+
+  return e.json(201, { created: true })
+}
+
 module.exports = {
   start,
   nextQuestion,
   answer,
   finish,
   result,
+  recommendations,
+  contact,
 }

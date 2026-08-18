@@ -24,3 +24,13 @@ routerAdd('GET', '/api/language-school/placement/attempts/{id}/result', (e) => {
   const placement = require(`${__hooks}/placement_service.js`)
   return placement.result(e)
 })
+
+routerAdd('GET', '/api/language-school/placement/attempts/{id}/recommendations', (e) => {
+  const placement = require(`${__hooks}/placement_service.js`)
+  return placement.recommendations(e)
+})
+
+routerAdd('POST', '/api/language-school/placement/attempts/{id}/contact', (e) => {
+  const placement = require(`${__hooks}/placement_service.js`)
+  return placement.contact(e)
+})
