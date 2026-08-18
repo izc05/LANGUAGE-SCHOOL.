@@ -20,7 +20,7 @@ function zoomMeetingCreateBase64Ascii(value) {
 
 function zoomMeetingCreateExisting(app, classId) {
   try {
-    return app.findFirstRecordByFilter("zoom_meetings", "class = {:classId}", { classId })
+    return app.findFirstRecordByData("zoom_meetings", "class", classId)
   } catch {
     return null
   }
