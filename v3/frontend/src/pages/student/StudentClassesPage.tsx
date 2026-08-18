@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router'
 import DashboardShell from '../../components/DashboardShell'
 import PortalEmptyState from '../../components/PortalEmptyState'
 import { useAuth } from '../../features/auth/AuthProvider'
@@ -68,19 +69,29 @@ function formatTime(value: string): string {
   return new Intl.DateTimeFormat('es-ES', { hour: '2-digit', minute: '2-digit' }).format(date)
 }
 
-function ClassDelivery({ item, upcoming = false, isDemoMode = false }: { item: ClassView; upcoming?: boolean; isDemoMode?: boolean }) {
+function ClassDelivery({ item, upcoming = false, isDemoMode = false, prominent = false }: { item: ClassView; upcoming?: boolean; isDemoMode?: boolean; prominent?: boolean }) {
   return (
-    <div className="student-class-delivery">
+    <div className={`student-class-delivery${prominent ? ' student-class-delivery-prominent' : ''}`}>
       <span className={`class-mode class-mode-${item.deliveryMode.toLowerCase()}`}>{modeLabel(item.deliveryMode)}</span>
       {item.deliveryMode !== 'ONLINE' && <span className="student-class-location">📍 {item.locationText || 'Aula pendiente'}</span>}
       {upcoming && item.deliveryMode !== 'IN_PERSON' && (
         item.onlineJoinUrl
           ? isDemoMode
             ? <a className="student-online-class-link" href={item.onlineJoinUrl} target="_blank" rel="noreferrer">Entrar en clase online ↗</a>
-            : <a className="student-online-class-link" href={`/alumno/aula/${encodeURIComponent(item.id)}`}>Entrar al aula online →</a>
+            : <Link className="student-online-class-link" to={`/alumno/aula/${encodeURIComponent(item.id)}`}>Entrar al aula online →</Link>
           : <span className="student-online-pending">Acceso online pendiente</span>
       )}
     </div>
+  )
+}
+
+function UpcomingClassRow({ item, isDemoMode }: { item: ClassView; isDemoMode: boolean }) {
+  return (
+    <article>
+      <div className="student-class-date"><strong>{formatDate(item.startsAt)}</strong><span>{formatTime(item.startsAt)} – {formatTime(item.endsAt)}</span></div>
+      <div className="student-class-main"><h4>{item.topic}</h4><p>{item.courseTitle} · {item.groupName}</p><ClassDelivery item={item} upcoming isDemoMode={isDemoMode} /></div>
+      <span className="status info">Programada</span>
+    </article>
   )
 }
 
@@ -112,41 +123,62 @@ export default function StudentClassesPage() {
   }, [isDemoMode])
 
   const attendanceMap = useMemo(() => new Map(attendance.map((item) => [item.class, item.status])), [attendance])
+  const nextClass = upcoming[0]
+  const laterClasses = upcoming.slice(1)
 
   return (
     <DashboardShell role="Alumno" name="Alumno" nav={[...studentNav]}>
-      <div className="dashboard-content student-files-page student-classes-campus-page">
-        <header className="student-page-heading">
-          <div><span className="eyebrow">CALENDARIO</span><h2>Mis clases</h2><p>Consulta cuándo es tu próxima sesión, si es presencial u online y entra al aula cuando esté disponible.</p></div>
-          <div className="private-space-badge"><strong>{upcoming.length}</strong><span>próximas clases</span></div>
+      <div className="dashboard-content student-files-page student-classes-campus-page student-classes-phase10b">
+        <header className="student-page-heading student-classes-heading10">
+          <div><span className="eyebrow">TU SEMANA</span><h2>Mis clases</h2><p>Primero, tu siguiente sesión. Después, el resto de la agenda y tu historial de asistencia.</p></div>
+          <div className="private-space-badge"><strong>{upcoming.length}</strong><span>{upcoming.length === 1 ? 'clase programada' : 'clases programadas'}</span></div>
         </header>
 
         {loading && <div className="cms-notice" role="status">Cargando clases…</div>}
         {error && <div className="cms-notice auth-error" role="alert">{error}</div>}
 
-        <section className="panel student-class-section">
-          <div className="panel-heading"><div><span className="eyebrow">PRÓXIMAS</span><h3>Tu agenda</h3></div></div>
-          <div className="student-class-list student-class-list-delivery">
-            {upcoming.map((item) => (
-              <article key={item.id}>
-                <div className="student-class-date"><strong>{formatDate(item.startsAt)}</strong><span>{formatTime(item.startsAt)} – {formatTime(item.endsAt)}</span></div>
-                <div className="student-class-main"><h4>{item.topic}</h4><p>{item.courseTitle} · {item.groupName}</p><ClassDelivery item={item} upcoming isDemoMode={isDemoMode} /></div>
-                <span className="status info">Programada</span>
-              </article>
-            ))}
-            {!loading && upcoming.length === 0 && (
-              <PortalEmptyState
-                compact
-                title="No hay próximas clases programadas"
-                description="Cuando la academia programe tu siguiente sesión aparecerá aquí con fecha, horario y modalidad."
-                action={{ label: 'Revisar material', to: '/alumno/material' }}
-              />
-            )}
-          </div>
-        </section>
+        {!loading && nextClass && (
+          <section className="student-next-session" aria-labelledby="student-next-session-title">
+            <div className="student-next-session-copy">
+              <div className="student-next-session-top"><span className="eyebrow">PRÓXIMA SESIÓN</span><span className="status info">Siguiente</span></div>
+              <div className="student-next-session-date"><strong>{formatDate(nextClass.startsAt)}</strong><span>{formatTime(nextClass.startsAt)} – {formatTime(nextClass.endsAt)}</span></div>
+              <h3 id="student-next-session-title">{nextClass.topic}</h3>
+              <p>{nextClass.courseTitle} · {nextClass.groupName}</p>
+              <div className="student-class-list-delivery student-next-session-delivery">
+                <ClassDelivery item={nextClass} upcoming isDemoMode={isDemoMode} prominent />
+              </div>
+            </div>
+            <div className="student-next-session-side" aria-label="Preparación para la siguiente clase">
+              <span className="student-next-session-number">01</span>
+              <strong>Tu siguiente paso</strong>
+              <p>{nextClass.deliveryMode === 'IN_PERSON' ? 'Revisa el horario y el aula. Después puedes abrir tu material antes de venir.' : 'Cuando quieras entrar, Language School te llevará primero a tu aula online protegida.'}</p>
+              <Link className="student-next-material-link" to="/alumno/material">Revisar material →</Link>
+            </div>
+          </section>
+        )}
 
-        <section className="panel student-class-section">
-          <div className="panel-heading"><div><span className="eyebrow">HISTORIAL</span><h3>Clases realizadas</h3></div></div>
+        {!loading && !nextClass && (
+          <section className="panel student-class-section">
+            <PortalEmptyState
+              compact
+              title="No hay próximas clases programadas"
+              description="Cuando la academia programe tu siguiente sesión aparecerá aquí con fecha, horario y modalidad."
+              action={{ label: 'Revisar material', to: '/alumno/material' }}
+            />
+          </section>
+        )}
+
+        {laterClasses.length > 0 && (
+          <section className="panel student-class-section student-class-later-section">
+            <div className="panel-heading"><div><span className="eyebrow">DESPUÉS</span><h3>Próximas en tu agenda</h3></div><span className="student-class-count">{laterClasses.length} más</span></div>
+            <div className="student-class-list student-class-list-delivery">
+              {laterClasses.map((item) => <UpcomingClassRow key={item.id} item={item} isDemoMode={isDemoMode} />)}
+            </div>
+          </section>
+        )}
+
+        <section className="panel student-class-section student-class-history10">
+          <div className="panel-heading"><div><span className="eyebrow">HISTORIAL</span><h3>Clases realizadas</h3></div><span className="student-class-count">{recent.length} sesiones</span></div>
           <div className="student-class-list student-class-list-delivery">
             {recent.map((item) => {
               const attendanceStatus = attendanceMap.get(item.id)
