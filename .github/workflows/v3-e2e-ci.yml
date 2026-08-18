@@ -31,6 +31,8 @@ jobs:
       E2E_TEACHER_PASSWORD: E2eTeacherPass123!
       E2E_STUDENT_EMAIL: e2e-student@example.com
       E2E_STUDENT_PASSWORD: E2eStudentPass123!
+      E2E_OUTSIDER_EMAIL: e2e-outsider@example.com
+      E2E_OUTSIDER_PASSWORD: E2eOutsiderPass123!
       LANGUAGE_SCHOOL_E2E: '1'
       LANGUAGE_SCHOOL_E2E_ZOOM_BASE_URL: http://127.0.0.1:8092
 
