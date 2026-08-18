@@ -31,10 +31,12 @@ async function expectNoHorizontalOverflow(page: Page) {
   expect(overflow).toBeLessThanOrEqual(1)
 }
 
-test('10.4: Material destaca, busca y filtra un recurso real del grupo', async ({ page }) => {
+test('10.4: Material destaca, busca y filtra un recurso real del grupo', async ({ page }, testInfo) => {
+  const materialTitle = `Phase 10 · Travel pack R${testInfo.retry}`
+
   await login(page, credentials.admin.email, credentials.admin.password, /\/admin$/)
 
-  const created = await page.evaluate(async ({ pbUrl }) => {
+  const created = await page.evaluate(async ({ pbUrl, materialTitle }) => {
     const auth = JSON.parse(localStorage.getItem('pocketbase_auth') || '{}') as { token?: string }
     const token = auth.token || ''
     const groupsResponse = await fetch(`${pbUrl}/api/collections/groups/records?perPage=20`, { headers: { Authorization: token } })
@@ -43,13 +45,13 @@ test('10.4: Material destaca, busca y filtra un recurso real del grupo', async (
     if (!group) return { status: 404, id: '' }
 
     const form = new FormData()
-    form.set('title', 'Phase 10 · Travel pack')
+    form.set('title', materialTitle)
     form.set('description', 'Material real creado para validar la biblioteca del alumno.')
     form.set('teacher', group.teacher)
     form.set('group', group.id)
     form.set('visibility', 'GROUP')
     form.set('published', 'true')
-    form.set('file', new File(['%PDF-1.4\n% E2E phase 10 material'], 'phase-10-travel-pack.pdf', { type: 'application/pdf' }))
+    form.set('file', new File(['%PDF-1.4\n% E2E phase 10 material'], `phase-10-travel-pack-r${materialTitle.slice(-1)}.pdf`, { type: 'application/pdf' }))
 
     const response = await fetch(`${pbUrl}/api/collections/materials/records`, {
       method: 'POST',
@@ -58,7 +60,7 @@ test('10.4: Material destaca, busca y filtra un recurso real del grupo', async (
     })
     const payload = await response.json().catch(() => ({})) as { id?: string }
     return { status: response.status, id: payload.id || '' }
-  }, { pbUrl: PB_URL })
+  }, { pbUrl: PB_URL, materialTitle })
 
   expect(created.status).toBe(200)
   expect(created.id).toBeTruthy()
@@ -72,21 +74,22 @@ test('10.4: Material destaca, busca y filtra un recurso real del grupo', async (
   const featured = page.locator('.student-material-featured10')
   await expect(featured).toBeVisible()
   await expect(featured.getByText('ÚLTIMO RECURSO', { exact: true })).toBeVisible()
-  await expect(featured.getByRole('heading', { name: 'Phase 10 · Travel pack' })).toBeVisible()
+  await expect(featured.getByRole('heading', { name: materialTitle })).toBeVisible()
   await expect(featured.getByText('Tu grupo', { exact: true })).toBeVisible()
   await expect(featured.getByRole('button', { name: 'Descargar recurso' })).toBeVisible()
 
   const search = page.getByPlaceholder('Título, descripción o archivo...')
-  await search.fill('Travel pack')
+  await search.fill(materialTitle)
   await expect(featured).toHaveCount(0)
-  await expect(page.locator('.student-resource-card10').filter({ hasText: 'Phase 10 · Travel pack' })).toBeVisible()
+  await expect(page.locator('.student-resource-card10').filter({ hasText: materialTitle })).toHaveCount(1)
+  await expect(page.locator('.student-resource-card10').filter({ hasText: materialTitle }).first()).toBeVisible()
 
   await search.fill('')
   await page.getByRole('button', { name: 'Mi grupo' }).click()
   await expect(featured).toHaveCount(0)
-  await expect(page.locator('.student-resource-card10').filter({ hasText: 'Phase 10 · Travel pack' })).toBeVisible()
+  await expect(page.locator('.student-resource-card10').filter({ hasText: materialTitle }).first()).toBeVisible()
 
-  await page.getByLabel('Ordenar').selectOption('TITLE')
+  await page.locator('.student-material-sort10 select').selectOption('TITLE')
   await expect(page.getByRole('button', { name: 'Limpiar filtros' })).toBeVisible()
 
   await page.setViewportSize({ width: 390, height: 844 })
