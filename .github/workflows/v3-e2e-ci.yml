@@ -128,10 +128,11 @@ jobs:
           exit 1
 
       - name: Install Playwright 1.62.1
+        timeout-minutes: 8
         working-directory: v3/e2e
         run: |
           npm install
-          npx playwright install --with-deps chromium
+          npx playwright install chromium
 
       - name: Run connected browser flows
         working-directory: v3/e2e
