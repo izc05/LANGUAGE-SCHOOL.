@@ -20,6 +20,7 @@ import StudentFilesPage from '../pages/student/StudentFilesPage'
 import StudentMaterialPage from '../pages/student/StudentMaterialPage'
 import StudentAssignmentsPage from '../pages/student/StudentAssignmentsPage'
 import StudentClassesPage from '../pages/student/StudentClassesPage'
+import StudentOnlineClassPage from '../pages/student/StudentOnlineClassPage'
 import StudentNotificationsPage from '../pages/student/StudentNotificationsPage'
 import TeacherDashboard from '../pages/teacher/TeacherDashboard'
 import TeacherStudentsPage from '../pages/teacher/TeacherStudentsPage'
@@ -69,6 +70,7 @@ export default function App() {
       <Route path="/alumno" element={<RequireRole allow={['STUDENT']}><StudentDashboard /></RequireRole>} />
       <Route path="/alumno/nivel" element={<RequireRole allow={['STUDENT']}><StudentLevelPage /></RequireRole>} />
       <Route path="/alumno/clases" element={<RequireRole allow={['STUDENT']}><StudentClassesPage /></RequireRole>} />
+      <Route path="/alumno/aula/:classId" element={<RequireRole allow={['STUDENT']}><StudentOnlineClassPage /></RequireRole>} />
       <Route path="/alumno/material" element={<RequireRole allow={['STUDENT']}><StudentMaterialPage /></RequireRole>} />
       <Route path="/alumno/tareas" element={<RequireRole allow={['STUDENT']}><StudentAssignmentsPage /></RequireRole>} />
       <Route path="/alumno/archivos" element={<RequireRole allow={['STUDENT']}><StudentFilesPage /></RequireRole>} />
