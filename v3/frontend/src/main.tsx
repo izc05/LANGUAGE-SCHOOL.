@@ -74,6 +74,7 @@ import './styles/zoom-integration-phase8b1.css'
 import './styles/placement-test-phase8c2.css'
 import './styles/placement-conversion-phase8c3.css'
 import './styles/student-level-phase8c4.css'
+import './styles/teacher-levels-phase8c5.css'
 
 const root = document.getElementById('root')
 if (!root) throw new Error('No se ha encontrado el elemento #root')

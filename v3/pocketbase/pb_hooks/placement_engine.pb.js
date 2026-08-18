@@ -10,6 +10,16 @@ routerAdd('GET', '/api/language-school/placement/campus/summary', (e) => {
   return placement.campusSummary(e)
 })
 
+routerAdd('GET', '/api/language-school/placement/teacher/students/{studentId}/summary', (e) => {
+  const teacherPlacement = require(`${__hooks}/placement_teacher.js`)
+  return teacherPlacement.summary(e)
+})
+
+routerAdd('POST', '/api/language-school/placement/teacher/students/{studentId}/validate', (e) => {
+  const teacherPlacement = require(`${__hooks}/placement_teacher.js`)
+  return teacherPlacement.validate(e)
+})
+
 routerAdd('GET', '/api/language-school/placement/attempts/{id}/question', (e) => {
   const placement = require(`${__hooks}/placement_service.js`)
   return placement.nextQuestion(e)

@@ -79,6 +79,7 @@ test('todas las rutas TEACHER cargan sin errores runtime', async ({ page }) => {
   await visitRoutes(page, [
     '/profesor',
     '/profesor/alumnos',
+    '/profesor/niveles',
     '/profesor/clases',
     '/profesor/material',
     '/profesor/tareas',

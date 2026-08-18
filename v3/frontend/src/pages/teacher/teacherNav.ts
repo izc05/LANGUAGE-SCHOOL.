@@ -1,6 +1,7 @@
 export const teacherNav = [
   { label: 'Resumen', to: '/profesor' },
   { label: 'Mis alumnos', to: '/profesor/alumnos' },
+  { label: 'Niveles', to: '/profesor/niveles' },
   { label: 'Clases', to: '/profesor/clases' },
   { label: 'Material', to: '/profesor/material' },
   { label: 'Tareas', to: '/profesor/tareas' },
