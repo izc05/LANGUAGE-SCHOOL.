@@ -1,0 +1,117 @@
+/* FASE 10.6 · AVISOS + ARCHIVOS + PERFIL
+   Capa específica del alumno; no altera la presentación del perfil de Profesor. */
+
+.student-notifications-phase10f,
+.student-files-phase10f,
+.account-profile-student10{
+  padding:30px clamp(20px,3vw,48px) 58px;
+  background:
+    radial-gradient(circle at 91% 2%,rgba(216,77,124,.06),transparent 25rem),
+    #f7f6f3;
+}
+
+.student-notifications-toolbar10{margin-bottom:18px}
+.student-notice-list10{padding:8px}
+
+.student-notice-list10 article{
+  cursor:default;
+  border-radius:16px;
+  transition:border-color .18s ease,background .18s ease;
+}
+
+.student-notice-list10 article.unread{
+  border-color:#edd3dc;
+  background:#fff8fa;
+}
+
+.student-notice-list10 article.read{opacity:.84}
+.student-notice-copy10{min-width:0}
+
+.student-notice-actions10{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  margin-top:12px;
+  flex-wrap:wrap;
+}
+
+.student-notice-actions10 a,
+.student-notice-actions10 button{
+  border:0;
+  background:none;
+  color:#a63864;
+  font:inherit;
+  font-size:.75rem;
+  font-weight:850;
+  text-decoration:none;
+  cursor:pointer;
+  padding:4px 0;
+}
+
+.student-notice-actions10 a:hover,
+.student-notice-actions10 button:hover{text-decoration:underline}
+
+.student-files-overview10{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:12px;
+  margin:0 0 20px;
+}
+
+.student-files-overview10>div{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:15px;
+  padding:16px 18px;
+  border:1px solid #e9e3e2;
+  border-radius:17px;
+  background:#fff;
+}
+
+.student-files-overview10 small{color:#a45e79;font-size:.61rem;font-weight:900;letter-spacing:.1em}
+.student-files-overview10 strong{color:#382b32;font-family:'Playfair Display',Georgia,serif;font-size:1.55rem}
+.student-files-layout10{align-items:start}
+.student-upload-panel10,.student-files-list-panel10{box-shadow:0 14px 38px rgba(48,30,38,.03)}
+.student-upload-intro10{margin:-4px 0 16px;color:#88777e;font-size:.8rem;line-height:1.5}
+.student-private-file-list10 article{transition:border-color .18s ease,background .18s ease}
+.student-private-file-list10 article:hover{border-color:#e8d2da;background:#fffbfc}
+.student-security-note10{border-color:#e4d9dd;background:#fffafb}
+
+.account-profile-student10 .account-profile-summary,
+.account-profile-student10 .account-profile-form{
+  border-color:#e8e1e2;
+  box-shadow:0 14px 38px rgba(48,30,38,.035);
+}
+
+.account-profile-student10 .account-profile-summary{
+  background:linear-gradient(160deg,#fff 0%,#fff9fb 100%);
+}
+
+.student-notifications-phase10f a:focus-visible,
+.student-notifications-phase10f button:focus-visible,
+.student-files-phase10f button:focus-visible,
+.student-files-phase10f input:focus-visible,
+.student-files-phase10f select:focus-visible,
+.student-files-phase10f textarea:focus-visible,
+.account-profile-student10 button:focus-visible,
+.account-profile-student10 input:focus-visible{
+  outline:3px solid rgba(194,63,114,.34);
+  outline-offset:3px;
+}
+
+@media(max-width:720px){
+  .student-notifications-phase10f,
+  .student-files-phase10f,
+  .account-profile-student10{padding:24px 18px 46px}
+
+  .student-files-overview10{grid-template-columns:1fr}
+  .student-notice-list10 article{align-items:flex-start}
+  .student-notice-list10 article>.status{align-self:flex-start}
+  .student-notice-actions10{align-items:flex-start;flex-direction:column;gap:4px}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .student-notice-list10 article,
+  .student-private-file-list10 article{transition:none}
+}
