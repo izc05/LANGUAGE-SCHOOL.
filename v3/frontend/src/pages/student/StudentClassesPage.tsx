@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router'
 import DashboardShell from '../../components/DashboardShell'
 import PortalEmptyState from '../../components/PortalEmptyState'
 import { useAuth } from '../../features/auth/AuthProvider'
@@ -78,7 +77,7 @@ function ClassDelivery({ item, upcoming = false, isDemoMode = false }: { item: C
         item.onlineJoinUrl
           ? isDemoMode
             ? <a className="student-online-class-link" href={item.onlineJoinUrl} target="_blank" rel="noreferrer">Entrar en clase online ↗</a>
-            : <Link className="student-online-class-link" to={`/alumno/aula/${item.id}`}>Entrar al aula online →</Link>
+            : <a className="student-online-class-link" href={`/alumno/aula/${encodeURIComponent(item.id)}`}>Entrar al aula online →</a>
           : <span className="student-online-pending">Acceso online pendiente</span>
       )}
     </div>
