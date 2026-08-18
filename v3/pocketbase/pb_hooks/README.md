@@ -4,7 +4,10 @@ Los hooks server-side viven en esta carpeta y deben cargarse con `--hooksDir` ap
 
 ## Zoom
 
-`zoom_status.pb.js` expone únicamente un estado técnico protegido para Administración.
+La integración Zoom se mantiene completamente en servidor:
+
+- `zoom_status.pb.js`: indica si las credenciales están configuradas, sin devolver valores secretos.
+- `zoom_connection.pb.js`: verifica Server-to-Server OAuth contra Zoom cuando Administración lo solicita.
 
 Las credenciales privadas se leen exclusivamente desde variables de entorno del servidor:
 
@@ -14,4 +17,6 @@ Las credenciales privadas se leen exclusivamente desde variables de entorno del 
 - `ZOOM_MEETING_SDK_CLIENT_ID`
 - `ZOOM_MEETING_SDK_CLIENT_SECRET`
 
-Nunca guardar estos valores en React, `site_settings`, PocketBase público ni el repositorio.
+Nunca guardar estos valores en React, `site_settings`, registros públicos de PocketBase ni el repositorio.
+
+La colección `zoom_meetings` mantiene la asociación técnica entre una clase de Language School y su futura reunión Zoom. No contiene `start_url` de host y no es visible directamente para alumnos.
