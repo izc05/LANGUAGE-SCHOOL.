@@ -16,6 +16,15 @@ El archivo debe permanecer:
 - fuera de cualquier variable `VITE_*`;
 - fuera de PocketBase/CMS público.
 
+## Cloudflare Turnstile · Contacto
+
+- `TURNSTILE_SITE_KEY` — sitekey pública del widget asociado al hostname real. El script de despliegue la compila como `VITE_TURNSTILE_SITE_KEY`; no es un secreto.
+- `TURNSTILE_SECRET_KEY` — secret key privada para Siteverify; solo servidor.
+- `TURNSTILE_EXPECTED_ACTION` — debe ser `contact` en producción.
+- `TURNSTILE_ALLOWED_HOSTNAMES` — lista separada por comas de hostnames válidos; debe incluir el hostname de `PUBLIC_ORIGIN`.
+
+Las claves oficiales de prueba de Cloudflare solo se usan en E2E. `deploy-frontend.sh` y `start-pocketbase.sh` rechazan la secret/sitekey de prueba y los hostnames locales en producción.
+
 ## Zoom · Server-to-Server OAuth
 
 Añadir en el host cuando se vaya a activar la integración real:
@@ -33,8 +42,8 @@ Añadir en el host cuando se vaya a activar la integración real:
 ## Procedimiento
 
 1. Crear/preparar `/etc/language-school/production.env` con `prepare-production-env.sh`.
-2. Editar el archivo como root y añadir las variables privadas necesarias.
-3. No usar valores placeholder.
+2. Editar el archivo como root y sustituir todas las variables Turnstile obligatorias; añadir Zoom cuando se active.
+3. No usar valores placeholder ni claves de prueba en producción.
 4. Mantener permisos `0640 root:root`.
 5. Reiniciar PocketBase para que el proceso reciba el nuevo entorno:
 
@@ -49,25 +58,26 @@ sudo systemctl is-active language-school-pocketbase
 sudo bash v3/infrastructure/raspberry-pi/health-check.sh
 ```
 
-7. Desde **Admin → Zoom**, verificar el estado de Server-to-Server OAuth y Meeting SDK. La interfaz debe mostrar únicamente estado/configuración, nunca secretos ni access tokens.
+7. Probar el formulario público: una solicitud válida debe llegar a Admin → Contactos y una llamada directa anónima a la colección `contact_requests` debe ser rechazada.
+8. Desde **Admin → Zoom**, cuando Zoom esté configurado, verificar el estado de Server-to-Server OAuth y Meeting SDK. La interfaz debe mostrar únicamente estado/configuración, nunca secretos ni access tokens.
 
 ## Rotación
 
-Si una credencial se rota en Zoom Marketplace:
+Si una credencial se rota en Turnstile o Zoom:
 
 1. reemplazar el valor únicamente en `/etc/language-school/production.env`;
 2. reiniciar PocketBase;
-3. repetir health check y verificación Admin;
+3. repetir health check y la prueba funcional correspondiente;
 4. revocar la credencial antigua en el proveedor cuando la nueva esté confirmada.
 
 ## Prohibiciones
 
 No guardar secretos en:
 
-- `.env.example` versionados;
+- `.env.example` versionados con valores reales;
 - React;
 - `VITE_*`;
 - issues/PRs/logs;
 - `site_settings` u otras colecciones públicas;
 - scripts shell del repositorio;
-- documentación con valores concretos.
+- documentación con valores concretos de producción.
