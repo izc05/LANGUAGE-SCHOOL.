@@ -95,8 +95,10 @@ test('8C.2: crear Zoom es idempotente, restringido y no expone datos de host', a
   await logout(page)
 
   await login(page, credentials.admin.email, credentials.admin.password, /\/admin$/)
-  const adminClasses = await backendRequest(page, '/api/collections/classes/records?page=1&perPage=1&filter=topic%3D%22E2E%20Speaking%20class%22')
-  const classId = (adminClasses.body as { items?: Array<{ id?: string }> })?.items?.[0]?.id
+  const meetings = await backendRequest(page, '/api/collections/zoom_meetings/records?page=1&perPage=5')
+  expect(meetings.status).toBe(200)
+  const meeting = (meetings.body as { items?: Array<{ class?: string; external_meeting_id?: string }> })?.items?.find((item) => item.external_meeting_id === '98765432100')
+  const classId = meeting?.class
   expect(classId).toBeTruthy()
 
   const createResult = await backendRequest(page, `/api/language-school/zoom/classes/${encodeURIComponent(String(classId))}/meeting`, 'POST')
