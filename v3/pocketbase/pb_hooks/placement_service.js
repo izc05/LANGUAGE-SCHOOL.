@@ -5,8 +5,45 @@ function noStore(e) {
 }
 
 function requestBody(e) {
-  const info = e.requestInfo()
-  return info && info.body ? info.body : {}
+  const data = new DynamicModel({
+    mode: '',
+    questionId: '',
+    optionId: '',
+    score: null,
+    rawScore: null,
+    raw_score: null,
+    maxScore: null,
+    max_score: null,
+    scorePercent: null,
+    score_percent: null,
+    level: '',
+    estimatedLevel: '',
+    estimated_level: '',
+    skillScores: null,
+    skill_scores: null,
+    student: '',
+    test: '',
+  })
+  e.bindBody(data)
+  return {
+    mode: data.mode,
+    questionId: data.questionId,
+    optionId: data.optionId,
+    score: data.score,
+    rawScore: data.rawScore,
+    raw_score: data.raw_score,
+    maxScore: data.maxScore,
+    max_score: data.max_score,
+    scorePercent: data.scorePercent,
+    score_percent: data.score_percent,
+    level: data.level,
+    estimatedLevel: data.estimatedLevel,
+    estimated_level: data.estimated_level,
+    skillScores: data.skillScores,
+    skill_scores: data.skill_scores,
+    student: data.student,
+    test: data.test,
+  }
 }
 
 function recordJson(record, field, fallback) {
@@ -32,7 +69,7 @@ function placementHeader(e) {
 }
 
 function nowIso() {
-  return new Date().toISOString()
+  return new Date().toISOString().replace('T', ' ')
 }
 
 function publishedTest(app) {
@@ -231,7 +268,7 @@ function rejectComputedFields(body) {
     'score', 'rawScore', 'raw_score', 'maxScore', 'max_score', 'scorePercent', 'score_percent',
     'level', 'estimatedLevel', 'estimated_level', 'skillScores', 'skill_scores', 'student', 'test', 'mode',
   ]
-  const attempted = forbidden.some((key) => body[key] !== undefined)
+  const attempted = forbidden.some((key) => body[key] !== null && body[key] !== undefined && body[key] !== '')
   if (attempted) {
     throw new BadRequestError('La puntuación, el nivel y la identidad del intento se calculan exclusivamente en el servidor.')
   }
