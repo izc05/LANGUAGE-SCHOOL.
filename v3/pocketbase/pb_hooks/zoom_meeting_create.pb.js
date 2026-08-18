@@ -19,10 +19,9 @@ function zoomMeetingCreateBase64Ascii(value) {
 }
 
 function zoomMeetingCreateExisting(app, classId) {
-  // classId has already been resolved through findRecordById before this helper is called,
-  // therefore it is a canonical PocketBase record id. Use the record-filter parser here
-  // instead of findFirstRecordByData because the relation field is literally named `class`.
-  const records = app.findRecordsByFilter("zoom_meetings", "class = '" + classId + "'", "-created", 1, 0)
+  // The relation field is literally named `class`. Avoid the text filter parser and use
+  // a DB expression so the identifier is quoted safely by PocketBase/DBX.
+  const records = app.findAllRecords("zoom_meetings", $dbx.hashExp({ "class": classId }))
   return records.length ? records[0] : null
 }
 
