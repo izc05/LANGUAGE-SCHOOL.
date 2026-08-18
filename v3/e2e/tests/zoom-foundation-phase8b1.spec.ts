@@ -25,20 +25,17 @@ async function logout(page: Page) {
   await expect(page).toHaveURL(/\/acceso$/)
 }
 
-async function backendRequest(page: Page, path: string, method: 'GET' | 'POST' = 'GET', body?: unknown) {
-  return page.evaluate(async ({ path, method, body }) => {
+async function backendRequest(page: Page, path: string, method: 'GET' | 'POST' = 'GET') {
+  return page.evaluate(async ({ path, method }) => {
     const stored = JSON.parse(localStorage.getItem('pocketbase_auth') || '{}') as { token?: string }
-    const headers: Record<string, string> = stored.token ? { Authorization: stored.token } : {}
-    if (body !== undefined) headers['Content-Type'] = 'application/json'
     const response = await fetch(`http://127.0.0.1:8090${path}`, {
       method,
-      headers,
-      body: body === undefined ? undefined : JSON.stringify(body),
+      headers: stored.token ? { Authorization: stored.token } : {},
     })
     let responseBody: unknown = null
     try { responseBody = await response.json() } catch { responseBody = null }
     return { status: response.status, body: responseBody }
-  }, { path, method, body })
+  }, { path, method })
 }
 
 test('8B: Zoom permanece server-side y solo Administración puede comprobarlo', async ({ page, request }) => {
@@ -86,14 +83,14 @@ test('8C.1: la asociación Zoom existe pero queda oculta al alumno', async ({ pa
 })
 
 test('8C.2: crear Zoom es idempotente, restringido y no expone datos de host', async ({ page, request }) => {
-  const anonymousCreate = await request.post('http://127.0.0.1:8090/api/language-school/zoom/meetings/create', { data: { classId: 'fake' } })
+  const anonymousCreate = await request.post('http://127.0.0.1:8090/api/language-school/zoom/classes/fake/meeting')
   expect(anonymousCreate.status()).toBe(401)
 
   await login(page, credentials.teacher.email, credentials.teacher.password, /\/profesor$/)
   const teacherClasses = await backendRequest(page, '/api/collections/classes/records?page=1&perPage=1')
   const teacherClassId = (teacherClasses.body as { items?: Array<{ id?: string }> })?.items?.[0]?.id
   expect(teacherClassId).toBeTruthy()
-  const forbiddenCreate = await backendRequest(page, '/api/language-school/zoom/meetings/create', 'POST', { classId: teacherClassId })
+  const forbiddenCreate = await backendRequest(page, `/api/language-school/zoom/classes/${encodeURIComponent(String(teacherClassId))}/meeting`, 'POST')
   expect(forbiddenCreate.status).toBe(403)
   await logout(page)
 
@@ -102,8 +99,8 @@ test('8C.2: crear Zoom es idempotente, restringido y no expone datos de host', a
   const classId = (adminClasses.body as { items?: Array<{ id?: string }> })?.items?.[0]?.id
   expect(classId).toBeTruthy()
 
-  const createResult = await backendRequest(page, '/api/language-school/zoom/meetings/create', 'POST', { classId })
-  expect(createResult.status).toBe(200)
+  const createResult = await backendRequest(page, `/api/language-school/zoom/classes/${encodeURIComponent(String(classId))}/meeting`, 'POST')
+  expect(createResult.status, JSON.stringify(createResult.body)).toBe(200)
   expect(createResult.body).toMatchObject({ provider: 'zoom', existing: true, status: 'READY', externalMeetingId: '98765432100' })
   const safePayload = JSON.stringify(createResult.body)
   expect(safePayload).not.toContain('start_url')
