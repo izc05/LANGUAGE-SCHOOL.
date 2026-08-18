@@ -6,6 +6,7 @@ export const collections = {
   groups: 'groups',
   enrollments: 'enrollments',
   classes: 'classes',
+  zoomMeetings: 'zoom_meetings',
   attendance: 'attendance',
   materials: 'materials',
   studentFiles: 'student_files',
