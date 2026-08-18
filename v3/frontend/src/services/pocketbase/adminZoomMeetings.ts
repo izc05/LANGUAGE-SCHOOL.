@@ -47,6 +47,7 @@ export async function createAdminZoomMeeting(classId: string): Promise<ZoomMeeti
   requireAdmin()
   return pb.send<ZoomMeetingCreateResult>('/api/language-school/zoom/meetings/create', {
     method: 'POST',
-    body: { classId },
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ classId }),
   })
 }
