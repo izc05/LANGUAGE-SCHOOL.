@@ -56,7 +56,7 @@ test('8A.2: Administración configura la modalidad y el alumno recibe el acceso 
   const upcoming = page.locator('.student-class-list-delivery').first()
   await expect(upcoming.getByText('Híbrida')).toBeVisible()
   await expect(upcoming.getByText(/Aula E2E/)).toBeVisible()
-  await expect(upcoming.getByRole('link', { name: /Entrar en clase online/ })).toHaveAttribute('href', 'https://example.com/e2e-language-class')
+  await expect(upcoming.getByRole('link', { name: /Entrar al aula online/ })).toHaveAttribute('href', /\/alumno\/aula\//)
   await logout(page)
 
   await login(page, credentials.teacher.email, credentials.teacher.password, /\/profesor$/)
