@@ -6,17 +6,27 @@ function requiredEnv(name: string): string {
   return value
 }
 
-test('visitante envía solicitud y ADMIN completa su seguimiento', async ({ page }) => {
+test('visitante envía solicitud protegida y ADMIN completa su seguimiento', async ({ page }) => {
   const adminEmail = requiredEnv('E2E_ADMIN_EMAIL')
   const adminPassword = requiredEnv('E2E_ADMIN_PASSWORD')
   const visitorName = 'E2E Contact Flow'
+
+  await page.route('https://challenges.cloudflare.com/turnstile/v0/api.js**', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/javascript',
+      body: `window.turnstile={render:function(_container,options){setTimeout(function(){options.callback('XXXX.DUMMY.TOKEN.XXXX')},0);return 'e2e-contact-widget'},remove:function(){}};`,
+    })
+  })
 
   await page.goto('/contacto?interes=Seguimiento%20E2E')
   await page.getByLabel('Nombre').fill(visitorName)
   await page.getByLabel('Email').fill('contact-flow@example.com')
   await page.getByLabel('Teléfono').fill('611111111')
   await page.getByLabel('Mensaje').fill('Solicitud destinada a probar el circuito completo de seguimiento.')
-  await page.getByRole('button', { name: 'Enviar solicitud' }).click()
+  const submitButton = page.getByRole('button', { name: 'Enviar solicitud' })
+  await expect(submitButton).toBeEnabled()
+  await submitButton.click()
   await expect(page.getByText('Solicitud enviada. Nos pondremos en contacto contigo.')).toBeVisible()
 
   await page.goto('/acceso')
