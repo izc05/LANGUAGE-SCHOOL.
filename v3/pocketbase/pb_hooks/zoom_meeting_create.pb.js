@@ -19,11 +19,11 @@ function zoomMeetingCreateBase64Ascii(value) {
 }
 
 function zoomMeetingCreateExisting(app, classId) {
-  try {
-    return app.findFirstRecordByData("zoom_meetings", "class", classId)
-  } catch {
-    return null
-  }
+  // classId has already been resolved through findRecordById before this helper is called,
+  // therefore it is a canonical PocketBase record id. Use the record-filter parser here
+  // instead of findFirstRecordByData because the relation field is literally named `class`.
+  const records = app.findRecordsByFilter("zoom_meetings", "class = '" + classId + "'", "-created", 1, 0)
+  return records.length ? records[0] : null
 }
 
 function zoomMeetingCreateSafeResult(record, existing) {
@@ -44,6 +44,8 @@ routerAdd("POST", "/api/language-school/zoom/classes/{classId}/meeting", (e) => 
   const classId = String(e.request.pathValue("classId") || "").trim()
   if (!classId) throw new BadRequestError("Falta la clase que se quiere conectar con Zoom.")
 
+  // Resolve the class first. Besides guaranteeing it exists, this constrains classId to a
+  // canonical PocketBase record id before it is used by zoomMeetingCreateExisting().
   const classRecord = e.app.findRecordById("classes", classId)
 
   const existingMeeting = zoomMeetingCreateExisting(e.app, classId)
