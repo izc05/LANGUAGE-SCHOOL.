@@ -2,7 +2,12 @@
 
 routerAdd('POST', '/api/language-school/placement/start', (e) => {
   const placement = require(`${__hooks}/placement_service.js`)
-  return placement.start(e)
+  try {
+    return placement.start(e)
+  } catch (error) {
+    console.log(`[placement/start] ${error && error.stack ? error.stack : String(error)}`)
+    throw error
+  }
 })
 
 routerAdd('GET', '/api/language-school/placement/attempts/{id}/question', (e) => {
