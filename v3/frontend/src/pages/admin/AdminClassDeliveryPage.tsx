@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { Link } from 'react-router'
 import DashboardShell from '../../components/DashboardShell'
 import PortalEmptyState from '../../components/PortalEmptyState'
 import { useAuth } from '../../features/auth/AuthProvider'
@@ -7,6 +8,12 @@ import {
   listAdminClassesForDelivery,
   updateAdminClassDelivery,
 } from '../../services/pocketbase/adminClassDelivery'
+import {
+  createAdminZoomMeeting,
+  getAdminZoomMeetingForClass,
+  type ZoomMeetingRecord,
+} from '../../services/pocketbase/adminZoomMeetings'
+import { getZoomIntegrationStatus, type ZoomIntegrationStatus } from '../../services/pocketbase/zoomIntegration'
 import type { ClassDeliveryMode, ClassRecord, CourseRecord, GroupRecord } from '../../services/pocketbase/studentPortal'
 import { adminNav } from './adminNav'
 
@@ -38,6 +45,11 @@ const demoClass: DeliveryClass = {
   expand: { group: { id: 'demo-group', collectionId: '', collectionName: 'groups', created: '', updated: '', name: 'Adultos B1', course: 'demo-course', teacher: 'demo-teacher', academic_year: '2026/27', schedule_text: '', capacity: 8, status: 'ACTIVE', expand: { course: { id: 'demo-course', collectionId: '', collectionName: 'courses', created: '', updated: '', title: 'Adult English B1', slug: 'adult-english-b1', level: 'B1', description: '', status: 'ACTIVE', public_visible: true } } } },
 }
 
+const demoZoomStatus: ZoomIntegrationStatus = {
+  provider: 'zoom', source: 'server_environment', apiConfigured: false, hostUserConfigured: false,
+  meetingCreationConfigured: false, meetingSdkConfigured: false, configured: false,
+}
+
 export default function AdminClassDeliveryPage() {
   const { isDemoMode } = useAuth()
   const [classes, setClasses] = useState<DeliveryClass[]>(isDemoMode ? [demoClass] : [])
@@ -45,6 +57,10 @@ export default function AdminClassDeliveryPage() {
   const [mode, setMode] = useState<ClassDeliveryMode>('IN_PERSON')
   const [locationText, setLocationText] = useState('')
   const [onlineJoinUrl, setOnlineJoinUrl] = useState('')
+  const [zoomStatus, setZoomStatus] = useState<ZoomIntegrationStatus | null>(isDemoMode ? demoZoomStatus : null)
+  const [zoomMeeting, setZoomMeeting] = useState<ZoomMeetingRecord | null>(null)
+  const [zoomLoading, setZoomLoading] = useState(false)
+  const [zoomCreating, setZoomCreating] = useState(false)
   const [loading, setLoading] = useState(!isDemoMode)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -53,16 +69,17 @@ export default function AdminClassDeliveryPage() {
   useEffect(() => {
     if (isDemoMode) return
     let mounted = true
-    listAdminClassesForDelivery()
-      .then((records) => {
+    Promise.all([listAdminClassesForDelivery(), getZoomIntegrationStatus()])
+      .then(([records, integrationStatus]) => {
         if (!mounted) return
         setClasses(records as DeliveryClass[])
+        setZoomStatus(integrationStatus)
         const upcoming = [...records]
           .filter((record) => record.status === 'SCHEDULED')
           .sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime())[0]
         setSelectedId(upcoming?.id || records[0]?.id || null)
       })
-      .catch(() => { if (mounted) setError('No se han podido cargar las clases.') })
+      .catch(() => { if (mounted) setError('No se han podido cargar las clases o el estado de Zoom.') })
       .finally(() => { if (mounted) setLoading(false) })
     return () => { mounted = false }
   }, [isDemoMode])
@@ -74,9 +91,19 @@ export default function AdminClassDeliveryPage() {
     setMode(effectiveDeliveryMode(selectedClass))
     setLocationText(selectedClass.location_text || '')
     setOnlineJoinUrl(selectedClass.online_join_url || '')
+    setZoomMeeting(null)
     setError(null)
     setMessage(null)
-  }, [selectedClass?.id])
+
+    if (isDemoMode) return
+    let mounted = true
+    setZoomLoading(true)
+    getAdminZoomMeetingForClass(selectedClass.id)
+      .then((record) => { if (mounted) setZoomMeeting(record) })
+      .catch(() => { if (mounted) setError('No se ha podido comprobar si esta clase tiene una reunión Zoom.') })
+      .finally(() => { if (mounted) setZoomLoading(false) })
+    return () => { mounted = false }
+  }, [isDemoMode, selectedClass?.id])
 
   const orderedClasses = useMemo(() => [...classes].sort((a, b) => {
     const aUpcoming = a.status === 'SCHEDULED' && new Date(a.starts_at).getTime() >= Date.now()
@@ -120,6 +147,30 @@ export default function AdminClassDeliveryPage() {
     }
   }
 
+  async function createZoomMeeting() {
+    if (!selectedClass || mode === 'IN_PERSON') return
+    setError(null)
+    setMessage(null)
+    if (isDemoMode) {
+      setMessage('En producción, Language School creará aquí la reunión Zoom desde el servidor.')
+      return
+    }
+    setZoomCreating(true)
+    try {
+      const result = await createAdminZoomMeeting(selectedClass.id)
+      const refreshed = await getAdminZoomMeetingForClass(selectedClass.id)
+      setZoomMeeting(refreshed)
+      setOnlineJoinUrl(result.joinUrl)
+      setClasses((current) => current.map((record) => record.id === selectedClass.id ? { ...record, online_join_url: result.joinUrl } : record))
+      setMessage(result.existing ? 'Esta clase ya tenía una reunión Zoom preparada.' : 'Reunión Zoom creada y asociada a la clase.')
+    } catch (creationError) {
+      const detail = creationError instanceof Error ? creationError.message : ''
+      setError(detail || 'No se ha podido crear la reunión Zoom. Revisa la configuración en Admin → Zoom.')
+    } finally {
+      setZoomCreating(false)
+    }
+  }
+
   return (
     <DashboardShell role="Administrador" name="Admin" nav={[...adminNav]}>
       <div className="dashboard-content cms-page class-delivery-admin-page">
@@ -127,7 +178,7 @@ export default function AdminClassDeliveryPage() {
           <div>
             <span className="eyebrow">CAMPUS · AULA</span>
             <h2>Modalidad de las clases</h2>
-            <p>Decide si cada sesión es presencial, online o híbrida. Esta es la base sobre la que conectaremos Zoom en la siguiente fase.</p>
+            <p>Decide si cada sesión es presencial, online o híbrida y prepara su videoclase Zoom desde Language School.</p>
           </div>
         </header>
 
@@ -179,13 +230,39 @@ export default function AdminClassDeliveryPage() {
                   </fieldset>
 
                   {mode !== 'ONLINE' && <div><label htmlFor="class-location">Lugar / aula</label><input id="class-location" value={locationText} onChange={(event) => setLocationText(event.target.value)} placeholder="Ej. Aula 2 · Language School" /></div>}
-                  {mode !== 'IN_PERSON' && <div><label htmlFor="class-online-url">Acceso online</label><input id="class-online-url" type="url" value={onlineJoinUrl} onChange={(event) => setOnlineJoinUrl(event.target.value)} placeholder="https://…" /><small className="muted">Temporalmente puede ser un enlace https. Cuando conectemos Zoom se generará desde la plataforma.</small></div>}
+                  {mode !== 'IN_PERSON' && <div><label htmlFor="class-online-url">Acceso online</label><input id="class-online-url" type="url" value={onlineJoinUrl} onChange={(event) => setOnlineJoinUrl(event.target.value)} placeholder="https://…" /><small className="muted">Puede seguir usándose un enlace manual. Si creas Zoom desde la plataforma, este campo se actualizará automáticamente.</small></div>}
 
                   <div className="class-delivery-preview">
                     <span className={`class-mode class-mode-${mode.toLowerCase()}`}>{modeLabel(mode)}</span>
                     {mode !== 'ONLINE' && <span>📍 {locationText.trim() || 'Lugar pendiente'}</span>}
                     {mode !== 'IN_PERSON' && <span>◉ {onlineJoinUrl.trim() ? 'Acceso online preparado' : 'Acceso online pendiente'}</span>}
                   </div>
+
+                  {mode !== 'IN_PERSON' && (
+                    <section className={`class-zoom-meeting-card ${zoomMeeting?.status === 'READY' ? 'is-ready' : ''}`} aria-label="Reunión Zoom de la clase">
+                      <div>
+                        <span className="eyebrow">ZOOM · REUNIÓN</span>
+                        <h4>{zoomLoading ? 'Comprobando reunión…' : zoomMeeting?.status === 'READY' ? 'Reunión Zoom preparada' : 'Todavía no hay reunión Zoom'}</h4>
+                        {zoomMeeting?.status === 'READY' ? (
+                          <p>ID {zoomMeeting.external_meeting_id || 'registrado'} · acceso de alumno sincronizado con esta clase.</p>
+                        ) : (
+                          <p>La reunión se crea en el servidor y se asocia a esta sesión. El enlace de host no se guarda ni se expone al alumno.</p>
+                        )}
+                      </div>
+                      {zoomMeeting?.status === 'READY' ? (
+                        <span className="zoom-meeting-ready-pill">Preparada</span>
+                      ) : zoomStatus?.meetingCreationConfigured ? (
+                        <button className="button button-primary" type="button" onClick={() => void createZoomMeeting()} disabled={zoomCreating || zoomLoading}>
+                          {zoomCreating ? 'Creando…' : 'Crear reunión Zoom'}
+                        </button>
+                      ) : (
+                        <div className="zoom-meeting-needs-config">
+                          <span>Configuración pendiente</span>
+                          <Link to="/admin/zoom">Revisar Zoom →</Link>
+                        </div>
+                      )}
+                    </section>
+                  )}
 
                   <button className="button button-primary" type="submit" disabled={saving}>{saving ? 'Guardando…' : 'Guardar modalidad'}</button>
                 </form>
