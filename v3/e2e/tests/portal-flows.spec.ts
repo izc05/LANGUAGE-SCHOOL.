@@ -161,10 +161,20 @@ test('TEACHER permanece en su ámbito', async ({ page }) => {
   await logout(page)
 })
 
-test('STUDENT navega y no puede entrar en otros portales', async ({ page }) => {
+test('STUDENT entra a un campus orientado a acciones y permanece en su ámbito', async ({ page }) => {
   await login(page, credentials.student.email, credentials.student.password, /\/alumno$/)
   await expect(page.getByRole('heading', { name: 'Hola, E2E Student' })).toBeVisible()
+  await expect(page.getByText('CAMPUS LANGUAGE SCHOOL')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Tu semana de inglés, en un solo lugar.' })).toBeVisible()
+  await expect(page.locator('.campus-next-class')).toBeVisible()
+  await expect(page.locator('.campus-shortcut')).toHaveCount(3)
+
   const nav = page.getByRole('navigation', { name: 'Menú de Alumno' })
+  await expect(nav.getByRole('link', { name: 'Inicio' })).toHaveAttribute('aria-current', 'page')
+
+  await page.setViewportSize({ width: 390, height: 844 })
+  await expectNoHorizontalPageOverflow(page)
+  await page.setViewportSize({ width: 1280, height: 900 })
 
   await nav.getByRole('link', { name: 'Mis clases' }).click()
   await expect(page).toHaveURL(/\/alumno\/clases$/)
