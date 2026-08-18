@@ -31,14 +31,14 @@ test('8A.2: Administración configura la modalidad y el alumno recibe el acceso 
   await adminNav.getByRole('link', { name: 'Aula online' }).click()
   await expect(page).toHaveURL(/\/admin\/aula-online$/)
   await expect(page.getByRole('heading', { name: 'Modalidad de las clases' })).toBeVisible()
-  await expect(page.getByText('E2E Speaking class')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'E2E Speaking class' })).toBeVisible()
   await expect(page.getByDisplayValue('Aula E2E')).toBeVisible()
 
-  await page.getByRole('radio', { name: /Online/i }).check()
+  await page.getByRole('radio', { name: /^Online/ }).check()
   await page.getByRole('button', { name: 'Guardar modalidad' }).click()
   await expect(page.getByText('Modalidad de la clase actualizada.')).toBeVisible()
 
-  await page.getByRole('radio', { name: /Híbrida/i }).check()
+  await page.getByRole('radio', { name: /^Híbrida/ }).check()
   await page.getByLabel('Lugar / aula').fill('Aula E2E')
   await page.getByRole('button', { name: 'Guardar modalidad' }).click()
   await expect(page.getByText('Modalidad de la clase actualizada.')).toBeVisible()
