@@ -2,9 +2,12 @@ import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig(({ command, mode }) => {
-  const loadedEnv = loadEnv(mode, process.cwd(), 'VITE_')
-  const appMode = (process.env.VITE_APP_MODE ?? loadedEnv.VITE_APP_MODE ?? '').trim().toLowerCase()
-  const pocketBaseUrl = (process.env.VITE_POCKETBASE_URL ?? loadedEnv.VITE_POCKETBASE_URL ?? '').trim()
+  // loadEnv merges matching variables already present in the process environment
+  // with Vite's .env files, so the config can validate them without depending on
+  // Node globals/types in the frontend TypeScript project.
+  const env = loadEnv(mode, '.', 'VITE_')
+  const appMode = (env.VITE_APP_MODE ?? '').trim().toLowerCase()
+  const pocketBaseUrl = (env.VITE_POCKETBASE_URL ?? '').trim()
 
   if (command === 'build') {
     if (appMode !== 'demo' && appMode !== 'connected') {
