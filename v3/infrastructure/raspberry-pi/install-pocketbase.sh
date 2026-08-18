@@ -26,6 +26,7 @@ SERVICE_FILE="/etc/systemd/system/language-school-pocketbase.service"
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 V3_DIR="$(cd -- "$SCRIPT_DIR/../.." && pwd)"
 MIGRATIONS_SOURCE="$V3_DIR/pocketbase/pb_migrations"
+HOOKS_SOURCE="$V3_DIR/pocketbase/pb_hooks"
 SERVICE_SOURCE="$SCRIPT_DIR/language-school-pocketbase.service"
 START_SOURCE="$SCRIPT_DIR/start-pocketbase.sh"
 
@@ -54,6 +55,11 @@ PB_ARCHIVE="pocketbase_${PB_VERSION}_linux_${PB_RELEASE_ARCH}.zip"
 
 if [[ ! -d "$MIGRATIONS_SOURCE" ]]; then
   echo "Migrations directory not found: $MIGRATIONS_SOURCE" >&2
+  exit 1
+fi
+
+if [[ ! -d "$HOOKS_SOURCE" ]]; then
+  echo "Hooks directory not found: $HOOKS_SOURCE" >&2
   exit 1
 fi
 
@@ -88,7 +94,7 @@ fi
 
 install -d -m 0755 -o root -g root "$APP_ROOT" "$PB_DIR"
 install -d -m 0700 -o "$SERVICE_USER" -g "$SERVICE_GROUP" "$DATA_ROOT" "$PB_DATA"
-install -d -m 0755 -o root -g root "$PB_DIR/pb_migrations"
+install -d -m 0755 -o root -g root "$PB_DIR/pb_migrations" "$PB_DIR/pb_hooks"
 
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TMP_DIR"' EXIT
@@ -108,11 +114,12 @@ unzip -q "$TMP_DIR/$PB_ARCHIVE" -d "$TMP_DIR/pocketbase"
 install -m 0755 -o root -g root "$TMP_DIR/pocketbase/pocketbase" "$PB_DIR/pocketbase"
 install -m 0755 -o root -g root "$START_SOURCE" "$PB_DIR/start-pocketbase.sh"
 
-rm -rf "$PB_DIR/pb_migrations"/*
+rm -rf "$PB_DIR/pb_migrations"/* "$PB_DIR/pb_hooks"/*
 cp -a "$MIGRATIONS_SOURCE"/. "$PB_DIR/pb_migrations/"
-chown -R root:root "$PB_DIR/pb_migrations"
-find "$PB_DIR/pb_migrations" -type d -exec chmod 0755 {} +
-find "$PB_DIR/pb_migrations" -type f -exec chmod 0644 {} +
+cp -a "$HOOKS_SOURCE"/. "$PB_DIR/pb_hooks/"
+chown -R root:root "$PB_DIR/pb_migrations" "$PB_DIR/pb_hooks"
+find "$PB_DIR/pb_migrations" "$PB_DIR/pb_hooks" -type d -exec chmod 0755 {} +
+find "$PB_DIR/pb_migrations" "$PB_DIR/pb_hooks" -type f -exec chmod 0644 {} +
 
 install -m 0644 -o root -g root "$SERVICE_SOURCE" "$SERVICE_FILE"
 systemctl daemon-reload
@@ -121,5 +128,6 @@ systemctl enable language-school-pocketbase.service
 echo
 printf 'PocketBase %s installed at %s\n' "$PB_VERSION" "$PB_DIR"
 printf 'Runtime data: %s\n' "$PB_DATA"
+printf 'Server hooks: %s\n' "$PB_DIR/pb_hooks"
 echo 'Service enabled but not started by this installer.'
 echo 'Next: run migrate.sh, then bootstrap-admin.sh and health-check.sh.'
