@@ -24,6 +24,9 @@ test('ADMIN envía un aviso y el alumno lo recibe en su portal', async ({ page }
   await expect(page).toHaveURL(/\/admin\/avisos$/)
   await expect(page.getByRole('heading', { name: 'Centro de avisos' })).toBeVisible()
 
+  // Do not depend on recipient ordering: the Campus E2E dataset deliberately contains
+  // another active STUDENT without enrollment to verify authorization boundaries.
+  await page.getByLabel('Alumno').selectOption({ label: 'E2E Student' })
   await page.getByLabel('Título').fill(title)
   await page.getByLabel('Mensaje').fill(body)
   await page.getByRole('button', { name: 'Enviar aviso' }).click()
