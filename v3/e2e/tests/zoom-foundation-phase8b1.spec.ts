@@ -114,3 +114,65 @@ test('8C.2: crear Zoom es idempotente, restringido y no expone datos de host', a
   await expect(page.getByRole('heading', { name: 'Reunión Zoom preparada' })).toBeVisible()
   await expect(page.getByText(/ID 98765432100/)).toBeVisible()
 })
+
+test('8C.2: una clase nueva recorre la creación Zoom y entrega solo el acceso de participante', async ({ page }) => {
+  await login(page, credentials.admin.email, credentials.admin.password, /\/admin$/)
+
+  const filter = encodeURIComponent('topic = "E2E Zoom create class"')
+  const classList = await backendRequest(page, `/api/collections/classes/records?page=1&perPage=5&filter=${filter}`)
+  expect(classList.status).toBe(200)
+  const targetClass = (classList.body as { items?: Array<{ id?: string; online_join_url?: string }> })?.items?.[0]
+  expect(targetClass?.id).toBeTruthy()
+  expect(targetClass?.online_join_url || '').toBe('')
+
+  const firstCreate = await backendRequest(page, `/api/language-school/zoom/classes/${encodeURIComponent(String(targetClass?.id))}/meeting`, 'POST')
+  expect(firstCreate.status, JSON.stringify(firstCreate.body)).toBe(201)
+  expect(firstCreate.body).toMatchObject({
+    provider: 'zoom',
+    existing: false,
+    status: 'READY',
+    externalMeetingId: '12345678901',
+    joinUrl: 'https://zoom.example/j/12345678901?pwd=participant',
+  })
+  const firstPayload = JSON.stringify(firstCreate.body)
+  expect(firstPayload).not.toContain('HOST_SECRET_MUST_NOT_ESCAPE')
+  expect(firstPayload).not.toContain('start_url')
+  expect(firstPayload).not.toContain('meeting_password')
+
+  const secondCreate = await backendRequest(page, `/api/language-school/zoom/classes/${encodeURIComponent(String(targetClass?.id))}/meeting`, 'POST')
+  expect(secondCreate.status).toBe(200)
+  expect(secondCreate.body).toMatchObject({
+    provider: 'zoom',
+    existing: true,
+    status: 'READY',
+    externalMeetingId: '12345678901',
+  })
+
+  const updatedClass = await backendRequest(page, `/api/collections/classes/records/${encodeURIComponent(String(targetClass?.id))}`)
+  expect(updatedClass.status).toBe(200)
+  expect(updatedClass.body).toMatchObject({ online_join_url: 'https://zoom.example/j/12345678901?pwd=participant' })
+
+  const meetingList = await backendRequest(page, `/api/collections/zoom_meetings/records?page=1&perPage=5&filter=${encodeURIComponent(`class = "${targetClass?.id}"`)}`)
+  expect(meetingList.status).toBe(200)
+  const persisted = (meetingList.body as { items?: Array<Record<string, unknown>> })?.items?.[0]
+  expect(persisted).toMatchObject({
+    external_meeting_id: '12345678901',
+    external_uuid: 'e2e-created-zoom-uuid',
+    join_url: 'https://zoom.example/j/12345678901?pwd=participant',
+    meeting_password: 'e2e-pass',
+    status: 'READY',
+  })
+  expect(JSON.stringify(persisted)).not.toContain('HOST_SECRET_MUST_NOT_ESCAPE')
+  expect(JSON.stringify(persisted)).not.toContain('start_url')
+
+  await logout(page)
+  await login(page, credentials.student.email, credentials.student.password, /\/alumno$/)
+  const directTechnicalRecords = await backendRequest(page, '/api/collections/zoom_meetings/records?page=1&perPage=10')
+  expect(directTechnicalRecords.status).toBe(200)
+  expect(directTechnicalRecords.body).toMatchObject({ items: [] })
+
+  await page.getByRole('navigation', { name: 'Menú de Alumno' }).getByRole('link', { name: 'Mis clases' }).click()
+  const createdClassCard = page.locator('.student-class-list-delivery').filter({ hasText: 'E2E Zoom create class' })
+  await expect(createdClassCard).toBeVisible()
+  await expect(createdClassCard.getByRole('link', { name: /Entrar en clase online/ })).toHaveAttribute('href', 'https://zoom.example/j/12345678901?pwd=participant')
+})
