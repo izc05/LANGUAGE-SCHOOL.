@@ -1,10 +1,20 @@
 /* FASE 9.6A / 8D.2 · Aula Zoom dentro de Language School */
-.student-online-class-page{padding-bottom:72px}
-.student-online-class-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:24px}
+.student-online-class-document{min-height:100vh;padding:clamp(22px,4vw,54px);background:radial-gradient(circle at 86% 10%,rgba(250,220,232,.72),transparent 31%),linear-gradient(160deg,#fffafc 0%,#fdf7f8 48%,#f7eef1 100%);color:#49343f}
+.student-online-class-page{width:min(1180px,100%);margin:0 auto;padding-bottom:72px}
+.student-online-class-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:30px;margin-bottom:24px}
+.student-online-class-heading-copy{max-width:760px}
+.student-online-class-heading-copy>.eyebrow{display:block;margin:22px 0 8px}
+.student-online-class-heading-copy h1{max-width:720px;margin:0;color:#3f2b35;font-family:'Playfair Display',Georgia,serif;font-size:clamp(2.15rem,5vw,4.45rem);font-weight:600;line-height:.98;letter-spacing:-.035em}
+.student-online-class-heading-copy>p{max-width:680px;margin:16px 0 0;color:#806a75;font-size:clamp(.9rem,1.35vw,1.02rem);line-height:1.7}
 .student-online-class-heading>.button{flex:0 0 auto;margin-top:4px}
-.student-online-class-card{overflow:hidden;padding:0;border-radius:26px}
+.student-online-class-brand{display:inline-grid;grid-template-columns:auto auto;align-items:end;gap:0 6px;color:#3f2b35;text-decoration:none}
+.student-online-class-brand strong{font-family:'Playfair Display',Georgia,serif;font-size:1.05rem;line-height:1;letter-spacing:.08em}
+.student-online-class-brand span{color:#c64476;font-family:'Playfair Display',Georgia,serif;font-size:1.05rem;font-style:italic;line-height:1}
+.student-online-class-brand small{grid-column:1/-1;margin-top:5px;color:#9f7c8b;font-size:.58rem;font-weight:800;letter-spacing:.23em}
+.student-online-class-brand:focus-visible{outline:3px solid rgba(198,68,118,.28);outline-offset:6px;border-radius:6px}
+.student-online-class-card{overflow:hidden;padding:0;border:1px solid rgba(180,113,139,.15);border-radius:26px;background:#fff;box-shadow:0 26px 70px rgba(78,43,57,.1)}
 .student-online-class-summary{display:flex;align-items:flex-start;justify-content:space-between;gap:28px;padding:28px 30px;border-bottom:1px solid #f0e3e8;background:linear-gradient(135deg,#fff 0%,#fff8fa 100%)}
-.student-online-class-summary h3{margin:6px 0 7px;color:#3f2b35;font-family:'Playfair Display',Georgia,serif;font-size:clamp(1.55rem,2.7vw,2.35rem);line-height:1.08}
+.student-online-class-summary h2{margin:6px 0 7px;color:#3f2b35;font-family:'Playfair Display',Georgia,serif;font-size:clamp(1.55rem,2.7vw,2.35rem);line-height:1.08}
 .student-online-class-summary p{margin:0;color:#8b727d}
 .student-online-class-time{display:flex;min-width:230px;flex-direction:column;gap:7px;padding:15px 17px;border:1px solid #eadde2;border-radius:16px;background:#fff;color:#745c67}
 .student-online-class-time strong{color:#4a323e;font-size:.88rem;line-height:1.45;text-transform:capitalize}
@@ -19,8 +29,11 @@
 .student-online-class-privacy{margin:0 30px 30px;padding:18px 20px;border-radius:16px;background:#fff7fa;color:#7b6570}
 .student-online-class-privacy strong{display:block;margin-bottom:5px;color:#5c414d;font-size:.82rem}
 .student-online-class-privacy p{margin:0;font-size:.78rem;line-height:1.55}
+.student-online-class-document>.student-online-class-page>.cms-notice{margin-bottom:20px}
 
 @media(max-width:900px){
+  .student-online-class-heading{flex-direction:column}
+  .student-online-class-heading>.button{margin-top:0}
   .student-online-class-summary{flex-direction:column}
   .student-online-class-time{width:100%;min-width:0}
   .student-online-class-actions{grid-template-columns:1fr 1fr}
@@ -28,13 +41,23 @@
 }
 
 @media(max-width:640px){
-  .student-online-class-heading{flex-direction:column}
+  .student-online-class-document{padding:20px 14px 34px}
+  .student-online-class-page{padding-bottom:36px}
+  .student-online-class-heading{gap:22px;margin-bottom:20px}
+  .student-online-class-heading-copy h1{font-size:clamp(2rem,12vw,3.1rem)}
   .student-online-class-heading>.button{width:100%;justify-content:center}
   .student-online-class-summary,.student-online-class-actions{padding:22px 20px}
   .student-online-class-actions{grid-template-columns:1fr}
   .student-online-class-explainer{grid-column:auto}
   .student-online-class-actions>.button{width:100%;justify-content:center}
   .student-online-class-error,.student-online-class-privacy{margin-left:20px;margin-right:20px}
+}
+
+@media(max-width:390px){
+  .student-online-class-document{padding-left:10px;padding-right:10px}
+  .student-online-class-card{border-radius:20px}
+  .student-online-class-summary,.student-online-class-actions{padding-left:16px;padding-right:16px}
+  .student-online-class-error,.student-online-class-privacy{margin-left:16px;margin-right:16px}
 }
 
 @media(prefers-reduced-motion:reduce){
