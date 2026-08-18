@@ -57,18 +57,19 @@ jobs:
             "$PB_SUPERUSER_EMAIL" "$PB_SUPERUSER_PASSWORD" \
             --dir="$RUNNER_TEMP/language-school-pb-data"
 
-      - name: Start temporary PocketBase server
+      - name: Start temporary PocketBase server with production hooks
         run: |
           nohup "$RUNNER_TEMP/pocketbase/pocketbase" serve \
             --http=127.0.0.1:8090 \
             --dir="$RUNNER_TEMP/language-school-pb-data" \
             --migrationsDir="$GITHUB_WORKSPACE/v3/pocketbase/pb_migrations" \
+            --hooksDir="$GITHUB_WORKSPACE/v3/pocketbase/pb_hooks" \
             >"$RUNNER_TEMP/pocketbase-server.log" 2>&1 &
           echo $! > "$RUNNER_TEMP/pocketbase-server.pid"
 
           for attempt in {1..30}; do
             if curl -fsS "$PB_URL/api/health" >/dev/null; then
-              echo 'PocketBase is ready.'
+              echo 'PocketBase is ready with hooks loaded.'
               exit 0
             fi
             sleep 1
