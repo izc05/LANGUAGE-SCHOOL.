@@ -58,6 +58,28 @@ export type PublicPlacementResult = {
   notice: string
 }
 
+export type PlacementRecommendationCourse = {
+  id: string
+  title: string
+  slug: string
+  level: string
+  description: string
+  cefrLevels: CefrLevel[]
+}
+
+export type PublicPlacementRecommendations = {
+  estimatedLevel: CefrLevel
+  courses: PlacementRecommendationCourse[]
+}
+
+export type PublicPlacementContactInput = {
+  name: string
+  email: string
+  phone?: string
+  interest?: string
+  message: string
+}
+
 function publicHeaders(token: string, json = false): Record<string, string> {
   return {
     'X-Placement-Token': token,
@@ -104,6 +126,35 @@ export async function finishPublicPlacementTest(session: PublicPlacementSession)
       method: 'POST',
       headers: publicHeaders(session.token, true),
       body: '{}',
+    },
+  )
+}
+
+export async function getPublicPlacementRecommendations(
+  session: PublicPlacementSession,
+): Promise<PublicPlacementRecommendations> {
+  return pb.send<PublicPlacementRecommendations>(
+    `/api/language-school/placement/attempts/${encodeURIComponent(session.attemptId)}/recommendations`,
+    { method: 'GET', headers: publicHeaders(session.token) },
+  )
+}
+
+export async function submitPublicPlacementContact(
+  session: PublicPlacementSession,
+  input: PublicPlacementContactInput,
+): Promise<{ created: true }> {
+  return pb.send<{ created: true }>(
+    `/api/language-school/placement/attempts/${encodeURIComponent(session.attemptId)}/contact`,
+    {
+      method: 'POST',
+      headers: publicHeaders(session.token, true),
+      body: JSON.stringify({
+        name: input.name.trim(),
+        email: input.email.trim(),
+        phone: input.phone?.trim() || '',
+        interest: input.interest?.trim() || '',
+        message: input.message.trim(),
+      }),
     },
   )
 }
