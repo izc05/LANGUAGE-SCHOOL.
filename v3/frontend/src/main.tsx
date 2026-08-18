@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router'
 import App from './app/App'
 import AppErrorBoundary from './components/AppErrorBoundary'
+import PublicPageTransition from './components/PublicPageTransition'
 import ScrollToTop from './components/ScrollToTop'
 import { AuthProvider } from './features/auth/AuthProvider'
 import './styles/global.css'
@@ -87,6 +88,7 @@ createRoot(root).render(
     <AppErrorBoundary>
       <BrowserRouter>
         <ScrollToTop />
+        <PublicPageTransition />
         <AuthProvider><App /></AuthProvider>
       </BrowserRouter>
     </AppErrorBoundary>
