@@ -1,11 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router'
-import DashboardShell from '../../components/DashboardShell'
+import { useParams } from 'react-router'
 import { useAuth } from '../../features/auth/AuthProvider'
 import { getMyClass, type ClassRecord } from '../../services/pocketbase/studentPortal'
 import { getStudentZoomSdkAuthorization } from '../../services/pocketbase/studentZoomMeeting'
 import { configureZoomMeetingSdk, loadZoomMeetingSdk, type ZoomClientViewApi } from '../../services/zoomMeetingSdkCdn'
-import { studentNav } from './studentNav'
 
 type JoinState = 'idle' | 'authorizing' | 'loading-sdk' | 'joining' | 'joined' | 'error'
 
@@ -121,15 +119,18 @@ export default function StudentOnlineClassPage() {
   }
 
   return (
-    <DashboardShell role="Alumno" name="Alumno" nav={[...studentNav]}>
-      <div className="dashboard-content student-online-class-page">
-        <header className="student-page-heading student-online-class-heading">
-          <div>
+    <main className="student-online-class-document">
+      <div className="student-online-class-page">
+        <header className="student-online-class-heading">
+          <div className="student-online-class-heading-copy">
+            <a className="student-online-class-brand" href="/alumno/clases" aria-label="Volver a Language School">
+              <strong>LANGUAGE</strong><span>School</span><small>ROCÍO RUIZ</small>
+            </a>
             <span className="eyebrow">AULA ONLINE</span>
-            <h2>{classRecord?.topic || 'Tu clase online'}</h2>
+            <h1>{classRecord?.topic || 'Tu clase online'}</h1>
             <p>Accede a tu sesión Zoom sin compartir credenciales privadas. La autorización se genera en el servidor y caduca automáticamente.</p>
           </div>
-          <Link className="button secondary" to="/alumno/clases">← Volver a Mis clases</Link>
+          <a className="button secondary" href="/alumno/clases">← Volver a Mis clases</a>
         </header>
 
         {loading && <div className="cms-notice" role="status">Cargando aula…</div>}
@@ -140,7 +141,7 @@ export default function StudentOnlineClassPage() {
             <div className="student-online-class-summary">
               <div>
                 <span className="eyebrow">PRÓXIMA SESIÓN</span>
-                <h3 id="online-class-title">{classRecord.topic || 'Clase de inglés'}</h3>
+                <h2 id="online-class-title">{classRecord.topic || 'Clase de inglés'}</h2>
                 <p>{courseTitle} · {groupName}</p>
               </div>
               <div className="student-online-class-time">
@@ -183,6 +184,6 @@ export default function StudentOnlineClassPage() {
           </section>
         )}
       </div>
-    </DashboardShell>
+    </main>
   )
 }
