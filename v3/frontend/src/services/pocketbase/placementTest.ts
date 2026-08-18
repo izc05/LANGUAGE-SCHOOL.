@@ -1,6 +1,7 @@
+import { pocketBaseUrl } from '../../config/environment'
 import { pb } from './client'
 
-export type PlacementSkill = 'GRAMMAR' | 'VOCABULARY' | 'READING'
+export type PlacementSkill = 'GRAMMAR' | 'VOCABULARY' | 'READING' | 'LISTENING'
 export type CefrLevel = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2'
 
 export type PublicPlacementSession = {
@@ -27,6 +28,7 @@ export type PublicPlacementQuestion = {
     skill: PlacementSkill
     prompt: string
     passage: string
+    hasAudio?: boolean
     options: PlacementOption[]
   }
 }
@@ -42,6 +44,7 @@ export type PlacementSkillScore = {
   correct: number
   total: number
   percent: number
+  diagnosticOnly?: boolean
 }
 
 export type PublicPlacementResult = {
@@ -53,9 +56,10 @@ export type PublicPlacementResult = {
   rawScore: number
   maxScore: number
   scorePercent: number
-  skillScores: Record<PlacementSkill, PlacementSkillScore>
+  skillScores: Partial<Record<PlacementSkill, PlacementSkillScore>>
   completedAt: string
   notice: string
+  listeningDiagnosticOnly?: boolean
 }
 
 export type PlacementRecommendationCourse = {
@@ -85,6 +89,25 @@ function publicHeaders(token: string, json = false): Record<string, string> {
     'X-Placement-Token': token,
     ...(json ? { 'Content-Type': 'application/json' } : {}),
   }
+}
+
+function placementAudioUrl(attemptId: string, questionId: string): string {
+  const base = pocketBaseUrl.replace(/\/$/, '')
+  return `${base}/api/language-school/placement/attempts/${encodeURIComponent(attemptId)}/questions/${encodeURIComponent(questionId)}/audio`
+}
+
+export async function fetchPlacementAudio(attemptId: string, questionId: string, publicToken?: string): Promise<Blob> {
+  const headers: Record<string, string> = {}
+  if (publicToken) headers['X-Placement-Token'] = publicToken
+  else if (pb.authStore.token) headers.Authorization = pb.authStore.token
+
+  const response = await fetch(placementAudioUrl(attemptId, questionId), {
+    method: 'GET',
+    headers,
+    cache: 'no-store',
+  })
+  if (!response.ok) throw new Error('Placement audio unavailable')
+  return response.blob()
 }
 
 export async function startPublicPlacementTest(): Promise<PublicPlacementSession> {
