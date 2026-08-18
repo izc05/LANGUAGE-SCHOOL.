@@ -32,21 +32,43 @@ jobs:
             bash -n "$script"
           done
 
-      - name: Validate PocketBase loopback start wrapper
+      - name: Validate PocketBase loopback and hooks start wrapper
         run: |
+          mkdir -p "$RUNNER_TEMP/pb_hooks"
           OUTPUT=$(PB_URL=http://127.0.0.1:8090 \
             PB_BIN=/usr/bin/echo \
             PB_DATA=/tmp/pb_data \
             PB_MIGRATIONS=/tmp/pb_migrations \
+            PB_HOOKS="$RUNNER_TEMP/pb_hooks" \
             bash v3/infrastructure/raspberry-pi/start-pocketbase.sh)
           printf '%s' "$OUTPUT" | grep -q -- '--http=127.0.0.1:8090'
+          printf '%s' "$OUTPUT" | grep -q -- "--hooksDir=$RUNNER_TEMP/pb_hooks"
 
           if PB_URL=http://0.0.0.0:8090 \
             PB_BIN=/usr/bin/echo \
+            PB_HOOKS="$RUNNER_TEMP/pb_hooks" \
             bash v3/infrastructure/raspberry-pi/start-pocketbase.sh; then
             echo 'PocketBase start wrapper accepted a non-loopback origin.' >&2
             exit 1
           fi
+
+          if PB_URL=http://127.0.0.1:8090 \
+            PB_BIN=/usr/bin/echo \
+            PB_HOOKS="$RUNNER_TEMP/missing-hooks" \
+            bash v3/infrastructure/raspberry-pi/start-pocketbase.sh; then
+            echo 'PocketBase start wrapper accepted a missing hooks directory.' >&2
+            exit 1
+          fi
+
+      - name: Validate PocketBase installer ships migrations and hooks
+        run: |
+          INSTALLER='v3/infrastructure/raspberry-pi/install-pocketbase.sh'
+          grep -Fq 'HOOKS_SOURCE="$V3_DIR/pocketbase/pb_hooks"' "$INSTALLER"
+          grep -Fq 'cp -a "$HOOKS_SOURCE"/. "$PB_DIR/pb_hooks/"' "$INSTALLER"
+          grep -Fq 'cp -a "$MIGRATIONS_SOURCE"/. "$PB_DIR/pb_migrations/"' "$INSTALLER"
+          grep -Fq 'find "$PB_DIR/pb_migrations" "$PB_DIR/pb_hooks" -type f -exec chmod 0644 {} +' "$INSTALLER"
+          test -d v3/pocketbase/pb_hooks
+          test -d v3/pocketbase/pb_migrations
 
       - name: Reject secret-like environment keys
         run: |
