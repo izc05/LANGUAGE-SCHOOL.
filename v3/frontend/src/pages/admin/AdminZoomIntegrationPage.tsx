@@ -13,6 +13,8 @@ const demoStatus: ZoomIntegrationStatus = {
   provider: 'zoom',
   source: 'server_environment',
   apiConfigured: false,
+  hostUserConfigured: false,
+  meetingCreationConfigured: false,
   meetingSdkConfigured: false,
   configured: false,
 }
@@ -56,7 +58,7 @@ export default function AdminZoomIntegrationPage() {
           <div>
             <span className="eyebrow">CAMPUS · VIDEOCONFERENCIA</span>
             <h2>Integración con Zoom</h2>
-            <p>Comprueba si el servidor tiene preparada la API de Zoom y el Meeting SDK. Las credenciales nunca se muestran ni se guardan en el navegador.</p>
+            <p>Comprueba si el servidor puede crear reuniones y autorizar el Meeting SDK. Las credenciales nunca se muestran ni se guardan en el navegador.</p>
           </div>
         </header>
 
@@ -68,16 +70,17 @@ export default function AdminZoomIntegrationPage() {
             <section className={`zoom-connection-card ${status.configured ? 'is-ready' : 'is-pending'}`}>
               <div>
                 <span className="eyebrow">ESTADO DEL SERVIDOR</span>
-                <h3>{status.configured ? 'Zoom preparado para conectar el Campus.' : 'Credenciales de Zoom pendientes.'}</h3>
-                <p>{status.configured ? 'La API y el Meeting SDK están configurados en el servidor. El siguiente paso será crear reuniones desde las clases.' : 'La estructura segura ya está lista. Falta añadir las credenciales privadas al servidor antes de crear o incrustar reuniones reales.'}</p>
+                <h3>{status.configured ? 'Zoom preparado para conectar el Campus.' : 'Configuración de Zoom pendiente.'}</h3>
+                <p>{status.configured ? 'Creación de reuniones y Meeting SDK están preparados en el servidor.' : 'La estructura segura ya está lista. Completa la cuenta anfitriona, las credenciales API y el Meeting SDK en el servidor.'}</p>
               </div>
               <span className={`zoom-status-pill ${status.configured ? 'success' : 'warning'}`}>{status.configured ? 'Preparado' : 'Pendiente'}</span>
             </section>
 
             <section className="zoom-capability-grid" aria-label="Estado técnico de Zoom">
-              <article><span>01</span><div><small>ZOOM API</small><strong>{status.apiConfigured ? 'Configurada' : 'Pendiente'}</strong><p>Server-to-Server OAuth para crear y gestionar reuniones desde el backend.</p></div></article>
-              <article><span>02</span><div><small>MEETING SDK</small><strong>{status.meetingSdkConfigured ? 'Configurado' : 'Pendiente'}</strong><p>Autorización de la videoclase incrustada dentro del Campus.</p></div></article>
-              <article><span>03</span><div><small>SEGURIDAD</small><strong>Servidor</strong><p>Los secretos permanecen fuera de React, PocketBase records y el CMS.</p></div></article>
+              <article><span>01</span><div><small>ZOOM API</small><strong>{status.apiConfigured ? 'Configurada' : 'Pendiente'}</strong><p>Server-to-Server OAuth para operar contra la API de la cuenta.</p></div></article>
+              <article><span>02</span><div><small>ANFITRIÓN</small><strong>{status.hostUserConfigured ? 'Configurado' : 'Pendiente'}</strong><p>Usuario Zoom que será propietario de las reuniones creadas por Language School.</p></div></article>
+              <article><span>03</span><div><small>CREAR REUNIONES</small><strong>{status.meetingCreationConfigured ? 'Preparado' : 'Pendiente'}</strong><p>API y anfitrión disponibles para programar Zoom desde Aula online.</p></div></article>
+              <article><span>04</span><div><small>MEETING SDK</small><strong>{status.meetingSdkConfigured ? 'Configurado' : 'Pendiente'}</strong><p>Autorización de la videoclase incrustada dentro del Campus.</p></div></article>
             </section>
 
             <section className="panel zoom-api-check-panel">
@@ -94,12 +97,12 @@ export default function AdminZoomIntegrationPage() {
             </section>
 
             <section className="panel zoom-next-step-panel">
-              <div className="panel-heading"><div><span className="eyebrow">CONFIGURACIÓN PRIVADA</span><h3>Credenciales que necesita el servidor</h3></div></div>
+              <div className="panel-heading"><div><span className="eyebrow">CONFIGURACIÓN PRIVADA</span><h3>Variables que necesita el servidor</h3></div></div>
               <div className="zoom-next-step-copy">
-                <p>Las credenciales de la cuenta Zoom de Language School se añaden únicamente al entorno del servidor.</p>
-                <code>ZOOM_ACCOUNT_ID · ZOOM_CLIENT_ID · ZOOM_CLIENT_SECRET</code>
+                <p>Las credenciales y el usuario anfitrión de la cuenta Zoom de Language School se añaden únicamente al entorno del servidor.</p>
+                <code>ZOOM_ACCOUNT_ID · ZOOM_CLIENT_ID · ZOOM_CLIENT_SECRET · ZOOM_HOST_USER_ID</code>
                 <code>ZOOM_MEETING_SDK_CLIENT_ID · ZOOM_MEETING_SDK_CLIENT_SECRET</code>
-                <p className="muted">Admin solo consulta su estado y puede probar la conexión. Nunca puede leer sus valores.</p>
+                <p className="muted">Admin solo consulta si existen y puede probar la conexión. Nunca puede leer sus valores.</p>
               </div>
             </section>
           </>
