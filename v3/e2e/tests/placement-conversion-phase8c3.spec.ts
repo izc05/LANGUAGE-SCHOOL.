@@ -68,10 +68,23 @@ test('8C.3: recomendación usa CEFR estructurado y contacto queda ligado al inte
   const token = await adminToken(request)
   await patchE2eCourseForC2(request, token)
 
-  const genericContact = await request.post(`${PB_URL}/api/collections/contact_requests/records`, {
-    data: { name: 'E2E Generic 8C3', email: 'generic8c3@example.com', phone: '', interest: 'General', message: 'Generic contact remains available.', status: 'NEW' },
+  const blockedGenericDirect = await request.post(`${PB_URL}/api/collections/contact_requests/records`, {
+    data: { name: 'E2E Generic 8C3', email: 'generic8c3@example.com', phone: '', interest: 'General', message: 'Direct anonymous writes must remain blocked.', status: 'NEW' },
   })
-  expect(genericContact.status()).toBe(200)
+  expect(blockedGenericDirect.status()).toBe(403)
+
+  const genericContact = await request.post(`${PB_URL}/api/language-school/contact`, {
+    data: {
+      name: 'E2E Generic 8C3',
+      email: 'generic8c3@example.com',
+      phone: '',
+      interest: 'General',
+      message: 'Generic protected contact remains available.',
+      website: '',
+      turnstileToken: 'XXXX.DUMMY.TOKEN.XXXX',
+    },
+  })
+  expect(genericContact.status(), await genericContact.text()).toBe(201)
 
   const attempt = await startPublicAttempt(request)
 
@@ -81,7 +94,7 @@ test('8C.3: recomendación usa CEFR estructurado y contacto queda ligado al inte
       placement_attempt: attempt.attemptId,
     },
   })
-  expect(forbiddenDirectLink.status()).toBe(400)
+  expect(forbiddenDirectLink.status()).toBe(403)
 
   const beforeCompletion = await request.get(`${PB_URL}/api/language-school/placement/attempts/${attempt.attemptId}/recommendations`, {
     headers: { 'X-Placement-Token': attempt.token },
