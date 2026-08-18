@@ -18,14 +18,25 @@ fi
 
 PUBLIC_ORIGIN="${PUBLIC_ORIGIN:-}"
 if [[ -z "$PUBLIC_ORIGIN" ]]; then
-  echo 'PUBLIC_ORIGIN is required, for example https://english.example.com' >&2
+  echo 'PUBLIC_ORIGIN is required and must be the final public HTTPS origin.' >&2
   exit 1
 fi
 
-if [[ ! "$PUBLIC_ORIGIN" =~ ^https?://[^/]+$ ]]; then
-  echo 'PUBLIC_ORIGIN must be an origin without a trailing path.' >&2
+if [[ ! "$PUBLIC_ORIGIN" =~ ^https://[^/]+$ ]]; then
+  echo 'PUBLIC_ORIGIN must use HTTPS and contain only the origin, without a path or trailing slash.' >&2
   exit 1
 fi
+
+PUBLIC_HOST="${PUBLIC_ORIGIN#https://}"
+PUBLIC_HOST="${PUBLIC_HOST%%:*}"
+PUBLIC_HOST="${PUBLIC_HOST,,}"
+
+case "$PUBLIC_HOST" in
+  localhost|127.*|0.0.0.0|example.com|*.example.com|*.example|*.invalid|*.test|*.local)
+    echo "PUBLIC_ORIGIN uses a local or placeholder host and cannot be deployed: $PUBLIC_ORIGIN" >&2
+    exit 1
+    ;;
+esac
 
 for command in node npm rsync; do
   command -v "$command" >/dev/null || {
