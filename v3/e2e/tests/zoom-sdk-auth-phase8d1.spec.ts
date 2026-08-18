@@ -72,6 +72,7 @@ test('8D.1: Meeting SDK autoriza solo al alumno matriculado con firma temporal r
   await page.goto(`/alumno/aula/${encodeURIComponent(String(classId))}`)
   await expect(page.getByText('No hemos podido cargar esta clase o ya no pertenece a tu calendario activo.')).toBeVisible()
   await expect(page.getByRole('heading', { name: 'E2E Speaking class' })).toHaveCount(0)
+  await page.goto('/alumno')
   await logout(page)
 
   await login(page, credentials.student.email, credentials.student.password, /\/alumno$/)
