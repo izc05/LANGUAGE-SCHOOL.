@@ -1,0 +1,108 @@
+name: V3 Zoom Classroom CI
+
+on:
+  pull_request:
+    paths:
+      - 'v3/frontend/src/pages/student/StudentOnlineClassPage.tsx'
+      - 'v3/frontend/src/pages/student/StudentClassesPage.tsx'
+      - 'v3/frontend/src/services/zoomMeetingSdkCdn.ts'
+      - 'v3/frontend/src/services/pocketbase/studentZoomMeeting.ts'
+      - 'v3/frontend/src/styles/student-online-class-phase9.css'
+      - 'v3/pocketbase/pb_hooks/zoom_meeting_sdk_auth.pb.js'
+      - 'v3/infrastructure/reverse-proxy/language-school.nginx.conf'
+      - 'v3/e2e/tests/zoom-sdk-auth-phase8d1.spec.ts'
+      - '.github/workflows/v3-zoom-classroom-ci.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'v3/frontend/src/pages/student/StudentOnlineClassPage.tsx'
+      - 'v3/frontend/src/pages/student/StudentClassesPage.tsx'
+      - 'v3/frontend/src/services/zoomMeetingSdkCdn.ts'
+      - 'v3/frontend/src/services/pocketbase/studentZoomMeeting.ts'
+      - 'v3/frontend/src/styles/student-online-class-phase9.css'
+      - 'v3/pocketbase/pb_hooks/zoom_meeting_sdk_auth.pb.js'
+      - 'v3/infrastructure/reverse-proxy/language-school.nginx.conf'
+      - 'v3/e2e/tests/zoom-sdk-auth-phase8d1.spec.ts'
+      - '.github/workflows/v3-zoom-classroom-ci.yml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate classroom contract
+        run: |
+          set -euo pipefail
+          PAGE='v3/frontend/src/pages/student/StudentOnlineClassPage.tsx'
+          LIST='v3/frontend/src/pages/student/StudentClassesPage.tsx'
+          LOADER='v3/frontend/src/services/zoomMeetingSdkCdn.ts'
+          HOOK='v3/pocketbase/pb_hooks/zoom_meeting_sdk_auth.pb.js'
+
+          grep -Fq '/alumno/aula/' "$LIST"
+          grep -Fq 'getStudentZoomSdkAuthorization' "$PAGE"
+          grep -Fq 'https://source.zoom.us/' "$LOADER"
+          grep -Fq "ZOOM_MEETING_SDK_VERSION = '6.2.0'" "$LOADER"
+          grep -Fq 'ZOOM_MEETING_SDK_CLIENT_SECRET' "$HOOK"
+          grep -Fq 'role: 0' "$HOOK"
+          grep -Fq 'hasActiveEnrollment' "$HOOK"
+
+          if grep -Fq 'ZOOM_MEETING_SDK_CLIENT_SECRET' "$PAGE"; then
+            echo 'Meeting SDK secret name leaked into the browser page.' >&2
+            exit 1
+          fi
+          if grep -Eq 'ClientSecret|clientSecret|ZOOM_CLIENT_SECRET' "$LOADER"; then
+            echo 'A Zoom secret reference exists in the CDN loader.' >&2
+            exit 1
+          fi
+
+      - name: Validate route-scoped media permissions
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y nginx
+
+          sudo install -d -m 0755 /opt/language-school/frontend
+          printf '<!doctype html><title>Language School Zoom CI</title>\n' | sudo tee /opt/language-school/frontend/index.html >/dev/null
+
+          cat >"$RUNNER_TEMP/upstream.py" <<'PY'
+          from http.server import BaseHTTPRequestHandler, HTTPServer
+          class Handler(BaseHTTPRequestHandler):
+              def do_GET(self):
+                  self.send_response(200)
+                  self.send_header('Content-Length', '2')
+                  self.end_headers()
+                  self.wfile.write(b'OK')
+              def log_message(self, *_args):
+                  pass
+          HTTPServer(('127.0.0.1', 8091), Handler).serve_forever()
+          PY
+          python3 "$RUNNER_TEMP/upstream.py" &
+          UPSTREAM_PID=$!
+          trap 'kill "$UPSTREAM_PID" 2>/dev/null || true' EXIT
+
+          sed \
+            -e 's|__PROXY_LISTEN__|127.0.0.1:8083|g' \
+            -e 's|__PB_URL__|http://127.0.0.1:8091|g' \
+            v3/infrastructure/reverse-proxy/language-school.nginx.conf \
+            | sudo tee /etc/nginx/conf.d/language-school.conf >/dev/null
+
+          sudo nginx -t
+          sudo systemctl restart nginx
+          for attempt in {1..20}; do
+            curl -fsS http://127.0.0.1:8083/ >/dev/null && break
+            sleep 0.2
+          done
+
+          ROOT_HEADERS="$(curl -fsSI http://127.0.0.1:8083/)"
+          printf '%s\n' "$ROOT_HEADERS" | grep -Eqi '^Permissions-Policy:[[:space:]]*camera=\(\), microphone=\(\), geolocation=\(\)'
+
+          CLASS_HEADERS="$(curl -fsSI http://127.0.0.1:8083/alumno/aula/test-class)"
+          printf '%s\n' "$CLASS_HEADERS" | grep -Eqi '^Permissions-Policy:[[:space:]]*camera=\(self\), microphone=\(self\), geolocation=\(\)'
+          printf '%s\n' "$CLASS_HEADERS" | grep -Eqi '^X-Robots-Tag:[[:space:]]*noindex, nofollow, noarchive'
+
+          STUDENT_HEADERS="$(curl -fsSI http://127.0.0.1:8083/alumno/clases)"
+          printf '%s\n' "$STUDENT_HEADERS" | grep -Eqi '^Permissions-Policy:[[:space:]]*camera=\(\), microphone=\(\), geolocation=\(\)'
+          printf '%s\n' "$STUDENT_HEADERS" | grep -Eqi '^X-Robots-Tag:[[:space:]]*noindex, nofollow, noarchive'
