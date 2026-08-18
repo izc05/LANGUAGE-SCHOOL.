@@ -39,7 +39,8 @@ test('8C.8 UI: visitante escucha Listening sin autoplay y Admin ve el banco prot
     }
 
     const option = page.getByRole('radio').first()
-    await option.check()
+    await page.locator('label.placement-option').first().click()
+    await expect(option).toBeChecked()
     await page.getByRole('button', { name: position === 21 ? 'Ver mi resultado' : 'Confirmar respuesta' }).click()
   }
 
