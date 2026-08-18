@@ -17,6 +17,11 @@ jobs:
     defaults:
       run:
         working-directory: v3/frontend
+    env:
+      # A production-mode Vite build must choose the application mode explicitly.
+      # This job builds the review/demo artifact; connected E2E builds use their
+      # own explicit VITE_APP_MODE=connected and PocketBase URL.
+      VITE_APP_MODE: demo
 
     steps:
       - name: Checkout
