@@ -15,7 +15,7 @@ migrate((app) => {
       { type: 'select', name: 'provider', required: true, maxSelect: 1, values: ['ZOOM'] },
       { type: 'text', name: 'external_meeting_id', max: 80 },
       { type: 'text', name: 'external_uuid', max: 220 },
-      { type: 'url', name: 'join_url', max: 2000 },
+      { type: 'text', name: 'join_url', max: 2000 },
       { type: 'select', name: 'status', required: true, maxSelect: 1, values: ['PENDING', 'READY', 'CANCELLED', 'ERROR'] },
       { type: 'relation', name: 'created_by', maxSelect: 1, collectionId: users.id, cascadeDelete: false },
       { type: 'autodate', name: 'created', onCreate: true },
