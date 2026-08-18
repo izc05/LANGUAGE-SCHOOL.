@@ -1,5 +1,17 @@
-# pb_hooks
+# PocketBase hooks · Language School
 
-Solo se añadirán hooks de PocketBase cuando una regla de negocio no pueda resolverse de forma clara con colecciones, validaciones y reglas de acceso.
+Los hooks server-side viven en esta carpeta y deben cargarse con `--hooksDir` apuntando a `v3/pocketbase/pb_hooks`.
 
-Se mantendrán pequeños, revisables y sin secretos embebidos.
+## Zoom
+
+`zoom_status.pb.js` expone únicamente un estado técnico protegido para Administración.
+
+Las credenciales privadas se leen exclusivamente desde variables de entorno del servidor:
+
+- `ZOOM_ACCOUNT_ID`
+- `ZOOM_CLIENT_ID`
+- `ZOOM_CLIENT_SECRET`
+- `ZOOM_MEETING_SDK_CLIENT_ID`
+- `ZOOM_MEETING_SDK_CLIENT_SECRET`
+
+Nunca guardar estos valores en React, `site_settings`, PocketBase público ni el repositorio.
