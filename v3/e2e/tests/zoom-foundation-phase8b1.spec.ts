@@ -66,13 +66,16 @@ test('8B: Zoom permanece server-side y solo Administración puede comprobarlo', 
   await expect(page.getByText('access_token', { exact: false })).toHaveCount(0)
 })
 
-test('8C.1: la asociación Zoom de una clase no es visible directamente para alumnos', async ({ page }) => {
+test('8C.1: la asociación Zoom existe pero queda oculta al alumno', async ({ page }) => {
   await login(page, credentials.student.email, credentials.student.password, /\/alumno$/)
   const studentResult = await backendRequest(page, '/api/collections/zoom_meetings/records?page=1&perPage=5')
-  expect(studentResult.status).toBe(403)
+  expect(studentResult.status).toBe(200)
+  expect(studentResult.body).toMatchObject({ items: [] })
   await logout(page)
 
   await login(page, credentials.admin.email, credentials.admin.password, /\/admin$/)
   const adminResult = await backendRequest(page, '/api/collections/zoom_meetings/records?page=1&perPage=5')
   expect(adminResult.status).toBe(200)
+  expect(adminResult.body).toMatchObject({ totalItems: 1 })
+  expect(JSON.stringify(adminResult.body)).toContain('98765432100')
 })
