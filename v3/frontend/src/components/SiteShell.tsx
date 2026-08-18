@@ -15,6 +15,7 @@ type PageMeta = { title: string; description: string }
 const publicMeta: Record<string, PageMeta> = {
   '/': { title: 'Language School · Inglés con confianza', description: 'Academia de idiomas con clases presenciales y online, programas por objetivos y espacio privado para cada alumno.' },
   '/programas': { title: 'Programas · Language School', description: 'Programas de idiomas para niños, adolescentes, adultos y preparación de exámenes.' },
+  '/test-de-nivel': { title: 'Test de nivel de inglés · Language School', description: 'Haz un test breve de inglés sin registro y obtén una estimación orientativa de tu nivel MCER de A1 a C2.' },
   '/profesores': { title: 'Profesores · Language School', description: 'Conoce al equipo docente y su enfoque para acompañar el aprendizaje de idiomas.' },
   '/sobre-nosotros': { title: 'Sobre nosotros · Language School', description: 'Conoce la metodología, los valores y la forma de acompañar a los alumnos en Language School.' },
   '/tarifas': { title: 'Tarifas · Language School', description: 'Consulta los planes y tarifas publicados por Language School.' },
@@ -202,6 +203,7 @@ export default function SiteShell({ children }: SiteShellProps) {
           <div className="footer-nav-column">
             <strong>Explora</strong>
             <Link to="/programas">Programas</Link>
+            <Link to="/test-de-nivel">Test de nivel</Link>
             <Link to="/profesores">Profesores</Link>
             <Link to="/sobre-nosotros">Sobre nosotros</Link>
             <Link to="/tarifas">Tarifas</Link>
