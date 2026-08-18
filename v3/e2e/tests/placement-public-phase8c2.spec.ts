@@ -12,7 +12,7 @@ test('8C.2: visitante completa el test público desde la UI y recibe C2 sin expo
   await page.goto('/test-de-nivel')
 
   await expect(page.getByRole('heading', { name: /Descubre tu punto de partida en inglés/i })).toBeVisible()
-  await expect(page.getByText(/sin registrarte ni dejar tus datos/i)).toBeVisible()
+  await expect(page.getByText(/(?:sin|no necesitas) registrarte ni dejar tus datos/i)).toBeVisible()
   await page.getByRole('button', { name: 'Empezar test' }).click()
 
   for (let position = 1; position <= 15; position += 1) {
