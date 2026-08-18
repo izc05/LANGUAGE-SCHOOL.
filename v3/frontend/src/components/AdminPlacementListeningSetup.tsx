@@ -41,7 +41,7 @@ export default function AdminPlacementListeningSetup({ tests, disabled = false, 
         <label>Partir de<select value={resolvedSource} onChange={(event) => setSourceId(event.target.value)} disabled={disabled || busy || eligible.length === 0}>{eligible.map((test) => <option key={test.id} value={test.id}>{test.version} · {test.status}{test.algorithmVersion === 'cefr-v2-listening' ? ' · Listening' : ''}</option>)}</select></label>
         <label>Nombre<input value={name} onChange={(event) => setName(event.target.value)} required disabled={disabled || busy} /></label>
         <label>Versión<input value={version} onChange={(event) => setVersion(event.target.value)} placeholder="2026.09-listening-v1" required disabled={disabled || busy} /></label>
-        <button className="button button-primary" type="submit" disabled={disabled || busy || !resolvedSource}>{busy ? 'Preparando…' : 'Crear versión Listening'}</button>
+        <button className="button button-primary" type="submit" disabled={disabled || busy || !resolvedSource}>{busy ? 'Preparando…' : 'Preparar Listening'}</button>
       </form>
       {eligible.length === 0 && <div className="cms-notice auth-error">Necesitas una versión de test existente para preparar Listening.</div>}
       {error && <div className="cms-notice auth-error" role="alert">{error}</div>}
