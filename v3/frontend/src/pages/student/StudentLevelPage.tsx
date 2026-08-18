@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import DashboardShell from '../../components/DashboardShell'
+import PlacementAudioPlayer from '../../components/PlacementAudioPlayer'
 import { isDemoMode } from '../../config/environment'
 import {
   answerCampusPlacementQuestion,
@@ -19,9 +20,10 @@ const skillLabels: Record<PlacementSkill, string> = {
   GRAMMAR: 'Gramática',
   VOCABULARY: 'Vocabulario',
   READING: 'Comprensión lectora',
+  LISTENING: 'Comprensión oral',
 }
 
-const skillOrder: PlacementSkill[] = ['GRAMMAR', 'VOCABULARY', 'READING']
+const skillOrder: PlacementSkill[] = ['GRAMMAR', 'VOCABULARY', 'READING', 'LISTENING']
 
 const levelCopy: Record<CefrLevel, string> = {
   A1: 'Base inicial',
@@ -69,6 +71,10 @@ function sourceLabel(source: CampusLevelSummary['currentLevelSource']): string {
   if (source === 'VALIDATED') return 'Nivel validado por la academia'
   if (source === 'AUTOMATIC') return 'Última estimación automática'
   return 'Pendiente de evaluación'
+}
+
+function resultSkills(result: CampusPlacementResult | null | undefined): PlacementSkill[] {
+  return skillOrder.filter((skill) => Boolean(result?.skillScores[skill]))
 }
 
 export default function StudentLevelPage() {
@@ -145,6 +151,8 @@ export default function StudentLevelPage() {
   const canStart = Boolean(summary && !summary.activeAttempt && summary.retake.allowed)
   const canResume = Boolean(summary?.activeAttempt)
   const nextRetake = summary?.retake.nextAvailableAt ? formatDate(summary.retake.nextAvailableAt) : ''
+  const hasListening = Boolean(summary && (summary.campusQuestionCount > 30 || summary.latestAttempt?.skillScores.LISTENING))
+  const competenceCount = hasListening ? 4 : 3
 
   return (
     <DashboardShell role="Alumno" name="Alumno" nav={[...studentNav]}>
@@ -174,11 +182,11 @@ export default function StudentLevelPage() {
                   <h3>{canResume ? 'Tienes una evaluación empezada.' : summary.latestAttempt ? 'Tu evaluación está al día.' : 'Haz tu primera evaluación completa.'}</h3>
                   <p>{canResume
                     ? `Has respondido ${summary.activeAttempt?.answered || 0} de ${summary.activeAttempt?.totalQuestions || summary.campusQuestionCount} preguntas. Puedes continuar exactamente donde lo dejaste.`
-                    : `La evaluación Campus utiliza ${summary.campusQuestionCount} preguntas de gramática, vocabulario y comprensión lectora.`}</p>
+                    : `La evaluación Campus utiliza ${summary.campusQuestionCount} preguntas de gramática, vocabulario, comprensión lectora${hasListening ? ' y comprensión oral diagnóstica' : ''}.`}</p>
                 </div>
                 <div className="student-level-action-meta">
                   <span><strong>{summary.campusQuestionCount}</strong> preguntas</span>
-                  <span><strong>3</strong> competencias</span>
+                  <span><strong>{competenceCount}</strong> competencias</span>
                   <span><strong>A1–C2</strong> estimación</span>
                 </div>
                 {canResume && <button className="button button-primary" type="button" onClick={() => void beginOrResume()} disabled={busy}>{busy ? 'Abriendo…' : 'Continuar evaluación'}</button>}
@@ -193,9 +201,10 @@ export default function StudentLevelPage() {
                   <>
                     <div className="student-level-score"><strong>{Math.round(summary.latestAttempt.scorePercent)}%</strong><span>{summary.latestAttempt.rawScore} de {summary.latestAttempt.maxScore} respuestas correctas</span></div>
                     <div className="student-level-skill-list">
-                      {skillOrder.map((skill) => {
+                      {resultSkills(summary.latestAttempt).map((skill) => {
                         const score = summary.latestAttempt?.skillScores[skill]
-                        return <div key={skill}><span>{skillLabels[skill]}</span><div className="student-level-skill-track"><i style={{ width: `${score?.percent || 0}%` }} /></div><strong>{Math.round(score?.percent || 0)}%</strong></div>
+                        if (!score) return null
+                        return <div className={score.diagnosticOnly ? 'is-diagnostic' : ''} key={skill}><span>{skillLabels[skill]}{score.diagnosticOnly ? ' · diagnóstico' : ''}</span><div className="student-level-skill-track"><i style={{ width: `${score.percent}%` }} /></div><strong>{Math.round(score.percent)}%</strong></div>
                       })}
                     </div>
                   </>
@@ -210,7 +219,7 @@ export default function StudentLevelPage() {
               </section>
             )}
 
-            {completedResult && <div className="student-level-complete" role="status"><strong>Evaluación completada · {completedResult.estimatedLevel}</strong><span>{Math.round(completedResult.scorePercent)}% de puntuación global. El resultado ya forma parte de tu histórico.</span></div>}
+            {completedResult && <div className="student-level-complete" role="status"><strong>Evaluación completada · {completedResult.estimatedLevel}</strong><span>{Math.round(completedResult.scorePercent)}% de puntuación global. El resultado ya forma parte de tu histórico.{completedResult.skillScores.LISTENING ? ' Listening queda registrado como diagnóstico complementario.' : ''}</span></div>}
 
             <section className="student-level-history" aria-labelledby="student-level-history-title">
               <div className="student-level-history-heading"><div><span className="eyebrow">HISTÓRICO</span><h3 id="student-level-history-title">Tus evaluaciones Campus</h3></div><p>Los intentos completados se conservan; una nueva evaluación nunca sobrescribe la anterior.</p></div>
@@ -218,7 +227,11 @@ export default function StudentLevelPage() {
               {summary.history.length > 0 && <div className="student-level-history-list">{summary.history.map((attempt) => (
                 <article className="panel" key={attempt.attemptId}>
                   <div><small>{formatDate(attempt.completedAt)}</small><strong>{attempt.estimatedLevel}</strong><span>{Math.round(attempt.scorePercent)}%</span></div>
-                  <div>{skillOrder.map((skill) => <span key={skill}>{skillLabels[skill]} <strong>{Math.round(attempt.skillScores[skill]?.percent || 0)}%</strong></span>)}</div>
+                  <div>{resultSkills(attempt).map((skill) => {
+                    const score = attempt.skillScores[skill]
+                    if (!score) return null
+                    return <span className={score.diagnosticOnly ? 'is-diagnostic' : ''} key={skill}>{skillLabels[skill]} <strong>{Math.round(score.percent)}%</strong>{score.diagnosticOnly ? ' · diagnóstico' : ''}</span>
+                  })}</div>
                 </article>
               ))}</div>}
             </section>
@@ -230,13 +243,14 @@ export default function StudentLevelPage() {
             <div className="student-level-progress-head"><div><span className="eyebrow">{skillLabels[question.question.skill]}</span><strong aria-live="polite">Pregunta {question.position} de {question.total}</strong></div><span>{progress}%</span></div>
             <div className="student-level-progress" role="progressbar" aria-label="Progreso de la evaluación Campus" aria-valuemin={1} aria-valuemax={question.total} aria-valuenow={question.position}><span style={{ width: `${progress}%` }} /></div>
             <article className="panel student-level-question-card">
+              {question.question.hasAudio && <PlacementAudioPlayer attemptId={session.attemptId} questionId={question.question.id} />}
               {question.question.passage && <div className="student-level-passage"><span>LEE ESTE TEXTO</span><p>{toPlainText(question.question.passage)}</p></div>}
               <form onSubmit={(event) => { event.preventDefault(); void submitAnswer() }}>
                 <fieldset disabled={busy}>
                   <legend id="student-level-question-title">{toPlainText(question.question.prompt)}</legend>
                   <div className="student-level-options">{question.question.options.map((option, index) => (
                     <label className={selectedOption === option.id ? 'is-selected' : ''} key={option.id}>
-                      <input type="radio" name="campus-level-answer" value={option.id} checked={selectedOption === option.id} onChange={() => setSelectedOption(option.id)} />
+                      <input type="radio" name="campus-level-answer" value={option.id} checked={selectedOption === option.id} onChange={() => setSelectedOption(option.id)} aria-label={`Option ${String.fromCharCode(65 + index)}`} />
                       <span aria-hidden="true">{String.fromCharCode(65 + index)}</span>
                       <strong>{toPlainText(option.label)}</strong>
                     </label>
