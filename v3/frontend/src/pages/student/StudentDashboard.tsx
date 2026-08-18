@@ -95,8 +95,8 @@ function DemoStudentDashboard() {
 
         <section className="campus-course-strip">
           <div><span className="eyebrow">TU CURSO ACTUAL</span><h3>Adult English B1</h3><p>B1 Evening · Matrícula activa</p></div>
-          <div className="campus-level"><strong>B1</strong><span>Nivel actual</span></div>
-          <div className="campus-course-links"><Link to="/alumno/clases">Clases</Link><Link to="/alumno/archivos">Mis archivos</Link><Link to="/alumno/perfil">Mi perfil</Link></div>
+          <div className="campus-level"><strong>B1</strong><span>Nivel del curso</span></div>
+          <div className="campus-course-links"><Link to="/alumno/nivel">Mi nivel</Link><Link to="/alumno/clases">Clases</Link><Link to="/alumno/archivos">Mis archivos</Link><Link to="/alumno/perfil">Mi perfil</Link></div>
         </section>
       </div>
     </DashboardShell>
@@ -121,7 +121,7 @@ function ConnectedStudentDashboard() {
   const currentEnrollment = activeEnrollments[0]
   const currentCourse = currentEnrollment?.expand?.group?.expand?.course
   const currentGroup = currentEnrollment?.expand?.group
-  const currentLevel = currentCourse?.level || 'En progreso'
+  const courseLevel = currentCourse?.level || 'Sin nivel indicado'
   const currentCourseTitle = currentCourse?.title || currentCourse?.level || 'Tu curso de inglés'
   const currentGroupName = currentGroup?.name || 'Grupo asignado'
   const enrollmentSummary = currentEnrollment ? `${currentCourseTitle} · ${currentGroupName} · Matrícula activa` : 'Cuando tengas una matrícula activa aparecerá aquí tu curso.'
@@ -173,8 +173,8 @@ function ConnectedStudentDashboard() {
 
             <section className="campus-course-strip">
               <div><span className="eyebrow">TU CURSO ACTUAL</span><h3>{currentCourseTitle}</h3><p>{currentEnrollment ? `${currentGroupName} · Matrícula activa` : enrollmentSummary}</p></div>
-              <div className="campus-level"><strong>{currentLevel}</strong><span>Nivel actual</span></div>
-              <div className="campus-course-links"><Link to="/alumno/clases">Clases</Link><Link to="/alumno/archivos">Mis archivos</Link><Link to="/alumno/perfil">Mi perfil</Link></div>
+              <div className="campus-level"><strong>{courseLevel}</strong><span>Nivel del curso</span></div>
+              <div className="campus-course-links"><Link to="/alumno/nivel">Mi nivel</Link><Link to="/alumno/clases">Clases</Link><Link to="/alumno/archivos">Mis archivos</Link><Link to="/alumno/perfil">Mi perfil</Link></div>
             </section>
 
             {(snapshot?.files.length || unreadNotifications.length) > 0 && (

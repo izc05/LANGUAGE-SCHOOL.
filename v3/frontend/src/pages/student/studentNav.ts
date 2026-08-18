@@ -1,5 +1,6 @@
 export const studentNav = [
   { label: 'Inicio', to: '/alumno' },
+  { label: 'Mi nivel', to: '/alumno/nivel' },
   { label: 'Mis clases', to: '/alumno/clases' },
   { label: 'Material', to: '/alumno/material' },
   { label: 'Tareas', to: '/alumno/tareas' },

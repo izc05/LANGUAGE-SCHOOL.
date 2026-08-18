@@ -15,6 +15,7 @@ import NotFoundPage from '../pages/public/NotFoundPage'
 import LoginPage from '../pages/auth/LoginPage'
 import AccountProfilePage from '../pages/account/AccountProfilePage'
 import StudentDashboard from '../pages/student/StudentDashboard'
+import StudentLevelPage from '../pages/student/StudentLevelPage'
 import StudentFilesPage from '../pages/student/StudentFilesPage'
 import StudentMaterialPage from '../pages/student/StudentMaterialPage'
 import StudentAssignmentsPage from '../pages/student/StudentAssignmentsPage'
@@ -63,6 +64,7 @@ export default function App() {
       <Route path="/acceso" element={<LoginPage />} />
 
       <Route path="/alumno" element={<RequireRole allow={['STUDENT']}><StudentDashboard /></RequireRole>} />
+      <Route path="/alumno/nivel" element={<RequireRole allow={['STUDENT']}><StudentLevelPage /></RequireRole>} />
       <Route path="/alumno/clases" element={<RequireRole allow={['STUDENT']}><StudentClassesPage /></RequireRole>} />
       <Route path="/alumno/material" element={<RequireRole allow={['STUDENT']}><StudentMaterialPage /></RequireRole>} />
       <Route path="/alumno/tareas" element={<RequireRole allow={['STUDENT']}><StudentAssignmentsPage /></RequireRole>} />

@@ -45,6 +45,13 @@ function nowIso() {
   return new Date().toISOString().replace('T', ' ')
 }
 
+function asDate(value) {
+  const text = String(value || '').trim()
+  if (!text) return null
+  const date = new Date(text.includes('T') ? text : text.replace(' ', 'T'))
+  return Number.isNaN(date.getTime()) ? null : date
+}
+
 function publishedTest(app) {
   const tests = app.findAllRecords('placement_tests').filter((record) => record.getString('status') === 'PUBLISHED')
   if (tests.length !== 1) {
@@ -154,6 +161,12 @@ function selectSnapshot(app, test, mode, seed) {
   }))
 }
 
+function requireStudent(e) {
+  if (!e.auth) throw new UnauthorizedError('Debes iniciar sesión como alumno para acceder a tu nivel.')
+  if (e.auth.getString('role') !== 'STUDENT') throw new ForbiddenError('Esta información solo está disponible para el alumno.')
+  return e.auth
+}
+
 function authorizeAttempt(e, attempt) {
   const mode = attempt.getString('mode')
   if (mode === 'PUBLIC') {
@@ -167,11 +180,8 @@ function authorizeAttempt(e, attempt) {
     return
   }
 
-  if (!e.auth) throw new UnauthorizedError('Debes iniciar sesión para acceder a esta evaluación.')
-  if (e.auth.getString('role') !== 'STUDENT') {
-    throw new ForbiddenError('Solo el alumno puede acceder a su evaluación.')
-  }
-  if (attempt.getString('student') !== e.auth.id) {
+  const student = requireStudent(e)
+  if (attempt.getString('student') !== student.id) {
     throw new ForbiddenError('No puedes acceder a la evaluación de otro alumno.')
   }
 }
@@ -198,6 +208,20 @@ function snapshot(attempt) {
 
 function attemptAnswers(app, attemptId) {
   return app.findAllRecords('placement_answers').filter((answer) => answer.getString('attempt') === attemptId)
+}
+
+function campusAttempts(app, studentId) {
+  return app.findAllRecords('placement_attempts').filter((attempt) => (
+    attempt.getString('mode') === 'CAMPUS' && attempt.getString('student') === studentId
+  ))
+}
+
+function sortNewest(records, field) {
+  return records.slice().sort((a, b) => {
+    const left = asDate(a.getString(field))
+    const right = asDate(b.getString(field))
+    return (right ? right.getTime() : 0) - (left ? left.getTime() : 0)
+  })
 }
 
 function questionDto(app, attempt, entry, answeredCount) {
@@ -248,6 +272,70 @@ function resultDto(attempt) {
   }
 }
 
+function campusHistoryDto(attempt) {
+  return {
+    ...resultDto(attempt),
+    startedAt: attempt.getString('started_at'),
+  }
+}
+
+function assessmentDto(assessment) {
+  return {
+    automaticLevel: assessment.getString('automatic_level'),
+    speakingLevel: assessment.getString('speaking_level'),
+    validatedLevel: assessment.getString('validated_level'),
+    assessedAt: assessment.getString('assessed_at'),
+    reason: assessment.getString('reason'),
+  }
+}
+
+function campusRetakeState(test, latestCompleted) {
+  const days = test.getInt('campus_retake_days')
+  if (!latestCompleted || days <= 0) return { allowed: true, days, nextAvailableAt: '' }
+
+  const completedAt = asDate(latestCompleted.getString('completed_at'))
+  if (!completedAt) return { allowed: true, days, nextAvailableAt: '' }
+  const next = new Date(completedAt.getTime() + days * 86400000)
+  const allowed = Date.now() >= next.getTime()
+  return { allowed, days, nextAvailableAt: allowed ? '' : next.toISOString() }
+}
+
+function campusSummary(e) {
+  noStore(e)
+  const student = requireStudent(e)
+  const test = publishedTest(e.app)
+  const attempts = campusAttempts(e.app, student.id)
+  const active = sortNewest(attempts.filter((attempt) => attempt.getString('status') === 'IN_PROGRESS'), 'started_at')[0] || null
+  const completed = sortNewest(attempts.filter((attempt) => attempt.getString('status') === 'COMPLETED'), 'completed_at')
+  const latestCompleted = completed[0] || null
+  const assessments = sortNewest(
+    e.app.findAllRecords('student_level_assessments').filter((assessment) => assessment.getString('student') === student.id),
+    'assessed_at',
+  )
+  const latestAssessment = assessments[0] || null
+  const currentLevel = latestAssessment
+    ? latestAssessment.getString('validated_level')
+    : latestCompleted ? latestCompleted.getString('estimated_level') : ''
+  const currentLevelSource = latestAssessment ? 'VALIDATED' : latestCompleted ? 'AUTOMATIC' : 'NONE'
+  const retake = campusRetakeState(test, latestCompleted)
+
+  return e.json(200, {
+    currentLevel,
+    currentLevelSource,
+    latestAttempt: latestCompleted ? campusHistoryDto(latestCompleted) : null,
+    latestAssessment: latestAssessment ? assessmentDto(latestAssessment) : null,
+    history: completed.slice(0, 20).map(campusHistoryDto),
+    activeAttempt: active ? {
+      attemptId: active.id,
+      totalQuestions: snapshot(active).length,
+      answered: attemptAnswers(e.app, active.id).length,
+      startedAt: active.getString('started_at'),
+    } : null,
+    retake,
+    campusQuestionCount: test.getInt('campus_question_count'),
+  })
+}
+
 function rejectComputedFields(body) {
   const forbidden = [
     'score', 'rawScore', 'raw_score', 'maxScore', 'max_score', 'scorePercent', 'score_percent',
@@ -276,14 +364,39 @@ function start(e) {
   const mode = String(body.mode || 'PUBLIC').toUpperCase()
   if (mode !== 'PUBLIC' && mode !== 'CAMPUS') throw new BadRequestError('Modo de evaluación no válido.')
 
+  let student = null
   if (mode === 'CAMPUS') {
-    if (!e.auth) throw new UnauthorizedError('Debes iniciar sesión para comenzar la evaluación Campus.')
-    if (e.auth.getString('role') !== 'STUDENT') throw new ForbiddenError('Solo un alumno puede iniciar la evaluación Campus.')
+    student = requireStudent(e)
+    const existing = sortNewest(
+      campusAttempts(e.app, student.id).filter((attempt) => attempt.getString('status') === 'IN_PROGRESS'),
+      'started_at',
+    )[0]
+    if (existing) {
+      return e.json(200, {
+        attemptId: existing.id,
+        mode: 'CAMPUS',
+        totalQuestions: snapshot(existing).length,
+        algorithmVersion: existing.getString('algorithm_version'),
+        resumed: true,
+      })
+    }
   }
 
   const test = publishedTest(e.app)
   const algorithmVersion = test.getString('algorithm_version')
   if (algorithmVersion !== 'cefr-v1') throw new InternalServerError('La versión de cálculo publicada no está soportada.')
+
+  if (mode === 'CAMPUS') {
+    const completed = sortNewest(
+      campusAttempts(e.app, student.id).filter((attempt) => attempt.getString('status') === 'COMPLETED'),
+      'completed_at',
+    )[0]
+    const retake = campusRetakeState(test, completed)
+    if (!retake.allowed) {
+      const readable = retake.nextAvailableAt ? retake.nextAvailableAt.slice(0, 10) : 'más adelante'
+      throw new BadRequestError(`Podrás repetir la evaluación Campus a partir de ${readable}.`)
+    }
+  }
 
   const publicToken = mode === 'PUBLIC' ? $security.randomString(48) : ''
   const selectionSeed = publicToken || $security.randomString(48)
@@ -292,7 +405,7 @@ function start(e) {
   const attempt = new Record(collection)
   attempt.set('test', test.id)
   attempt.set('mode', mode)
-  if (mode === 'CAMPUS') attempt.set('student', e.auth.id)
+  if (mode === 'CAMPUS') attempt.set('student', student.id)
   if (mode === 'PUBLIC') attempt.set('public_token_hash', $security.sha256(publicToken))
   attempt.set('status', 'IN_PROGRESS')
   attempt.set('algorithm_version', algorithmVersion)
@@ -305,6 +418,7 @@ function start(e) {
     mode,
     totalQuestions: selection.length,
     algorithmVersion,
+    resumed: false,
   }
   if (mode === 'PUBLIC') response.token = publicToken
   return e.json(201, response)
@@ -486,4 +600,5 @@ module.exports = {
   result,
   recommendations,
   contact,
+  campusSummary,
 }

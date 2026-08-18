@@ -92,6 +92,7 @@ test('todas las rutas STUDENT cargan sin errores runtime', async ({ page }) => {
   await login(page, requiredEnv('E2E_STUDENT_EMAIL'), requiredEnv('E2E_STUDENT_PASSWORD'), /\/alumno$/)
   await visitRoutes(page, [
     '/alumno',
+    '/alumno/nivel',
     '/alumno/clases',
     '/alumno/material',
     '/alumno/tareas',

@@ -5,6 +5,11 @@ routerAdd('POST', '/api/language-school/placement/start', (e) => {
   return placement.start(e)
 })
 
+routerAdd('GET', '/api/language-school/placement/campus/summary', (e) => {
+  const placement = require(`${__hooks}/placement_service.js`)
+  return placement.campusSummary(e)
+})
+
 routerAdd('GET', '/api/language-school/placement/attempts/{id}/question', (e) => {
   const placement = require(`${__hooks}/placement_service.js`)
   return placement.nextQuestion(e)
