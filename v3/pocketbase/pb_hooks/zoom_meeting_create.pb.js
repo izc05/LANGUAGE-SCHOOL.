@@ -41,9 +41,9 @@ routerAdd("POST", "/api/language-school/zoom/meetings/create", (e) => {
     throw new ForbiddenError("Solo Administración puede crear reuniones Zoom.")
   }
 
-  const data = new DynamicModel({ classId: "" })
-  e.bindBody(data)
-  const classId = String(data.classId || "").trim()
+  const requestInfo = e.requestInfo()
+  const body = requestInfo && requestInfo.body ? requestInfo.body : {}
+  const classId = String(body.classId || body.classid || "").trim()
   if (!classId) throw new BadRequestError("Falta la clase que se quiere conectar con Zoom.")
 
   const classRecord = e.app.findRecordById("classes", classId)
