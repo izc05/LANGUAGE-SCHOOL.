@@ -145,7 +145,7 @@ test('8C.6: Admin versiona el banco y PUBLISHED queda inmutable en servidor y UI
 
   await loginAdmin(page)
   await page.goto('/admin/test-de-nivel')
-  await expect(page.getByRole('heading', { name: 'Test de nivel' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Test de nivel', exact: true })).toBeVisible()
   await expect(page.getByText(apiVersion, { exact: true }).first()).toBeVisible()
   await expect(page.getByText('Versión inmutable.')).toBeVisible()
 
@@ -169,7 +169,7 @@ test('8C.6: Admin versiona el banco y PUBLISHED queda inmutable en servidor y UI
 
   await page.setViewportSize({ width: 390, height: 844 })
   await page.reload()
-  await expect(page.getByRole('heading', { name: 'Test de nivel' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Test de nivel', exact: true })).toBeVisible()
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
   expect(overflow).toBeLessThanOrEqual(1)
 })
