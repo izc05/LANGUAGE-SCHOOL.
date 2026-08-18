@@ -35,6 +35,10 @@ jobs:
       E2E_OUTSIDER_PASSWORD: E2eOutsiderPass123!
       LANGUAGE_SCHOOL_E2E: '1'
       LANGUAGE_SCHOOL_E2E_ZOOM_BASE_URL: http://127.0.0.1:8092
+      VITE_TURNSTILE_SITE_KEY: 1x00000000000000000000AA
+      TURNSTILE_SECRET_KEY: 1x0000000000000000000000000000000AA
+      TURNSTILE_EXPECTED_ACTION: contact
+      TURNSTILE_ALLOWED_HOSTNAMES: localhost,127.0.0.1
 
     steps:
       - name: Checkout
@@ -135,6 +139,7 @@ jobs:
           npx playwright install chromium
 
       - name: Run connected browser flows
+        timeout-minutes: 20
         working-directory: v3/e2e
         run: npm test
 
