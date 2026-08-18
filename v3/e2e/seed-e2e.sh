@@ -10,6 +10,8 @@ TEACHER_EMAIL="${E2E_TEACHER_EMAIL:-e2e-teacher@example.com}"
 TEACHER_PASSWORD="${E2E_TEACHER_PASSWORD:-E2eTeacherPass123!}"
 STUDENT_EMAIL="${E2E_STUDENT_EMAIL:-e2e-student@example.com}"
 STUDENT_PASSWORD="${E2E_STUDENT_PASSWORD:-E2eStudentPass123!}"
+OUTSIDER_EMAIL="${E2E_OUTSIDER_EMAIL:-e2e-outsider@example.com}"
+OUTSIDER_PASSWORD="${E2E_OUTSIDER_PASSWORD:-E2eOutsiderPass123!}"
 
 post_json() {
   local url="$1" token="$2" body="$3"
@@ -58,6 +60,10 @@ STUDENT="$(create_record 'users' "$ADMIN_TOKEN" "$(jq -nc --arg email "$STUDENT_
 STUDENT_ID="$(jq -r '.id' <<<"$STUDENT")"
 create_record 'student_profiles' "$ADMIN_TOKEN" "$(jq -nc --arg user "$STUDENT_ID" '{user:$user,guardian_name:"",guardian_phone:"",notes_private:"",active:true}')" >/dev/null
 
+OUTSIDER="$(create_record 'users' "$ADMIN_TOKEN" "$(jq -nc --arg email "$OUTSIDER_EMAIL" --arg password "$OUTSIDER_PASSWORD" '{email:$email,password:$password,passwordConfirm:$password,name:"E2E",surname:"Outsider",role:"STUDENT",status:"ACTIVE",phone:""}')")"
+OUTSIDER_ID="$(jq -r '.id' <<<"$OUTSIDER")"
+create_record 'student_profiles' "$ADMIN_TOKEN" "$(jq -nc --arg user "$OUTSIDER_ID" '{user:$user,guardian_name:"",guardian_phone:"",notes_private:"",active:true}')" >/dev/null
+
 echo 'E2E seed: creating academic chain'
 COURSE="$(create_record 'courses' "$ADMIN_TOKEN" '{"title":"E2E English B1","slug":"e2e-english-b1","level":"B1","description":"Browser test course","status":"ACTIVE","public_visible":true}')"
 COURSE_ID="$(jq -r '.id' <<<"$COURSE")"
@@ -67,7 +73,7 @@ create_record 'enrollments' "$ADMIN_TOKEN" "$(jq -nc --arg student "$STUDENT_ID"
 
 CLASS="$(create_record 'classes' "$ADMIN_TOKEN" "$(jq -nc --arg group "$GROUP_ID" --arg teacher "$TEACHER_ID" '{group:$group,teacher:$teacher,starts_at:"2026-12-10 18:00:00.000Z",ends_at:"2026-12-10 19:00:00.000Z",topic:"E2E Speaking class",description:"Browser test",status:"SCHEDULED",delivery_mode:"HYBRID",location_text:"Aula E2E",online_join_url:"https://example.com/e2e-language-class"}')")"
 CLASS_ID="$(jq -r '.id' <<<"$CLASS")"
-create_record 'zoom_meetings' "$ADMIN_TOKEN" "$(jq -nc --arg classId "$CLASS_ID" --arg admin "$ADMIN_ID" '{class:$classId,provider:"ZOOM",external_meeting_id:"98765432100",external_uuid:"e2e-zoom-uuid",join_url:"https://example.com/e2e-language-class",status:"READY",created_by:$admin}')" >/dev/null
+create_record 'zoom_meetings' "$ADMIN_TOKEN" "$(jq -nc --arg classId "$CLASS_ID" --arg admin "$ADMIN_ID" '{class:$classId,provider:"ZOOM",external_meeting_id:"98765432100",external_uuid:"e2e-zoom-uuid",join_url:"https://example.com/e2e-language-class",meeting_password:"e2e-room-pass",status:"READY",created_by:$admin}')" >/dev/null
 
 ZOOM_CREATE_CLASS="$(create_record 'classes' "$ADMIN_TOKEN" "$(jq -nc --arg group "$GROUP_ID" --arg teacher "$TEACHER_ID" '{group:$group,teacher:$teacher,starts_at:"2026-12-17 18:00:00.000Z",ends_at:"2026-12-17 19:15:00.000Z",topic:"E2E Zoom create class",description:"Forces the complete mocked Zoom creation path",status:"SCHEDULED",delivery_mode:"ONLINE",location_text:"",online_join_url:""}')")"
 ZOOM_CREATE_CLASS_ID="$(jq -r '.id' <<<"$ZOOM_CREATE_CLASS")"
@@ -75,4 +81,4 @@ ZOOM_CREATE_CLASS_ID="$(jq -r '.id' <<<"$ZOOM_CREATE_CLASS")"
 echo 'E2E seed: publishing a real pricing plan'
 create_record 'pricing_plans' "$ADMIN_TOKEN" '{"name":"E2E Monthly","description":"Tarifa publicada por la prueba de navegador.","price":45,"billing_text":"al mes","features":["Clases","Material","Seguimiento"],"sort_order":10,"active":true,"featured":true}' >/dev/null
 
-echo "E2E seed complete: admin=$ADMIN_ID teacher=$TEACHER_ID student=$STUDENT_ID group=$GROUP_ID zoom_create_class=$ZOOM_CREATE_CLASS_ID"
+echo "E2E seed complete: admin=$ADMIN_ID teacher=$TEACHER_ID student=$STUDENT_ID outsider=$OUTSIDER_ID group=$GROUP_ID zoom_create_class=$ZOOM_CREATE_CLASS_ID"
