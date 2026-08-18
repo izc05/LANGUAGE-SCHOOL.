@@ -61,6 +61,11 @@ if ! command -v nginx >/dev/null; then
   NGINX_INSTALLED_NOW=1
 fi
 
+if ! nginx -V 2>&1 | grep -q -- '--with-http_realip_module'; then
+  echo 'Installed Nginx lacks ngx_http_realip_module; refusing a Cloudflare deployment without trusted client-IP restoration.' >&2
+  exit 1
+fi
+
 # A fresh Ubuntu package enables a public default site on port 80. Disable only
 # that package-provided symlink; never remove a site that predates this install.
 DEFAULT_ENABLED_CONF='/etc/nginx/sites-enabled/default'
@@ -129,3 +134,4 @@ fi
 
 echo "Nginx configured for Language School at $PROXY_URL."
 echo "PocketBase API upstream: $PB_URL."
+echo 'Cloudflare visitor IP restoration: CF-Connecting-IP trusted only from loopback cloudflared.'
