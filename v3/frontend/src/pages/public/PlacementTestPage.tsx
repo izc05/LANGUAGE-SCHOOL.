@@ -220,14 +220,7 @@ export default function PlacementTestPage() {
                 </div>
                 <span aria-hidden="true">{progress}%</span>
               </div>
-              <div
-                className="placement-test-progress"
-                role="progressbar"
-                aria-label="Progreso del test"
-                aria-valuemin={1}
-                aria-valuemax={question.total}
-                aria-valuenow={question.position}
-              >
+              <div className="placement-test-progress" role="progressbar" aria-label="Progreso del test" aria-valuemin={1} aria-valuemax={question.total} aria-valuenow={question.position}>
                 <span style={{ width: `${progress}%` }} />
               </div>
 
@@ -236,10 +229,7 @@ export default function PlacementTestPage() {
                   <PlacementAudioPlayer attemptId={session.attemptId} questionId={question.question.id} publicToken={session.token} />
                 )}
                 {question.question.passage && (
-                  <div className="placement-question-passage">
-                    <span>LEE ESTE TEXTO</span>
-                    <p>{toPlainText(question.question.passage)}</p>
-                  </div>
+                  <div className="placement-question-passage"><span>LEE ESTE TEXTO</span><p>{toPlainText(question.question.passage)}</p></div>
                 )}
 
                 <form onSubmit={(event) => { event.preventDefault(); void submitAnswer() }}>
@@ -248,26 +238,16 @@ export default function PlacementTestPage() {
                     <div className="placement-option-list">
                       {question.question.options.map((option, index) => (
                         <label className={`placement-option${selectedOption === option.id ? ' is-selected' : ''}`} key={option.id}>
-                          <input
-                            type="radio"
-                            name="placement-answer"
-                            value={option.id}
-                            checked={selectedOption === option.id}
-                            onChange={() => setSelectedOption(option.id)}
-                            aria-label={`Option ${String.fromCharCode(65 + index)}`}
-                          />
+                          <input type="radio" name="placement-answer" value={option.id} checked={selectedOption === option.id} onChange={() => setSelectedOption(option.id)} />
                           <span className="placement-option-key" aria-hidden="true">{String.fromCharCode(65 + index)}</span>
                           <span>{toPlainText(option.label)}</span>
                         </label>
                       ))}
                     </div>
                   </fieldset>
-
                   <div className="placement-question-actions">
                     <p>Elige una respuesta. Una vez confirmada pasaremos a la siguiente pregunta.</p>
-                    <button className="button button-primary" type="submit" disabled={!selectedOption || busy}>
-                      {busy ? 'Guardando…' : question.position === question.total ? 'Ver mi resultado' : 'Confirmar respuesta'}
-                    </button>
+                    <button className="button button-primary" type="submit" disabled={!selectedOption || busy}>{busy ? 'Guardando…' : question.position === question.total ? 'Ver mi resultado' : 'Confirmar respuesta'}</button>
                   </div>
                   {error && <p className="placement-test-error" role="alert">{error}</p>}
                 </form>
@@ -312,39 +292,25 @@ export default function PlacementTestPage() {
                 </div>
 
                 <section className="placement-recommendations" aria-labelledby="placement-recommendations-title">
-                  <div className="placement-recommendations-heading">
-                    <div><span className="eyebrow">SIGUIENTE PASO</span><h2 id="placement-recommendations-title">Programas que encajan con tu {result.estimatedLevel}.</h2></div>
-                    <small>La recomendación usa la compatibilidad MCER configurada por la academia.</small>
-                  </div>
-
+                  <div className="placement-recommendations-heading"><div><span className="eyebrow">SIGUIENTE PASO</span><h2 id="placement-recommendations-title">Programas que encajan con tu {result.estimatedLevel}.</h2></div><small>La recomendación usa la compatibilidad MCER configurada por la academia.</small></div>
                   {recommendationsLoading && <p className="placement-recommendations-status" role="status">Buscando programas compatibles…</p>}
                   {recommendationError && <p className="placement-test-error" role="alert">{recommendationError}</p>}
                   {!recommendationsLoading && recommendations && recommendations.courses.length > 0 && (
-                    <div className="placement-recommendation-grid">
-                      {recommendations.courses.map((course) => (
-                        <article className="placement-recommendation-card" key={course.id}>
-                          <div><span>{course.cefrLevels.join(' · ')}</span><strong>{course.title}</strong></div>
-                          <p>{course.description || 'Consulta el programa para conocer enfoque, grupos y disponibilidad.'}</p>
-                          <div className="placement-recommendation-actions">
-                            <small>Nivel visible: {course.level || 'por confirmar'}</small>
-                            <Link to={`/programas/${course.slug}`}>Ver programa →</Link>
-                          </div>
-                        </article>
-                      ))}
-                    </div>
+                    <div className="placement-recommendation-grid">{recommendations.courses.map((course) => (
+                      <article className="placement-recommendation-card" key={course.id}>
+                        <div><span>{course.cefrLevels.join(' · ')}</span><strong>{course.title}</strong></div>
+                        <p>{course.description || 'Consulta el programa para conocer enfoque, grupos y disponibilidad.'}</p>
+                        <div className="placement-recommendation-actions"><small>Nivel visible: {course.level || 'por confirmar'}</small><Link to={`/programas/${course.slug}`}>Ver programa →</Link></div>
+                      </article>
+                    ))}</div>
                   )}
                   {!recommendationsLoading && recommendations && recommendations.courses.length === 0 && (
-                    <div className="placement-recommendations-empty">
-                      <strong>Tu nivel necesita una orientación más personalizada.</strong>
-                      <p>Ahora mismo no hay un programa público marcado específicamente para {result.estimatedLevel}. Podemos revisar contigo el objetivo, edad, speaking y disponibilidad.</p>
-                    </div>
+                    <div className="placement-recommendations-empty"><strong>Tu nivel necesita una orientación más personalizada.</strong><p>Ahora mismo no hay un programa público marcado específicamente para {result.estimatedLevel}. Podemos revisar contigo el objetivo, edad, speaking y disponibilidad.</p></div>
                   )}
                 </section>
 
                 <div className="placement-conversion-actions">
-                  <button className="button button-primary" type="button" onClick={() => { setContactOpen((value) => !value); setContactError(''); setContactNotice('') }}>
-                    {contactOpen ? 'Cerrar solicitud' : 'Quiero que me orientéis'}
-                  </button>
+                  <button className="button button-primary" type="button" onClick={() => { setContactOpen((value) => !value); setContactError(''); setContactNotice('') }}>{contactOpen ? 'Cerrar solicitud' : 'Quiero que me orientéis'}</button>
                   <button className="button button-outline" type="button" onClick={restart}>Repetir el test</button>
                 </div>
 
@@ -353,11 +319,7 @@ export default function PlacementTestPage() {
 
                 {contactOpen && (
                   <form className="placement-contact-form" aria-labelledby="placement-contact-title" onSubmit={submitContact}>
-                    <div className="placement-contact-heading">
-                      <span className="eyebrow">ORIENTACIÓN PERSONAL</span>
-                      <h2 id="placement-contact-title">Cuéntanos qué quieres conseguir.</h2>
-                      <p>La academia recibirá tu resultado {result.estimatedLevel} junto a este mensaje para poder orientarte mejor.</p>
-                    </div>
+                    <div className="placement-contact-heading"><span className="eyebrow">ORIENTACIÓN PERSONAL</span><h2 id="placement-contact-title">Cuéntanos qué quieres conseguir.</h2><p>La academia recibirá tu resultado {result.estimatedLevel} junto a este mensaje para poder orientarte mejor.</p></div>
                     <div className="placement-contact-fields">
                       <label><span>Nombre</span><input value={contactName} onChange={(event) => setContactName(event.target.value)} required /></label>
                       <label><span>Email</span><input type="email" value={contactEmail} onChange={(event) => setContactEmail(event.target.value)} required /></label>
@@ -365,10 +327,7 @@ export default function PlacementTestPage() {
                       <label className="placement-contact-message"><span>¿Qué necesitas?</span><textarea rows={4} value={contactMessage} onChange={(event) => setContactMessage(event.target.value)} placeholder="Quiero mejorar conversación, preparar un examen, conocer horarios…" required /></label>
                     </div>
                     {contactError && <p className="placement-test-error" role="alert">{contactError}</p>}
-                    <div className="placement-contact-submit">
-                      <p>Al enviar, usaremos estos datos únicamente para atender tu consulta y orientarte sobre los servicios solicitados.</p>
-                      <button className="button button-primary" type="submit" disabled={contactSending}>{contactSending ? 'Enviando…' : 'Enviar solicitud con mi resultado'}</button>
-                    </div>
+                    <div className="placement-contact-submit"><p>Al enviar, usaremos estos datos únicamente para atender tu consulta y orientarte sobre los servicios solicitados.</p><button className="button button-primary" type="submit" disabled={contactSending}>{contactSending ? 'Enviando…' : 'Enviar solicitud con mi resultado'}</button></div>
                   </form>
                 )}
               </div>
