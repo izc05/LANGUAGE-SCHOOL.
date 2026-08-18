@@ -164,10 +164,10 @@ test('TEACHER permanece en su ámbito', async ({ page }) => {
 test('STUDENT entra a un campus orientado a acciones y permanece en su ámbito', async ({ page }) => {
   await login(page, credentials.student.email, credentials.student.password, /\/alumno$/)
   await expect(page.getByRole('heading', { name: 'Hola, E2E Student' })).toBeVisible()
-  await expect(page.getByText('CAMPUS LANGUAGE SCHOOL')).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'Tu semana de inglés, en un solo lugar.' })).toBeVisible()
+  await expect(page.getByText('TU CAMPUS', { exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Hoy, empieza por aquí/i })).toBeVisible()
   await expect(page.locator('.campus-next-class')).toBeVisible()
-  await expect(page.locator('.campus-shortcut')).toHaveCount(3)
+  await expect(page.locator('.campus10-action-card')).toHaveCount(3)
 
   const nav = page.getByRole('navigation', { name: 'Menú de Alumno' })
   await expect(nav.getByRole('link', { name: 'Inicio' })).toHaveAttribute('aria-current', 'page')
