@@ -70,6 +70,7 @@ test('todas las rutas ADMIN cargan sin errores runtime', async ({ page }) => {
     '/admin/aula-online',
     '/admin/zoom',
     '/admin/test-de-nivel',
+    '/admin/test-de-nivel/resultados',
     '/admin/tarifas',
     '/admin/configuracion',
     '/admin/sistema',

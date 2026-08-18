@@ -20,6 +20,11 @@ routerAdd('POST', '/api/language-school/placement/teacher/students/{studentId}/v
   return teacherPlacement.validate(e)
 })
 
+routerAdd('GET', '/api/language-school/placement/admin/overview', (e) => {
+  const placementAdminOverview = require(`${__hooks}/placement_admin_overview.js`)
+  return placementAdminOverview.overview(e)
+})
+
 routerAdd('GET', '/api/language-school/placement/admin/tests', (e) => {
   const placementAdmin = require(`${__hooks}/placement_admin.js`)
   return placementAdmin.listTests(e)

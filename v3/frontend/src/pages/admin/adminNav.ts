@@ -14,6 +14,7 @@ export const adminNav = [
   { label: 'Aula online', to: '/admin/aula-online' },
   { label: 'Zoom', to: '/admin/zoom' },
   { label: 'Test de nivel', to: '/admin/test-de-nivel' },
+  { label: 'Resultados nivel', to: '/admin/test-de-nivel/resultados' },
   { label: 'Tarifas', to: '/admin/tarifas' },
   { label: 'Configuración', to: '/admin/configuracion' },
   { label: 'Sistema', to: '/admin/sistema' },

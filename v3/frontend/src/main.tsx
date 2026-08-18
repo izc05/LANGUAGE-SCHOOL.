@@ -76,6 +76,7 @@ import './styles/placement-conversion-phase8c3.css'
 import './styles/student-level-phase8c4.css'
 import './styles/teacher-levels-phase8c5.css'
 import './styles/placement-admin-phase8c6.css'
+import './styles/placement-results-phase8c6.css'
 
 const root = document.getElementById('root')
 if (!root) throw new Error('No se ha encontrado el elemento #root')

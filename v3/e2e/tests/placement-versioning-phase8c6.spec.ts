@@ -24,7 +24,7 @@ async function loginAdmin(page: Page) {
   await expect(page).toHaveURL(/\/admin$/)
 }
 
-test('8C.6: Admin versiona el banco y PUBLISHED queda inmutable en servidor y UI', async ({ request, page }) => {
+test('8C.6: Admin versiona el banco, revisa resultados reales y PUBLISHED queda inmutable', async ({ request, page }) => {
   const suffix = Date.now().toString(36)
   const apiVersion = `e2e-8c6-api-${suffix}`
   const uiVersion = `e2e-8c6-ui-${suffix}`
@@ -35,6 +35,33 @@ test('8C.6: Admin versiona el banco y PUBLISHED queda inmutable en servidor y UI
     headers: { Authorization: student.token },
   })
   expect(studentList.status()).toBe(403)
+
+  const studentOverview = await request.get(`${PB_URL}/api/language-school/placement/admin/overview`, {
+    headers: { Authorization: student.token },
+  })
+  expect(studentOverview.status()).toBe(403)
+
+  const overviewResponse = await request.get(`${PB_URL}/api/language-school/placement/admin/overview`, {
+    headers: { Authorization: admin.token },
+  })
+  expect(overviewResponse.status()).toBe(200)
+  expect(overviewResponse.headers()['cache-control']).toContain('no-store')
+  const overviewText = await overviewResponse.text()
+  expect(overviewText).not.toContain('correct_option_id')
+  expect(overviewText).not.toContain('selected_option_id')
+  const overview = JSON.parse(overviewText) as {
+    metrics: { totalAttempts: number; studentsWithLevel: number; validatedStudents: number }
+    studentLevels: Array<{ studentId: string; currentLevel: string; currentLevelSource: string; latestAttempt?: { estimatedLevel?: string } | null; latestAssessment?: { validatedLevel?: string } | null }>
+    recentAttempts: Array<{ mode: string; estimatedLevel: string }>
+  }
+  expect(overview.metrics.totalAttempts).toBeGreaterThan(0)
+  expect(overview.metrics.studentsWithLevel).toBeGreaterThan(0)
+  expect(overview.metrics.validatedStudents).toBeGreaterThan(0)
+  const studentLevel = overview.studentLevels.find((item) => item.studentId === student.record.id)
+  expect(studentLevel).toMatchObject({ currentLevel: 'C2', currentLevelSource: 'VALIDATED' })
+  expect(studentLevel?.latestAttempt?.estimatedLevel).toBe('C2')
+  expect(studentLevel?.latestAssessment?.validatedLevel).toBe('C2')
+  expect(overview.recentAttempts.length).toBeGreaterThan(0)
 
   const directCreate = await request.post(`${PB_URL}/api/collections/placement_tests/records`, {
     headers: { Authorization: admin.token },
@@ -144,6 +171,19 @@ test('8C.6: Admin versiona el banco y PUBLISHED queda inmutable en servidor y UI
   expect(immutablePublished.status()).toBe(400)
 
   await loginAdmin(page)
+  await page.goto('/admin/test-de-nivel/resultados')
+  await expect(page.getByRole('heading', { name: 'Resultados de nivel', exact: true })).toBeVisible()
+  const studentResultCard = page.locator('.placement-results-student-list article', { hasText: 'E2E Student' })
+  await expect(studentResultCard).toContainText('C2')
+  await expect(studentResultCard).toContainText('Validado por profesor')
+  await expect(page.getByRole('table', { name: 'Intentos recientes del test de nivel' })).toBeVisible()
+
+  await page.goto('/admin/alumnos')
+  const studentRow = page.locator('.students-table-row', { hasText: 'E2E Student' })
+  await expect(studentRow).toBeVisible()
+  await expect(studentRow.locator(':scope > span').nth(1).locator('strong')).toHaveText('C2')
+  await expect(studentRow).toContainText('E2E English B1')
+
   await page.goto('/admin/test-de-nivel')
   await expect(page.getByRole('heading', { name: 'Test de nivel', exact: true })).toBeVisible()
   await expect(page.getByText(apiVersion, { exact: true }).first()).toBeVisible()
@@ -168,8 +208,8 @@ test('8C.6: Admin versiona el banco y PUBLISHED queda inmutable en servidor y UI
   await expect(page.getByText('Versión inmutable.')).toBeVisible()
 
   await page.setViewportSize({ width: 390, height: 844 })
-  await page.reload()
-  await expect(page.getByRole('heading', { name: 'Test de nivel', exact: true })).toBeVisible()
+  await page.goto('/admin/test-de-nivel/resultados')
+  await expect(page.getByRole('heading', { name: 'Resultados de nivel', exact: true })).toBeVisible()
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
   expect(overflow).toBeLessThanOrEqual(1)
 })

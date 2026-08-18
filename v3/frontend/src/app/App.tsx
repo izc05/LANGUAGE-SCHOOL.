@@ -43,6 +43,7 @@ import AdminClassesPage from '../pages/admin/AdminClassesPage'
 import AdminClassDeliveryPage from '../pages/admin/AdminClassDeliveryPage'
 import AdminZoomIntegrationPage from '../pages/admin/AdminZoomIntegrationPage'
 import AdminPlacementTestPage from '../pages/admin/AdminPlacementTestPage'
+import AdminPlacementResultsPage from '../pages/admin/AdminPlacementResultsPage'
 import AdminPricingPage from '../pages/admin/AdminPricingPage'
 import AdminSettingsPage from '../pages/admin/AdminSettingsPage'
 import AdminSystemStatusPage from '../pages/admin/AdminSystemStatusPage'
@@ -98,6 +99,7 @@ export default function App() {
       <Route path="/admin/aula-online" element={<RequireRole allow={['ADMIN']}><AdminClassDeliveryPage /></RequireRole>} />
       <Route path="/admin/zoom" element={<RequireRole allow={['ADMIN']}><AdminZoomIntegrationPage /></RequireRole>} />
       <Route path="/admin/test-de-nivel" element={<RequireRole allow={['ADMIN']}><AdminPlacementTestPage /></RequireRole>} />
+      <Route path="/admin/test-de-nivel/resultados" element={<RequireRole allow={['ADMIN']}><AdminPlacementResultsPage /></RequireRole>} />
       <Route path="/admin/tarifas" element={<RequireRole allow={['ADMIN']}><AdminPricingPage /></RequireRole>} />
       <Route path="/admin/configuracion" element={<RequireRole allow={['ADMIN']}><AdminSettingsPage /></RequireRole>} />
       <Route path="/admin/sistema" element={<RequireRole allow={['ADMIN']}><AdminSystemStatusPage /></RequireRole>} />

@@ -13,6 +13,7 @@ import {
   type AdminEnrollmentRecord,
   type AdminGroupRecord,
 } from '../../services/pocketbase/adminAcademic'
+import { getPlacementAdminOverview, type PlacementAdminStudentLevel } from '../../services/pocketbase/placementAdmin'
 import type { AppUser } from '../../services/pocketbase/types'
 import type { ClassRecord } from '../../services/pocketbase/studentPortal'
 import { adminNav } from './adminNav'
@@ -23,6 +24,7 @@ type StudentView = {
   name: string
   email: string
   level: string
+  levelSource: PlacementAdminStudentLevel['currentLevelSource']
   program: string
   group: string
   teacher: string
@@ -35,6 +37,10 @@ const demoUsers = [
   { id: 'demo-2', name: 'Daniel', surname: 'López', email: 'daniel@example.com', phone: '', role: 'STUDENT', status: 'ACTIVE', collectionId: '', collectionName: 'users', created: '', updated: '', expand: {} },
 ] as AppUser[]
 
+const demoLevels: PlacementAdminStudentLevel[] = [
+  { studentId: 'demo-1', studentName: 'Emma Martín', email: 'emma@example.com', status: 'ACTIVE', currentLevel: 'B1', currentLevelSource: 'VALIDATED', latestAttempt: null, latestAssessment: null, attemptCount: 2, assessmentCount: 1 },
+]
+
 function formatNextClass(value?: string): string {
   if (!value) return 'Sin programar'
   const date = new Date(value)
@@ -46,6 +52,12 @@ function initials(user: AppUser): string {
   return `${user.name?.charAt(0) || ''}${user.surname?.charAt(0) || ''}`.toUpperCase() || 'AL'
 }
 
+function levelSourceLabel(source: PlacementAdminStudentLevel['currentLevelSource']): string {
+  if (source === 'VALIDATED') return 'validado'
+  if (source === 'AUTOMATIC') return 'estimado'
+  return 'sin evaluar'
+}
+
 export default function AdminStudentsPage() {
   const { isDemoMode } = useAuth()
   const [users, setUsers] = useState<AppUser[]>(isDemoMode ? demoUsers : [])
@@ -53,6 +65,7 @@ export default function AdminStudentsPage() {
   const [enrollments, setEnrollments] = useState<AdminEnrollmentRecord[]>([])
   const [classes, setClasses] = useState<ClassRecord[]>([])
   const [groups, setGroups] = useState<AdminGroupRecord[]>([])
+  const [levelSummaries, setLevelSummaries] = useState<PlacementAdminStudentLevel[]>(isDemoMode ? demoLevels : [])
   const [query, setQuery] = useState('')
   const [status, setStatus] = useState<'Todos' | StudentView['status']>('Todos')
   const [selectedId, setSelectedId] = useState<string | null>(isDemoMode ? demoUsers[0].id : null)
@@ -76,14 +89,15 @@ export default function AdminStudentsPage() {
     if (isDemoMode) return
     let mounted = true
     setLoading(true)
-    Promise.all([listAdminUsers('STUDENT'), listAdminUsers('TEACHER'), listAdminEnrollments(), listAdminClasses(), listAdminGroups()])
-      .then(([studentUsers, teacherUsers, enrollmentRecords, classRecords, groupRecords]) => {
+    Promise.all([listAdminUsers('STUDENT'), listAdminUsers('TEACHER'), listAdminEnrollments(), listAdminClasses(), listAdminGroups(), getPlacementAdminOverview()])
+      .then(([studentUsers, teacherUsers, enrollmentRecords, classRecords, groupRecords, placementOverview]) => {
         if (!mounted) return
         setUsers(studentUsers)
         setTeachers(teacherUsers)
         setEnrollments(enrollmentRecords)
         setClasses(classRecords)
         setGroups(groupRecords)
+        setLevelSummaries(placementOverview.studentLevels)
         if (studentUsers[0]) setSelectedId(studentUsers[0].id)
       })
       .catch(() => { if (mounted) setError('No se han podido cargar los alumnos. Inténtalo de nuevo en unos segundos.') })
@@ -96,6 +110,7 @@ export default function AdminStudentsPage() {
     const group = activeEnrollment?.expand?.group
     const course = group?.expand?.course
     const teacher = teachers.find((item) => item.id === group?.teacher)
+    const academicLevel = levelSummaries.find((item) => item.studentId === user.id)
     const next = classes
       .filter((item) => item.group === group?.id && item.status === 'SCHEDULED' && new Date(item.starts_at).getTime() >= Date.now())
       .sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime())[0]
@@ -104,14 +119,15 @@ export default function AdminStudentsPage() {
       initials: initials(user),
       name: [user.name, user.surname].filter(Boolean).join(' ') || user.email,
       email: user.email,
-      level: course?.level || '—',
+      level: academicLevel?.currentLevel || '—',
+      levelSource: academicLevel?.currentLevelSource || 'NONE',
       program: course?.title || 'Sin curso',
       group: group?.name || 'Sin grupo',
       teacher: teacher ? [teacher.name, teacher.surname].filter(Boolean).join(' ') : 'Sin profesor',
       status: user.status === 'ACTIVE' ? 'Activo' : 'Pausado',
       nextClass: formatNextClass(next?.starts_at),
     }
-  }), [classes, enrollments, teachers, users])
+  }), [classes, enrollments, levelSummaries, teachers, users])
 
   const filteredStudents = useMemo(() => {
     const normalized = query.trim().toLowerCase()
@@ -214,7 +230,7 @@ export default function AdminStudentsPage() {
           <div>
             <span className="eyebrow">PLATAFORMA · ALUMNOS</span>
             <h2>Alumnos y espacio privado</h2>
-            <p>Gestiona cuentas de alumno, estado de acceso, matrícula, grupo, profesor y próxima clase desde un único lugar.</p>
+            <p>Gestiona cuentas, matrícula, grupo, profesor, próxima clase y nivel académico real desde un único lugar.</p>
           </div>
           <button className="button button-primary" type="button" onClick={() => setShowCreate((value) => !value)}>{showCreate ? 'Cerrar alta' : '+ Nuevo alumno'}</button>
         </header>
@@ -239,24 +255,24 @@ export default function AdminStudentsPage() {
           <article><span>Alumnos</span><strong>{studentViews.length}</strong><small>Total registrado</small></article>
           <article><span>Activos</span><strong>{activeCount}</strong><small>Cuentas habilitadas</small></article>
           <article><span>Matriculados</span><strong>{enrolledCount}</strong><small>Con matrícula activa</small></article>
-          <article><span>Sin grupo</span><strong>{Math.max(0, studentViews.length - enrolledCount)}</strong><small>Pendientes de matrícula</small></article>
+          <article><span>Evaluados</span><strong>{studentViews.filter((student) => student.level !== '—').length}</strong><small>Con nivel automático o validado</small></article>
         </section>
 
         <div className="students-admin-layout">
           <section className="panel students-list-panel">
             <div className="students-toolbar">
-              <label className="student-search"><span>Buscar alumno</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Nombre, nivel, profesor..." /></label>
+              <label className="student-search"><span>Buscar alumno</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Nombre, nivel evaluado, profesor..." /></label>
               <div className="filter-pills">
                 {(['Todos', 'Activo', 'Pausado'] as const).map((option) => <button key={option} className={status === option ? 'active' : ''} type="button" onClick={() => setStatus(option)}>{option}</button>)}
               </div>
             </div>
 
             <div className="students-table" role="table" aria-label="Listado de alumnos">
-              <div className="students-table-row students-table-header" role="row"><span>Alumno</span><span>Programa</span><span>Profesor</span><span>Próxima clase</span><span>Estado</span></div>
+              <div className="students-table-row students-table-header" role="row"><span>Alumno</span><span>Nivel / programa</span><span>Profesor</span><span>Próxima clase</span><span>Estado</span></div>
               {filteredStudents.map((student) => (
                 <button className={`students-table-row ${selected?.user.id === student.user.id ? 'selected' : ''}`} role="row" type="button" key={student.user.id} onClick={() => setSelectedId(student.user.id)}>
                   <span className="student-identity"><b>{student.initials}</b><span><strong>{student.name}</strong><small>{student.email}</small></span></span>
-                  <span><strong>{student.level}</strong><small>{student.program}</small></span>
+                  <span><strong>{student.level}</strong><small>{student.level !== '—' ? `${levelSourceLabel(student.levelSource)} · ` : ''}{student.program}</small></span>
                   <span>{student.teacher}</span><span>{student.nextClass}</span>
                   <span><i className={`student-status ${student.status === 'Activo' ? 'active' : 'paused'}`}>{student.status}</i></span>
                 </button>
@@ -268,7 +284,7 @@ export default function AdminStudentsPage() {
           <aside className="panel student-detail-panel">
             {!selected ? <PortalEmptyState title="Sin alumnos" description="Crea el primer alumno para empezar la gestión académica." /> : <>
               <div className="student-detail-heading"><span className="student-avatar-large">{selected.initials}</span><div><span className="eyebrow">FICHA DEL ALUMNO</span><h3>{selected.name}</h3><p>{selected.email}</p></div></div>
-              <div className="student-detail-tags"><span>{selected.level}</span><span>{selected.program}</span><span>{selected.group}</span></div>
+              <div className="student-detail-tags"><span>Nivel {selected.level} · {levelSourceLabel(selected.levelSource)}</span><span>{selected.program}</span><span>{selected.group}</span></div>
               <div className="student-detail-grid">
                 <div><span>Próxima clase</span><strong>{selected.nextClass}</strong></div>
                 <div><span>Profesor</span><strong>{selected.teacher}</strong></div>
@@ -287,8 +303,8 @@ export default function AdminStudentsPage() {
                 <div><label>Nombre</label><input value={editName} onChange={(event) => setEditName(event.target.value)} required /></div>
                 <div><label>Apellidos</label><input value={editSurname} onChange={(event) => setEditSurname(event.target.value)} required /></div>
                 <div><label>Teléfono</label><input type="tel" value={editPhone} onChange={(event) => setEditPhone(event.target.value)} /></div>
-                <div><label>Grupo y nivel</label><select value={editGroupId} onChange={(event) => setEditGroupId(event.target.value)}><option value="">Sin grupo activo</option>{groups.filter((group) => group.status === 'ACTIVE').map((group) => <option key={group.id} value={group.id}>{group.expand?.course?.level || 'Sin nivel'} · {group.expand?.course?.title || 'Curso'} · {group.name}</option>)}</select></div>
-                <p className="muted admin-create-wide">Cambiar de grupo finaliza la matrícula activa anterior y crea una nueva, sin borrar su historial ni clases anteriores.</p>
+                <div><label>Grupo y curso</label><select value={editGroupId} onChange={(event) => setEditGroupId(event.target.value)}><option value="">Sin grupo activo</option>{groups.filter((group) => group.status === 'ACTIVE').map((group) => <option key={group.id} value={group.id}>{group.expand?.course?.level || 'Sin nivel de curso'} · {group.expand?.course?.title || 'Curso'} · {group.name}</option>)}</select></div>
+                <p className="muted admin-create-wide">El nivel mostrado en esta ficha procede del test/histórico académico. El texto de nivel del curso se usa solo para identificar el programa. Cambiar de grupo conserva el historial anterior.</p>
                 <div className="admin-create-action"><button type="button" onClick={() => setShowEdit(false)}>Cancelar</button><button className="button button-primary" type="submit" disabled={saving}>{saving ? 'Guardando…' : 'Guardar cambios'}</button></div>
               </form>}
             </>}
