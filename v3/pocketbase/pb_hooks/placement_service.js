@@ -5,44 +5,17 @@ function noStore(e) {
 }
 
 function requestBody(e) {
-  const data = new DynamicModel({
-    mode: '',
-    questionId: '',
-    optionId: '',
-    score: null,
-    rawScore: null,
-    raw_score: null,
-    maxScore: null,
-    max_score: null,
-    scorePercent: null,
-    score_percent: null,
-    level: '',
-    estimatedLevel: '',
-    estimated_level: '',
-    skillScores: null,
-    skill_scores: null,
-    student: '',
-    test: '',
-  })
-  e.bindBody(data)
-  return {
-    mode: data.mode,
-    questionId: data.questionId,
-    optionId: data.optionId,
-    score: data.score,
-    rawScore: data.rawScore,
-    raw_score: data.raw_score,
-    maxScore: data.maxScore,
-    max_score: data.max_score,
-    scorePercent: data.scorePercent,
-    score_percent: data.score_percent,
-    level: data.level,
-    estimatedLevel: data.estimatedLevel,
-    estimated_level: data.estimated_level,
-    skillScores: data.skillScores,
-    skill_scores: data.skill_scores,
-    student: data.student,
-    test: data.test,
+  const raw = toString(e.request.body || '').trim()
+  if (!raw) return {}
+
+  try {
+    const parsed = JSON.parse(raw)
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      throw new Error('invalid body shape')
+    }
+    return parsed
+  } catch {
+    throw new BadRequestError('El cuerpo de la solicitud no es JSON válido.')
   }
 }
 
@@ -268,7 +241,7 @@ function rejectComputedFields(body) {
     'score', 'rawScore', 'raw_score', 'maxScore', 'max_score', 'scorePercent', 'score_percent',
     'level', 'estimatedLevel', 'estimated_level', 'skillScores', 'skill_scores', 'student', 'test', 'mode',
   ]
-  const attempted = forbidden.some((key) => body[key] !== null && body[key] !== undefined && body[key] !== '')
+  const attempted = forbidden.some((key) => body[key] !== undefined)
   if (attempted) {
     throw new BadRequestError('La puntuación, el nivel y la identidad del intento se calculan exclusivamente en el servidor.')
   }
