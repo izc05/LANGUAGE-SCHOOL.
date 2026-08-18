@@ -77,10 +77,7 @@ jobs:
           ARCHIVE="$(sudo find "$BACKUP_DIR" -maxdepth 1 -type f -name 'language-school-*.tar.gz' -print -quit)"
           test -n "$ARCHIVE"
           sudo test -f "$ARCHIVE.sha256"
-          (
-            cd "$BACKUP_DIR"
-            sudo sha256sum -c "$(basename "$ARCHIVE.sha256")"
-          )
+          sudo bash -c 'cd "$1" && sha256sum -c "$2"' _ "$BACKUP_DIR" "$(basename "$ARCHIVE.sha256")"
 
           printf 'changed-after-backup\n' > "$DATA_PARENT/pb_data/state.txt"
           printf 'new-data\n' > "$DATA_PARENT/pb_data/new.txt"
@@ -99,7 +96,7 @@ jobs:
           test -n "$PREVIOUS"
           test "$(sudo cat "$PREVIOUS/state.txt")" = 'changed-after-backup'
 
-          cp "$ARCHIVE" "$ROOT/no-checksum.tar.gz"
+          sudo cp "$ARCHIVE" "$ROOT/no-checksum.tar.gz"
           if sudo env \
             PRODUCTION_ENV="$PROD_ENV" \
             DATA_PARENT="$DATA_PARENT" \
