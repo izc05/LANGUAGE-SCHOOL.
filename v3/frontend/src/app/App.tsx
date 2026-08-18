@@ -37,6 +37,7 @@ import AdminTeachersPage from '../pages/admin/AdminTeachersPage'
 import AdminTeacherPublicProfilesPage from '../pages/admin/AdminTeacherPublicProfilesPage'
 import AdminCoursesPage from '../pages/admin/AdminCoursesPage'
 import AdminClassesPage from '../pages/admin/AdminClassesPage'
+import AdminClassDeliveryPage from '../pages/admin/AdminClassDeliveryPage'
 import AdminPricingPage from '../pages/admin/AdminPricingPage'
 import AdminSettingsPage from '../pages/admin/AdminSettingsPage'
 import AdminSystemStatusPage from '../pages/admin/AdminSystemStatusPage'
@@ -86,6 +87,7 @@ export default function App() {
       <Route path="/admin/profesores/publicos" element={<RequireRole allow={['ADMIN']}><AdminTeacherPublicProfilesPage /></RequireRole>} />
       <Route path="/admin/cursos" element={<RequireRole allow={['ADMIN']}><AdminCoursesPage /></RequireRole>} />
       <Route path="/admin/clases" element={<RequireRole allow={['ADMIN']}><AdminClassesPage /></RequireRole>} />
+      <Route path="/admin/aula-online" element={<RequireRole allow={['ADMIN']}><AdminClassDeliveryPage /></RequireRole>} />
       <Route path="/admin/tarifas" element={<RequireRole allow={['ADMIN']}><AdminPricingPage /></RequireRole>} />
       <Route path="/admin/configuracion" element={<RequireRole allow={['ADMIN']}><AdminSettingsPage /></RequireRole>} />
       <Route path="/admin/sistema" element={<RequireRole allow={['ADMIN']}><AdminSystemStatusPage /></RequireRole>} />
