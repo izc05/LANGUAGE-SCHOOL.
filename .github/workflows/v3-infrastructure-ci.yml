@@ -35,16 +35,16 @@ jobs:
       - name: Validate PocketBase loopback and hooks start wrapper
         run: |
           mkdir -p "$RUNNER_TEMP/pb_hooks"
-          OUTPUT=$(PB_URL=http://127.0.0.1:8090 \
+          OUTPUT=$(PB_URL=http://127.0.0.1:8091 \
             PB_BIN=/usr/bin/echo \
             PB_DATA=/tmp/pb_data \
             PB_MIGRATIONS=/tmp/pb_migrations \
             PB_HOOKS="$RUNNER_TEMP/pb_hooks" \
             bash v3/infrastructure/raspberry-pi/start-pocketbase.sh)
-          printf '%s' "$OUTPUT" | grep -q -- '--http=127.0.0.1:8090'
+          printf '%s' "$OUTPUT" | grep -q -- '--http=127.0.0.1:8091'
           printf '%s' "$OUTPUT" | grep -q -- "--hooksDir=$RUNNER_TEMP/pb_hooks"
 
-          if PB_URL=http://0.0.0.0:8090 \
+          if PB_URL=http://0.0.0.0:8091 \
             PB_BIN=/usr/bin/echo \
             PB_HOOKS="$RUNNER_TEMP/pb_hooks" \
             bash v3/infrastructure/raspberry-pi/start-pocketbase.sh; then
@@ -52,7 +52,7 @@ jobs:
             exit 1
           fi
 
-          if PB_URL=http://127.0.0.1:8090 \
+          if PB_URL=http://127.0.0.1:8091 \
             PB_BIN=/usr/bin/echo \
             PB_HOOKS="$RUNNER_TEMP/missing-hooks" \
             bash v3/infrastructure/raspberry-pi/start-pocketbase.sh; then
@@ -69,6 +69,27 @@ jobs:
           grep -Fq 'find "$PB_DIR/pb_migrations" "$PB_DIR/pb_hooks" -type f -exec chmod 0644 {} +' "$INSTALLER"
           test -d v3/pocketbase/pb_hooks
           test -d v3/pocketbase/pb_migrations
+
+      - name: Reject unsafe frontend production origins
+        run: |
+          DEPLOY='v3/infrastructure/raspberry-pi/deploy-frontend.sh'
+          for ORIGIN in \
+            'http://academy.example.org' \
+            'https://english.example.com' \
+            'https://localhost' \
+            'https://127.0.0.1'; do
+            set +e
+            PUBLIC_ORIGIN="$ORIGIN" \
+              PRODUCTION_ENV="$RUNNER_TEMP/not-present.env" \
+              bash "$DEPLOY" >"$RUNNER_TEMP/deploy-origin.log" 2>&1
+            EXIT_CODE=$?
+            set -e
+            if [ "$EXIT_CODE" -eq 0 ]; then
+              cat "$RUNNER_TEMP/deploy-origin.log" >&2
+              echo "Unsafe PUBLIC_ORIGIN was accepted: $ORIGIN" >&2
+              exit 1
+            fi
+          done
 
       - name: Reject secret-like environment keys
         run: |
@@ -101,8 +122,8 @@ jobs:
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y nginx
           sudo install -d -m 0755 /opt/language-school/frontend
           sed \
-            -e 's|__PROXY_LISTEN__|127.0.0.1:8080|g' \
-            -e 's|__PB_URL__|http://127.0.0.1:8090|g' \
+            -e 's|__PROXY_LISTEN__|127.0.0.1:8083|g' \
+            -e 's|__PB_URL__|http://127.0.0.1:8091|g' \
             v3/infrastructure/reverse-proxy/language-school.nginx.conf \
             | sudo tee /etc/nginx/conf.d/language-school.conf >/dev/null
           sudo nginx -t
