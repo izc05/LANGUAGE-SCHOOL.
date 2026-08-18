@@ -58,7 +58,7 @@ export type PublicPlacementResult = {
   notice: string
 }
 
-function publicHeaders(token: string, json = false): HeadersInit {
+function publicHeaders(token: string, json = false): Record<string, string> {
   return {
     'X-Placement-Token': token,
     ...(json ? { 'Content-Type': 'application/json' } : {}),
