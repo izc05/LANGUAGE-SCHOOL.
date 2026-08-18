@@ -25,17 +25,20 @@ async function logout(page: Page) {
   await expect(page).toHaveURL(/\/acceso$/)
 }
 
-async function backendRequest(page: Page, path: string, method: 'GET' | 'POST' = 'GET') {
-  return page.evaluate(async ({ path, method }) => {
+async function backendRequest(page: Page, path: string, method: 'GET' | 'POST' = 'GET', body?: unknown) {
+  return page.evaluate(async ({ path, method, body }) => {
     const stored = JSON.parse(localStorage.getItem('pocketbase_auth') || '{}') as { token?: string }
+    const headers: Record<string, string> = stored.token ? { Authorization: stored.token } : {}
+    if (body !== undefined) headers['Content-Type'] = 'application/json'
     const response = await fetch(`http://127.0.0.1:8090${path}`, {
       method,
-      headers: stored.token ? { Authorization: stored.token } : {},
+      headers,
+      body: body === undefined ? undefined : JSON.stringify(body),
     })
-    let body: unknown = null
-    try { body = await response.json() } catch { body = null }
-    return { status: response.status, body }
-  }, { path, method })
+    let responseBody: unknown = null
+    try { responseBody = await response.json() } catch { responseBody = null }
+    return { status: response.status, body: responseBody }
+  }, { path, method, body })
 }
 
 test('8B: Zoom permanece server-side y solo Administración puede comprobarlo', async ({ page, request }) => {
@@ -58,8 +61,10 @@ test('8B: Zoom permanece server-side y solo Administración puede comprobarlo', 
   await nav.getByRole('link', { name: 'Zoom', exact: true }).click()
   await expect(page).toHaveURL(/\/admin\/zoom$/)
   await expect(page.getByRole('heading', { name: 'Integración con Zoom' })).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'Credenciales de Zoom pendientes.' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Configuración de Zoom pendiente.' })).toBeVisible()
   await expect(page.getByText('ZOOM API', { exact: true })).toBeVisible()
+  await expect(page.getByText('ANFITRIÓN', { exact: true })).toBeVisible()
+  await expect(page.getByText('CREAR REUNIONES', { exact: true })).toBeVisible()
   await expect(page.getByText('MEETING SDK', { exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Añade primero las credenciales' })).toBeDisabled()
   await expect(page.getByText('Client Secret', { exact: false })).toHaveCount(0)
@@ -78,4 +83,35 @@ test('8C.1: la asociación Zoom existe pero queda oculta al alumno', async ({ pa
   expect(adminResult.status).toBe(200)
   expect(adminResult.body).toMatchObject({ totalItems: 1 })
   expect(JSON.stringify(adminResult.body)).toContain('98765432100')
+})
+
+test('8C.2: crear Zoom es idempotente, restringido y no expone datos de host', async ({ page, request }) => {
+  const anonymousCreate = await request.post('http://127.0.0.1:8090/api/language-school/zoom/meetings/create', { data: { classId: 'fake' } })
+  expect(anonymousCreate.status()).toBe(401)
+
+  await login(page, credentials.teacher.email, credentials.teacher.password, /\/profesor$/)
+  const teacherClasses = await backendRequest(page, '/api/collections/classes/records?page=1&perPage=1')
+  const teacherClassId = (teacherClasses.body as { items?: Array<{ id?: string }> })?.items?.[0]?.id
+  expect(teacherClassId).toBeTruthy()
+  const forbiddenCreate = await backendRequest(page, '/api/language-school/zoom/meetings/create', 'POST', { classId: teacherClassId })
+  expect(forbiddenCreate.status).toBe(403)
+  await logout(page)
+
+  await login(page, credentials.admin.email, credentials.admin.password, /\/admin$/)
+  const adminClasses = await backendRequest(page, '/api/collections/classes/records?page=1&perPage=1&filter=topic%3D%22E2E%20Speaking%20class%22')
+  const classId = (adminClasses.body as { items?: Array<{ id?: string }> })?.items?.[0]?.id
+  expect(classId).toBeTruthy()
+
+  const createResult = await backendRequest(page, '/api/language-school/zoom/meetings/create', 'POST', { classId })
+  expect(createResult.status).toBe(200)
+  expect(createResult.body).toMatchObject({ provider: 'zoom', existing: true, status: 'READY', externalMeetingId: '98765432100' })
+  const safePayload = JSON.stringify(createResult.body)
+  expect(safePayload).not.toContain('start_url')
+  expect(safePayload).not.toContain('meeting_password')
+
+  const nav = page.getByRole('navigation', { name: 'Menú de Administrador' })
+  await nav.getByRole('link', { name: 'Aula online' }).click()
+  await expect(page.getByRole('heading', { name: 'Modalidad de las clases' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Reunión Zoom preparada' })).toBeVisible()
+  await expect(page.getByText(/ID 98765432100/)).toBeVisible()
 })
