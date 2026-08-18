@@ -26,7 +26,7 @@ test('ADMIN envía un aviso y el alumno lo recibe en su portal', async ({ page }
 
   // Do not depend on recipient ordering: the Campus E2E dataset deliberately contains
   // another active STUDENT without enrollment to verify authorization boundaries.
-  await page.getByLabel('Alumno').selectOption({ label: 'E2E Student' })
+  await page.getByRole('combobox', { name: 'Alumno', exact: true }).selectOption({ label: 'E2E Student' })
   await page.getByLabel('Título').fill(title)
   await page.getByLabel('Mensaje').fill(body)
   await page.getByRole('button', { name: 'Enviar aviso' }).click()
