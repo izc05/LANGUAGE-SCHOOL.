@@ -37,7 +37,8 @@
 
 .placement-result-skills article.is-diagnostic,
 .student-level-skill-list .is-diagnostic,
-.student-level-history-list .is-diagnostic {
+.student-level-history-list .is-diagnostic,
+.teacher-level-skill-grid .is-diagnostic {
   position: relative;
 }
 
@@ -55,6 +56,166 @@
   text-transform: uppercase;
 }
 
+.placement-listening-setup,
+.placement-listening-admin {
+  display: grid;
+  gap: 1rem;
+}
+
+.placement-listening-setup {
+  margin-top: 1rem;
+}
+
+.placement-listening-setup form {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.2fr) minmax(0, 1fr) auto;
+  gap: 0.8rem;
+  align-items: end;
+}
+
+.placement-listening-setup label,
+.placement-listening-editor > label,
+.placement-listening-editor .placement-question-fields label {
+  display: grid;
+  gap: 0.38rem;
+  min-width: 0;
+}
+
+.placement-listening-setup input,
+.placement-listening-setup select,
+.placement-listening-editor input,
+.placement-listening-editor select,
+.placement-listening-editor textarea {
+  width: 100%;
+}
+
+.placement-listening-levels {
+  display: grid;
+  gap: 1rem;
+}
+
+.placement-listening-level {
+  border: 1px solid rgba(35, 29, 34, 0.09);
+  border-radius: 18px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.76);
+}
+
+.placement-listening-level-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.78rem 1rem;
+  background: color-mix(in srgb, var(--color-brand-soft, #fcebf1) 42%, white);
+  border-bottom: 1px solid rgba(35, 29, 34, 0.08);
+}
+
+.placement-listening-level-heading strong {
+  font-size: 1rem;
+  letter-spacing: 0.06em;
+}
+
+.placement-listening-level-heading span {
+  color: var(--color-muted, #6f6870);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.placement-listening-question-list {
+  display: grid;
+}
+
+.placement-listening-question-list article {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.9rem 1rem;
+  align-items: center;
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid rgba(35, 29, 34, 0.07);
+}
+
+.placement-listening-question-list article:last-child {
+  border-bottom: 0;
+}
+
+.placement-listening-question-list article.inactive {
+  opacity: 0.58;
+}
+
+.placement-listening-question-list article p {
+  margin: 0.2rem 0 0.25rem;
+  line-height: 1.45;
+}
+
+.placement-listening-question-list article small {
+  color: var(--color-muted, #6f6870);
+}
+
+.placement-listening-question-list article > audio {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+
+.placement-listening-admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.45rem;
+}
+
+.placement-listening-admin-actions button,
+.placement-listening-upload span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 0.46rem 0.72rem;
+  border: 1px solid rgba(35, 29, 34, 0.14);
+  border-radius: 10px;
+  background: white;
+  color: inherit;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.placement-listening-upload {
+  position: relative;
+  display: inline-flex;
+}
+
+.placement-listening-upload input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.placement-listening-editor {
+  display: grid;
+  gap: 0.9rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(35, 29, 34, 0.09);
+}
+
+.placement-listening-editor .placement-question-fields {
+  display: grid;
+  grid-template-columns: 1.2fr 0.7fr 0.65fr 0.65fr auto;
+  gap: 0.75rem;
+  align-items: end;
+}
+
+@media (max-width: 1000px) {
+  .placement-listening-setup form,
+  .placement-listening-editor .placement-question-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 640px) {
   .placement-listening-player {
     padding: 1rem;
@@ -63,5 +224,24 @@
 
   .placement-listening-player audio {
     min-width: 0;
+  }
+
+  .placement-listening-setup form,
+  .placement-listening-editor .placement-question-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .placement-listening-question-list article {
+    grid-template-columns: 1fr;
+    padding: 0.9rem;
+  }
+
+  .placement-listening-admin-actions {
+    justify-content: flex-start;
+  }
+
+  .placement-listening-admin-actions button,
+  .placement-listening-upload span {
+    min-height: 44px;
   }
 }
