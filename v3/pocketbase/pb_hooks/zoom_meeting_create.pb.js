@@ -36,28 +36,27 @@ function zoomMeetingCreateSafeResult(record, existing) {
   }
 }
 
-routerAdd("POST", "/api/language-school/zoom/meetings/create", (e) => {
+routerAdd("POST", "/api/language-school/zoom/classes/{classId}/meeting", (e) => {
   if (!e.auth || e.auth.get("role") !== "ADMIN") {
     throw new ForbiddenError("Solo Administración puede crear reuniones Zoom.")
   }
 
-  const requestInfo = e.requestInfo()
-  const body = requestInfo && requestInfo.body ? requestInfo.body : {}
-  const classId = String(body.classId || body.classid || "").trim()
+  const classId = String(e.request.pathValue("classId") || "").trim()
   if (!classId) throw new BadRequestError("Falta la clase que se quiere conectar con Zoom.")
 
   const classRecord = e.app.findRecordById("classes", classId)
+
+  const existingMeeting = zoomMeetingCreateExisting(e.app, classId)
+  if (existingMeeting && existingMeeting.getString("status") === "READY" && existingMeeting.getString("join_url")) {
+    return e.json(200, zoomMeetingCreateSafeResult(existingMeeting, true))
+  }
+
   const mode = classRecord.getString("delivery_mode") || "IN_PERSON"
   if (mode !== "ONLINE" && mode !== "HYBRID") {
     throw new BadRequestError("Solo las clases online o híbridas pueden tener una reunión Zoom.")
   }
   if (classRecord.getString("status") !== "SCHEDULED") {
     throw new BadRequestError("Solo se pueden preparar reuniones para clases programadas.")
-  }
-
-  const existingMeeting = zoomMeetingCreateExisting(e.app, classId)
-  if (existingMeeting && existingMeeting.getString("status") === "READY" && existingMeeting.getString("join_url")) {
-    return e.json(200, zoomMeetingCreateSafeResult(existingMeeting, true))
   }
 
   const accountId = $os.getenv("ZOOM_ACCOUNT_ID")
