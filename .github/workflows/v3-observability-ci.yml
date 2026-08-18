@@ -1,0 +1,74 @@
+name: V3 Observability CI
+
+on:
+  pull_request:
+    paths:
+      - 'v3/infrastructure/raspberry-pi/health-check.sh'
+      - 'v3/infrastructure/raspberry-pi/install-health-monitor.sh'
+      - 'v3/infrastructure/raspberry-pi/language-school-health.service'
+      - 'v3/infrastructure/raspberry-pi/language-school-health.timer'
+      - 'v3/infrastructure/OBSERVABILITY-RUNBOOK.md'
+      - '.github/workflows/v3-observability-ci.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'v3/infrastructure/raspberry-pi/health-check.sh'
+      - 'v3/infrastructure/raspberry-pi/install-health-monitor.sh'
+      - 'v3/infrastructure/raspberry-pi/language-school-health.service'
+      - 'v3/infrastructure/raspberry-pi/language-school-health.timer'
+      - 'v3/infrastructure/OBSERVABILITY-RUNBOOK.md'
+      - '.github/workflows/v3-observability-ci.yml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate scripts
+        run: |
+          bash -n v3/infrastructure/raspberry-pi/health-check.sh
+          bash -n v3/infrastructure/raspberry-pi/install-health-monitor.sh
+          if grep -Eq '^[[:space:]]*set[[:space:]]+-x' v3/infrastructure/raspberry-pi/health-check.sh v3/infrastructure/raspberry-pi/install-health-monitor.sh; then
+            echo 'Observability scripts must never enable shell tracing.' >&2
+            exit 1
+          fi
+
+      - name: Validate systemd monitor contract
+        run: |
+          SERVICE='v3/infrastructure/raspberry-pi/language-school-health.service'
+          TIMER='v3/infrastructure/raspberry-pi/language-school-health.timer'
+          INSTALLER='v3/infrastructure/raspberry-pi/install-health-monitor.sh'
+
+          grep -Fq 'Type=oneshot' "$SERVICE"
+          grep -Fq 'ExecStart=/usr/local/lib/language-school/health-check.sh' "$SERVICE"
+          grep -Fq 'NoNewPrivileges=true' "$SERVICE"
+          grep -Fq 'ProtectSystem=strict' "$SERVICE"
+          grep -Fq 'ProtectHome=true' "$SERVICE"
+
+          grep -Fq 'OnBootSec=2min' "$TIMER"
+          grep -Fq 'OnUnitActiveSec=5min' "$TIMER"
+          grep -Fq 'Persistent=true' "$TIMER"
+          grep -Fq 'Unit=language-school-health.service' "$TIMER"
+
+          grep -Fq 'install -o root -g root -m 0755 "$SCRIPT_DIR/health-check.sh" "$INSTALL_DIR/health-check.sh"' "$INSTALLER"
+          grep -Fq 'systemctl enable --now language-school-health.timer' "$INSTALLER"
+
+      - name: Verify systemd unit syntax
+        run: |
+          sudo install -d -m 0755 /usr/local/lib/language-school
+          sudo install -m 0755 v3/infrastructure/raspberry-pi/health-check.sh /usr/local/lib/language-school/health-check.sh
+          systemd-analyze verify \
+            v3/infrastructure/raspberry-pi/language-school-health.service \
+            v3/infrastructure/raspberry-pi/language-school-health.timer
+
+      - name: Validate runbook privacy guardrails
+        run: |
+          RUNBOOK='v3/infrastructure/OBSERVABILITY-RUNBOOK.md'
+          test -f "$RUNBOOK"
+          grep -Fq 'journalctl -u language-school-health.service' "$RUNBOOK"
+          grep -Fq 'Admin → Sistema' "$RUNBOOK"
+          grep -Fq 'set -x' "$RUNBOOK"
+          grep -Fq 'payloads de formularios' "$RUNBOOK"
