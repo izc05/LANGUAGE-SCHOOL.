@@ -9,6 +9,7 @@ function requiredEnv(name: string): string {
 const credentials = {
   admin: { email: requiredEnv('E2E_ADMIN_EMAIL'), password: requiredEnv('E2E_ADMIN_PASSWORD') },
   teacher: { email: requiredEnv('E2E_TEACHER_EMAIL'), password: requiredEnv('E2E_TEACHER_PASSWORD') },
+  student: { email: requiredEnv('E2E_STUDENT_EMAIL'), password: requiredEnv('E2E_STUDENT_PASSWORD') },
 }
 
 async function login(page: Page, email: string, password: string, expectedPath: RegExp) {
@@ -19,7 +20,12 @@ async function login(page: Page, email: string, password: string, expectedPath: 
   await expect(page).toHaveURL(expectedPath)
 }
 
-async function backendZoomRequest(page: Page, path: string, method: 'GET' | 'POST' = 'GET') {
+async function logout(page: Page) {
+  await page.getByRole('button', { name: 'Cerrar sesión' }).click()
+  await expect(page).toHaveURL(/\/acceso$/)
+}
+
+async function backendRequest(page: Page, path: string, method: 'GET' | 'POST' = 'GET') {
   return page.evaluate(async ({ path, method }) => {
     const stored = JSON.parse(localStorage.getItem('pocketbase_auth') || '{}') as { token?: string }
     const response = await fetch(`http://127.0.0.1:8090${path}`, {
@@ -39,14 +45,12 @@ test('8B: Zoom permanece server-side y solo Administración puede comprobarlo', 
   expect(anonymousCheck.status()).toBe(401)
 
   await login(page, credentials.teacher.email, credentials.teacher.password, /\/profesor$/)
-  expect((await backendZoomRequest(page, '/api/language-school/zoom/status')).status).toBe(403)
-  expect((await backendZoomRequest(page, '/api/language-school/zoom/check', 'POST')).status).toBe(403)
-
-  await page.getByRole('button', { name: 'Cerrar sesión' }).click()
-  await expect(page).toHaveURL(/\/acceso$/)
+  expect((await backendRequest(page, '/api/language-school/zoom/status')).status).toBe(403)
+  expect((await backendRequest(page, '/api/language-school/zoom/check', 'POST')).status).toBe(403)
+  await logout(page)
 
   await login(page, credentials.admin.email, credentials.admin.password, /\/admin$/)
-  const adminCheck = await backendZoomRequest(page, '/api/language-school/zoom/check', 'POST')
+  const adminCheck = await backendRequest(page, '/api/language-school/zoom/check', 'POST')
   expect(adminCheck.status).toBe(200)
   expect(adminCheck.body).toMatchObject({ provider: 'zoom', configured: false, connected: false, reason: 'missing_credentials' })
 
@@ -60,4 +64,15 @@ test('8B: Zoom permanece server-side y solo Administración puede comprobarlo', 
   await expect(page.getByRole('button', { name: 'Añade primero las credenciales' })).toBeDisabled()
   await expect(page.getByText('Client Secret', { exact: false })).toHaveCount(0)
   await expect(page.getByText('access_token', { exact: false })).toHaveCount(0)
+})
+
+test('8C.1: la asociación Zoom de una clase no es visible directamente para alumnos', async ({ page }) => {
+  await login(page, credentials.student.email, credentials.student.password, /\/alumno$/)
+  const studentResult = await backendRequest(page, '/api/collections/zoom_meetings/records?page=1&perPage=5')
+  expect(studentResult.status).toBe(403)
+  await logout(page)
+
+  await login(page, credentials.admin.email, credentials.admin.password, /\/admin$/)
+  const adminResult = await backendRequest(page, '/api/collections/zoom_meetings/records?page=1&perPage=5')
+  expect(adminResult.status).toBe(200)
 })
