@@ -20,6 +20,51 @@ routerAdd('POST', '/api/language-school/placement/teacher/students/{studentId}/v
   return teacherPlacement.validate(e)
 })
 
+routerAdd('GET', '/api/language-school/placement/admin/tests', (e) => {
+  const placementAdmin = require(`${__hooks}/placement_admin.js`)
+  return placementAdmin.listTests(e)
+})
+
+routerAdd('POST', '/api/language-school/placement/admin/tests', (e) => {
+  const placementAdmin = require(`${__hooks}/placement_admin.js`)
+  return placementAdmin.createDraft(e)
+})
+
+routerAdd('PATCH', '/api/language-school/placement/admin/tests/{id}', (e) => {
+  const placementAdmin = require(`${__hooks}/placement_admin.js`)
+  return placementAdmin.updateDraft(e)
+})
+
+routerAdd('DELETE', '/api/language-school/placement/admin/tests/{id}', (e) => {
+  const placementAdmin = require(`${__hooks}/placement_admin.js`)
+  return placementAdmin.deleteDraft(e)
+})
+
+routerAdd('GET', '/api/language-school/placement/admin/tests/{id}/questions', (e) => {
+  const placementAdmin = require(`${__hooks}/placement_admin.js`)
+  return placementAdmin.listQuestions(e)
+})
+
+routerAdd('POST', '/api/language-school/placement/admin/tests/{id}/questions', (e) => {
+  const placementAdmin = require(`${__hooks}/placement_admin.js`)
+  return placementAdmin.createQuestion(e)
+})
+
+routerAdd('PATCH', '/api/language-school/placement/admin/questions/{id}', (e) => {
+  const placementAdmin = require(`${__hooks}/placement_admin.js`)
+  return placementAdmin.updateQuestion(e)
+})
+
+routerAdd('DELETE', '/api/language-school/placement/admin/questions/{id}', (e) => {
+  const placementAdmin = require(`${__hooks}/placement_admin.js`)
+  return placementAdmin.deleteQuestion(e)
+})
+
+routerAdd('POST', '/api/language-school/placement/admin/tests/{id}/publish', (e) => {
+  const placementAdmin = require(`${__hooks}/placement_admin.js`)
+  return placementAdmin.publish(e)
+})
+
 routerAdd('GET', '/api/language-school/placement/attempts/{id}/question', (e) => {
   const placement = require(`${__hooks}/placement_service.js`)
   return placement.nextQuestion(e)
