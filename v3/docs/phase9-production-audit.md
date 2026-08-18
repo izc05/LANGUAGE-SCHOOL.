@@ -10,67 +10,80 @@ Separar la candidata funcional validada de la candidata realmente desplegable. E
 
 ## Resumen
 
-La base de producción es mejor de lo que sugerían los defaults del frontend: el flujo oficial de despliegue fuerza `connected`, exige `PUBLIC_ORIGIN`, enlaza PocketBase y Nginx a loopback, bloquea `/_/`, endurece el servicio systemd y dispone de backup/restore defensivos.
+La base de producción es mejor de lo que sugerían los defaults del frontend: el flujo oficial de despliegue fuerza `connected`, enlaza PocketBase y Nginx a loopback, bloquea `/_/`, endurece el servicio systemd y dispone de backup/restore defensivos.
 
-Sin embargo, se ha encontrado un defecto P0 que impediría que una instalación nueva reproduzca toda la aplicación: `install-pocketbase.sh` instala migraciones pero no `pb_hooks`.
+La auditoría encontró un P0 real —el instalador no materializaba `pb_hooks`— y varias deudas P1. El P0 y el bloque de configuración fail-safe 9.1 ya tienen corrección en código; su cierre sigue sujeto a que el candidato completo pase las puertas CI sobre el mismo SHA.
 
 ## P0 · Bloqueadores de despliegue
 
-### P0-1 · Los hooks de PocketBase no se instalan
+### P0-1 · Los hooks de PocketBase no se instalaban
 
-Estado: **ABIERTO**.
+Estado: **RESUELTO EN CÓDIGO · sujeto a puerta CI del candidato de 9.1**.
 
-`v3/infrastructure/raspberry-pi/install-pocketbase.sh` copia `pb_migrations`, pero no crea ni copia `pb_hooks`.
+Hallazgo original: `install-pocketbase.sh` copiaba `pb_migrations`, pero no creaba ni copiaba `pb_hooks`.
 
-Los endpoints de aplicación que viven en hooks —entre ellos Zoom, test de nivel, Listening y otros servicios server-side— funcionan en CI porque los workflows arrancan PocketBase contra el árbol del repositorio, pero no quedarían materializados en `/opt/language-school/pocketbase` durante una instalación física nueva.
+Riesgo: los endpoints de aplicación que viven en hooks —Zoom, test de nivel, Listening y otros servicios server-side— funcionaban en CI porque los workflows arrancaban PocketBase contra el árbol del repositorio, pero no quedarían materializados en `/opt/language-school/pocketbase` durante una instalación física nueva.
 
-Corrección obligatoria:
+Corrección aplicada:
 
-1. instalar `v3/pocketbase/pb_hooks` en `/opt/language-school/pocketbase/pb_hooks`;
-2. mantener propiedad root y permisos de solo lectura para el usuario de servicio;
-3. hacer explícito `--hooksDir` en `start-pocketbase.sh`;
-4. ampliar Infrastructure CI para fallar si hooks y migraciones no viajan juntos.
+1. `install-pocketbase.sh` instala `v3/pocketbase/pb_hooks` en `/opt/language-school/pocketbase/pb_hooks` junto con las migraciones;
+2. ambos árboles quedan `root:root`, directorios `0755` y archivos `0644`;
+3. `start-pocketbase.sh` exige que `pb_hooks` exista y arranca PocketBase con `--hooksDir` explícito;
+4. Infrastructure CI falla si hooks y migraciones dejan de viajar juntos o si se intenta arrancar sin hooks;
+5. PocketBase CI carga el mismo directorio de hooks que el runtime real.
 
 ## P1 · Obligatorio antes de producción pública
 
-### P1-1 · Defaults frontend seguros solo a través del script oficial
+### P1-1 · Configuración frontend fail-safe
 
-`frontend/src/config/environment.ts` cae a `demo` y localhost en un build genérico. El script oficial `deploy-frontend.sh` sí fuerza `VITE_APP_MODE=connected`, exige `PUBLIC_ORIGIN` y compila `VITE_POCKETBASE_URL` con ese origen.
+Estado: **IMPLEMENTADO EN 9.1 · sujeto a puerta CI**.
 
-Acción: hacer que el flujo de producción rechace explícitamente dominios placeholder y documentar que ningún despliegue alternativo puede usar un build genérico.
+Corrección aplicada:
 
-### P1-2 · Plantilla de producción no documenta las variables Zoom
+- desarrollo local puede seguir entrando en demo si no hay variables;
+- un build de producción exige `VITE_APP_MODE=demo|connected` desde `vite.config.ts`;
+- `connected` exige `VITE_POCKETBASE_URL`;
+- Frontend CI demuestra que ambos casos inseguros fallan;
+- el deploy físico fuerza `connected` y solo acepta `PUBLIC_ORIGIN` HTTPS;
+- el deploy rechaza localhost, loopback y hosts reservados/placeholder como `*.example.com`.
+
+### P1-2 · Variables privadas Zoom
+
+Estado: **DOCUMENTADO EN 9.1 · verificación real pendiente del host/Zoom Marketplace**.
 
 Los hooks esperan:
 
 - `ZOOM_ACCOUNT_ID`
 - `ZOOM_CLIENT_ID`
 - `ZOOM_CLIENT_SECRET`
+- `ZOOM_HOST_USER_ID`
 - `ZOOM_MEETING_SDK_CLIENT_ID`
 - `ZOOM_MEETING_SDK_CLIENT_SECRET`
 
-La plantilla versionada evita correctamente valores secretos, pero el procedimiento actual no deja un checklist claro de variables privadas que deben añadirse manualmente a `/etc/language-school/production.env`.
-
-Acción: documentar nombres y validación sin añadir valores reales al repositorio.
+`v3/infrastructure/PRIVATE-VARIABLES.md` documenta nombres, propósito, permisos, reinicio y rotación. Los valores reales deben añadirse únicamente a `/etc/language-school/production.env`; nunca se versionan ni entran en `VITE_*`.
 
 ### P1-3 · Inconsistencia de puertos en documentación
 
-La configuración actual de ejemplo usa:
+Estado: **RESUELTO EN DOCUMENTACIÓN 9.1 · verificación física pendiente**.
+
+La plantilla actual usa:
 
 - Nginx `127.0.0.1:8083`
 - PocketBase `127.0.0.1:8091`
 
-`cloudflare/config.yml.example` coincide con `8083`, pero `infrastructure/README.md` y `PRODUCTION-CHECKLIST.md` conservan referencias antiguas `8080/8090`.
-
-Acción: unificar documentación con los valores de `production.env` y evitar checks escritos contra puertos obsoletos.
+`infrastructure/README.md`, `PRODUCTION-CHECKLIST.md`, Cloudflare e Infrastructure CI quedan alineados con esos valores y recuerdan que la fuente real de configuración es `/etc/language-school/production.env`.
 
 ### P1-4 · Contexto real del visitante detrás de Cloudflare Tunnel
 
-Cloudflare conserva la IP del visitante en `CF-Connecting-IP` y el protocolo original en `X-Forwarded-Proto`. El Nginx actual envía a PocketBase `X-Real-IP $remote_addr` y sobrescribe `X-Forwarded-Proto` con `$scheme`, que es HTTP en el salto local cloudflared → Nginx.
+Estado: **ABIERTO · 9.2**.
+
+Cloudflare conserva la IP del visitante en `CF-Connecting-IP` y el protocolo original en cabeceras de forwarding. El Nginx actual envía a PocketBase `X-Real-IP $remote_addr` y sobrescribe `X-Forwarded-Proto` con `$scheme`, que es HTTP en el salto local cloudflared → Nginx.
 
 Acción: preservar de forma segura el contexto de Cloudflare sin confiar ciegamente en cabeceras que podrían falsificarse desde una ruta no confiable. Nginx solo debe permanecer accesible por loopback/Tunnel.
 
 ### P1-5 · Sin política explícita robots/bots
+
+Estado: **ABIERTO · 9.3**.
 
 `v3/frontend/public` no contiene `robots.txt`.
 
@@ -82,6 +95,8 @@ Acción:
 - usar Cloudflare AI Crawl Control/WAF para enforcement real cuando se configure la zona.
 
 ### P1-6 · Sin rate limiting explícito de aplicación/edge
+
+Estado: **ABIERTO · 9.3**.
 
 No se ha encontrado Turnstile, captcha, throttle o rate limiting propio en el repositorio.
 
@@ -95,6 +110,8 @@ Superficies prioritarias:
 Acción: diseñar reglas Cloudflare por ruta y, donde aporte defensa en profundidad, controles server-side. No implementar rate limiting Nginx por `$remote_addr`, porque con Tunnel el origen ve a `cloudflared` y podría agrupar a todos los visitantes.
 
 ### P1-7 · Permissions-Policy y futura aula Zoom embebida
+
+Estado: **ABIERTO PARA LA FUTURA UI EMBEBIDA; no rompe la candidata actual**.
 
 Nginx envía actualmente `Permissions-Policy: camera=(), microphone=(), geolocation=()` global.
 
@@ -116,9 +133,7 @@ Acción: medir y aplicar lazy loading/code splitting por rutas pesadas sin rompe
 
 ### P2-3 · Prueba automatizada del paquete físico
 
-Infrastructure CI valida sintaxis, loopback, checksums, Nginx, Cloudflare catch-all y timer, pero no realiza una instalación simulada del paquete PocketBase completo.
-
-Acción: añadir assertions de artefactos (`pb_hooks`, `pb_migrations`, wrapper y permisos esperados) y ampliar gradualmente el smoke de infraestructura.
+Infrastructure CI valida sintaxis, loopback, hooks/migraciones, origen público, checksums, Nginx, Cloudflare catch-all y timer. Sigue pendiente una simulación todavía más completa del instalador físico con systemd/usuarios reales, que no sustituye al piloto en host.
 
 ## P3 · Mejoras opcionales
 
@@ -128,8 +143,9 @@ Acción: añadir assertions de artefactos (`pb_hooks`, `pb_migrations`, wrapper 
 
 ## Fortalezas verificadas
 
-- deploy oficial fuerza `connected` y exige `PUBLIC_ORIGIN`;
+- deploy oficial fuerza `connected` y exige un `PUBLIC_ORIGIN` HTTPS no-placeholder;
 - PocketBase solo acepta `127.0.0.1:<puerto>` en el wrapper de arranque;
+- PocketBase exige el árbol `pb_hooks` antes de arrancar;
 - Nginx solo escucha en loopback según la instalación prevista;
 - PocketBase `/_/` se bloquea en reverse proxy;
 - Cloudflare Tunnel apunta a Nginx, no a PocketBase;
