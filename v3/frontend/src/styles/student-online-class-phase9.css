@@ -1,0 +1,42 @@
+/* FASE 9.6A / 8D.2 · Aula Zoom dentro de Language School */
+.student-online-class-page{padding-bottom:72px}
+.student-online-class-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:24px}
+.student-online-class-heading>.button{flex:0 0 auto;margin-top:4px}
+.student-online-class-card{overflow:hidden;padding:0;border-radius:26px}
+.student-online-class-summary{display:flex;align-items:flex-start;justify-content:space-between;gap:28px;padding:28px 30px;border-bottom:1px solid #f0e3e8;background:linear-gradient(135deg,#fff 0%,#fff8fa 100%)}
+.student-online-class-summary h3{margin:6px 0 7px;color:#3f2b35;font-family:'Playfair Display',Georgia,serif;font-size:clamp(1.55rem,2.7vw,2.35rem);line-height:1.08}
+.student-online-class-summary p{margin:0;color:#8b727d}
+.student-online-class-time{display:flex;min-width:230px;flex-direction:column;gap:7px;padding:15px 17px;border:1px solid #eadde2;border-radius:16px;background:#fff;color:#745c67}
+.student-online-class-time strong{color:#4a323e;font-size:.88rem;line-height:1.45;text-transform:capitalize}
+.student-online-class-time span{color:#a33164;font-size:.76rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase}
+.student-online-class-actions{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:14px;padding:28px 30px}
+.student-online-class-explainer{min-width:0}
+.student-online-class-explainer strong{display:block;margin-bottom:5px;color:#4d3541;font-size:.95rem}
+.student-online-class-explainer p{max-width:650px;margin:0;color:#8c747f;font-size:.82rem;line-height:1.55}
+.student-online-class-actions>.button{min-height:44px;white-space:nowrap}
+.student-online-class-error{display:flex;flex-direction:column;gap:5px;margin:0 30px 24px}
+.student-online-class-error strong{color:inherit}
+.student-online-class-privacy{margin:0 30px 30px;padding:18px 20px;border-radius:16px;background:#fff7fa;color:#7b6570}
+.student-online-class-privacy strong{display:block;margin-bottom:5px;color:#5c414d;font-size:.82rem}
+.student-online-class-privacy p{margin:0;font-size:.78rem;line-height:1.55}
+
+@media(max-width:900px){
+  .student-online-class-summary{flex-direction:column}
+  .student-online-class-time{width:100%;min-width:0}
+  .student-online-class-actions{grid-template-columns:1fr 1fr}
+  .student-online-class-explainer{grid-column:1/-1}
+}
+
+@media(max-width:640px){
+  .student-online-class-heading{flex-direction:column}
+  .student-online-class-heading>.button{width:100%;justify-content:center}
+  .student-online-class-summary,.student-online-class-actions{padding:22px 20px}
+  .student-online-class-actions{grid-template-columns:1fr}
+  .student-online-class-explainer{grid-column:auto}
+  .student-online-class-actions>.button{width:100%;justify-content:center}
+  .student-online-class-error,.student-online-class-privacy{margin-left:20px;margin-right:20px}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .student-online-class-page *{scroll-behavior:auto}
+}
