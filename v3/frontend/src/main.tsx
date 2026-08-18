@@ -68,6 +68,7 @@ import './styles/public-consent-whatsapp.css'
 import './styles/admin-privacy-settings.css'
 import './styles/white-canvas-phase7j6.css'
 import './styles/home-structure-phase7j7.css'
+import './styles/student-campus-phase8a1.css'
 
 const root = document.getElementById('root')
 if (!root) throw new Error('No se ha encontrado el elemento #root')
