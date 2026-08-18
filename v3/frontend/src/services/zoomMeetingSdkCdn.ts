@@ -31,6 +31,50 @@ declare global {
 }
 
 const scriptPromises = new Map<string, Promise<void>>()
+const stylesheetPromises = new Map<string, Promise<void>>()
+
+function loadStylesheet(href: string): Promise<void> {
+  const existingPromise = stylesheetPromises.get(href)
+  if (existingPromise) return existingPromise
+
+  const promise = new Promise<void>((resolve, reject) => {
+    const selector = `link[data-language-school-zoom-style="${href}"]`
+    const existing = document.querySelector<HTMLLinkElement>(selector)
+    const link = existing ?? document.createElement('link')
+    const timeout = window.setTimeout(() => reject(new Error('Zoom no respondió a tiempo al cargar los estilos del aula.')), 20_000)
+
+    const cleanup = () => window.clearTimeout(timeout)
+    const handleLoad = () => {
+      cleanup()
+      link.dataset.languageSchoolZoomStyleLoaded = 'true'
+      resolve()
+    }
+    const handleError = () => {
+      cleanup()
+      reject(new Error('No se han podido cargar los estilos del aula Zoom. Comprueba tu conexión e inténtalo de nuevo.'))
+    }
+
+    if (link.dataset.languageSchoolZoomStyleLoaded === 'true') {
+      cleanup()
+      resolve()
+      return
+    }
+
+    link.addEventListener('load', handleLoad, { once: true })
+    link.addEventListener('error', handleError, { once: true })
+
+    if (!existing) {
+      link.rel = 'stylesheet'
+      link.type = 'text/css'
+      link.href = href
+      link.dataset.languageSchoolZoomStyle = href
+      document.head.appendChild(link)
+    }
+  })
+
+  stylesheetPromises.set(href, promise)
+  return promise
+}
 
 function loadScript(src: string): Promise<void> {
   const existingPromise = scriptPromises.get(src)
@@ -76,6 +120,12 @@ function loadScript(src: string): Promise<void> {
 
 export async function loadZoomMeetingSdk(): Promise<ZoomClientViewApi> {
   if (window.ZoomMtg) return window.ZoomMtg
+
+  const cssBase = `https://source.zoom.us/${ZOOM_MEETING_SDK_VERSION}/css`
+  await Promise.all([
+    loadStylesheet(`${cssBase}/bootstrap.css`),
+    loadStylesheet(`${cssBase}/react-select.css`),
+  ])
 
   const vendorBase = `https://source.zoom.us/${ZOOM_MEETING_SDK_VERSION}/lib/vendor`
   const sources = [
