@@ -109,13 +109,16 @@ test('8D.1: Meeting SDK autoriza solo al alumno matriculado con firma temporal r
 test('8D.2: alumno entra desde Campus al aula y el SDK se carga solo al solicitar acceso', async ({ page }) => {
   await page.route('https://source.zoom.us/**', async (route) => {
     const url = route.request().url()
+    const isStylesheet = url.endsWith('.css')
     const isMeetingClient = url.includes('zoom-meeting-6.2.0.min.js')
     await route.fulfill({
       status: 200,
-      contentType: 'application/javascript',
-      body: isMeetingClient
-        ? `window.ZoomMtg={setZoomJSLib:function(){},preLoadWasm:function(){},prepareWebSDK:function(){},i18n:{load:function(){return Promise.resolve()}},init:function(options){window.__languageSchoolZoomInit=options;options.success()},join:function(options){window.__languageSchoolZoomJoin=options;options.success()}};`
-        : '',
+      contentType: isStylesheet ? 'text/css' : 'application/javascript',
+      body: isStylesheet
+        ? '/* Zoom Client View E2E stylesheet stub */'
+        : isMeetingClient
+          ? `window.ZoomMtg={setZoomJSLib:function(){},preLoadWasm:function(){},prepareWebSDK:function(){},i18n:{load:function(){return Promise.resolve()}},init:function(options){window.__languageSchoolZoomInit=options;options.success()},join:function(options){window.__languageSchoolZoomJoin=options;options.success()}};`
+          : '',
     })
   })
 
@@ -131,12 +134,14 @@ test('8D.2: alumno entra desde Campus al aula y el SDK se carga solo al solicita
   await expect(page.getByText('AULA ONLINE')).toBeVisible()
   await expect(page.getByRole('heading', { name: 'E2E Speaking class' })).toBeVisible()
   await expect(page.locator('script[data-language-school-zoom-src]')).toHaveCount(0)
+  await expect(page.locator('link[data-language-school-zoom-style]')).toHaveCount(0)
 
   const joinButton = page.getByRole('button', { name: 'Entrar al aula Zoom' })
   await expect(joinButton).toBeEnabled()
   await joinButton.click()
   await expect(page.getByRole('button', { name: 'Aula iniciada' })).toBeVisible()
   await expect(page.locator('script[data-language-school-zoom-src]')).toHaveCount(6)
+  await expect(page.locator('link[data-language-school-zoom-style]')).toHaveCount(2)
 
   const joined = await page.evaluate(() => {
     const join = (window as typeof window & { __languageSchoolZoomJoin?: { meetingNumber?: string; userName?: string; passWord?: string; signature?: string } }).__languageSchoolZoomJoin
