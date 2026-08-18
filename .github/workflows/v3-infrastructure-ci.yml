@@ -4,12 +4,14 @@ on:
   pull_request:
     paths:
       - 'v3/infrastructure/**'
+      - 'v3/frontend/public/robots.txt'
       - '.github/workflows/v3-infrastructure-ci.yml'
   push:
     branches:
       - main
     paths:
       - 'v3/infrastructure/**'
+      - 'v3/frontend/public/robots.txt'
       - '.github/workflows/v3-infrastructure-ci.yml'
 
 jobs:
@@ -32,10 +34,14 @@ jobs:
             bash -n "$script"
           done
 
-      - name: Validate PocketBase loopback and hooks start wrapper
+      - name: Validate PocketBase loopback, hooks and Turnstile start wrapper
         run: |
           mkdir -p "$RUNNER_TEMP/pb_hooks"
           OUTPUT=$(PB_URL=http://127.0.0.1:8091 \
+            PUBLIC_ORIGIN=https://school.example.org \
+            TURNSTILE_SECRET_KEY=ci-turnstile-secret \
+            TURNSTILE_EXPECTED_ACTION=contact \
+            TURNSTILE_ALLOWED_HOSTNAMES=school.example.org \
             PB_BIN=/usr/bin/echo \
             PB_DATA=/tmp/pb_data \
             PB_MIGRATIONS=/tmp/pb_migrations \
@@ -45,6 +51,10 @@ jobs:
           printf '%s' "$OUTPUT" | grep -q -- "--hooksDir=$RUNNER_TEMP/pb_hooks"
 
           if PB_URL=http://0.0.0.0:8091 \
+            PUBLIC_ORIGIN=https://school.example.org \
+            TURNSTILE_SECRET_KEY=ci-turnstile-secret \
+            TURNSTILE_EXPECTED_ACTION=contact \
+            TURNSTILE_ALLOWED_HOSTNAMES=school.example.org \
             PB_BIN=/usr/bin/echo \
             PB_HOOKS="$RUNNER_TEMP/pb_hooks" \
             bash v3/infrastructure/raspberry-pi/start-pocketbase.sh; then
@@ -53,10 +63,38 @@ jobs:
           fi
 
           if PB_URL=http://127.0.0.1:8091 \
+            PUBLIC_ORIGIN=https://school.example.org \
+            TURNSTILE_SECRET_KEY=ci-turnstile-secret \
+            TURNSTILE_EXPECTED_ACTION=contact \
+            TURNSTILE_ALLOWED_HOSTNAMES=school.example.org \
             PB_BIN=/usr/bin/echo \
             PB_HOOKS="$RUNNER_TEMP/missing-hooks" \
             bash v3/infrastructure/raspberry-pi/start-pocketbase.sh; then
             echo 'PocketBase start wrapper accepted a missing hooks directory.' >&2
+            exit 1
+          fi
+
+          if PB_URL=http://127.0.0.1:8091 \
+            PUBLIC_ORIGIN=https://school.example.org \
+            TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA \
+            TURNSTILE_EXPECTED_ACTION=contact \
+            TURNSTILE_ALLOWED_HOSTNAMES=school.example.org \
+            PB_BIN=/usr/bin/echo \
+            PB_HOOKS="$RUNNER_TEMP/pb_hooks" \
+            bash v3/infrastructure/raspberry-pi/start-pocketbase.sh; then
+            echo 'PocketBase start wrapper accepted the official Turnstile E2E secret in production.' >&2
+            exit 1
+          fi
+
+          if PB_URL=http://127.0.0.1:8091 \
+            PUBLIC_ORIGIN=https://school.example.org \
+            TURNSTILE_SECRET_KEY=ci-turnstile-secret \
+            TURNSTILE_EXPECTED_ACTION=contact \
+            TURNSTILE_ALLOWED_HOSTNAMES=other.example.org \
+            PB_BIN=/usr/bin/echo \
+            PB_HOOKS="$RUNNER_TEMP/pb_hooks" \
+            bash v3/infrastructure/raspberry-pi/start-pocketbase.sh; then
+            echo 'PocketBase start wrapper accepted a Turnstile hostname allowlist that excludes PUBLIC_ORIGIN.' >&2
             exit 1
           fi
 
@@ -91,11 +129,42 @@ jobs:
             fi
           done
 
+      - name: Reject unsafe Turnstile production configuration
+        run: |
+          DEPLOY='v3/infrastructure/raspberry-pi/deploy-frontend.sh'
+          TEST_SITE='1x00000000000000000000AA'
+          TEST_SECRET='1x0000000000000000000000000000000AA'
+
+          reject_config() {
+            set +e
+            PUBLIC_ORIGIN=https://school.example.org \
+              TURNSTILE_SITE_KEY="$1" \
+              TURNSTILE_SECRET_KEY="$2" \
+              TURNSTILE_EXPECTED_ACTION="$3" \
+              TURNSTILE_ALLOWED_HOSTNAMES="$4" \
+              PRODUCTION_ENV="$RUNNER_TEMP/not-present.env" \
+              bash "$DEPLOY" >"$RUNNER_TEMP/deploy-turnstile.log" 2>&1
+            EXIT_CODE=$?
+            set -e
+            if [ "$EXIT_CODE" -eq 0 ]; then
+              cat "$RUNNER_TEMP/deploy-turnstile.log" >&2
+              echo 'Unsafe Turnstile production configuration was accepted.' >&2
+              exit 1
+            fi
+          }
+
+          reject_config "$TEST_SITE" 'ci-real-secret' contact school.example.org
+          reject_config 'ci-real-sitekey' "$TEST_SECRET" contact school.example.org
+          reject_config 'ci-real-sitekey' 'ci-real-secret' wrong-action school.example.org
+          reject_config 'ci-real-sitekey' 'ci-real-secret' contact other.example.org
+          reject_config 'ci-real-sitekey' 'ci-real-secret' contact localhost
+
       - name: Validate crawler policy source
         run: |
           ROBOTS='v3/frontend/public/robots.txt'
           test -f "$ROBOTS"
           grep -Fq 'User-agent: *' "$ROBOTS"
+          grep -Fq 'Content-Signal: search=yes, ai-input=yes, ai-train=no, use=reference' "$ROBOTS"
           grep -Fq 'Disallow: /admin' "$ROBOTS"
           grep -Fq 'Disallow: /alumno' "$ROBOTS"
           grep -Fq 'Disallow: /profesor' "$ROBOTS"
@@ -104,14 +173,17 @@ jobs:
           grep -Fq 'User-agent: GPTBot' "$ROBOTS"
           grep -Fq 'v3/frontend/public/robots.txt' v3/infrastructure/cloudflare/SECURITY-RULES.md
 
-      - name: Reject secret-like environment keys
+      - name: Reject real secrets in tracked environment template
         run: |
           ENV_FILE='v3/infrastructure/.env.example'
           test -f "$ENV_FILE"
-          if grep -E '^[[:space:]]*[A-Z0-9_]*(PASSWORD|SECRET|TOKEN|CREDENTIAL)[A-Z0-9_]*=' "$ENV_FILE"; then
-            echo 'Secret-like variable keys are not allowed in the tracked production env example.' >&2
-            exit 1
-          fi
+          while IFS= read -r line; do
+            value="${line#*=}"
+            if [[ -n "$value" && "$value" != REPLACE_* ]]; then
+              echo "Tracked env template contains a non-placeholder secret-like value: ${line%%=*}" >&2
+              exit 1
+            fi
+          done < <(grep -E '^[[:space:]]*[A-Z0-9_]*(PASSWORD|SECRET|TOKEN|CREDENTIAL)[A-Z0-9_]*=' "$ENV_FILE" || true)
 
       - name: Verify pinned PocketBase Linux artifact checksums
         run: |
@@ -194,6 +266,7 @@ jobs:
           printf '%s\n' "$ROOT_HEADERS" | grep -Eqi '^X-Content-Type-Options:[[:space:]]*nosniff'
           printf '%s\n' "$ROOT_HEADERS" | grep -Eqi '^X-Frame-Options:[[:space:]]*SAMEORIGIN'
           printf '%s\n' "$ROOT_HEADERS" | grep -Eqi '^Permissions-Policy:'
+          printf '%s\n' "$ROOT_HEADERS" | grep -Eqi '^Content-Signal:[[:space:]]*search=yes, ai-input=yes, ai-train=no'
           printf '%s\n' "$ROOT_HEADERS" | grep -Eqi '^Cache-Control:[[:space:]]*no-cache'
           if printf '%s\n' "$ROOT_HEADERS" | grep -Eqi '^X-Robots-Tag:'; then
             echo 'Public root must remain indexable.' >&2
@@ -207,6 +280,7 @@ jobs:
           printf '%s\n' "$API_HEADERS" | grep -Eqi '^X-Robots-Tag:[[:space:]]*noindex, nofollow, noarchive'
 
           ROBOTS_BODY=$(curl -fsS http://127.0.0.1:8083/robots.txt)
+          printf '%s\n' "$ROBOTS_BODY" | grep -Fq 'Content-Signal: search=yes, ai-input=yes, ai-train=no, use=reference'
           printf '%s\n' "$ROBOTS_BODY" | grep -Fq 'User-agent: OAI-SearchBot'
           printf '%s\n' "$ROBOTS_BODY" | grep -Fq 'User-agent: GPTBot'
 
@@ -248,6 +322,25 @@ jobs:
           done
           test "$RATE_LIMITED" = '1' || {
             echo 'Origin login limiter never returned HTTP 429.' >&2
+            exit 1
+          }
+
+          CONTACT_RATE_LIMITED=0
+          for attempt in {1..20}; do
+            STATUS=$(curl -sS -o /dev/null -w '%{http_code}' \
+              -X POST \
+              -H 'CF-Connecting-IP: 198.51.100.88' \
+              -H 'Content-Type: application/json' \
+              --data '{"name":"x"}' \
+              http://127.0.0.1:8083/api/language-school/contact)
+            if [ "$STATUS" = '429' ]; then
+              CONTACT_RATE_LIMITED=1
+              break
+            fi
+            test "$STATUS" = '200'
+          done
+          test "$CONTACT_RATE_LIMITED" = '1' || {
+            echo 'Origin contact limiter never returned HTTP 429.' >&2
             exit 1
           }
 
