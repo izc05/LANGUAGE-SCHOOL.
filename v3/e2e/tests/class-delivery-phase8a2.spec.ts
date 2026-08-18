@@ -49,7 +49,7 @@ test('8A.2: Administración configura la modalidad y el alumno recibe el acceso 
   await expect(nextClass.getByText('E2E Speaking class')).toBeVisible()
   await expect(nextClass.getByText('Híbrida')).toBeVisible()
   await expect(nextClass.getByText('Aula E2E')).toBeVisible()
-  await expect(nextClass.getByRole('link', { name: /Entrar en clase online/ })).toHaveAttribute('href', 'https://example.com/e2e-language-class')
+  await expect(nextClass.getByRole('link', { name: /Entrar al aula online/ })).toHaveAttribute('href', /\/alumno\/aula\//)
 
   await page.getByRole('navigation', { name: 'Menú de Alumno' }).getByRole('link', { name: 'Mis clases' }).click()
   await expect(page).toHaveURL(/\/alumno\/clases$/)
