@@ -116,17 +116,84 @@ jobs:
             echo "$EXPECTED  $RUNNER_TEMP/$ARCHIVE" | sha256sum --check
           done
 
-      - name: Validate Nginx configuration
+      - name: Validate Nginx configuration and Cloudflare request context
         run: |
           sudo apt-get update -qq
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y nginx
-          sudo install -d -m 0755 /opt/language-school/frontend
+          nginx -V 2>&1 | grep -q -- '--with-http_realip_module'
+
+          sudo install -d -m 0755 /opt/language-school/frontend/assets
+          printf '<!doctype html><title>Language School CI</title>\n' | sudo tee /opt/language-school/frontend/index.html >/dev/null
+          printf 'console.log("asset");\n' | sudo tee /opt/language-school/frontend/assets/test.js >/dev/null
+
+          cat >"$RUNNER_TEMP/header-upstream.py" <<'PY'
+          from http.server import BaseHTTPRequestHandler, HTTPServer
+
+          class Handler(BaseHTTPRequestHandler):
+              def do_GET(self):
+                  body = (
+                      f"x-real-ip={self.headers.get('X-Real-IP', '')}\n"
+                      f"x-forwarded-for={self.headers.get('X-Forwarded-For', '')}\n"
+                      f"x-forwarded-proto={self.headers.get('X-Forwarded-Proto', '')}\n"
+                      f"x-forwarded-host={self.headers.get('X-Forwarded-Host', '')}\n"
+                  ).encode()
+                  self.send_response(200)
+                  self.send_header('Content-Type', 'text/plain')
+                  self.send_header('Content-Length', str(len(body)))
+                  self.end_headers()
+                  self.wfile.write(body)
+
+              def log_message(self, *_args):
+                  pass
+
+          HTTPServer(('127.0.0.1', 8091), Handler).serve_forever()
+          PY
+
+          python3 "$RUNNER_TEMP/header-upstream.py" &
+          UPSTREAM_PID=$!
+          trap 'kill "$UPSTREAM_PID" 2>/dev/null || true' EXIT
+
           sed \
             -e 's|__PROXY_LISTEN__|127.0.0.1:8083|g' \
             -e 's|__PB_URL__|http://127.0.0.1:8091|g' \
             v3/infrastructure/reverse-proxy/language-school.nginx.conf \
             | sudo tee /etc/nginx/conf.d/language-school.conf >/dev/null
+
           sudo nginx -t
+          sudo systemctl restart nginx
+
+          for attempt in {1..20}; do
+            curl -fsS http://127.0.0.1:8083/ >/dev/null && break
+            sleep 0.2
+          done
+
+          ROOT_HEADERS=$(curl -fsSI http://127.0.0.1:8083/)
+          printf '%s\n' "$ROOT_HEADERS" | grep -Eqi '^X-Content-Type-Options:[[:space:]]*nosniff'
+          printf '%s\n' "$ROOT_HEADERS" | grep -Eqi '^X-Frame-Options:[[:space:]]*SAMEORIGIN'
+          printf '%s\n' "$ROOT_HEADERS" | grep -Eqi '^Permissions-Policy:'
+          printf '%s\n' "$ROOT_HEADERS" | grep -Eqi '^Cache-Control:[[:space:]]*no-cache'
+
+          ASSET_HEADERS=$(curl -fsSI http://127.0.0.1:8083/assets/test.js)
+          printf '%s\n' "$ASSET_HEADERS" | grep -Eqi '^X-Content-Type-Options:[[:space:]]*nosniff'
+          printf '%s\n' "$ASSET_HEADERS" | grep -Eqi '^Cache-Control:[[:space:]]*max-age='
+
+          ADMIN_STATUS=$(curl -sS -o /dev/null -w '%{http_code}' http://127.0.0.1:8083/_/)
+          test "$ADMIN_STATUS" = '404'
+
+          PROXY_CONTEXT=$(curl -fsS \
+            -H 'CF-Connecting-IP: 203.0.113.42' \
+            -H 'X-Forwarded-Proto: https' \
+            -H 'Host: school.example.org' \
+            http://127.0.0.1:8083/api/headers)
+          printf '%s\n' "$PROXY_CONTEXT" | grep -Fxq 'x-real-ip=203.0.113.42'
+          printf '%s\n' "$PROXY_CONTEXT" | grep -Fxq 'x-forwarded-for=203.0.113.42'
+          printf '%s\n' "$PROXY_CONTEXT" | grep -Fxq 'x-forwarded-proto=https'
+          printf '%s\n' "$PROXY_CONTEXT" | grep -Fxq 'x-forwarded-host=school.example.org'
+
+          LOCAL_CONTEXT=$(curl -fsS http://127.0.0.1:8083/api/headers)
+          printf '%s\n' "$LOCAL_CONTEXT" | grep -Fxq 'x-real-ip=127.0.0.1'
+          printf '%s\n' "$LOCAL_CONTEXT" | grep -Fxq 'x-forwarded-for=127.0.0.1'
+          printf '%s\n' "$LOCAL_CONTEXT" | grep -Fxq 'x-forwarded-proto=http'
 
       - name: Validate Cloudflare ingress catch-all
         run: |
