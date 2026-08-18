@@ -25,6 +25,9 @@ async function loginAdmin(page: Page) {
 }
 
 test('8C.6: Admin versiona el banco y PUBLISHED queda inmutable en servidor y UI', async ({ request, page }) => {
+  const suffix = Date.now().toString(36)
+  const apiVersion = `e2e-8c6-api-${suffix}`
+  const uiVersion = `e2e-8c6-ui-${suffix}`
   const admin = await authenticate(request, requiredEnv('E2E_ADMIN_EMAIL'), requiredEnv('E2E_ADMIN_PASSWORD'))
   const student = await authenticate(request, requiredEnv('E2E_STUDENT_EMAIL'), requiredEnv('E2E_STUDENT_PASSWORD'))
 
@@ -65,7 +68,7 @@ test('8C.6: Admin versiona el banco y PUBLISHED queda inmutable en servidor y UI
     headers: { Authorization: admin.token },
     data: {
       name: 'E2E Placement Test 8C.6',
-      version: 'e2e-8c6-api',
+      version: apiVersion,
       sourceTestId: published?.id,
     },
   })
@@ -122,7 +125,7 @@ test('8C.6: Admin versiona el banco y PUBLISHED queda inmutable en servidor y UI
   expect(publishedResult.status()).toBe(200)
   expect((await publishedResult.json() as { test: { status: string; version: string } }).test).toMatchObject({
     status: 'PUBLISHED',
-    version: 'e2e-8c6-api',
+    version: apiVersion,
   })
 
   const afterList = await request.get(`${PB_URL}/api/language-school/placement/admin/tests`, {
@@ -143,13 +146,13 @@ test('8C.6: Admin versiona el banco y PUBLISHED queda inmutable en servidor y UI
   await loginAdmin(page)
   await page.goto('/admin/test-de-nivel')
   await expect(page.getByRole('heading', { name: 'Test de nivel' })).toBeVisible()
-  await expect(page.getByText('e2e-8c6-api', { exact: true }).first()).toBeVisible()
+  await expect(page.getByText(apiVersion, { exact: true }).first()).toBeVisible()
   await expect(page.getByText('Versión inmutable.')).toBeVisible()
 
-  await page.getByLabel('Versión').first().fill('e2e-8c6-ui')
+  await page.getByLabel('Versión').first().fill(uiVersion)
   await page.getByRole('button', { name: 'Crear versión' }).click()
-  await expect(page.getByRole('status')).toContainText('Nueva versión DRAFT creada')
-  await expect(page.getByText('e2e-8c6-ui', { exact: true }).first()).toBeVisible()
+  await expect(page.locator('.cms-notice.success-notice')).toContainText('Nueva versión DRAFT creada')
+  await expect(page.getByText(uiVersion, { exact: true }).first()).toBeVisible()
   await expect(page.getByText('Banco preparado para publicar')).toBeVisible()
 
   const firstQuestionCard = page.locator('.placement-question-list article').first()
@@ -157,11 +160,11 @@ test('8C.6: Admin versiona el banco y PUBLISHED queda inmutable en servidor y UI
   const prompt = page.getByLabel('Enunciado')
   await prompt.fill('Pregunta actualizada desde la interfaz 8C.6')
   await page.getByRole('button', { name: 'Guardar cambios' }).click()
-  await expect(page.getByRole('status')).toContainText('Pregunta actualizada')
+  await expect(page.locator('.cms-notice.success-notice')).toContainText('Pregunta actualizada')
 
   page.once('dialog', (dialog) => dialog.accept())
   await page.getByRole('button', { name: 'Publicar versión' }).click()
-  await expect(page.getByRole('status')).toContainText('publicada')
+  await expect(page.locator('.cms-notice.success-notice')).toContainText('publicada')
   await expect(page.getByText('Versión inmutable.')).toBeVisible()
 
   await page.setViewportSize({ width: 390, height: 844 })
