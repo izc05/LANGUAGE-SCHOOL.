@@ -42,7 +42,7 @@ jobs:
       - name: Reject production build without explicit app mode
         run: |
           set +e
-          env -u VITE_APP_MODE -u VITE_POCKETBASE_URL npm run build >"$RUNNER_TEMP/frontend-missing-mode.log" 2>&1
+          env -u VITE_APP_MODE -u VITE_POCKETBASE_URL -u VITE_TURNSTILE_SITE_KEY npm run build >"$RUNNER_TEMP/frontend-missing-mode.log" 2>&1
           EXIT_CODE=$?
           set -e
           if [ "$EXIT_CODE" -eq 0 ]; then
@@ -55,7 +55,10 @@ jobs:
       - name: Reject connected build without PocketBase URL
         run: |
           set +e
-          env -u VITE_POCKETBASE_URL VITE_APP_MODE=connected npm run build >"$RUNNER_TEMP/frontend-missing-url.log" 2>&1
+          env -u VITE_POCKETBASE_URL \
+            VITE_APP_MODE=connected \
+            VITE_TURNSTILE_SITE_KEY=1x00000000000000000000AA \
+            npm run build >"$RUNNER_TEMP/frontend-missing-url.log" 2>&1
           EXIT_CODE=$?
           set -e
           if [ "$EXIT_CODE" -eq 0 ]; then
@@ -64,6 +67,22 @@ jobs:
             exit 1
           fi
           grep -q 'Connected production build requires VITE_POCKETBASE_URL' "$RUNNER_TEMP/frontend-missing-url.log"
+
+      - name: Reject connected build without Turnstile sitekey
+        run: |
+          set +e
+          env -u VITE_TURNSTILE_SITE_KEY \
+            VITE_APP_MODE=connected \
+            VITE_POCKETBASE_URL=https://school.example.invalid \
+            npm run build >"$RUNNER_TEMP/frontend-missing-turnstile.log" 2>&1
+          EXIT_CODE=$?
+          set -e
+          if [ "$EXIT_CODE" -eq 0 ]; then
+            cat "$RUNNER_TEMP/frontend-missing-turnstile.log" >&2
+            echo 'Connected frontend build unexpectedly succeeded without VITE_TURNSTILE_SITE_KEY.' >&2
+            exit 1
+          fi
+          grep -q 'Connected production build requires VITE_TURNSTILE_SITE_KEY' "$RUNNER_TEMP/frontend-missing-turnstile.log"
 
       - name: Upload compiled visual preview
         uses: actions/upload-artifact@v4
