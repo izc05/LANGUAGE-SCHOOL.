@@ -38,7 +38,7 @@ function StaticIntroFallback({ onEnter }: { onEnter: () => void }) {
   return (
     <main className={classes}>
       <div className="intro-orbit-ambient" aria-hidden="true" />
-      <IntroOrbitArtwork />
+      <IntroOrbitArtwork withPlane={false} />
 
       <div className="premium-entry-actions intro-orbit-actions">
         <p className="premium-instruction">Bienvenido a Language School</p>
