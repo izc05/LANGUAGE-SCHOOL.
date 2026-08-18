@@ -22,22 +22,31 @@ async function completeCampusAttempt(request: APIRequestContext, token: string) 
     data: { mode: 'CAMPUS' },
   })
   expect([200, 201]).toContain(start.status())
-  const session = await start.json() as { attemptId: string; totalQuestions: number }
+  const session = await start.json() as { attemptId: string; totalQuestions: number; resumed?: boolean }
   expect(session.totalQuestions).toBe(30)
 
-  for (let position = 1; position <= 30; position += 1) {
+  let safety = 0
+  while (safety < 30) {
+    safety += 1
     const next = await request.get(`${PB_URL}/api/language-school/placement/attempts/${session.attemptId}/question`, {
       headers: { Authorization: token },
     })
     expect(next.status()).toBe(200)
-    const question = await next.json() as { question?: { id: string } }
-    expect(question.question?.id).toBeTruthy()
+    const payload = await next.json() as { complete?: boolean; question?: { id: string } }
+    if (payload.complete) break
+    expect(payload.question?.id).toBeTruthy()
     const answer = await request.post(`${PB_URL}/api/language-school/placement/attempts/${session.attemptId}/answer`, {
       headers: { Authorization: token },
-      data: { questionId: question.question?.id, optionId: 'a' },
+      data: { questionId: payload.question?.id, optionId: 'a' },
     })
     expect(answer.status()).toBe(200)
   }
+
+  const ready = await request.get(`${PB_URL}/api/language-school/placement/attempts/${session.attemptId}/question`, {
+    headers: { Authorization: token },
+  })
+  expect(ready.status()).toBe(200)
+  expect((await ready.json() as { complete?: boolean }).complete).toBe(true)
 
   const finish = await request.post(`${PB_URL}/api/language-school/placement/attempts/${session.attemptId}/finish`, {
     headers: { Authorization: token }, data: {},
