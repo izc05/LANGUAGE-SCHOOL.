@@ -20,6 +20,7 @@ export type CampusPlacementQuestion = {
     skill: PlacementSkill
     prompt: string
     passage: string
+    hasAudio?: boolean
     options: Array<{ id: string; label: string }>
   }
 }
@@ -40,9 +41,10 @@ export type CampusPlacementResult = {
   rawScore: number
   maxScore: number
   scorePercent: number
-  skillScores: Record<PlacementSkill, PlacementSkillScore>
+  skillScores: Partial<Record<PlacementSkill, PlacementSkillScore>>
   completedAt: string
   notice: string
+  listeningDiagnosticOnly?: boolean
   startedAt?: string
 }
 
