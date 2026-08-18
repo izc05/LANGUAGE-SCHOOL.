@@ -10,6 +10,9 @@ fi
 source "$PRODUCTION_ENV"
 
 SERVICE="${SERVICE:-language-school-pocketbase.service}"
+SYSTEMCTL_BIN="${SYSTEMCTL_BIN:-systemctl}"
+CURL_BIN="${CURL_BIN:-curl}"
+PB_OWNER="${PB_OWNER:-languageschool:languageschool}"
 : "${PB_URL:?PB_URL is required in $PRODUCTION_ENV}"
 DATA_PARENT="${DATA_PARENT:-/var/lib/language-school}"
 PB_DATA_NAME="${PB_DATA_NAME:-pb_data}"
@@ -26,11 +29,18 @@ if [[ -z "$ARCHIVE" || ! -f "$ARCHIVE" ]]; then
   exit 1
 fi
 
-for command in tar sha256sum systemctl curl; do
+for command in tar sha256sum; do
   command -v "$command" >/dev/null || {
     echo "Missing required command: $command" >&2
     exit 1
   }
+done
+for command in "$SYSTEMCTL_BIN" "$CURL_BIN"; do
+  if [[ "$command" == */* ]]; then
+    [[ -x "$command" ]] || { echo "Required executable not found: $command" >&2; exit 1; }
+  else
+    command -v "$command" >/dev/null || { echo "Missing required command: $command" >&2; exit 1; }
+  fi
 done
 
 CHECKSUM="$ARCHIVE.sha256"
@@ -45,7 +55,28 @@ else
   exit 1
 fi
 
-if ! tar -tzf "$ARCHIVE" | grep -E "^${PB_DATA_NAME}/" >/dev/null; then
+found_expected=0
+unsafe_entry=''
+while IFS= read -r entry; do
+  normalized="${entry#./}"
+  [[ -n "$normalized" ]] || continue
+
+  if [[ "$normalized" == /* || "$normalized" == '..' || "$normalized" == ../* || "$normalized" == *'/../'* || "$normalized" == *'/..' ]]; then
+    unsafe_entry="$entry"
+    break
+  fi
+
+  case "$normalized" in
+    "$PB_DATA_NAME"|"$PB_DATA_NAME/"*) found_expected=1 ;;
+    *) unsafe_entry="$entry"; break ;;
+  esac
+done < <(tar -tzf "$ARCHIVE")
+
+if [[ -n "$unsafe_entry" ]]; then
+  echo "Archive contains an unsafe path outside ${PB_DATA_NAME}/; refusing restore." >&2
+  exit 1
+fi
+if [[ "$found_expected" -ne 1 ]]; then
   echo "Archive does not contain expected ${PB_DATA_NAME}/ directory." >&2
   exit 1
 fi
@@ -53,7 +84,7 @@ fi
 TIMESTAMP="$(date -u +'%Y%m%dT%H%M%SZ')"
 PREVIOUS="$DATA_PARENT/${PB_DATA_NAME}.before-restore-$TIMESTAMP"
 
-systemctl stop "$SERVICE" 2>/dev/null || true
+"$SYSTEMCTL_BIN" stop "$SERVICE" 2>/dev/null || true
 
 had_previous=0
 if [[ -d "$PB_DATA" ]]; then
@@ -62,23 +93,23 @@ if [[ -d "$PB_DATA" ]]; then
 fi
 
 rollback() {
-  systemctl stop "$SERVICE" 2>/dev/null || true
+  "$SYSTEMCTL_BIN" stop "$SERVICE" 2>/dev/null || true
   rm -rf "$PB_DATA"
   if [[ "$had_previous" -eq 1 && -d "$PREVIOUS" ]]; then
     mv "$PREVIOUS" "$PB_DATA"
   fi
-  chown -R languageschool:languageschool "$PB_DATA" 2>/dev/null || true
-  systemctl start "$SERVICE" 2>/dev/null || true
+  chown -R "$PB_OWNER" "$PB_DATA" 2>/dev/null || true
+  "$SYSTEMCTL_BIN" start "$SERVICE" 2>/dev/null || true
 }
 trap rollback ERR
 
-tar -C "$DATA_PARENT" -xzf "$ARCHIVE"
-chown -R languageschool:languageschool "$PB_DATA"
+tar --no-same-owner --no-same-permissions -C "$DATA_PARENT" -xzf "$ARCHIVE"
+chown -R "$PB_OWNER" "$PB_DATA"
 chmod 0700 "$PB_DATA"
-systemctl start "$SERVICE"
+"$SYSTEMCTL_BIN" start "$SERVICE"
 
 for attempt in {1..30}; do
-  if curl -fsS --max-time 5 "$PB_URL/api/health" >/dev/null; then
+  if "$CURL_BIN" -fsS --max-time 5 "$PB_URL/api/health" >/dev/null; then
     trap - ERR
     echo 'Restore health check: SUCCESS'
     if [[ "$had_previous" -eq 1 ]]; then
