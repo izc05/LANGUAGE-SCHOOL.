@@ -91,6 +91,19 @@ jobs:
             fi
           done
 
+      - name: Validate crawler policy source
+        run: |
+          ROBOTS='v3/frontend/public/robots.txt'
+          test -f "$ROBOTS"
+          grep -Fq 'User-agent: *' "$ROBOTS"
+          grep -Fq 'Disallow: /admin' "$ROBOTS"
+          grep -Fq 'Disallow: /alumno' "$ROBOTS"
+          grep -Fq 'Disallow: /profesor' "$ROBOTS"
+          grep -Fq 'Disallow: /api/' "$ROBOTS"
+          grep -Fq 'User-agent: OAI-SearchBot' "$ROBOTS"
+          grep -Fq 'User-agent: GPTBot' "$ROBOTS"
+          grep -Fq 'v3/frontend/public/robots.txt' v3/infrastructure/cloudflare/SECURITY-RULES.md
+
       - name: Reject secret-like environment keys
         run: |
           ENV_FILE='v3/infrastructure/.env.example'
@@ -116,7 +129,7 @@ jobs:
             echo "$EXPECTED  $RUNNER_TEMP/$ARCHIVE" | sha256sum --check
           done
 
-      - name: Validate Nginx configuration and Cloudflare request context
+      - name: Validate Nginx configuration, Cloudflare context and abuse guards
         run: |
           sudo apt-get update -qq
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y nginx
@@ -125,12 +138,13 @@ jobs:
           sudo install -d -m 0755 /opt/language-school/frontend/assets
           printf '<!doctype html><title>Language School CI</title>\n' | sudo tee /opt/language-school/frontend/index.html >/dev/null
           printf 'console.log("asset");\n' | sudo tee /opt/language-school/frontend/assets/test.js >/dev/null
+          sudo cp v3/frontend/public/robots.txt /opt/language-school/frontend/robots.txt
 
           cat >"$RUNNER_TEMP/header-upstream.py" <<'PY'
           from http.server import BaseHTTPRequestHandler, HTTPServer
 
           class Handler(BaseHTTPRequestHandler):
-              def do_GET(self):
+              def respond(self):
                   body = (
                       f"x-real-ip={self.headers.get('X-Real-IP', '')}\n"
                       f"x-forwarded-for={self.headers.get('X-Forwarded-For', '')}\n"
@@ -142,6 +156,15 @@ jobs:
                   self.send_header('Content-Length', str(len(body)))
                   self.end_headers()
                   self.wfile.write(body)
+
+              def do_GET(self):
+                  self.respond()
+
+              def do_POST(self):
+                  length = int(self.headers.get('Content-Length', '0') or '0')
+                  if length:
+                      self.rfile.read(length)
+                  self.respond()
 
               def log_message(self, *_args):
                   pass
@@ -172,6 +195,20 @@ jobs:
           printf '%s\n' "$ROOT_HEADERS" | grep -Eqi '^X-Frame-Options:[[:space:]]*SAMEORIGIN'
           printf '%s\n' "$ROOT_HEADERS" | grep -Eqi '^Permissions-Policy:'
           printf '%s\n' "$ROOT_HEADERS" | grep -Eqi '^Cache-Control:[[:space:]]*no-cache'
+          if printf '%s\n' "$ROOT_HEADERS" | grep -Eqi '^X-Robots-Tag:'; then
+            echo 'Public root must remain indexable.' >&2
+            exit 1
+          fi
+
+          PRIVATE_HEADERS=$(curl -fsSI http://127.0.0.1:8083/acceso)
+          printf '%s\n' "$PRIVATE_HEADERS" | grep -Eqi '^X-Robots-Tag:[[:space:]]*noindex, nofollow, noarchive'
+
+          API_HEADERS=$(curl -fsS -D - -o /dev/null http://127.0.0.1:8083/api/headers)
+          printf '%s\n' "$API_HEADERS" | grep -Eqi '^X-Robots-Tag:[[:space:]]*noindex, nofollow, noarchive'
+
+          ROBOTS_BODY=$(curl -fsS http://127.0.0.1:8083/robots.txt)
+          printf '%s\n' "$ROBOTS_BODY" | grep -Fq 'User-agent: OAI-SearchBot'
+          printf '%s\n' "$ROBOTS_BODY" | grep -Fq 'User-agent: GPTBot'
 
           ASSET_HEADERS=$(curl -fsSI http://127.0.0.1:8083/assets/test.js)
           printf '%s\n' "$ASSET_HEADERS" | grep -Eqi '^X-Content-Type-Options:[[:space:]]*nosniff'
@@ -194,6 +231,30 @@ jobs:
           printf '%s\n' "$LOCAL_CONTEXT" | grep -Fxq 'x-real-ip=127.0.0.1'
           printf '%s\n' "$LOCAL_CONTEXT" | grep -Fxq 'x-forwarded-for=127.0.0.1'
           printf '%s\n' "$LOCAL_CONTEXT" | grep -Fxq 'x-forwarded-proto=http'
+
+          RATE_LIMITED=0
+          for attempt in {1..30}; do
+            STATUS=$(curl -sS -o /dev/null -w '%{http_code}' \
+              -X POST \
+              -H 'CF-Connecting-IP: 198.51.100.77' \
+              -H 'Content-Type: application/json' \
+              --data '{"identity":"x","password":"x"}' \
+              http://127.0.0.1:8083/api/collections/users/auth-with-password)
+            if [ "$STATUS" = '429' ]; then
+              RATE_LIMITED=1
+              break
+            fi
+            test "$STATUS" = '200'
+          done
+          test "$RATE_LIMITED" = '1' || {
+            echo 'Origin login limiter never returned HTTP 429.' >&2
+            exit 1
+          }
+
+          # A GET to contact records is not counted by the POST-only write key.
+          for attempt in {1..15}; do
+            test "$(curl -sS -o /dev/null -w '%{http_code}' http://127.0.0.1:8083/api/collections/contact_requests/records)" = '200'
+          done
 
       - name: Validate Cloudflare ingress catch-all
         run: |
