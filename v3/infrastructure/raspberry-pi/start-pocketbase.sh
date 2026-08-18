@@ -15,6 +15,12 @@ if [[ ! "$PB_URL" =~ ^http://127\.0\.0\.1:([0-9]{1,5})$ ]]; then
   echo 'PB_URL must use http://127.0.0.1:<port> with no path.' >&2
   exit 1
 fi
+PB_PORT="${BASH_REMATCH[1]}"
+
+if (( PB_PORT < 1 || PB_PORT > 65535 )); then
+  echo "PB_URL contains an invalid TCP port: $PB_PORT" >&2
+  exit 1
+fi
 
 if [[ -z "$TURNSTILE_SECRET_KEY" || "$TURNSTILE_SECRET_KEY" == 'replace-with-real-secret-key' ]]; then
   echo 'TURNSTILE_SECRET_KEY must contain the real server-side Turnstile secret before PocketBase can start.' >&2
@@ -32,7 +38,7 @@ if [[ ! "$PUBLIC_ORIGIN" =~ ^https://([A-Za-z0-9.-]+)$ ]]; then
 fi
 PUBLIC_HOST="${BASH_REMATCH[1],,}"
 
-if [[ -z "$TURNSTILE_ALLOWED_HOSTNAMES" || "$TURNSTILE_ALLOWED_HOSTNAMES" == *'example.com'* ]]; then
+if [[ -z "$TURNSTILE_ALLOWED_HOSTNAMES" || "$TURNSTILE_ALLOWED_HOSTNAMES" == 'english.example.com' ]]; then
   echo 'TURNSTILE_ALLOWED_HOSTNAMES must contain the real production hostname.' >&2
   exit 1
 fi
@@ -56,16 +62,6 @@ done
 
 if [[ "$HOST_ALLOWED" != true ]]; then
   echo 'TURNSTILE_ALLOWED_HOSTNAMES must include the hostname from PUBLIC_ORIGIN.' >&2
-  exit 1
-fi
-
-PB_PORT="${BASH_REMATCH[1]:-}"
-# Re-read the PocketBase port because the PUBLIC_ORIGIN regex above updates BASH_REMATCH.
-if [[ "$PB_URL" =~ ^http://127\.0\.0\.1:([0-9]{1,5})$ ]]; then
-  PB_PORT="${BASH_REMATCH[1]}"
-fi
-if [[ -z "$PB_PORT" ]] || (( PB_PORT < 1 || PB_PORT > 65535 )); then
-  echo "PB_URL contains an invalid TCP port: ${PB_PORT:-missing}" >&2
   exit 1
 fi
 
