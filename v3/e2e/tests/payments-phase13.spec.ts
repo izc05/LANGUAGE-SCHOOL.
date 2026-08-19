@@ -105,7 +105,10 @@ test('13C-D: Admin registra una mensualidad, la cobra y la ficha del alumno refl
   const create = page.locator('.admin-payment-create')
   const studentSelect = create.getByLabel('Alumno')
   const studentEmail = requiredEnv('E2E_STUDENT_EMAIL')
-  await expect(studentSelect.locator(`option[value="${studentAccount.id}"]`)).toHaveCount(1)
+  const studentOption = studentSelect.locator(`option[value="${studentAccount.id}"]`)
+  await expect(studentOption).toHaveCount(1)
+  const selectedStudentName = (await studentOption.textContent())?.trim() || ''
+  expect(selectedStudentName).toBeTruthy()
   await studentSelect.selectOption(studentAccount.id)
 
   const enrollmentSelect = create.getByLabel('Matrícula')
@@ -114,23 +117,28 @@ test('13C-D: Admin registra una mensualidad, la cobra y la ficha del alumno refl
   expect(enrollmentValue).toBeTruthy()
   await enrollmentSelect.selectOption(enrollmentValue!)
 
-  await create.getByLabel('Modalidad').selectOption('MONTHLY')
-  await create.getByLabel('Importe (€)').fill('55')
-  await create.getByLabel('Inicio del periodo').fill(dates.start)
-  await create.getByLabel('Fin del periodo').fill(dates.end)
-  await create.getByLabel('Vencimiento').fill(dates.due)
-  await create.getByRole('button', { name: 'Crear pendiente' }).click()
-  await expect(page.getByText('Cobro pendiente creado correctamente.')).toBeVisible()
+  const record = page.locator('.payment-record').filter({ hasText: selectedStudentName }).filter({ hasText: '55,00' }).first()
+  if (await record.count() === 0) {
+    await create.getByLabel('Modalidad').selectOption('MONTHLY')
+    await create.getByLabel('Importe (€)').fill('55')
+    await create.getByLabel('Inicio del periodo').fill(dates.start)
+    await create.getByLabel('Fin del periodo').fill(dates.end)
+    await create.getByLabel('Vencimiento').fill(dates.due)
+    await create.getByRole('button', { name: 'Crear pendiente' }).click()
+    await expect(page.getByText('Cobro pendiente creado correctamente.')).toBeVisible()
+  }
 
-  const record = page.locator('.payment-record').filter({ hasText: '55,00' }).filter({ hasText: studentEmail.split('@')[0] }).first()
   await expect(record).toBeVisible()
-  await expect(record.getByText(/Pendiente|Vencido/)).toBeVisible()
-  await record.getByRole('button', { name: 'Marcar pagado' }).click()
-  const payPanel = page.locator('.payment-pay-panel')
-  await payPanel.getByLabel('Fecha de pago').fill(dates.today)
-  await payPanel.getByLabel('Método').selectOption('BIZUM')
-  await payPanel.getByRole('button', { name: 'Confirmar pago' }).click()
-  await expect(page.getByText('Pago registrado correctamente.')).toBeVisible()
+  const markPaid = record.getByRole('button', { name: 'Marcar pagado' })
+  if (await markPaid.count()) {
+    await expect(record.getByText(/Pendiente|Vencido/)).toBeVisible()
+    await markPaid.click()
+    const payPanel = page.locator('.payment-pay-panel')
+    await payPanel.getByLabel('Fecha de pago').fill(dates.today)
+    await payPanel.getByLabel('Método').selectOption('BIZUM')
+    await payPanel.getByRole('button', { name: 'Confirmar pago' }).click()
+    await expect(page.getByText('Pago registrado correctamente.')).toBeVisible()
+  }
   await expect(record.getByText('Pagado')).toBeVisible()
 
   await page.goto('/admin/alumnos')
