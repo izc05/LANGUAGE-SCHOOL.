@@ -19,8 +19,8 @@ test('16B: la entrada pública del test es directa, clara y responsive', async (
     await expect(page.getByRole('heading', { name: /Descubre tu punto de partida/i })).toBeVisible()
     const start = page.getByRole('button', { name: 'Empezar test' })
     await expect(start).toBeVisible()
-    await expect(page.getByText('Sin registro', { exact: false })).toBeVisible()
-    await expect(page.getByText('A1–C2', { exact: false })).toBeVisible()
+    await expect(page.getByText('Sin registro', { exact: true })).toBeVisible()
+    await expect(page.getByText('A1–C2', { exact: true })).toBeVisible()
 
     const startBox = await start.boundingBox()
     expect(startBox?.height || 0).toBeGreaterThanOrEqual(48)
@@ -46,12 +46,20 @@ test('16B: una pregunta mantiene opciones grandes, foco visible y progreso claro
   expect(Math.min(...heights)).toBeGreaterThanOrEqual(58)
 
   const firstInput = options.first().locator('input')
+  await page.keyboard.press('Tab')
   await firstInput.focus()
-  const outline = await options.first().evaluate((element) => {
+  await page.keyboard.press('Space')
+  const focusState = await options.first().evaluate((element) => {
+    const input = element.querySelector('input')
     const style = getComputedStyle(element)
-    return { outlineStyle: style.outlineStyle, outlineWidth: style.outlineWidth }
+    return {
+      inputFocused: document.activeElement === input,
+      outlineStyle: style.outlineStyle,
+      outlineWidth: style.outlineWidth,
+    }
   })
-  expect(outline.outlineStyle).not.toBe('none')
-  expect(outline.outlineWidth).not.toBe('0px')
+  expect(focusState.inputFocused).toBe(true)
+  expect(focusState.outlineStyle).not.toBe('none')
+  expect(focusState.outlineWidth).not.toBe('0px')
   await expectNoOverflow(page)
 })
