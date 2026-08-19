@@ -3,6 +3,7 @@
    Admin y Student quedan fuera de alcance. */
 
 .dashboard-shell-teacher .dashboard-main{min-width:0}
+.dashboard-shell-teacher .dashboard-nav a:focus,
 .dashboard-shell-teacher .dashboard-nav a:focus-visible{
   outline:3px solid rgba(225,121,157,.5);
   outline-offset:2px;
