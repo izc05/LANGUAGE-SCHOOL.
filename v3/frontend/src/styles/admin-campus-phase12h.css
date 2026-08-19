@@ -1,0 +1,430 @@
+/* FASE 12.8 · ADMIN CONFIGURACIÓN + SISTEMA
+   Capa visual aislada. Conserva settings, consentimiento, legal y diagnóstico seguro. */
+
+.dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row),
+.dashboard-shell-admin .system-status-page {
+  --sys-ink: #382b33;
+  --sys-muted: #806b76;
+  --sys-plum: #4a2d3b;
+  --sys-plum-deep: #281c23;
+  --sys-pink: #bd4f79;
+  --sys-pink-soft: #f8e8ee;
+  --sys-blush: #fff5f8;
+  --sys-paper: #fffdfb;
+  --sys-ivory: #fbf7f2;
+  --sys-line: rgba(105, 62, 80, .11);
+  --sys-shadow: 0 14px 36px rgba(70, 36, 50, .04);
+  display: grid;
+  gap: 22px;
+  max-width: 1480px;
+  margin: 0 auto;
+  padding-top: 30px;
+  padding-bottom: 52px;
+}
+
+.dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) > .cms-page-heading,
+.dashboard-shell-admin .system-status-page > .cms-page-heading {
+  position: relative;
+  min-height: 225px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 30px;
+  overflow: hidden;
+  padding: 40px 43px;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 29px;
+  color: #f8eef2;
+  background:
+    radial-gradient(circle at 84% 16%, rgba(218,112,151,.22), transparent 23rem),
+    linear-gradient(132deg, var(--sys-plum) 0%, var(--sys-plum-deep) 100%);
+  box-shadow: 0 27px 66px rgba(57,31,43,.13);
+}
+
+.dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) > .cms-page-heading::after,
+.dashboard-shell-admin .system-status-page > .cms-page-heading::after {
+  content: '';
+  position: absolute;
+  right: -95px;
+  bottom: -154px;
+  width: 355px;
+  height: 355px;
+  border: 1px solid rgba(255,255,255,.075);
+  border-radius: 50%;
+  box-shadow: 0 0 0 53px rgba(255,255,255,.018), 0 0 0 106px rgba(255,255,255,.012);
+  pointer-events: none;
+}
+
+.dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) > .cms-page-heading > *,
+.dashboard-shell-admin .system-status-page > .cms-page-heading > * {
+  position: relative;
+  z-index: 1;
+}
+
+.dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) > .cms-page-heading > div,
+.dashboard-shell-admin .system-status-page > .cms-page-heading > div {
+  max-width: 790px;
+}
+
+.dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) > .cms-page-heading .eyebrow,
+.dashboard-shell-admin .system-status-page > .cms-page-heading .eyebrow {
+  color: #efb3c8;
+}
+
+.dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) > .cms-page-heading h2,
+.dashboard-shell-admin .system-status-page > .cms-page-heading h2 {
+  margin: 10px 0 12px;
+  color: #fff;
+  font-size: clamp(2.3rem, 3.7vw, 4rem);
+  line-height: .99;
+  letter-spacing: -.038em;
+}
+
+.dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) > .cms-page-heading p,
+.dashboard-shell-admin .system-status-page > .cms-page-heading p {
+  max-width: 700px;
+  margin: 0;
+  color: #d9c7cf;
+  font-size: .98rem;
+  line-height: 1.7;
+}
+
+.dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) > .cms-page-heading .status,
+.dashboard-shell-admin .system-status-page > .cms-page-heading .button {
+  min-height: 45px;
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 999px;
+  color: #fff;
+  background: rgba(255,255,255,.09);
+  box-shadow: none;
+  backdrop-filter: blur(8px);
+}
+
+/* Configuración */
+.dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) .admin-settings-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) .panel {
+  border: 1px solid var(--sys-line);
+  border-radius: 23px;
+  background: rgba(255,253,251,.9);
+  box-shadow: var(--sys-shadow);
+}
+
+.dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) .cms-form {
+  gap: 18px;
+  padding: 25px 26px;
+}
+
+.dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) .panel-heading {
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) .panel-heading .eyebrow {
+  color: #ad5876;
+}
+
+.dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) .panel-heading h3 {
+  margin: 5px 0 0;
+  color: var(--sys-ink);
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.55rem;
+  line-height: 1.08;
+}
+
+.dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) .field-stack > span {
+  color: #8f6d7c;
+  font-size: .68rem;
+  font-weight: 850;
+  letter-spacing: .055em;
+  text-transform: uppercase;
+}
+
+.dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) .field-stack input,
+.dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) .field-stack textarea,
+.dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) .field-stack select {
+  border: 1px solid rgba(105,62,80,.12);
+  border-radius: 13px;
+  color: var(--sys-ink);
+  background: #fff;
+  box-shadow: none;
+}
+
+.dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) .field-stack input:focus,
+.dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) .field-stack textarea:focus,
+.dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) .field-stack select:focus {
+  border-color: rgba(189,79,121,.42);
+  outline: 3px solid rgba(189,79,121,.11);
+  box-shadow: none;
+}
+
+.dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) .settings-file-note {
+  padding: 14px 15px;
+  border: 1px solid var(--sys-line);
+  border-radius: 15px;
+  background: var(--sys-ivory);
+}
+
+.dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) .settings-file-note strong {
+  color: var(--sys-ink);
+}
+
+.dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) .settings-file-note small,
+.dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) .field-stack > small,
+.dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) .muted {
+  color: var(--sys-muted);
+  line-height: 1.55;
+}
+
+.dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) .settings-toggle-row {
+  gap: 18px;
+  padding: 15px 16px;
+  border: 1px solid var(--sys-line);
+  border-radius: 16px;
+  background: linear-gradient(145deg, #fff, #fff9fb);
+}
+
+.dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) .settings-toggle-row strong {
+  color: var(--sys-ink);
+}
+
+.dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) .settings-toggle-row small {
+  color: var(--sys-muted);
+}
+
+.dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) .settings-toggle-row input {
+  accent-color: var(--sys-pink);
+}
+
+.dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) .settings-legal-note {
+  padding: 15px 16px;
+  border: 1px solid rgba(189,79,121,.12);
+  border-radius: 16px;
+  background: var(--sys-blush);
+}
+
+.dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) .settings-legal-note strong {
+  color: #9a3d60;
+}
+
+.dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) .settings-legal-note p {
+  color: #735d67;
+}
+
+.dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) .admin-settings-privacy-panel,
+.dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) .admin-settings-legal-panel {
+  min-width: 0;
+}
+
+.dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) .admin-settings-submit-row {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 5px 0 0;
+}
+
+.dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) .admin-settings-submit-row .button {
+  min-width: 230px;
+  min-height: 45px;
+  border-radius: 999px;
+}
+
+/* Sistema */
+.dashboard-shell-admin .system-status-page .system-status-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.dashboard-shell-admin .system-status-page .system-status-card,
+.dashboard-shell-admin .system-status-page .system-status-detail {
+  border: 1px solid var(--sys-line);
+  border-radius: 21px;
+  background: rgba(255,253,251,.9);
+  box-shadow: var(--sys-shadow);
+}
+
+.dashboard-shell-admin .system-status-page .system-status-card {
+  min-height: 165px;
+  align-content: center;
+  gap: 9px;
+  padding: 21px 22px;
+}
+
+.dashboard-shell-admin .system-status-page .system-status-card .eyebrow,
+.dashboard-shell-admin .system-status-page .system-status-detail .eyebrow {
+  color: #ad5876;
+}
+
+.dashboard-shell-admin .system-status-page .system-status-number {
+  color: var(--sys-ink);
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(1.8rem, 3vw, 2.5rem);
+  line-height: 1;
+}
+
+.dashboard-shell-admin .system-status-page .system-status-origin {
+  color: var(--sys-ink);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: .85rem;
+  line-height: 1.45;
+}
+
+.dashboard-shell-admin .system-status-page .system-status-card small,
+.dashboard-shell-admin .system-status-page .system-status-detail span {
+  color: var(--sys-muted);
+  line-height: 1.5;
+}
+
+.dashboard-shell-admin .system-status-page .system-status-value {
+  gap: 10px;
+  color: var(--sys-ink);
+}
+
+.dashboard-shell-admin .system-status-page .system-status-value strong {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.55rem;
+}
+
+.dashboard-shell-admin .system-status-page .system-status-dot {
+  width: 12px;
+  height: 12px;
+  box-shadow: 0 0 0 5px rgba(105,62,80,.06);
+}
+
+.dashboard-shell-admin .system-status-page .system-status-detail {
+  padding: 24px 25px;
+}
+
+.dashboard-shell-admin .system-status-page .system-status-detail .panel-heading h3 {
+  margin: 5px 0 0;
+  color: var(--sys-ink);
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.45rem;
+}
+
+.dashboard-shell-admin .system-status-page .system-status-checklist {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+  margin-top: 15px;
+}
+
+.dashboard-shell-admin .system-status-page .system-status-checklist > div {
+  min-width: 0;
+  gap: 5px;
+  padding: 13px 14px;
+  border: 1px solid rgba(105,62,80,.075);
+  border-radius: 14px;
+  background: var(--sys-ivory);
+}
+
+.dashboard-shell-admin .system-status-page .system-status-checklist strong {
+  color: var(--sys-ink);
+  overflow-wrap: anywhere;
+}
+
+/* Foco */
+.dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) button:focus-visible,
+.dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) input:focus-visible,
+.dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) textarea:focus-visible,
+.dashboard-shell-admin .system-status-page button:focus-visible {
+  outline: 3px solid rgba(189,79,121,.42);
+  outline-offset: 3px;
+}
+
+@media (max-width: 1080px) {
+  .dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row),
+  .dashboard-shell-admin .system-status-page {
+    padding-top: 24px;
+  }
+
+  .dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) > .cms-page-heading,
+  .dashboard-shell-admin .system-status-page > .cms-page-heading {
+    grid-template-columns: 1fr;
+    min-height: 0;
+    padding: 35px;
+  }
+
+  .dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) > .cms-page-heading .status,
+  .dashboard-shell-admin .system-status-page > .cms-page-heading .button {
+    justify-self: start;
+  }
+
+  .dashboard-shell-admin .system-status-page .system-status-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-shell-admin .system-status-page .system-status-checklist {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) .admin-settings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) .admin-settings-submit-row {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 620px) {
+  .dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row),
+  .dashboard-shell-admin .system-status-page {
+    gap: 18px;
+    padding-top: 18px;
+    padding-bottom: 36px;
+  }
+
+  .dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) > .cms-page-heading,
+  .dashboard-shell-admin .system-status-page > .cms-page-heading {
+    padding: 29px 23px;
+    border-radius: 23px;
+  }
+
+  .dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) > .cms-page-heading h2,
+  .dashboard-shell-admin .system-status-page > .cms-page-heading h2 {
+    font-size: clamp(2.05rem, 11vw, 3rem);
+  }
+
+  .dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) .cms-form,
+  .dashboard-shell-admin .system-status-page .system-status-card,
+  .dashboard-shell-admin .system-status-page .system-status-detail {
+    padding: 21px 20px;
+    border-radius: 20px;
+  }
+
+  .dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) .field-row,
+  .dashboard-shell-admin .system-status-page .system-status-grid,
+  .dashboard-shell-admin .system-status-page .system-status-checklist {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) .settings-toggle-row {
+    align-items: flex-start;
+  }
+
+  .dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) .admin-settings-submit-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) .admin-settings-submit-row .button,
+  .dashboard-shell-admin .system-status-page > .cms-page-heading .button {
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-shell-admin .admin-settings-page:has(.admin-settings-submit-row) *,
+  .dashboard-shell-admin .system-status-page * {
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+  }
+}
