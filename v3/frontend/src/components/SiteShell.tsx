@@ -231,7 +231,7 @@ export default function SiteShell({ children }: SiteShellProps) {
       </footer>
 
       <CookieConsentBanner enabled={settings.cookieBannerEnabled} intro={settings.cookieIntro} />
-      <PublicWhatsAppButton enabled={settings.whatsappEnabled} phone={settings.whatsapp} message={settings.whatsappMessage} />
+      <PublicWhatsAppButton enabled={settings.whatsappEnabled} phone={settings.whatsapp} message={settings.whatsappMessage} academyName={brandName} />
     </div>
   )
 }
