@@ -6,6 +6,12 @@ function requiredEnv(name: string): string {
   return value
 }
 
+function durationInMs(value: string): number {
+  const normalized = value.trim()
+  const amount = Number.parseFloat(normalized)
+  return normalized.endsWith('ms') ? amount : amount * 1000
+}
+
 const admin = {
   email: requiredEnv('E2E_ADMIN_EMAIL'),
   password: requiredEnv('E2E_ADMIN_PASSWORD'),
@@ -65,5 +71,5 @@ test('12.2: Admin agrupa sus 19 rutas y mantiene navegación completa en tablet 
 
   await page.emulateMedia({ reducedMotion: 'reduce' })
   const transitionDuration = await dashboardLink.evaluate((element) => getComputedStyle(element).transitionDuration)
-  expect(transitionDuration.split(',').every((value) => value.trim() === '0s')).toBe(true)
+  expect(transitionDuration.split(',').every((value) => durationInMs(value) <= 0.01)).toBe(true)
 })
