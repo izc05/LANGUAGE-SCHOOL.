@@ -160,11 +160,14 @@ export default function AdminPlacementTestPage() {
   }, [bankLevel, bankQuery, bankSkill, bankState, questions])
 
   function preferredSource(records: PlacementAdminTest[]): string {
-    const compatible = records.filter(isProgressiveSource)
-    return compatible.find((record) => record.status === 'PUBLISHED')?.id
-      || compatible.find((record) => record.algorithmVersion === PROGRESSIVE_ALGORITHM_VERSION)?.id
-      || compatible[0]?.id
-      || ''
+    const ranked = records.filter(isProgressiveSource).slice().sort((left, right) => {
+      const coverageDifference = Number(right.validation.questionCount || 0) - Number(left.validation.questionCount || 0)
+      if (coverageDifference !== 0) return coverageDifference
+      if (left.status === 'PUBLISHED' && right.status !== 'PUBLISHED') return -1
+      if (right.status === 'PUBLISHED' && left.status !== 'PUBLISHED') return 1
+      return String(right.createdAt || '').localeCompare(String(left.createdAt || ''))
+    })
+    return ranked[0]?.id || ''
   }
 
   async function refreshTests(preferredId?: string) {

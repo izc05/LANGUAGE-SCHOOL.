@@ -41,13 +41,14 @@ test('16F: Admin gestiona una revisión progresiva con cobertura, filtros e hist
   })
   expect(list.status()).toBe(200)
   const tests = (await list.json() as {
-    tests: Array<{ id: string; version: string; status: string; algorithmVersion: string }>
+    tests: Array<{ id: string; version: string; status: string; algorithmVersion: string; validation: { questionCount: number } }>
   }).tests
-  const source = tests.find((item) => item.status === 'PUBLISHED')
-    || tests.find((item) => item.algorithmVersion === PROGRESSIVE)
-    || tests[0]
+  const source = [...tests]
+    .filter((item) => ['cefr-v1', 'cefr-v2-listening', PROGRESSIVE].includes(item.algorithmVersion))
+    .sort((left, right) => Number(right.validation.questionCount || 0) - Number(left.validation.questionCount || 0))[0]
   expect(source).toBeTruthy()
   if (!source) throw new Error('No placement source available for 16F')
+  expect(source.validation.questionCount).toBeGreaterThanOrEqual(72)
 
   const forbidden = await request.post(`${PB_URL}/api/language-school/placement/admin/progressive/tests`, {
     headers: { Authorization: student.token },
