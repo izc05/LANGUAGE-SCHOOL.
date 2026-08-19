@@ -78,7 +78,7 @@ test('12.6: Test de nivel y Resultados conservan trazabilidad con una interfaz r
   expect(reducedTransition.split(',').every((value) => durationInMs(value) <= 0.01)).toBe(true)
 
   await page.setViewportSize({ width: 1440, height: 1000 })
-  await page.goto('/admin/resultados-nivel')
+  await page.goto('/admin/test-de-nivel/resultados')
   await expect(page.getByRole('heading', { name: 'Resultados de nivel' })).toBeVisible()
   const resultsPage = page.locator('.placement-results-page')
   await expect(resultsPage.locator('.placement-results-metrics article')).toHaveCount(4)
