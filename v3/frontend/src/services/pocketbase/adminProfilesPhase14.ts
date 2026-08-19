@@ -66,6 +66,8 @@ export async function saveAdminTeacherProfilePhase14(userId: string, patch: {
   specialties?: string[]
   publicProfile?: boolean
   active?: boolean
+  displayName?: string
+  headline?: string
 }): Promise<TeacherProfileRecord> {
   requireAdmin()
   const current = await getAdminTeacherProfilePhase14(userId)
@@ -75,6 +77,8 @@ export async function saveAdminTeacherProfilePhase14(userId: string, patch: {
     specialties: patch.specialties || [],
     public_profile: Boolean(patch.publicProfile),
     active: patch.active ?? true,
+    display_name: patch.displayName?.trim() || '',
+    headline: patch.headline?.trim() || '',
   }
   return current
     ? pb.collection(collections.teacherProfiles).update<TeacherProfileRecord>(current.id, payload)
