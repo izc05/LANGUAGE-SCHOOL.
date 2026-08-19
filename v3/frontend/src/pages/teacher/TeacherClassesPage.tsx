@@ -239,7 +239,7 @@ export default function TeacherClassesPage() {
                 <option value="HYBRID">Híbrida</option>
               </select>
               {deliveryMode !== 'ONLINE' && <><label>Lugar / aula</label><input value={locationText} onChange={(e) => setLocationText(e.target.value)} placeholder="Ej. Aula 2" disabled={noGroups} /></>}
-              {deliveryMode !== 'IN_PERSON' && <><label>Enlace online</label><input type="url" value={onlineJoinUrl} onChange={(e) => setOnlineJoinUrl(e.target.value)} placeholder="https://… (opcional hasta integrar Zoom)" disabled={noGroups} /><small className="muted">En 8B este acceso podrá generarse automáticamente con Zoom.</small></>}
+              {deliveryMode !== 'IN_PERSON' && <><label>Enlace online alternativo</label><input type="url" value={onlineJoinUrl} onChange={(e) => setOnlineJoinUrl(e.target.value)} placeholder="https://… (opcional)" disabled={noGroups} /><small className="muted">El acceso Zoom se prepara de forma segura desde Administración. Añade aquí un enlace https alternativo solo cuando sea necesario.</small></>}
               <label>Tema</label>
               <input value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="Ej. Travel & experiences" required disabled={noGroups} />
               <label>Descripción</label>
