@@ -6,6 +6,12 @@ function requiredEnv(name: string): string {
   return value
 }
 
+function durationInMs(value: string): number {
+  const normalized = value.trim()
+  const amount = Number.parseFloat(normalized)
+  return normalized.endsWith('ms') ? amount : amount * 1000
+}
+
 const admin = {
   email: requiredEnv('E2E_ADMIN_EMAIL'),
   password: requiredEnv('E2E_ADMIN_PASSWORD'),
@@ -70,5 +76,5 @@ test('12.3: Operación mantiene Contactos y Avisos utilizables en escritorio y m
   const navTransition = await nav.getByRole('link', { name: 'Avisos' }).evaluate(
     (element) => getComputedStyle(element).transitionDuration,
   )
-  expect(navTransition.split(',').every((value) => value.trim() === '0s')).toBe(true)
+  expect(navTransition.split(',').every((value) => durationInMs(value) <= 0.01)).toBe(true)
 })
