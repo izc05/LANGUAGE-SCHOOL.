@@ -1,6 +1,7 @@
-import { type FormEvent, useEffect, useState } from 'react'
+import { type FormEvent, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { useAuth } from '../../features/auth/AuthProvider'
+import { useCloudPortal } from '../../features/transitions/CloudPortalProvider'
 import { useAcademyBrand } from '../../hooks/useAcademyBrand'
 import { getLoginErrorMessage } from '../../services/pocketbase/auth'
 import type { UserRole } from '../../services/pocketbase/types'
@@ -15,6 +16,8 @@ export default function LoginPage() {
   const navigate = useNavigate()
   const { academyName, logoUrl, initials } = useAcademyBrand()
   const { login, isDemoMode, ready, user, isAuthenticated } = useAuth()
+  const { isTransitioning, startCloudPortal } = useCloudPortal()
+  const loginNavigationRef = useRef(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -23,27 +26,39 @@ export default function LoginPage() {
   const portalVisual = `${import.meta.env.BASE_URL}visuals/student-access-portal.svg`
 
   useEffect(() => {
-    if (!isDemoMode && ready && isAuthenticated && user) {
+    if (!isDemoMode && ready && isAuthenticated && user && !loginNavigationRef.current) {
       navigate(routeForRole(user.role), { replace: true })
     }
   }, [isAuthenticated, isDemoMode, navigate, ready, user])
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (isDemoMode) return
+    if (isDemoMode || submitting || isTransitioning) return
 
+    loginNavigationRef.current = true
     setSubmitting(true)
     setError(null)
 
     try {
       const authenticatedUser = await login(email, password)
-      navigate(routeForRole(authenticatedUser.role), { replace: true })
+      const destination = routeForRole(authenticatedUser.role)
+
+      if (authenticatedUser.role === 'ADMIN') {
+        navigate(destination, { replace: true })
+        return
+      }
+
+      const started = await startCloudPortal(() => navigate(destination, { replace: true }))
+      if (!started) navigate(destination, { replace: true })
     } catch (loginError) {
+      loginNavigationRef.current = false
       setError(getLoginErrorMessage(loginError))
     } finally {
       setSubmitting(false)
     }
   }
+
+  const interactionLocked = isDemoMode || submitting || isTransitioning || !ready
 
   return (
     <div className="auth-page auth-premium-v2">
@@ -100,7 +115,7 @@ export default function LoginPage() {
               placeholder="nombre@email.com"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              disabled={isDemoMode || submitting || !ready}
+              disabled={interactionLocked}
               required
             />
             <label htmlFor="password">Contraseña</label>
@@ -111,11 +126,11 @@ export default function LoginPage() {
               placeholder="••••••••"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              disabled={isDemoMode || submitting || !ready}
+              disabled={interactionLocked}
               required
             />
-            <button className="button button-primary button-full" type="submit" disabled={isDemoMode || submitting || !ready}>
-              {!ready && !isDemoMode ? 'Comprobando sesión…' : submitting ? 'Entrando…' : 'Entrar'}
+            <button className="button button-primary button-full" type="submit" disabled={interactionLocked}>
+              {!ready && !isDemoMode ? 'Comprobando sesión…' : submitting || isTransitioning ? 'Entrando…' : 'Entrar'}
             </button>
           </form>
 
