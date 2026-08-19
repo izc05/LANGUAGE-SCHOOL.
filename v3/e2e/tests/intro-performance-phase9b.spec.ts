@@ -28,3 +28,22 @@ test('9.7B: primera visita conserva globo 3D y una sesión completada no vuelve 
 
   expect(loadedScripts.some((name) => /\/IntroPage-[^/]+\.js(?:\?|$)/.test(name))).toBe(false)
 })
+
+test('9.7C: returning session no solicita CSS ni fuentes exclusivas de la intro', async ({ page }) => {
+  await page.addInitScript((key) => {
+    window.sessionStorage.setItem(key, 'true')
+  }, INTRO_SESSION_KEY)
+
+  await page.goto('/')
+  await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible()
+  await expect(page.locator('.intro-orbit-globe-canvas')).toHaveCount(0)
+  await page.evaluate(() => document.fonts.ready)
+
+  const resources = await page.evaluate(() =>
+    performance.getEntriesByType('resource').map((entry) => entry.name),
+  )
+
+  expect(resources.some((name) => /\/IntroPage-[^/]+\.js(?:\?|$)/.test(name))).toBe(false)
+  expect(resources.some((name) => /\/IntroPage-[^/]+\.css(?:\?|$)/.test(name))).toBe(false)
+  expect(resources.some((name) => name.includes('fonts.googleapis.com') && /Montserrat|Playball/i.test(name))).toBe(false)
+})
