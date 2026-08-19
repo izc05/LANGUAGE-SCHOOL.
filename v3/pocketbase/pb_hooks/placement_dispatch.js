@@ -1,6 +1,8 @@
 const placement = require(`${__hooks}/placement_service.js`)
 const listening = require(`${__hooks}/placement_listening_service.js`)
 const listeningCore = require(`${__hooks}/placement_listening_core.js`)
+const progressive = require(`${__hooks}/placement_progressive_service.js`)
+const progressiveCore = require(`${__hooks}/placement_progressive_core.js`)
 
 function publishedAlgorithm(app) {
   const tests = app.findAllRecords('placement_tests').filter((record) => record.getString('status') === 'PUBLISHED')
@@ -18,23 +20,35 @@ function attemptAlgorithm(e) {
 }
 
 function start(e) {
-  return publishedAlgorithm(e.app) === listeningCore.ALGORITHM_VERSION ? listening.start(e) : placement.start(e)
+  const algorithm = publishedAlgorithm(e.app)
+  if (algorithm === listeningCore.ALGORITHM_VERSION) return listening.start(e)
+  if (algorithm === progressiveCore.ALGORITHM_VERSION) return progressive.start(e)
+  return placement.start(e)
 }
 
 function nextQuestion(e) {
-  return attemptAlgorithm(e) === listeningCore.ALGORITHM_VERSION ? listening.nextQuestion(e) : placement.nextQuestion(e)
+  const algorithm = attemptAlgorithm(e)
+  if (algorithm === listeningCore.ALGORITHM_VERSION) return listening.nextQuestion(e)
+  if (algorithm === progressiveCore.ALGORITHM_VERSION) return progressive.nextQuestion(e)
+  return placement.nextQuestion(e)
 }
 
 function answer(e) {
-  return placement.answer(e)
+  return attemptAlgorithm(e) === progressiveCore.ALGORITHM_VERSION ? progressive.answer(e) : placement.answer(e)
 }
 
 function finish(e) {
-  return attemptAlgorithm(e) === listeningCore.ALGORITHM_VERSION ? listening.finish(e) : placement.finish(e)
+  const algorithm = attemptAlgorithm(e)
+  if (algorithm === listeningCore.ALGORITHM_VERSION) return listening.finish(e)
+  if (algorithm === progressiveCore.ALGORITHM_VERSION) return progressive.finish(e)
+  return placement.finish(e)
 }
 
 function result(e) {
-  return attemptAlgorithm(e) === listeningCore.ALGORITHM_VERSION ? listening.result(e) : placement.result(e)
+  const algorithm = attemptAlgorithm(e)
+  if (algorithm === listeningCore.ALGORITHM_VERSION) return listening.result(e)
+  if (algorithm === progressiveCore.ALGORITHM_VERSION) return progressive.result(e)
+  return placement.result(e)
 }
 
 module.exports = { start, nextQuestion, answer, finish, result }
