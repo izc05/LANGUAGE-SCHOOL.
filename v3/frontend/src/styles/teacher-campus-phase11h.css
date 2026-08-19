@@ -1,0 +1,186 @@
+/* FASE 11.8 · PERFIL DEL PROFESOR
+   Identidad docente dentro del mismo componente compartido de cuenta.
+   No duplica lógica ni modifica campos protegidos o actualización de usuario. */
+
+.account-profile-teacher11{
+  --teacher-ink:#342a31;
+  --teacher-muted:#7d6c74;
+  --teacher-plum:#4a2a3a;
+  --teacher-rose:#b34f76;
+  --teacher-rose-soft:#f8e9ef;
+  --teacher-paper:#fffdfc;
+  --teacher-line:#eadfe3;
+  gap:28px;
+}
+
+.account-profile-teacher11>.account-profile-heading-teacher11{
+  position:relative;
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:24px;
+  padding:8px 2px 24px;
+  border-bottom:1px solid var(--teacher-line);
+}
+.account-profile-teacher11>.account-profile-heading-teacher11::before{
+  content:'Identidad docente';
+  position:absolute;
+  top:-11px;
+  left:2px;
+  color:var(--teacher-rose);
+  font-size:.63rem;
+  font-weight:900;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+}
+.account-profile-teacher11>.account-profile-heading-teacher11 .eyebrow{margin-top:10px;color:var(--teacher-rose)}
+.account-profile-teacher11>.account-profile-heading-teacher11 h2{
+  margin:8px 0 9px;
+  color:var(--teacher-ink);
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:clamp(2.65rem,4.5vw,4.45rem);
+  line-height:.98;
+  letter-spacing:-.04em;
+}
+.account-profile-teacher11>.account-profile-heading-teacher11 p{
+  max-width:760px;
+  margin:0;
+  color:var(--teacher-muted);
+  line-height:1.65;
+}
+.account-profile-teacher11>.account-profile-heading-teacher11>.status{
+  flex:none;
+  padding:10px 14px;
+  border:1px solid #d8e5d9;
+  border-radius:999px;
+  background:#f7fbf7;
+  box-shadow:none;
+}
+
+.account-profile-teacher11 .account-profile-grid{
+  grid-template-columns:minmax(270px,.78fr) minmax(0,1.22fr);
+  gap:22px;
+}
+.account-profile-teacher11 .account-profile-summary,
+.account-profile-teacher11 .account-profile-form{
+  border-color:var(--teacher-line);
+  border-radius:26px;
+  box-shadow:0 15px 42px rgba(64,35,48,.035);
+}
+
+.account-profile-teacher11 .account-profile-summary{
+  position:relative;
+  overflow:hidden;
+  gap:18px;
+  padding:28px;
+  background:linear-gradient(155deg,#fffdfc 0%,#fff4f8 100%);
+}
+.account-profile-teacher11 .account-profile-summary::before{
+  content:'';
+  position:absolute;
+  inset:0 auto 0 0;
+  width:4px;
+  background:linear-gradient(var(--teacher-rose),#d88ba7);
+}
+.account-profile-teacher11 .account-avatar-large{
+  width:138px;
+  border:1px solid #e3cbd4;
+  border-radius:34px;
+  background:linear-gradient(145deg,#fff,#f7e7ed);
+  color:var(--teacher-plum);
+  box-shadow:0 12px 30px rgba(74,42,58,.08);
+}
+.account-profile-teacher11 .account-profile-summary .eyebrow{color:var(--teacher-rose)}
+.account-profile-teacher11 .account-profile-summary h3{
+  margin:5px 0 4px;
+  color:var(--teacher-ink);
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:1.75rem;
+  line-height:1.05;
+}
+.account-profile-teacher11 .account-profile-summary p{color:var(--teacher-muted)}
+.account-profile-teacher11 .account-protected-note{
+  padding:15px 16px;
+  border:1px solid #eadde2;
+  border-radius:17px;
+  background:rgba(255,255,255,.72);
+}
+.account-profile-teacher11 .account-protected-note strong{color:var(--teacher-plum)}
+.account-profile-teacher11 .account-protected-note span{color:var(--teacher-muted)}
+
+.account-profile-teacher11 .account-profile-form{
+  gap:17px;
+  padding:28px clamp(22px,3vw,34px);
+  background:rgba(255,253,252,.92);
+}
+.account-profile-teacher11 .account-profile-form>.panel-heading{
+  padding-bottom:16px;
+  border-bottom:1px solid var(--teacher-line);
+}
+.account-profile-teacher11 .account-profile-form>.panel-heading h3{
+  color:var(--teacher-ink);
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:1.8rem;
+}
+.account-profile-teacher11 .account-profile-form .field-stack>span{
+  color:#65545d;
+  font-size:.73rem;
+  font-weight:800;
+  letter-spacing:.055em;
+  text-transform:uppercase;
+}
+.account-profile-teacher11 .account-profile-form input{
+  min-height:44px;
+  border-color:#ded0d6;
+  background:#fff;
+}
+.account-profile-teacher11 .account-profile-form input[readonly]{
+  border-style:dashed;
+  background:#f7f2f4;
+  color:#82717a;
+}
+.account-profile-teacher11 .account-profile-form input:focus:not([readonly]){
+  border-color:#c96b8d;
+  box-shadow:0 0 0 3px rgba(179,79,118,.11);
+}
+.account-profile-teacher11 .account-profile-form>.button{
+  width:max-content;
+  min-width:160px;
+  min-height:44px;
+  background:var(--teacher-plum);
+  border-color:var(--teacher-plum);
+}
+
+@media(max-width:900px){
+  .account-profile-teacher11 .account-profile-grid{grid-template-columns:1fr}
+  .account-profile-teacher11 .account-profile-summary{
+    grid-template-columns:auto minmax(0,1fr);
+    align-items:center;
+  }
+  .account-profile-teacher11 .account-protected-note{grid-column:1/-1}
+}
+
+@media(max-width:560px){
+  .account-profile-teacher11{gap:22px}
+  .account-profile-teacher11>.account-profile-heading-teacher11{
+    flex-direction:column;
+    gap:14px;
+    padding-bottom:19px;
+  }
+  .account-profile-teacher11>.account-profile-heading-teacher11 h2{font-size:clamp(2.4rem,12vw,3.2rem)}
+  .account-profile-teacher11 .account-profile-summary{grid-template-columns:1fr;padding:23px 19px}
+  .account-profile-teacher11 .account-avatar-large{width:112px;border-radius:27px}
+  .account-profile-teacher11 .account-profile-form{padding:23px 18px;border-radius:22px}
+  .account-profile-teacher11 .account-profile-form .field-row{grid-template-columns:1fr}
+  .account-profile-teacher11 .account-profile-form>.button{width:100%}
+}
+
+.account-profile-teacher11 button:focus-visible,
+.account-profile-teacher11 input:focus-visible{
+  outline:3px solid rgba(179,79,118,.28);
+  outline-offset:3px;
+}
+
+@media(prefers-reduced-motion:reduce){
+  .account-profile-teacher11 *{scroll-behavior:auto}
+}
