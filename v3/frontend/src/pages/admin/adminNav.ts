@@ -8,6 +8,7 @@ export const adminNav = [
   { label: 'Cursos', to: '/admin/cursos' },
   { label: 'Clases', to: '/admin/clases' },
   { label: 'Agenda', to: '/admin/agenda' },
+  { label: 'Pagos', to: '/admin/pagos' },
   { label: 'Aula online', to: '/admin/aula-online' },
   { label: 'Zoom', to: '/admin/zoom' },
   { label: 'Test de nivel', to: '/admin/test-de-nivel' },
