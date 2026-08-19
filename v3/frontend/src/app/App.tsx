@@ -42,8 +42,10 @@ const AdminMediaLibrary = lazy(() => import('../pages/admin/AdminMediaLibrary'))
 const AdminBlogManager = lazy(() => import('../pages/admin/AdminBlogManager'))
 const AdminContactsPage = lazy(() => import('../pages/admin/AdminContactsPage'))
 const AdminNotificationsPage = lazy(() => import('../pages/admin/AdminNotificationsPage'))
-const AdminStudentsPage = lazy(() => import('../pages/admin/AdminStudentsPage'))
-const AdminTeachersPage = lazy(() => import('../pages/admin/AdminTeachersPage'))
+const AdminStudentsPage = lazy(() => import('../pages/admin/AdminStudentsPhase14Page'))
+const AdminStudentDetailPage = lazy(() => import('../pages/admin/AdminStudentDetailPhase14Page'))
+const AdminTeachersPage = lazy(() => import('../pages/admin/AdminTeachersPhase14Page'))
+const AdminTeacherDetailPage = lazy(() => import('../pages/admin/AdminTeacherDetailPhase14Page'))
 const AdminTeacherPublicProfilesPage = lazy(() => import('../pages/admin/AdminTeacherPublicProfilesPage'))
 const AdminCoursesPage = lazy(() => import('../pages/admin/AdminCoursesPage'))
 const AdminClassesPage = lazy(() => import('../pages/admin/AdminClassesPage'))
@@ -112,7 +114,9 @@ export default function App() {
         <Route path="/admin/contactos" element={<RequireRole allow={['ADMIN']}><AdminContactsPage /></RequireRole>} />
         <Route path="/admin/avisos" element={<RequireRole allow={['ADMIN']}><AdminNotificationsPage /></RequireRole>} />
         <Route path="/admin/alumnos" element={<RequireRole allow={['ADMIN']}><AdminStudentsPage /></RequireRole>} />
+        <Route path="/admin/alumnos/:studentId" element={<RequireRole allow={['ADMIN']}><AdminStudentDetailPage /></RequireRole>} />
         <Route path="/admin/profesores" element={<RequireRole allow={['ADMIN']}><AdminTeachersPage /></RequireRole>} />
+        <Route path="/admin/profesores/:teacherId" element={<RequireRole allow={['ADMIN']}><AdminTeacherDetailPage /></RequireRole>} />
         <Route path="/admin/profesores/publicos" element={<RequireRole allow={['ADMIN']}><AdminTeacherPublicProfilesPage /></RequireRole>} />
         <Route path="/admin/cursos" element={<RequireRole allow={['ADMIN']}><AdminCoursesPage /></RequireRole>} />
         <Route path="/admin/clases" element={<RequireRole allow={['ADMIN']}><AdminClassesPage /></RequireRole>} />
