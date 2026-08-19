@@ -1,0 +1,328 @@
+/* FASE 12.4 · ALUMNOS + PROFESORES
+   Refinamiento visual aislado. No cambia altas, matrículas, permisos ni borrados. */
+
+.dashboard-shell-admin .cms-page:has(.students-admin-layout),
+.dashboard-shell-admin .cms-page:has(.teacher-admin-grid){
+  --people-ink:#382b33;
+  --people-muted:#806b76;
+  --people-pink:#bd4f79;
+  --people-soft:#f8e8ee;
+  --people-blush:#fff5f7;
+  --people-paper:#fffdfb;
+  --people-line:rgba(105,62,80,.11);
+  display:grid;
+  gap:22px;
+  max-width:1480px;
+  margin:0 auto;
+  padding-top:30px;
+  padding-bottom:52px;
+}
+
+.dashboard-shell-admin .cms-page:has(.students-admin-layout)>.cms-page-heading,
+.dashboard-shell-admin .cms-page:has(.teacher-admin-grid)>.cms-page-heading{
+  align-items:end;
+  gap:30px;
+  min-height:200px;
+  padding:38px 42px;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:28px;
+  color:#f8eef2;
+  background:
+    radial-gradient(circle at 85% 15%,rgba(218,112,151,.22),transparent 22rem),
+    linear-gradient(132deg,#4a2d3b 0%,#281c23 100%);
+  box-shadow:0 26px 64px rgba(57,31,43,.13);
+}
+.dashboard-shell-admin .cms-page:has(.students-admin-layout)>.cms-page-heading .eyebrow,
+.dashboard-shell-admin .cms-page:has(.teacher-admin-grid)>.cms-page-heading .eyebrow{color:#efb3c8}
+.dashboard-shell-admin .cms-page:has(.students-admin-layout)>.cms-page-heading h2,
+.dashboard-shell-admin .cms-page:has(.teacher-admin-grid)>.cms-page-heading h2{
+  margin:9px 0 11px;
+  color:#fff;
+  font-size:clamp(2.2rem,3.5vw,3.8rem);
+  line-height:1;
+  letter-spacing:-.035em;
+}
+.dashboard-shell-admin .cms-page:has(.students-admin-layout)>.cms-page-heading p,
+.dashboard-shell-admin .cms-page:has(.teacher-admin-grid)>.cms-page-heading p{
+  max-width:690px;
+  color:#d9c7cf;
+  line-height:1.65;
+}
+.dashboard-shell-admin .cms-page:has(.students-admin-layout)>.cms-page-heading .button-primary,
+.dashboard-shell-admin .cms-page:has(.teacher-admin-grid)>.cms-page-heading .button-primary{
+  color:#32222a;
+  background:#fff7fa;
+  box-shadow:0 14px 34px rgba(12,5,9,.18);
+}
+
+/* Métricas como contexto, no como cuatro paneles protagonistas. */
+.dashboard-shell-admin .cms-page:has(.students-admin-layout)>.metric-grid,
+.dashboard-shell-admin .cms-page:has(.teacher-admin-grid)>.metric-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:0;
+  overflow:hidden;
+  border:1px solid var(--people-line);
+  border-radius:21px;
+  background:rgba(255,253,251,.82);
+  box-shadow:0 12px 30px rgba(70,36,50,.035);
+}
+.dashboard-shell-admin .cms-page:has(.students-admin-layout)>.metric-grid article,
+.dashboard-shell-admin .cms-page:has(.teacher-admin-grid)>.metric-grid article{
+  min-height:116px;
+  display:grid;
+  align-content:center;
+  gap:5px;
+  padding:20px 23px;
+  border:0;
+  border-right:1px solid var(--people-line);
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+}
+.dashboard-shell-admin .cms-page:has(.students-admin-layout)>.metric-grid article:last-child,
+.dashboard-shell-admin .cms-page:has(.teacher-admin-grid)>.metric-grid article:last-child{border-right:0}
+.dashboard-shell-admin .cms-page:has(.students-admin-layout)>.metric-grid strong,
+.dashboard-shell-admin .cms-page:has(.teacher-admin-grid)>.metric-grid strong{
+  color:var(--people-ink);
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:1.9rem;
+}
+
+/* ALUMNOS · listado + expediente. */
+.dashboard-shell-admin .students-admin-layout{
+  grid-template-columns:minmax(0,1.45fr) minmax(340px,.72fr);
+  gap:16px;
+}
+.dashboard-shell-admin .students-list-panel,
+.dashboard-shell-admin .student-detail-panel{
+  border:1px solid var(--people-line);
+  border-radius:23px;
+  background:rgba(255,253,251,.88);
+  box-shadow:0 14px 36px rgba(70,36,50,.04);
+}
+.dashboard-shell-admin .students-toolbar{
+  padding:18px 20px;
+  border-bottom-color:var(--people-line);
+  background:linear-gradient(145deg,#fffdfb,#fff8fa);
+}
+.dashboard-shell-admin .student-search>span{color:#8f6d7c;font-size:.68rem;letter-spacing:.06em;text-transform:uppercase}
+.dashboard-shell-admin .student-search input{
+  border-color:rgba(105,62,80,.12);
+  border-radius:13px;
+  background:#fff;
+}
+.dashboard-shell-admin .student-search input:focus{
+  border-color:rgba(189,79,121,.4);
+  box-shadow:0 0 0 4px rgba(189,79,121,.09);
+}
+.dashboard-shell-admin .cms-page:has(.students-admin-layout) .filter-pills button.active{
+  color:#fff;
+  border-color:#a74469;
+  background:#a74469;
+}
+.dashboard-shell-admin .students-table-row{
+  border-bottom-color:rgba(105,62,80,.08);
+  color:#68555f;
+  background:rgba(255,255,255,.78);
+}
+.dashboard-shell-admin button.students-table-row:hover{background:#fff7f9}
+.dashboard-shell-admin button.students-table-row.selected{
+  background:linear-gradient(90deg,#fff1f5,#fffdfb 62%);
+  box-shadow:inset 4px 0 0 var(--people-pink);
+}
+.dashboard-shell-admin .students-table-header{color:#9a7887;background:#faf6f7}
+.dashboard-shell-admin .student-identity>b{
+  color:#a43f66;
+  background:var(--people-soft);
+}
+.dashboard-shell-admin .student-status.active{color:#32664b;background:#e7f3eb}
+.dashboard-shell-admin .student-status.paused{color:#825b27;background:#f8ecd9}
+
+.dashboard-shell-admin .student-detail-panel{
+  top:20px;
+  gap:18px;
+  padding:25px;
+}
+.dashboard-shell-admin .student-detail-heading{
+  padding-bottom:17px;
+  border-bottom:1px solid var(--people-line);
+}
+.dashboard-shell-admin .student-avatar-large{
+  min-width:68px;
+  height:68px;
+  border:0;
+  color:#fff;
+  background:linear-gradient(145deg,#b24d73,#62364a);
+  box-shadow:0 10px 24px rgba(107,49,73,.16);
+}
+.dashboard-shell-admin .student-detail-heading .eyebrow{color:#ad5876}
+.dashboard-shell-admin .student-detail-heading h3{color:var(--people-ink);font-size:1.8rem}
+.dashboard-shell-admin .student-detail-tags span{
+  color:#93415f;
+  background:#faeaf0;
+}
+.dashboard-shell-admin .student-detail-grid{
+  gap:0;
+  overflow:hidden;
+  border:1px solid var(--people-line);
+  border-radius:17px;
+  background:#fff;
+}
+.dashboard-shell-admin .student-detail-grid>div{
+  padding:14px;
+  border:0;
+  border-right:1px solid var(--people-line);
+  border-bottom:1px solid var(--people-line);
+  border-radius:0;
+  background:transparent;
+}
+.dashboard-shell-admin .student-detail-grid>div:nth-child(2n){border-right:0}
+.dashboard-shell-admin .student-detail-grid>div:nth-last-child(-n+2){border-bottom:0}
+.dashboard-shell-admin .student-private-space{
+  padding:15px 16px;
+  border-left:3px solid rgba(189,79,121,.38);
+  border-radius:0 15px 15px 0;
+  background:#fff7f9;
+}
+.dashboard-shell-admin .student-detail-actions button{
+  min-height:42px;
+  border:1px solid var(--people-line);
+  border-radius:999px;
+  background:#fff;
+}
+.dashboard-shell-admin .student-detail-actions .button-primary{border-color:#a74469;background:#a74469;color:#fff}
+
+/* PROFESORES · equipo humano, carga y asignaciones. */
+.dashboard-shell-admin .teacher-admin-grid{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:15px;
+}
+.dashboard-shell-admin .teacher-admin-card{
+  min-width:0;
+  gap:17px;
+  padding:25px;
+  border:1px solid var(--people-line);
+  border-radius:23px;
+  background:rgba(255,253,251,.9);
+  box-shadow:0 14px 36px rgba(70,36,50,.04);
+}
+.dashboard-shell-admin .teacher-card-heading{
+  grid-template-columns:auto minmax(0,1fr) auto;
+  gap:13px;
+  padding-bottom:15px;
+  border-bottom:1px solid var(--people-line);
+}
+.dashboard-shell-admin .teacher-avatar{
+  width:58px;
+  height:58px;
+  border:0;
+  color:#fff;
+  background:linear-gradient(145deg,#a74b6e,#50313f);
+  box-shadow:0 9px 22px rgba(91,43,62,.14);
+}
+.dashboard-shell-admin .teacher-card-heading .eyebrow{color:#ad5876}
+.dashboard-shell-admin .teacher-card-heading h3{color:var(--people-ink);font-family:'Playfair Display',Georgia,serif;font-size:1.45rem}
+.dashboard-shell-admin .teacher-card-email{overflow-wrap:anywhere}
+.dashboard-shell-admin .teacher-card-metrics{
+  gap:0;
+  overflow:hidden;
+  border:1px solid var(--people-line);
+  border-radius:15px;
+}
+.dashboard-shell-admin .teacher-card-metrics>div{
+  padding:13px 14px;
+  border:0;
+  border-right:1px solid var(--people-line);
+  border-radius:0;
+  background:#fff;
+}
+.dashboard-shell-admin .teacher-card-metrics>div:last-child{border-right:0}
+.dashboard-shell-admin .teacher-card-metrics span{color:#9b7485}
+.dashboard-shell-admin .teacher-card-metrics strong{color:var(--people-ink);font-family:'Playfair Display',Georgia,serif}
+.dashboard-shell-admin .teacher-availability{
+  align-items:flex-start;
+  padding:12px 0;
+  border-color:var(--people-line);
+}
+.dashboard-shell-admin .teacher-availability span{color:#9b7485}
+.dashboard-shell-admin .teacher-availability strong{max-width:66%;color:#5f4e56;text-align:right;font-size:.78rem;line-height:1.45}
+.dashboard-shell-admin .teacher-card-actions{
+  grid-template-columns:1fr 1fr;
+  gap:7px;
+}
+.dashboard-shell-admin .teacher-card-actions button{
+  min-height:40px;
+  border-color:var(--people-line);
+  border-radius:999px;
+  color:#604c56;
+  background:#fff;
+}
+.dashboard-shell-admin .teacher-card-actions .button-danger-soft{grid-column:1/-1}
+
+.dashboard-shell-admin .cms-page:has(.students-admin-layout) .admin-inline-create,
+.dashboard-shell-admin .cms-page:has(.teacher-admin-grid) .admin-inline-create{
+  border:1px solid var(--people-line);
+  border-radius:22px;
+  background:linear-gradient(145deg,#fffdfb,#fff7f9);
+  box-shadow:0 12px 30px rgba(70,36,50,.035);
+}
+.dashboard-shell-admin .cms-page:has(.students-admin-layout) input:focus-visible,
+.dashboard-shell-admin .cms-page:has(.students-admin-layout) select:focus-visible,
+.dashboard-shell-admin .cms-page:has(.students-admin-layout) button:focus-visible,
+.dashboard-shell-admin .cms-page:has(.teacher-admin-grid) input:focus-visible,
+.dashboard-shell-admin .cms-page:has(.teacher-admin-grid) button:focus-visible{
+  outline:3px solid rgba(189,79,121,.42);
+  outline-offset:3px;
+}
+
+@media(max-width:1250px){
+  .dashboard-shell-admin .teacher-admin-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:1080px){
+  .dashboard-shell-admin .students-admin-layout{grid-template-columns:1fr}
+  .dashboard-shell-admin .student-detail-panel{position:static}
+}
+@media(max-width:760px){
+  .dashboard-shell-admin .cms-page:has(.students-admin-layout),
+  .dashboard-shell-admin .cms-page:has(.teacher-admin-grid){gap:18px;padding-top:18px;padding-bottom:36px}
+  .dashboard-shell-admin .cms-page:has(.students-admin-layout)>.cms-page-heading,
+  .dashboard-shell-admin .cms-page:has(.teacher-admin-grid)>.cms-page-heading{
+    min-height:0;
+    padding:28px 23px;
+    border-radius:23px;
+  }
+  .dashboard-shell-admin .cms-page:has(.students-admin-layout)>.cms-page-heading h2,
+  .dashboard-shell-admin .cms-page:has(.teacher-admin-grid)>.cms-page-heading h2{font-size:clamp(2rem,10vw,3rem)}
+  .dashboard-shell-admin .cms-page:has(.students-admin-layout)>.cms-page-heading .button-primary,
+  .dashboard-shell-admin .cms-page:has(.teacher-admin-grid)>.cms-page-heading .button-primary{width:100%}
+  .dashboard-shell-admin .cms-page:has(.students-admin-layout)>.metric-grid,
+  .dashboard-shell-admin .cms-page:has(.teacher-admin-grid)>.metric-grid{grid-template-columns:1fr 1fr}
+  .dashboard-shell-admin .cms-page:has(.students-admin-layout)>.metric-grid article,
+  .dashboard-shell-admin .cms-page:has(.teacher-admin-grid)>.metric-grid article{min-height:104px;border-right:1px solid var(--people-line);border-bottom:1px solid var(--people-line)}
+  .dashboard-shell-admin .cms-page:has(.students-admin-layout)>.metric-grid article:nth-child(2n),
+  .dashboard-shell-admin .cms-page:has(.teacher-admin-grid)>.metric-grid article:nth-child(2n){border-right:0}
+  .dashboard-shell-admin .cms-page:has(.students-admin-layout)>.metric-grid article:nth-last-child(-n+2),
+  .dashboard-shell-admin .cms-page:has(.teacher-admin-grid)>.metric-grid article:nth-last-child(-n+2){border-bottom:0}
+  .dashboard-shell-admin .teacher-admin-grid{grid-template-columns:1fr}
+  .dashboard-shell-admin .student-detail-panel,.dashboard-shell-admin .teacher-admin-card{padding:21px;border-radius:20px}
+}
+@media(max-width:480px){
+  .dashboard-shell-admin .cms-page:has(.students-admin-layout)>.metric-grid,
+  .dashboard-shell-admin .cms-page:has(.teacher-admin-grid)>.metric-grid{grid-template-columns:1fr}
+  .dashboard-shell-admin .cms-page:has(.students-admin-layout)>.metric-grid article,
+  .dashboard-shell-admin .cms-page:has(.teacher-admin-grid)>.metric-grid article{border-right:0!important;border-bottom:1px solid var(--people-line)!important}
+  .dashboard-shell-admin .cms-page:has(.students-admin-layout)>.metric-grid article:last-child,
+  .dashboard-shell-admin .cms-page:has(.teacher-admin-grid)>.metric-grid article:last-child{border-bottom:0!important}
+  .dashboard-shell-admin .student-detail-grid{grid-template-columns:1fr}
+  .dashboard-shell-admin .student-detail-grid>div{border-right:0!important;border-bottom:1px solid var(--people-line)!important}
+  .dashboard-shell-admin .student-detail-grid>div:last-child{border-bottom:0!important}
+  .dashboard-shell-admin .student-detail-actions,.dashboard-shell-admin .teacher-card-actions{grid-template-columns:1fr}
+  .dashboard-shell-admin .teacher-card-actions .button-danger-soft{grid-column:auto}
+}
+@media(prefers-reduced-motion:reduce){
+  .dashboard-shell-admin .students-table-row,
+  .dashboard-shell-admin .teacher-admin-card,
+  .dashboard-shell-admin .teacher-card-actions button{transition:none!important}
+}
