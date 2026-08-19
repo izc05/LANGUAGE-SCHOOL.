@@ -70,6 +70,21 @@ routerAdd('POST', '/api/language-school/placement/admin/tests/{id}/publish', (e)
   return placementAdmin.publish(e)
 })
 
+routerAdd('POST', '/api/language-school/placement/admin/progressive/tests', (e) => {
+  const progressiveAdmin = require(`${__hooks}/placement_progressive_admin.js`)
+  return progressiveAdmin.createVersion(e)
+})
+
+routerAdd('GET', '/api/language-school/placement/admin/progressive/tests/{id}', (e) => {
+  const progressiveAdmin = require(`${__hooks}/placement_progressive_admin.js`)
+  return progressiveAdmin.status(e)
+})
+
+routerAdd('POST', '/api/language-school/placement/admin/progressive/tests/{id}/publish', (e) => {
+  const progressiveAdmin = require(`${__hooks}/placement_progressive_admin.js`)
+  return progressiveAdmin.publish(e)
+})
+
 routerAdd('POST', '/api/language-school/placement/admin/listening/tests', (e) => {
   const listeningAdmin = require(`${__hooks}/placement_listening_admin.js`)
   return listeningAdmin.createVersion(e)
