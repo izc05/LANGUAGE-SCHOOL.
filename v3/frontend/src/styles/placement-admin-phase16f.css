@@ -1,0 +1,218 @@
+.placement-admin-phase16f .panel-heading p {
+  max-width: 48rem;
+  margin: .35rem 0 0;
+  color: #76666c;
+  font-size: .86rem;
+  line-height: 1.55;
+}
+
+.placement-progressive-create {
+  border-color: rgba(183, 53, 104, .2);
+  background: linear-gradient(145deg, #fff, #fff7fa);
+}
+
+.placement-progressive-create form {
+  align-items: end;
+}
+
+.placement-algorithm-tag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: .3rem .58rem;
+  border: 1px solid rgba(91, 73, 80, .14);
+  border-radius: 999px;
+  background: #f7f3f5;
+  color: #69575e;
+  font-size: .68rem;
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: .04em;
+  white-space: nowrap;
+}
+
+.placement-algorithm-tag.recommended {
+  border-color: rgba(183, 53, 104, .2);
+  background: #fff0f5;
+  color: #a6325f;
+}
+
+.placement-progressive-contract {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .35rem .65rem;
+  margin-top: 1rem;
+  padding: .8rem .95rem;
+  border-radius: 13px;
+  background: rgba(255, 255, 255, .8);
+  color: #76666c;
+  font-size: .82rem;
+}
+
+.placement-progressive-contract strong {
+  color: #4e3c44;
+}
+
+.placement-version-list button span em {
+  display: block;
+  margin-top: .16rem;
+  color: #9d5470;
+  font-size: .66rem;
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: .035em;
+}
+
+.placement-version-badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: .45rem;
+}
+
+.placement-coverage-panel {
+  overflow: hidden;
+}
+
+.placement-coverage-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.placement-coverage-skill {
+  display: grid;
+  grid-template-columns: 145px minmax(0, 1fr);
+  gap: 1rem;
+  align-items: center;
+}
+
+.placement-coverage-skill > strong {
+  color: #5e4d54;
+  font-size: .88rem;
+}
+
+.placement-coverage-skill > div {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(72px, 1fr));
+  gap: .45rem;
+}
+
+.placement-coverage-cell {
+  display: grid;
+  gap: .12rem;
+  min-width: 0;
+  padding: .66rem .55rem;
+  border: 1px solid rgba(91, 73, 80, .12);
+  border-radius: 12px;
+  background: #faf8f9;
+  text-align: center;
+}
+
+.placement-coverage-cell span {
+  color: #806c74;
+  font-size: .68rem;
+  font-weight: 800;
+}
+
+.placement-coverage-cell b {
+  color: #59454e;
+  font-size: 1.02rem;
+}
+
+.placement-coverage-cell small {
+  color: #8b7b81;
+  font-size: .62rem;
+}
+
+.placement-coverage-cell.ready {
+  border-color: rgba(65, 125, 92, .2);
+  background: #f2faf5;
+}
+
+.placement-coverage-cell.ready b,
+.placement-coverage-cell.ready small {
+  color: #34704f;
+}
+
+.placement-coverage-cell.missing {
+  border-color: rgba(174, 72, 72, .2);
+  background: #fff6f6;
+}
+
+.placement-coverage-cell.missing b,
+.placement-coverage-cell.missing small {
+  color: #9c4545;
+}
+
+.placement-bank-filters {
+  display: grid;
+  grid-template-columns: minmax(180px, 1.4fr) repeat(3, minmax(135px, .8fr));
+  gap: .65rem;
+  margin-bottom: 1rem;
+  padding: .85rem;
+  border: 1px solid rgba(91, 73, 80, .1);
+  border-radius: 15px;
+  background: #fbf9fa;
+}
+
+.placement-bank-filters label {
+  display: grid;
+  gap: .35rem;
+  min-width: 0;
+  color: #6f5d64;
+  font-size: .7rem;
+  font-weight: 800;
+}
+
+.placement-bank-filters input,
+.placement-bank-filters select {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  border: 1px solid rgba(91, 73, 80, .16);
+  border-radius: 11px;
+  background: #fff;
+  padding: .66rem .72rem;
+  color: #43343a;
+  font: inherit;
+  font-size: .82rem;
+}
+
+@media (max-width: 980px) {
+  .placement-coverage-skill {
+    grid-template-columns: 1fr;
+    gap: .5rem;
+  }
+
+  .placement-bank-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .placement-version-badges {
+    justify-content: flex-start;
+  }
+
+  .placement-coverage-skill > div {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .placement-bank-filters {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 420px) {
+  .placement-coverage-skill > div {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .placement-coverage-cell {
+    padding-inline: .4rem;
+  }
+
+  .placement-progressive-contract {
+    display: grid;
+  }
+}

@@ -2,6 +2,8 @@ import { pocketBaseUrl } from '../../config/environment'
 import { pb } from './client'
 import type { CefrLevel, PlacementSkill, PlacementSkillScore } from './placementTest'
 
+export const PROGRESSIVE_ALGORITHM_VERSION = 'cefr-v3-progressive'
+
 export type PlacementAdminValidationRequirement = {
   skill: PlacementSkill
   level: CefrLevel
@@ -35,6 +37,13 @@ export type PlacementAdminTest = {
   publishedAt: string
   createdAt: string
   canEdit: boolean
+  validation: PlacementAdminValidation
+}
+
+export type PlacementProgressiveStatus = {
+  testId: string
+  status?: PlacementAdminTest['status']
+  algorithmVersion: string
   validation: PlacementAdminValidation
 }
 
@@ -160,6 +169,24 @@ export async function createPlacementAdminDraft(input: { name: string; version: 
     method: 'POST', headers: jsonHeaders, body: JSON.stringify(input),
   })
   return response.test
+}
+
+export async function createPlacementProgressiveDraft(input: { name: string; version: string; sourceTestId: string }): Promise<PlacementProgressiveStatus> {
+  return pb.send<PlacementProgressiveStatus>('/api/language-school/placement/admin/progressive/tests', {
+    method: 'POST', headers: jsonHeaders, body: JSON.stringify(input),
+  })
+}
+
+export async function getPlacementProgressiveStatus(testId: string): Promise<PlacementProgressiveStatus> {
+  return pb.send<PlacementProgressiveStatus>(`/api/language-school/placement/admin/progressive/tests/${encodeURIComponent(testId)}`, {
+    method: 'GET',
+  })
+}
+
+export async function publishPlacementProgressiveTest(testId: string): Promise<PlacementProgressiveStatus & { status: 'PUBLISHED' }> {
+  return pb.send<PlacementProgressiveStatus & { status: 'PUBLISHED' }>(`/api/language-school/placement/admin/progressive/tests/${encodeURIComponent(testId)}/publish`, {
+    method: 'POST', headers: jsonHeaders, body: '{}',
+  })
 }
 
 export async function createPlacementListeningDraft(input: { name: string; version: string; sourceTestId: string }): Promise<{ testId: string; algorithmVersion: string; validation: PlacementListeningValidation }> {
