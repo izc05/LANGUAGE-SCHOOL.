@@ -1,0 +1,112 @@
+/* FASE 14F · DASHBOARD ADMIN
+   Reduce cajas sobredimensionadas y evita que el panel de contenido reciente
+   se estire artificialmente hasta la altura de Contenido editable. */
+
+.dashboard-shell-admin .admin-dashboard-phase12a .admin-action-grid-secondary .admin-action-card {
+  min-height: 185px;
+  gap: 12px;
+  padding: 23px 25px;
+  background: #fff;
+}
+
+.dashboard-shell-admin .admin-dashboard-phase12a .admin-action-grid-secondary .admin-action-card h3 {
+  margin-bottom: 5px;
+  font-size: 1.42rem;
+}
+
+.dashboard-shell-admin .admin-dashboard-phase12a .admin-action-grid-secondary .admin-action-card p {
+  line-height: 1.5;
+}
+
+.dashboard-shell-admin .admin-dashboard-phase12a .admin-columns {
+  grid-template-columns: minmax(0, 1.15fr) minmax(310px, .85fr);
+  align-items: start;
+  gap: 18px;
+  padding-top: 20px;
+}
+
+.dashboard-shell-admin .admin-dashboard-phase12a .admin-columns > .panel {
+  align-self: start;
+  padding: 20px 22px;
+  background: #fff;
+  border-color: rgba(112, 54, 79, .14);
+  box-shadow: 0 12px 30px rgba(73, 34, 52, .04);
+}
+
+.dashboard-shell-admin .admin-dashboard-phase12a .admin-columns .panel-heading {
+  margin-bottom: 6px;
+  padding-bottom: 13px;
+}
+
+.dashboard-shell-admin .admin-dashboard-phase12a .admin-columns .panel-heading h3 {
+  margin-top: 4px;
+  font-size: 1.48rem;
+}
+
+.dashboard-shell-admin .admin-dashboard-phase12a .settings-list > a {
+  min-height: 58px;
+  padding: 10px 2px;
+}
+
+.dashboard-shell-admin .admin-dashboard-phase12a .settings-list > a strong,
+.dashboard-shell-admin .admin-dashboard-phase12a .content-list > div strong {
+  color: #382a31;
+}
+
+.dashboard-shell-admin .admin-dashboard-phase12a .settings-list > a small {
+  margin-top: 2px;
+  line-height: 1.35;
+}
+
+.dashboard-shell-admin .admin-dashboard-phase12a .content-list {
+  display: grid;
+  gap: 0;
+}
+
+.dashboard-shell-admin .admin-dashboard-phase12a .content-list > div {
+  min-height: 66px;
+  padding: 12px 2px;
+  align-items: center;
+}
+
+.dashboard-shell-admin .admin-dashboard-phase12a .content-list > div small {
+  line-height: 1.35;
+}
+
+.dashboard-shell-admin .admin-dashboard-phase12a .content-state {
+  min-width: 72px;
+  min-height: 28px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0 9px;
+}
+
+@media (max-width: 1040px) {
+  .dashboard-shell-admin .admin-dashboard-phase12a .admin-columns {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-shell-admin .admin-dashboard-phase12a .admin-columns > .panel {
+    width: 100%;
+  }
+}
+
+@media (max-width: 700px) {
+  .dashboard-shell-admin .admin-dashboard-phase12a .admin-action-grid-secondary .admin-action-card {
+    min-height: 0;
+    padding: 21px;
+  }
+
+  .dashboard-shell-admin .admin-dashboard-phase12a .admin-columns {
+    padding-top: 16px;
+  }
+
+  .dashboard-shell-admin .admin-dashboard-phase12a .admin-columns > .panel {
+    padding: 18px;
+  }
+
+  .dashboard-shell-admin .admin-dashboard-phase12a .settings-list > a,
+  .dashboard-shell-admin .admin-dashboard-phase12a .content-list > div {
+    min-height: 62px;
+  }
+}
