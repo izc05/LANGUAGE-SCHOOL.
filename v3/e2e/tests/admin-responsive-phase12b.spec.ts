@@ -25,22 +25,18 @@ async function login(page: import('@playwright/test').Page) {
   await expect(page).toHaveURL(/\/admin$/)
 }
 
-test('12.2+: Admin agrupa sus 20 rutas y mantiene navegación completa en tablet y móvil', async ({ page }) => {
+test('13+: Admin agrupa sus 21 rutas y mantiene navegación completa en tablet y móvil', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 })
   await login(page)
 
   const nav = page.getByRole('navigation', { name: 'Menú de Administrador' })
-  await expect(nav.getByRole('link')).toHaveCount(20)
-  await expect(page.locator('.dashboard-shell-admin .dashboard-nav-section')).toHaveText([
-    'Operación',
-    'Academia',
-    'Web y contenido',
-    'Sistema',
-  ])
+  await expect(nav.getByRole('link')).toHaveCount(21)
+  await expect(page.locator('.dashboard-shell-admin .dashboard-nav-section')).toHaveText(['Operación', 'Academia', 'Web y contenido', 'Sistema'])
 
   await page.setViewportSize({ width: 820, height: 900 })
   await expect(nav.getByRole('link', { name: 'Dashboard' })).toBeVisible()
   await expect(nav.getByRole('link', { name: 'Agenda' })).toBeVisible()
+  await expect(nav.getByRole('link', { name: 'Pagos' })).toBeVisible()
   await expect(nav.getByRole('link', { name: 'Resultados nivel' })).toBeVisible()
   const tabletSidebar = await page.locator('.dashboard-shell-admin .dashboard-sidebar').evaluate((element) => element.getBoundingClientRect().width)
   expect(tabletSidebar).toBeGreaterThanOrEqual(220)
