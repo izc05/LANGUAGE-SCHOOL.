@@ -94,12 +94,12 @@
   }
 
   /* Ver primero informacion existente; los formularios quedan despues. */
-  .dashboard-shell-teacher .teacher-class-agenda{order:1}
-  .dashboard-shell-teacher .teacher-class-create{order:2}
-  .dashboard-shell-teacher .teacher-material-library{order:1}
-  .dashboard-shell-teacher .teacher-material-form{order:2}
-  .dashboard-shell-teacher .teacher-assignment-plan{order:1}
-  .dashboard-shell-teacher .teacher-assignment-form{order:2}
+  .dashboard-shell-teacher .teacher-class-agenda{order:1 !important}
+  .dashboard-shell-teacher .teacher-class-create{order:2 !important}
+  .dashboard-shell-teacher .teacher-material-library{order:1 !important}
+  .dashboard-shell-teacher .teacher-material-form{order:2 !important}
+  .dashboard-shell-teacher .teacher-assignment-plan{order:1 !important}
+  .dashboard-shell-teacher .teacher-assignment-form{order:2 !important}
 
   /* Listados de seleccion amplios, reconocibles como tarjetas y no como filas comprimidas. */
   .dashboard-shell-teacher .teacher-student-picker,
@@ -111,12 +111,12 @@
     overflow:visible;
   }
 
-  .dashboard-shell-teacher .teacher-student-picker button,
-  .dashboard-shell-teacher .teacher-levels-picker button,
-  .dashboard-shell-teacher .teacher-correction-items>button{
+  .dashboard-shell-teacher .teacher-portal-page .teacher-student-picker button,
+  .dashboard-shell-teacher .teacher-portal-page .teacher-levels-picker button,
+  .dashboard-shell-teacher .teacher-portal-page .teacher-correction-items>button{
     width:100%;
     min-width:0;
-    min-height:72px;
+    min-height:72px !important;
     margin:0;
     padding:13px 14px;
     border:1px solid #eadde2;
@@ -124,9 +124,9 @@
     background:#fff;
   }
 
-  .dashboard-shell-teacher .teacher-student-picker button.active,
-  .dashboard-shell-teacher .teacher-levels-picker button.active,
-  .dashboard-shell-teacher .teacher-correction-items>button.active{
+  .dashboard-shell-teacher .teacher-portal-page .teacher-student-picker button.active,
+  .dashboard-shell-teacher .teacher-portal-page .teacher-levels-picker button.active,
+  .dashboard-shell-teacher .teacher-portal-page .teacher-correction-items>button.active{
     width:100%;
     margin:0;
     border-color:#dfb7c6;
@@ -178,12 +178,6 @@
   .dashboard-shell-teacher .teacher-levels-picker,
   .dashboard-shell-teacher .teacher-correction-items{
     grid-template-columns:1fr;
-  }
-
-  .dashboard-shell-teacher .teacher-student-picker button,
-  .dashboard-shell-teacher .teacher-levels-picker button,
-  .dashboard-shell-teacher .teacher-correction-items>button{
-    min-height:68px;
   }
 
   .dashboard-shell-teacher .teacher-record-actions,
