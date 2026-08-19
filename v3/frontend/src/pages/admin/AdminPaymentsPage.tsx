@@ -5,6 +5,7 @@ import { useAuth } from '../../features/auth/AuthProvider'
 import { listAdminEnrollments, listAdminUsers, type AdminEnrollmentRecord } from '../../services/pocketbase/adminAcademic'
 import {
   cancelAdminPayment,
+  createAdminMonthlyPaymentsForGroup,
   createAdminPayment,
   effectivePaymentStatus,
   listAdminPayments,
@@ -39,6 +40,15 @@ function monthEnd(date = new Date()): string {
 
 function monthKey(date = new Date()): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+}
+
+function monthBounds(value: string): { start: string; end: string } {
+  const match = /^(\d{4})-(\d{2})$/.exec(value)
+  if (!match) return { start: monthStart(), end: monthEnd() }
+  const year = Number(match[1])
+  const month = Number(match[2])
+  const lastDay = new Date(year, month, 0, 12).getDate()
+  return { start: `${value}-01`, end: `${value}-${String(lastDay).padStart(2, '0')}` }
 }
 
 function formatDate(value?: string): string {
@@ -118,6 +128,7 @@ export default function AdminPaymentsPage() {
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [showCreate, setShowCreate] = useState(false)
+  const [showBatch, setShowBatch] = useState(false)
 
   const initialStudent = new URLSearchParams(window.location.search).get('alumno') || ''
   const [query, setQuery] = useState('')
@@ -139,6 +150,13 @@ export default function AdminPaymentsPage() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('BIZUM')
   const [reference, setReference] = useState('')
   const [notes, setNotes] = useState('')
+
+  const [batchGroupId, setBatchGroupId] = useState(isDemoMode ? demoGroup.id : '')
+  const [batchMonth, setBatchMonth] = useState(monthKey())
+  const [batchAmountEuros, setBatchAmountEuros] = useState('55')
+  const [batchDueDate, setBatchDueDate] = useState(`${monthKey()}-05`)
+  const [batchReference, setBatchReference] = useState('')
+  const [batchNotes, setBatchNotes] = useState('')
 
   const [payingId, setPayingId] = useState<string | null>(null)
   const [payDate, setPayDate] = useState(dateOnly())
@@ -174,6 +192,28 @@ export default function AdminPaymentsPage() {
     enrollments.forEach((record) => { if (record.expand?.group) map.set(record.expand.group.id, record.expand.group) })
     return [...map.values()].sort((a, b) => a.name.localeCompare(b.name, 'es'))
   }, [enrollments])
+
+  useEffect(() => {
+    if (!groups.length) return
+    if (!groups.some((group) => group.id === batchGroupId)) setBatchGroupId(groups[0].id)
+  }, [batchGroupId, groups])
+
+  useEffect(() => {
+    if (/^\d{4}-\d{2}$/.test(batchMonth)) setBatchDueDate(`${batchMonth}-05`)
+  }, [batchMonth])
+
+  const batchPeriod = useMemo(() => monthBounds(batchMonth), [batchMonth])
+  const batchEnrollments = useMemo(
+    () => enrollments.filter((record) => record.status === 'ACTIVE' && record.group === batchGroupId),
+    [batchGroupId, enrollments],
+  )
+  const existingBatchEnrollmentIds = useMemo(() => new Set(
+    payments
+      .filter((record) => record.billing_mode === 'MONTHLY' && record.period_start.slice(0, 10) === batchPeriod.start && record.period_end.slice(0, 10) === batchPeriod.end)
+      .map((record) => record.enrollment),
+  ), [batchPeriod.end, batchPeriod.start, payments])
+  const batchExistingCount = batchEnrollments.filter((record) => existingBatchEnrollmentIds.has(record.id)).length
+  const batchMissingCount = Math.max(0, batchEnrollments.length - batchExistingCount)
 
   const visiblePayments = useMemo(() => {
     const normalized = query.trim().toLowerCase()
@@ -222,6 +262,54 @@ export default function AdminPaymentsPage() {
     } finally { setSaving(false) }
   }
 
+  async function createMonthlyBatch(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setError(null); setMessage(null)
+    const amountCents = Math.round(Number.parseFloat(batchAmountEuros.replace(',', '.')) * 100)
+    if (!batchGroupId) { setError('Selecciona un grupo para generar las mensualidades.'); return }
+    if (!Number.isFinite(amountCents) || amountCents <= 0) { setError('Indica un importe válido para la mensualidad.'); return }
+    if (!batchDueDate) { setError('Indica la fecha de vencimiento.'); return }
+    if (batchMissingCount === 0) { setMessage('No hay mensualidades pendientes de generar para ese grupo y mes.'); return }
+
+    setSaving(true)
+    try {
+      if (isDemoMode) {
+        const missingEnrollments = batchEnrollments.filter((record) => !existingBatchEnrollmentIds.has(record.id))
+        const created = missingEnrollments.map<StudentPaymentRecord>((enrollment, index) => ({
+          id: `demo-batch-${batchMonth}-${enrollment.id}-${index}`,
+          collectionId: '', collectionName: 'student_payments', created: '', updated: '',
+          student: enrollment.student, enrollment: enrollment.id, billing_mode: 'MONTHLY', amount_cents: amountCents,
+          period_start: batchPeriod.start, period_end: batchPeriod.end, due_date: batchDueDate, status: 'PENDING',
+          paid_at: '', payment_method: '', reference: batchReference.trim(), notes: batchNotes.trim(), recorded_by: 'demo-admin',
+          expand: { student: students.find((student) => student.id === enrollment.student) || enrollment.expand?.student, enrollment },
+        }))
+        setPayments((current) => [...created, ...current])
+        setMessage(`${created.length} mensualidades preparadas en la demostración.`)
+      } else {
+        const result = await createAdminMonthlyPaymentsForGroup({
+          groupId: batchGroupId,
+          amountCents,
+          periodStart: batchPeriod.start,
+          periodEnd: batchPeriod.end,
+          dueDate: batchDueDate,
+          reference: batchReference,
+          notes: batchNotes,
+        })
+        setPayments((current) => [...result.created, ...current])
+        const createdText = `${result.created.length} ${result.created.length === 1 ? 'mensualidad creada' : 'mensualidades creadas'}`
+        const skippedText = result.skippedExisting ? ` · ${result.skippedExisting} ya existían` : ''
+        setMessage(`${createdText}${skippedText}.`)
+      }
+      setMonthFilter(batchMonth)
+      setGroupFilter(batchGroupId)
+      setModeFilter('MONTHLY')
+      setStudentFilter('ALL')
+      setStatusFilter('ALL')
+    } catch (batchError) {
+      setError(batchError instanceof Error ? batchError.message : 'No se han podido generar las mensualidades.')
+    } finally { setSaving(false) }
+  }
+
   async function confirmPaid(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const record = payments.find((item) => item.id === payingId)
@@ -263,7 +351,11 @@ export default function AdminPaymentsPage() {
       <div className="dashboard-content cms-page admin-payments-page">
         <header className="cms-page-heading phase14-pink-heading">
           <div><span className="eyebrow">ADMINISTRACIÓN · COBROS</span><h2>Pagos de alumnos</h2><p>Controla mensualidades e intensivos, vencimientos, periodos cubiertos y el histórico de cada alumno.</p></div>
-          <div className="payment-heading-actions"><button className="button phase14-export-button" type="button" onClick={exportCurrentExcel} disabled={visiblePayments.length === 0}>Descargar Excel</button><button className="button button-primary" type="button" onClick={() => setShowCreate((value) => !value)}>{showCreate ? 'Cerrar' : '+ Nuevo cobro'}</button></div>
+          <div className="payment-heading-actions">
+            <button className="button phase14-export-button" type="button" onClick={exportCurrentExcel} disabled={visiblePayments.length === 0}>Descargar Excel</button>
+            <button className="button payment-batch-trigger" type="button" onClick={() => { setShowBatch((value) => !value); setShowCreate(false) }}>{showBatch ? 'Cerrar lote' : 'Generar mensualidades'}</button>
+            <button className="button button-primary" type="button" onClick={() => { setShowCreate((value) => !value); setShowBatch(false) }}>{showCreate ? 'Cerrar' : '+ Nuevo cobro'}</button>
+          </div>
         </header>
 
         {loading && <div className="cms-notice" role="status">Cargando pagos…</div>}
@@ -276,6 +368,27 @@ export default function AdminPaymentsPage() {
           <article><span>Vencido</span><strong>{currency.format(overdueTotal / 100)}</strong><small>Fuera de plazo</small></article>
           <article><span>Al corriente</span><strong>{studentsCurrent}</strong><small>Alumnos activos cubiertos hoy</small></article>
         </section>
+
+        {showBatch && <section className="panel admin-payment-batch" aria-label="Generación de mensualidades en lote">
+          <div className="panel-heading"><div><span className="eyebrow">GENERACIÓN EN LOTE</span><h3>Mensualidades por grupo</h3><p>Crea solo las obligaciones que faltan para las matrículas activas. Los intensivos siguen gestionándose manualmente por su periodo concreto.</p></div><span className="status info">Solo mensual</span></div>
+          <form className="payment-batch-grid" onSubmit={createMonthlyBatch}>
+            <label>Grupo<select value={batchGroupId} onChange={(event) => setBatchGroupId(event.target.value)} required><option value="">Selecciona grupo</option>{groups.map((group) => <option value={group.id} key={group.id}>{group.name}</option>)}</select></label>
+            <label>Mes<input type="month" value={batchMonth} onChange={(event) => setBatchMonth(event.target.value)} required /></label>
+            <label>Importe por alumno (€)<input inputMode="decimal" value={batchAmountEuros} onChange={(event) => setBatchAmountEuros(event.target.value)} required /></label>
+            <label>Vencimiento<input type="date" value={batchDueDate} onChange={(event) => setBatchDueDate(event.target.value)} required /></label>
+            <label>Referencia<input value={batchReference} onChange={(event) => setBatchReference(event.target.value)} placeholder="Opcional" /></label>
+            <label>Observaciones<input value={batchNotes} onChange={(event) => setBatchNotes(event.target.value)} placeholder="Opcional" /></label>
+
+            <div className="payment-batch-preview payment-wide" aria-live="polite">
+              <div><span>Matrículas activas</span><strong data-testid="batch-active-count">{batchEnrollments.length}</strong></div>
+              <div><span>Ya generadas</span><strong data-testid="batch-existing-count">{batchExistingCount}</strong></div>
+              <div className="batch-to-create"><span>Se crearán</span><strong data-testid="batch-missing-count">{batchMissingCount}</strong></div>
+              <small>Periodo: {formatDate(batchPeriod.start)} → {formatDate(batchPeriod.end)}. Una mensualidad ya existente, aunque esté pagada, cancelada o reembolsada, no se duplica.</small>
+            </div>
+
+            <div className="payment-create-actions"><button type="button" onClick={() => setShowBatch(false)}>Cancelar</button><button className="button button-primary" type="submit" disabled={saving || batchMissingCount === 0}>{saving ? 'Generando…' : batchMissingCount > 0 ? `Generar ${batchMissingCount} ${batchMissingCount === 1 ? 'mensualidad' : 'mensualidades'}` : 'Nada pendiente de generar'}</button></div>
+          </form>
+        </section>}
 
         {showCreate && <section className="panel admin-payment-create">
           <div className="panel-heading"><div><span className="eyebrow">NUEVO COBRO</span><h3>Mensualidad o intensivo</h3></div><span className="status info">Admin only</span></div>
