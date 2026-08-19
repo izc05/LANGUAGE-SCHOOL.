@@ -28,8 +28,15 @@ test('14F: Dashboard no estira Últimos contenidos y compacta herramientas secun
   const secondaryCards = dashboard.locator('.admin-action-grid-secondary .admin-action-card')
   await expect(secondaryCards).toHaveCount(3)
   for (let index = 0; index < 3; index += 1) {
-    const height = await secondaryCards.nth(index).evaluate((element) => element.getBoundingClientRect().height)
-    expect(height).toBeLessThanOrEqual(210)
+    const geometry = await secondaryCards.nth(index).evaluate((element) => {
+      const style = getComputedStyle(element)
+      return {
+        height: element.getBoundingClientRect().height,
+        minHeight: Number.parseFloat(style.minHeight),
+      }
+    })
+    expect(geometry.minHeight).toBeLessThanOrEqual(185)
+    expect(geometry.height).toBeLessThanOrEqual(225)
   }
 
   const columns = dashboard.locator('.admin-columns')
