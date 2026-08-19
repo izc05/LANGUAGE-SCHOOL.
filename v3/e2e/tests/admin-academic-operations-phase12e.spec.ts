@@ -55,12 +55,21 @@ test('12.5: Cursos, Clases, Aula online y Zoom forman un espacio académico cohe
   const classMetricsColumns = await classesPage.locator(':scope > .metric-grid').evaluate((element) => getComputedStyle(element).gridTemplateColumns)
   expect(columnCount(classMetricsColumns)).toBe(4)
 
-  await page.setViewportSize({ width: 390, height: 844 })
-  await expectNoPageOverflow(page)
   const weekCalendar = classesPage.locator('.week-calendar')
   await expect(weekCalendar).toBeVisible()
-  const calendarOverflow = await weekCalendar.evaluate((element) => getComputedStyle(element).overflowX)
-  expect(['auto', 'scroll']).toContain(calendarOverflow)
+  await expect(weekCalendar.locator('.calendar-day')).toHaveCount(7)
+  const desktopCalendarColumns = await weekCalendar.evaluate((element) => getComputedStyle(element).gridTemplateColumns)
+  expect(columnCount(desktopCalendarColumns)).toBe(7)
+
+  await page.setViewportSize({ width: 820, height: 900 })
+  await expectNoPageOverflow(page)
+  const tabletCalendarColumns = await weekCalendar.evaluate((element) => getComputedStyle(element).gridTemplateColumns)
+  expect(columnCount(tabletCalendarColumns)).toBe(2)
+
+  await page.setViewportSize({ width: 390, height: 844 })
+  await expectNoPageOverflow(page)
+  const mobileCalendarColumns = await weekCalendar.evaluate((element) => getComputedStyle(element).gridTemplateColumns)
+  expect(columnCount(mobileCalendarColumns)).toBe(1)
 
   await page.setViewportSize({ width: 1440, height: 1000 })
   await page.goto('/admin/aula-online')
