@@ -36,15 +36,15 @@ async function expectSingleReadableColumn(page: Page, selector: string) {
 }
 
 async function expectVisuallyBefore(page: Page, firstSelector: string, secondSelector: string) {
-  const positions = await page.evaluate(([firstQuery, secondQuery]) => {
-    const first = document.querySelector(firstQuery) as HTMLElement | null
-    const second = document.querySelector(secondQuery) as HTMLElement | null
-    return {
-      firstTop: first?.getBoundingClientRect().top ?? Number.POSITIVE_INFINITY,
-      secondTop: second?.getBoundingClientRect().top ?? Number.NEGATIVE_INFINITY,
-    }
-  }, [firstSelector, secondSelector])
-  expect(positions.firstTop).toBeLessThan(positions.secondTop)
+  const first = page.locator(firstSelector)
+  const second = page.locator(secondSelector)
+  await expect(first).toBeVisible()
+  await expect(second).toBeVisible()
+
+  const [firstBox, secondBox] = await Promise.all([first.boundingBox(), second.boundingBox()])
+  expect(firstBox).not.toBeNull()
+  expect(secondBox).not.toBeNull()
+  expect(firstBox!.y).toBeLessThan(secondBox!.y)
 }
 
 test('11.10: los espacios densos del Profesor priorizan lectura amplia en 1180', async ({ page }) => {
@@ -103,7 +103,9 @@ test('11.10: selección de alumnos, niveles y correcciones deja de parecer una t
 
   for (const [route, selector] of pickers) {
     await page.goto(route)
-    const geometry = await page.locator(selector).evaluate((element) => {
+    const picker = page.locator(selector)
+    await expect(picker).toBeVisible()
+    const geometry = await picker.evaluate((element) => {
       const style = getComputedStyle(element)
       const columns = style.gridTemplateColumns.trim().split(/\s+/).filter(Boolean)
       const buttons = [...element.querySelectorAll(':scope > button')] as HTMLElement[]
@@ -123,7 +125,9 @@ test('11.10: selección de alumnos, niveles y correcciones deja de parecer una t
 
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/profesor/alumnos')
-  const mobileColumns = await page.locator('.teacher-student-picker').evaluate((element) => getComputedStyle(element).gridTemplateColumns.trim().split(/\s+/).filter(Boolean).length)
+  const mobilePicker = page.locator('.teacher-student-picker')
+  await expect(mobilePicker).toBeVisible()
+  const mobileColumns = await mobilePicker.evaluate((element) => getComputedStyle(element).gridTemplateColumns.trim().split(/\s+/).filter(Boolean).length)
   expect(mobileColumns).toBe(1)
   await expectNoHorizontalOverflow(page)
 })
