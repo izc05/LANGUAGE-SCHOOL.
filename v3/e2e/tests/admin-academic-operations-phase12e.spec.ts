@@ -92,7 +92,8 @@ test('12.5: Cursos, Clases, Aula online y Zoom forman un espacio académico cohe
   const zoomPage = page.locator('.zoom-integration-page')
   await expect(zoomPage.locator('.zoom-capability-grid article')).toHaveCount(4)
   await expect(zoomPage.locator('.zoom-connection-card')).toBeVisible()
-  await expect(zoomPage).toContainText('Los secretos no se muestran en el navegador')
+  await expect(zoomPage).toContainText('Las credenciales nunca se muestran ni se guardan en el navegador')
+  await expect(zoomPage).toContainText('Nunca puede leer sus valores')
 
   await page.setViewportSize({ width: 390, height: 844 })
   await expectNoPageOverflow(page)
