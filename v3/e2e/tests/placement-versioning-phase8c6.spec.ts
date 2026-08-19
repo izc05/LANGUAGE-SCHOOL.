@@ -179,10 +179,10 @@ test('8C.6: Admin versiona el banco, revisa resultados reales y PUBLISHED queda 
   await expect(page.getByRole('table', { name: 'Intentos recientes del test de nivel' })).toBeVisible()
 
   await page.goto('/admin/alumnos')
-  const studentRow = page.locator('.students-table-row', { hasText: 'E2E Student' })
+  const studentRow = page.locator('.phase14-student-row:not(.phase14-student-header)', { hasText: 'E2E Student' })
   await expect(studentRow).toBeVisible()
-  await expect(studentRow.locator(':scope > span').nth(1).locator('strong')).toHaveText('C2')
-  await expect(studentRow).toContainText('E2E English B1')
+  await expect(studentRow.locator(':scope > span').nth(2).locator('strong')).toHaveText('C2')
+  await expect(studentRow.locator(':scope > span').nth(1)).toContainText('E2E English B1')
 
   await page.goto('/admin/test-de-nivel')
   await expect(page.getByRole('heading', { name: 'Test de nivel', exact: true })).toBeVisible()
