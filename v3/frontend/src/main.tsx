@@ -123,6 +123,7 @@ import './styles/visual-clarity-phase14a.css'
 import './styles/teacher-clarity-phase14b.css'
 import './styles/admin-profiles-phase14c.css'
 import './styles/admin-courses-phase14d.css'
+import './styles/admin-classes-phase14e.css'
 
 const root = document.getElementById('root')
 if (!root) throw new Error('No se ha encontrado el elemento #root')
