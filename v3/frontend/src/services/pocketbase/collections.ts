@@ -12,6 +12,7 @@ export const collections = {
   studentFiles: 'student_files',
   assignments: 'assignments',
   assignmentSubmissions: 'assignment_submissions',
+  studentPayments: 'student_payments',
   blogCategories: 'blog_categories',
   blogPosts: 'blog_posts',
   mediaLibrary: 'media_library',
