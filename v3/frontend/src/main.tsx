@@ -115,6 +115,7 @@ import './styles/placement-listening-phase8c8.css'
 import './styles/admin-campus-phase12f.css'
 import './styles/admin-campus-phase12g.css'
 import './styles/admin-campus-phase12h.css'
+import './styles/admin-campus-phase12i.css'
 
 const root = document.getElementById('root')
 if (!root) throw new Error('No se ha encontrado el elemento #root')
