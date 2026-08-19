@@ -1,7 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
 
-const PB_URL = 'http://127.0.0.1:8090'
-
 function requiredEnv(name: string): string {
   const value = process.env[name]
   if (!value) throw new Error(`Missing E2E environment variable: ${name}`)
@@ -36,35 +34,14 @@ test('10.6: avisos explícitos, archivos privados y perfil del alumno mantienen 
   const fileTitle = `phase-10-notes-r${testInfo.retry}.txt`
 
   await login(page, credentials.admin.email, credentials.admin.password, /\/admin$/)
-
-  const notification = await page.evaluate(async ({ pbUrl, studentEmail, noticeTitle }) => {
-    const auth = JSON.parse(localStorage.getItem('pocketbase_auth') || '{}') as { token?: string; record?: { id?: string } }
-    const token = auth.token || ''
-    const filter = encodeURIComponent(`email="${studentEmail}"`)
-    const studentsResponse = await fetch(`${pbUrl}/api/collections/users/records?perPage=1&filter=${filter}`, {
-      headers: { Authorization: token },
-    })
-    const students = await studentsResponse.json() as { items?: Array<{ id: string }> }
-    const recipient = students.items?.[0]?.id || ''
-    if (!recipient) return { status: 404, id: '' }
-
-    const response = await fetch(`${pbUrl}/api/collections/notifications/records`, {
-      method: 'POST',
-      headers: { Authorization: token, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        recipient,
-        title: noticeTitle,
-        body: 'Tienes nuevo material disponible en tu biblioteca del Campus.',
-        type: 'MATERIAL',
-        created_by: auth.record?.id || '',
-      }),
-    })
-    const payload = await response.json().catch(() => ({})) as { id?: string }
-    return { status: response.status, id: payload.id || '' }
-  }, { pbUrl: PB_URL, studentEmail: credentials.student.email, noticeTitle })
-
-  expect(notification.status).toBe(200)
-  expect(notification.id).toBeTruthy()
+  await page.getByRole('navigation', { name: 'Menú de Administrador' }).getByRole('link', { name: 'Avisos' }).click()
+  await expect(page).toHaveURL(/\/admin\/avisos$/)
+  await page.getByRole('combobox', { name: /^Alumno/ }).selectOption({ label: 'E2E Student' })
+  await page.getByLabel('Tipo').selectOption('MATERIAL')
+  await page.getByLabel('Título').fill(noticeTitle)
+  await page.getByLabel('Mensaje').fill('Tienes nuevo material disponible en tu biblioteca del Campus.')
+  await page.getByRole('button', { name: 'Enviar aviso' }).click()
+  await expect(page.getByText('Aviso enviado a 1 alumno.')).toBeVisible()
   await logout(page)
 
   await login(page, credentials.student.email, credentials.student.password, /\/alumno$/)
