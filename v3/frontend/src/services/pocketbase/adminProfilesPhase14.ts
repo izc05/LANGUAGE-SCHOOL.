@@ -2,7 +2,6 @@ import type { RecordModel } from 'pocketbase'
 import { getCurrentUser } from './auth'
 import { collections } from './collections'
 import { pb } from './client'
-import type { AdminStudentProfileRecord } from './adminAcademic'
 import type { TeacherProfileRecord } from './teacherPortal'
 
 function requireAdmin() {
@@ -15,7 +14,14 @@ function quote(value: string): string {
   return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
 }
 
-export type AdminStudentProfilePhase14 = AdminStudentProfileRecord & RecordModel
+export type AdminStudentProfilePhase14 = RecordModel & {
+  user: string
+  birth_date?: string
+  guardian_name?: string
+  guardian_phone?: string
+  notes_private?: string
+  active?: boolean
+}
 
 export async function getAdminStudentProfilePhase14(userId: string): Promise<AdminStudentProfilePhase14 | null> {
   requireAdmin()
