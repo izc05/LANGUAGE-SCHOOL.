@@ -25,7 +25,7 @@ async function removeRecord(page: Page, title: string) {
   await record.getByRole('button', { name: 'Eliminar' }).click()
   await expect(record.getByRole('button', { name: 'Confirmar eliminación' })).toBeVisible()
   await record.getByRole('button', { name: 'Confirmar eliminación' }).click()
-  await expect(page.getByRole('status')).toContainText('Tarea eliminada.')
+  await expect(page.locator('.cms-notice.success-notice').filter({ hasText: 'Tarea eliminada.' })).toBeVisible()
   await expect(page.locator('.teacher-assignment-record').filter({ hasText: title })).toHaveCount(0)
 }
 
