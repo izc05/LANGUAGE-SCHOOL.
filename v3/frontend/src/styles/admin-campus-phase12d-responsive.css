@@ -1,0 +1,112 @@
+/* FASE 12.4 · cierre responsive Alumnos + Profesores
+   Neutraliza la tabla ancha heredada y refuerza controles táctiles sin cambiar datos ni acciones. */
+
+@media (max-width: 760px) {
+  .dashboard-shell-admin .cms-page:has(.students-admin-layout) .students-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 13px;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.students-admin-layout) .filter-pills {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 7px;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.students-admin-layout) .filter-pills button {
+    min-height: 42px;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.students-admin-layout) .students-table {
+    display: grid;
+    gap: 10px;
+    overflow: visible;
+    padding: 10px;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.students-admin-layout) .students-table-header {
+    display: none;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.students-admin-layout) button.students-table-row {
+    min-width: 0;
+    width: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 13px 16px;
+    padding: 17px;
+    border: 1px solid var(--people-line);
+    border-radius: 17px;
+    background: #fff;
+    box-shadow: none;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.students-admin-layout) button.students-table-row.selected {
+    border-color: rgba(189, 79, 121, 0.2);
+    background: linear-gradient(145deg, #fff4f7, #fffdfb);
+    box-shadow: inset 4px 0 0 var(--people-pink);
+  }
+
+  .dashboard-shell-admin .cms-page:has(.students-admin-layout) button.students-table-row > .student-identity {
+    grid-column: 1 / -1;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--people-line);
+  }
+
+  .dashboard-shell-admin .cms-page:has(.students-admin-layout) button.students-table-row > span:not(.student-identity) {
+    display: grid;
+    align-content: start;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.students-admin-layout) button.students-table-row > span:not(.student-identity)::before {
+    color: #a07c8b;
+    font-size: 0.58rem;
+    font-weight: 850;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.students-admin-layout) button.students-table-row > span:nth-child(2)::before {
+    content: 'Nivel / programa';
+  }
+
+  .dashboard-shell-admin .cms-page:has(.students-admin-layout) button.students-table-row > span:nth-child(3)::before {
+    content: 'Profesor';
+  }
+
+  .dashboard-shell-admin .cms-page:has(.students-admin-layout) button.students-table-row > span:nth-child(4)::before {
+    content: 'Próxima clase';
+  }
+
+  .dashboard-shell-admin .cms-page:has(.students-admin-layout) button.students-table-row > span:nth-child(5)::before {
+    content: 'Estado';
+  }
+
+  .dashboard-shell-admin .cms-page:has(.teacher-admin-grid) .teacher-card-actions button,
+  .dashboard-shell-admin .cms-page:has(.students-admin-layout) .student-detail-actions button {
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-shell-admin .cms-page:has(.students-admin-layout) .filter-pills {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.students-admin-layout) button.students-table-row {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.students-admin-layout) button.students-table-row > .student-identity {
+    grid-column: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-shell-admin .cms-page:has(.students-admin-layout) button.students-table-row,
+  .dashboard-shell-admin .cms-page:has(.teacher-admin-grid) .teacher-card-actions button {
+    transition: none !important;
+  }
+}
