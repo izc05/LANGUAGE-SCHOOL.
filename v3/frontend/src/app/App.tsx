@@ -48,6 +48,7 @@ const AdminTeacherPublicProfilesPage = lazy(() => import('../pages/admin/AdminTe
 const AdminCoursesPage = lazy(() => import('../pages/admin/AdminCoursesPage'))
 const AdminClassesPage = lazy(() => import('../pages/admin/AdminClassesPage'))
 const AdminAgendaPage = lazy(() => import('../pages/admin/AdminAgendaPage'))
+const AdminPaymentsPage = lazy(() => import('../pages/admin/AdminPaymentsPage'))
 const AdminClassDeliveryPage = lazy(() => import('../pages/admin/AdminClassDeliveryPage'))
 const AdminZoomIntegrationPage = lazy(() => import('../pages/admin/AdminZoomIntegrationPage'))
 const AdminPlacementTestPage = lazy(() => import('../pages/admin/AdminPlacementTestPage'))
@@ -116,6 +117,7 @@ export default function App() {
         <Route path="/admin/cursos" element={<RequireRole allow={['ADMIN']}><AdminCoursesPage /></RequireRole>} />
         <Route path="/admin/clases" element={<RequireRole allow={['ADMIN']}><AdminClassesPage /></RequireRole>} />
         <Route path="/admin/agenda" element={<RequireRole allow={['ADMIN']}><AdminAgendaPage /></RequireRole>} />
+        <Route path="/admin/pagos" element={<RequireRole allow={['ADMIN']}><AdminPaymentsPage /></RequireRole>} />
         <Route path="/admin/aula-online" element={<RequireRole allow={['ADMIN']}><AdminClassDeliveryPage /></RequireRole>} />
         <Route path="/admin/zoom" element={<RequireRole allow={['ADMIN']}><AdminZoomIntegrationPage /></RequireRole>} />
         <Route path="/admin/test-de-nivel" element={<RequireRole allow={['ADMIN']}><AdminPlacementTestPage /></RequireRole>} />
