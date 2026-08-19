@@ -1,10 +1,9 @@
 import { lazy, Suspense, useState } from 'react'
-import HomePage from './HomePage'
 import IntroSceneErrorBoundary from './intro/premium/IntroSceneErrorBoundary'
-import IntroOrbitArtwork from './intro/premium/IntroOrbitArtwork'
 import './intro/premium/premium-intro.css'
 import './intro/premium/intro-orbit-refresh.css'
 
+const HomePage = lazy(() => import('./HomePage'))
 const IntroPage = lazy(() => import('./intro/IntroPage'))
 const INTRO_SESSION_KEY = 'language-school:intro-completed'
 const SAFE_ENTER_TRANSITION_MS = 520
@@ -15,6 +14,36 @@ function introAlreadyCompleted(): boolean {
   } catch {
     return false
   }
+}
+
+function LightweightOrbitLockup() {
+  return (
+    <div className="intro-orbit-stage">
+      <div className="intro-orbit-sphere" aria-hidden="true" />
+      <section className="premium-brand-lockup intro-orbit-brand" aria-label="Language School Rocío Ruiz">
+        <span className="premium-brand-language">LANGUAGE</span>
+        <strong className="premium-brand-school">School</strong>
+        <div className="premium-brand-divider" aria-hidden="true" />
+        <span className="premium-brand-rocio">ROCÍO RUIZ</span>
+      </section>
+    </div>
+  )
+}
+
+function IntroLoadingFallback() {
+  return (
+    <main className="premium-intro intro-orbit-refresh brand-visible actions-visible settled" aria-busy="true">
+      <div className="intro-orbit-ambient" aria-hidden="true" />
+      <LightweightOrbitLockup />
+      <div className="premium-entry-actions intro-orbit-actions" role="status">
+        <p className="premium-instruction">Preparando la entrada…</p>
+      </div>
+    </main>
+  )
+}
+
+function HomeLoadingFallback() {
+  return <div className="intro-loading" role="status">Preparando Language School…</div>
 }
 
 function StaticIntroFallback({ onEnter }: { onEnter: () => void }) {
@@ -38,7 +67,7 @@ function StaticIntroFallback({ onEnter }: { onEnter: () => void }) {
   return (
     <main className={classes}>
       <div className="intro-orbit-ambient" aria-hidden="true" />
-      <IntroOrbitArtwork withPlane={false} />
+      <LightweightOrbitLockup />
 
       <div className="premium-entry-actions intro-orbit-actions">
         <p className="premium-instruction">Bienvenido a Language School</p>
@@ -71,11 +100,17 @@ export default function IntroGatePage() {
     setCompleted(true)
   }
 
-  if (completed) return <HomePage />
+  if (completed) {
+    return (
+      <Suspense fallback={<HomeLoadingFallback />}>
+        <HomePage />
+      </Suspense>
+    )
+  }
 
   return (
     <IntroSceneErrorBoundary fallback={<StaticIntroFallback onEnter={enterAcademy} />}>
-      <Suspense fallback={<div className="intro-loading" role="status">Preparando la entrada…</div>}>
+      <Suspense fallback={<IntroLoadingFallback />}>
         <IntroPage onEnter={enterAcademy} />
       </Suspense>
     </IntroSceneErrorBoundary>
