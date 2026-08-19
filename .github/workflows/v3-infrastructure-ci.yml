@@ -17,6 +17,7 @@ on:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    timeout-minutes: 12
 
     steps:
       - name: Checkout
@@ -203,8 +204,25 @@ jobs:
 
       - name: Validate Nginx configuration, Cloudflare context and abuse guards
         run: |
-          sudo apt-get update -qq
-          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y nginx
+          if ! command -v nginx >/dev/null 2>&1; then
+            installed=0
+            for attempt in 1 2; do
+              if timeout 90s sudo apt-get -o Acquire::Retries=3 update -qq && \
+                 timeout 90s sudo env DEBIAN_FRONTEND=noninteractive apt-get \
+                   -o Acquire::Retries=3 -o DPkg::Lock::Timeout=30 \
+                   install -y --no-install-recommends nginx; then
+                installed=1
+                break
+              fi
+              echo "Nginx install attempt $attempt failed or timed out." >&2
+              sudo dpkg --configure -a || true
+              sleep 2
+            done
+            test "$installed" = '1' || {
+              echo 'Unable to install nginx within bounded CI time.' >&2
+              exit 1
+            }
+          fi
           nginx -V 2>&1 | grep -q -- '--with-http_realip_module'
 
           sudo install -d -m 0755 /opt/language-school/frontend/assets
