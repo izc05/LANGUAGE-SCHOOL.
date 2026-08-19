@@ -2,6 +2,7 @@ import { type FormEvent, useState } from 'react'
 import { Link } from 'react-router'
 import PlacementAudioPlayer from '../../components/PlacementAudioPlayer'
 import SiteShell from '../../components/SiteShell'
+import '../../styles/placement-result-phase16e.css'
 import {
   answerPublicPlacementQuestion,
   finishPublicPlacementTest,
@@ -35,10 +36,62 @@ const levelCopy: Record<CefrLevel, { title: string; description: string }> = {
 
 const skillOrder: PlacementSkill[] = ['GRAMMAR', 'VOCABULARY', 'READING', 'LISTENING']
 
+const skillInsightCopy: Record<PlacementSkill, { strength: string; focus: string }> = {
+  GRAMMAR: {
+    strength: 'Las estructuras y el uso de la lengua están sosteniendo bien tu recorrido.',
+    focus: 'Conviene consolidar estructuras y precisión para que el nivel sea más estable.',
+  },
+  VOCABULARY: {
+    strength: 'El vocabulario en contexto aparece como uno de tus apoyos más sólidos.',
+    focus: 'Ampliar vocabulario y matices te ayudará a responder con más precisión.',
+  },
+  READING: {
+    strength: 'La comprensión de textos está aportando evidencia positiva a tu nivel.',
+    focus: 'Trabajar comprensión fina e inferencias reforzará tu autonomía con textos.',
+  },
+  LISTENING: {
+    strength: 'La comprensión oral aporta una señal positiva dentro del diagnóstico disponible.',
+    focus: 'Conviene seguir trabajando la comprensión oral con voces, ritmos y contextos variados.',
+  },
+}
+
+type ResultInsight = {
+  skill: PlacementSkill
+  percent: number
+  copy: string
+}
+
 function toPlainText(value: string): string {
   if (!value) return ''
   const documentValue = new DOMParser().parseFromString(value, 'text/html')
   return documentValue.body.textContent?.trim() || ''
+}
+
+function buildResultInsights(result: PublicPlacementResult): { strengths: ResultInsight[]; focus: ResultInsight[] } {
+  const assessed = skillOrder.flatMap((skill) => {
+    const score = result.skillScores[skill]
+    if (!score || score.diagnosticOnly || score.total <= 0) return []
+    return [{ skill, percent: score.percent }]
+  })
+
+  const strongestFirst = [...assessed].sort((left, right) => right.percent - left.percent)
+  const strengthsBase = strongestFirst.filter((item) => item.percent >= 70).slice(0, 2)
+  const strengths = (strengthsBase.length ? strengthsBase : strongestFirst.slice(0, 1)).map((item) => ({
+    ...item,
+    copy: skillInsightCopy[item.skill].strength,
+  }))
+
+  const strengthSkills = new Set(strengths.map((item) => item.skill))
+  const focus = [...assessed]
+    .sort((left, right) => left.percent - right.percent)
+    .filter((item) => item.percent < 70 && !strengthSkills.has(item.skill))
+    .slice(0, 2)
+    .map((item) => ({
+      ...item,
+      copy: skillInsightCopy[item.skill].focus,
+    }))
+
+  return { strengths, focus }
 }
 
 export default function PlacementTestPage() {
@@ -172,6 +225,7 @@ export default function PlacementTestPage() {
   const progress = question ? Math.round((question.position / question.total) * 100) : 0
   const resultCopy = result ? levelCopy[result.estimatedLevel] : null
   const hasListeningResult = Boolean(result?.skillScores.LISTENING)
+  const resultInsights = result ? buildResultInsights(result) : { strengths: [], focus: [] }
 
   return (
     <SiteShell>
@@ -265,11 +319,26 @@ export default function PlacementTestPage() {
                 <h1 id="placement-result-title">Tu nivel estimado es {result.estimatedLevel}.</h1>
                 <h2>{resultCopy.title}</h2>
                 <p>{resultCopy.description}</p>
-                <div className="placement-result-score"><strong>{Math.round(result.scorePercent)}%</strong><span>{result.rawScore} de {result.maxScore} respuestas correctas</span></div>
+                <div className="placement-result-method">
+                  <strong>El nivel no sale solo del porcentaje.</strong>
+                  <p>El motor progresivo combina la dificultad de tu recorrido y la evidencia reunida en las preguntas que has contestado.</p>
+                </div>
               </div>
 
               <div className="placement-result-detail">
-                <div className="placement-result-skills">
+                <section className="placement-result-evidence" aria-labelledby="placement-evidence-title">
+                  <div>
+                    <span className="eyebrow">EVIDENCIA DEL RECORRIDO</span>
+                    <h2 id="placement-evidence-title">Así se sostiene tu estimación.</h2>
+                  </div>
+                  <div className="placement-result-score placement-result-score-secondary">
+                    <strong>{Math.round(result.scorePercent)}%</strong>
+                    <span>Aciertos del recorrido · {result.rawScore} de {result.maxScore}</span>
+                  </div>
+                  <p>Este porcentaje resume tus aciertos, pero el nivel MCER se estima también según la dificultad de las preguntas que te ha presentado la ruta progresiva.</p>
+                </section>
+
+                <div className="placement-result-skills" aria-label="Resultado por competencias">
                   {skillOrder.map((skill) => {
                     const score = result.skillScores[skill]
                     if (!score) return null
@@ -283,12 +352,56 @@ export default function PlacementTestPage() {
                   })}
                 </div>
 
+                <section className="placement-result-insights" aria-label="Lectura pedagógica del resultado">
+                  <article className="placement-result-insight-card is-strength">
+                    <span className="eyebrow">FORTALEZAS OBSERVADAS</span>
+                    <h2>Lo que ya está sosteniendo tu nivel.</h2>
+                    <ul>
+                      {resultInsights.strengths.map((insight) => (
+                        <li key={insight.skill}>
+                          <div><strong>{skillLabels[insight.skill]}</strong><span>{Math.round(insight.percent)}%</span></div>
+                          <p>{insight.copy}</p>
+                        </li>
+                      ))}
+                    </ul>
+                  </article>
+
+                  <article className="placement-result-insight-card is-focus">
+                    <span className="eyebrow">ÁREAS A REFORZAR</span>
+                    <h2>Dónde puede estar tu siguiente mejora.</h2>
+                    {resultInsights.focus.length > 0 ? (
+                      <ul>
+                        {resultInsights.focus.map((insight) => (
+                          <li key={insight.skill}>
+                            <div><strong>{skillLabels[insight.skill]}</strong><span>{Math.round(insight.percent)}%</span></div>
+                            <p>{insight.copy}</p>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <div className="placement-result-no-gap">
+                        <strong>No aparece una debilidad clara en las competencias evaluadas.</strong>
+                        <p>El siguiente paso es comprobar cómo trasladas este rendimiento a conversación real, fluidez y pronunciación.</p>
+                      </div>
+                    )}
+                  </article>
+                </section>
+
+                <aside className="placement-speaking-assessment" aria-labelledby="placement-speaking-title">
+                  <div className="placement-speaking-mark" aria-hidden="true">Speaking</div>
+                  <div>
+                    <span className="eyebrow">VALORACIÓN DOCENTE</span>
+                    <h2 id="placement-speaking-title">Speaking requiere valoración docente.</h2>
+                    <p>La expresión oral no se convierte en una nota automática en este test. Un profesor puede valorar conversación, fluidez, pronunciación e interacción y confirmar o ajustar la recomendación final.</p>
+                  </div>
+                </aside>
+
                 <div className="placement-result-notice">
                   <strong>¿Qué significa este resultado?</strong>
                   <p>{result.notice}</p>
                   {hasListeningResult
-                    ? <p>La comprensión oral aparece como diagnóstico independiente. Todavía no modifica por sí sola tu nivel automático; speaking y la valoración docente completan la fotografía académica.</p>
-                    : <p>Esta versión rápida evalúa gramática, vocabulario y comprensión lectora. No evalúa todavía speaking ni listening, así que no sustituye una valoración completa de la academia.</p>}
+                    ? <p>La comprensión oral aparece como diagnóstico independiente. No modifica por sí sola el nivel automático; speaking y la valoración docente completan la fotografía académica.</p>
+                    : <p>Esta versión rápida evalúa gramática, vocabulario y comprensión lectora. No sustituye una valoración completa de la academia.</p>}
                 </div>
 
                 <section className="placement-recommendations" aria-labelledby="placement-recommendations-title">
