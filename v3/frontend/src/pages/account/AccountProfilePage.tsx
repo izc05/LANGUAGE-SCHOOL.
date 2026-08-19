@@ -80,12 +80,12 @@ export default function AccountProfilePage({ portal }: Props) {
 
   return (
     <DashboardShell role={roleLabel} name={fullName} nav={[...nav]}>
-      <div className={`dashboard-content account-profile-page${portal === 'STUDENT' ? ' account-profile-student10' : ''}`}>
-        <header className={`cms-page-heading${portal === 'STUDENT' ? ' account-profile-heading10' : ''}`}>
+      <div className={`dashboard-content account-profile-page${portal === 'STUDENT' ? ' account-profile-student10' : ' account-profile-teacher11'}`}>
+        <header className={`cms-page-heading${portal === 'STUDENT' ? ' account-profile-heading10' : ' account-profile-heading-teacher11'}`}>
           <div>
             <span className="eyebrow">CUENTA · MI PERFIL</span>
             <h2>Tu información personal</h2>
-            <p>{portal === 'STUDENT' ? 'Mantén actualizados tus datos de contacto y tu avatar. El email, rol y estado de la cuenta siguen protegidos por la academia.' : 'Actualiza los datos básicos de tu cuenta. El rol, estado y email están protegidos frente a cambios desde esta pantalla.'}</p>
+            <p>{portal === 'STUDENT' ? 'Mantén actualizados tus datos de contacto y tu avatar. El email, rol y estado de la cuenta siguen protegidos por la academia.' : 'Actualiza tus datos de contacto y tu imagen de perfil. El email, el rol y el estado permanecen protegidos por la academia.'}</p>
           </div>
           <span className="status success">{status === 'ACTIVE' ? 'Cuenta activa' : status}</span>
         </header>
