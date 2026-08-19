@@ -93,13 +93,27 @@
     top:auto !important;
   }
 
-  /* Ver primero informacion existente; los formularios quedan despues. */
-  .dashboard-shell-teacher .teacher-class-agenda{order:1 !important}
-  .dashboard-shell-teacher .teacher-class-create{order:2 !important}
-  .dashboard-shell-teacher .teacher-material-library{order:1 !important}
-  .dashboard-shell-teacher .teacher-material-form{order:2 !important}
-  .dashboard-shell-teacher .teacher-assignment-plan{order:1 !important}
-  .dashboard-shell-teacher .teacher-assignment-form{order:2 !important}
+  /*
+    Orden visual explicito: primero revisar lo existente y despues crear contenido nuevo.
+    Las areas de grid evitan depender de order y hacen la jerarquia visible y comprobable.
+  */
+  .dashboard-shell-teacher .teacher-class-workspace{
+    grid-template-areas:"teacher-agenda" "teacher-create";
+  }
+  .dashboard-shell-teacher .teacher-class-agenda{grid-area:teacher-agenda}
+  .dashboard-shell-teacher .teacher-class-create{grid-area:teacher-create}
+
+  .dashboard-shell-teacher .teacher-material-workspace{
+    grid-template-areas:"teacher-library" "teacher-material-form";
+  }
+  .dashboard-shell-teacher .teacher-material-library{grid-area:teacher-library}
+  .dashboard-shell-teacher .teacher-material-form{grid-area:teacher-material-form}
+
+  .dashboard-shell-teacher .teacher-assignment-workspace{
+    grid-template-areas:"teacher-plan" "teacher-assignment-form";
+  }
+  .dashboard-shell-teacher .teacher-assignment-plan{grid-area:teacher-plan}
+  .dashboard-shell-teacher .teacher-assignment-form{grid-area:teacher-assignment-form}
 
   /* Listados de seleccion amplios, reconocibles como tarjetas y no como filas comprimidas. */
   .dashboard-shell-teacher .teacher-student-picker,
