@@ -1,0 +1,225 @@
+/* FASE 14E · CLASES + ASISTENCIA
+   Da jerarquía y aire a la clase seleccionada y convierte asistencia en filas legibles. */
+
+.dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-class-attendance {
+  padding: 0 22px 22px;
+  overflow: hidden;
+  border: 1px solid rgba(112, 54, 79, .16);
+  border-radius: 25px;
+  background: #fff;
+  box-shadow: 0 16px 40px rgba(73, 34, 52, .05);
+}
+
+.dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-class-detail-heading {
+  margin: 0 -22px 18px;
+  padding: 23px 24px 20px;
+  border-bottom: 1px solid rgba(112, 54, 79, .12);
+  background: linear-gradient(122deg, #fff 0%, #fff5f9 62%, #fde9f0 100%);
+}
+
+.dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-class-detail-heading > div:first-child {
+  min-width: 0;
+  max-width: 760px;
+}
+
+.dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-class-detail-heading h3 {
+  margin: 5px 0 7px;
+  color: #35262e;
+  font-size: clamp(1.55rem, 2vw, 2rem);
+  line-height: 1.1;
+}
+
+.dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-class-detail-heading p {
+  margin: 0;
+  color: #6f5863;
+  line-height: 1.55;
+}
+
+.dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-class-status-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 9px;
+  min-width: max-content;
+}
+
+.dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-class-status-actions button {
+  min-height: 42px;
+  padding: 0 14px;
+  border: 1px solid #dcc1cc;
+  border-radius: 999px;
+  background: #fff;
+  color: #744054;
+  font-size: .76rem;
+  font-weight: 850;
+}
+
+.dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-class-status-actions button:hover {
+  border-color: #c87998;
+  background: #fff1f6;
+}
+
+.dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-attendance-list {
+  display: grid;
+  gap: 10px;
+}
+
+.dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-attendance-list > article {
+  min-height: 86px;
+  grid-template-columns: auto minmax(210px, 1fr) auto;
+  gap: 14px 18px;
+  align-items: center;
+  padding: 14px 16px;
+  border: 1px solid #ead8df;
+  border-radius: 17px;
+  background: #fff;
+  box-shadow: 0 8px 22px rgba(73, 34, 52, .025);
+}
+
+.dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-attendance-list > article:hover {
+  border-color: #ddb1c2;
+  background: #fff9fb;
+}
+
+.dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-attendance-list > article > .avatar-mini {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  flex: none;
+  border-radius: 50%;
+  background: #f9e5ed;
+  color: #a8325e;
+  font-weight: 900;
+}
+
+.dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-attendance-list > article > div:nth-child(2) {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-attendance-list > article > div:nth-child(2) strong {
+  color: #34262d;
+  font-size: .94rem;
+}
+
+.dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-attendance-list > article > div:nth-child(2) small {
+  display: block;
+  color: #765f69;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-attendance-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-attendance-actions button {
+  min-width: 94px;
+  min-height: 42px;
+  padding: 0 13px;
+  border: 1px solid #dbc7cf;
+  border-radius: 999px;
+  background: #fff;
+  color: #694351;
+  font-size: .74rem;
+  font-weight: 850;
+}
+
+.dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-attendance-actions button:hover {
+  border-color: #d087a2;
+  background: #fff2f6;
+}
+
+.dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-attendance-actions button.active {
+  border-color: #b7406b;
+  background: linear-gradient(135deg, #c94d7c, #9b355d);
+  color: #fff;
+  box-shadow: 0 7px 16px rgba(159, 53, 93, .13);
+}
+
+.dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-attendance-list > .portal-empty-state {
+  margin-top: 4px;
+}
+
+@media (max-width: 1180px) {
+  .dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-class-detail-heading {
+    display: grid;
+    gap: 16px;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-class-status-actions {
+    justify-content: flex-start;
+    min-width: 0;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-attendance-list > article {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-attendance-actions {
+    grid-column: 2;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 700px) {
+  .dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-class-attendance {
+    padding: 0 14px 14px;
+    border-radius: 20px;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-class-detail-heading {
+    margin: 0 -14px 14px;
+    padding: 20px 17px 17px;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-class-status-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-class-status-actions button {
+    width: 100%;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-attendance-list > article {
+    grid-template-columns: 42px minmax(0, 1fr);
+    min-height: 0;
+    padding: 14px;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-attendance-actions {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-attendance-actions button {
+    min-width: 0;
+    padding-inline: 8px;
+  }
+}
+
+@media (max-width: 430px) {
+  .dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-class-status-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-attendance-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-class-status-actions button,
+  .dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-attendance-list > article,
+  .dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-attendance-actions button {
+    transition: none !important;
+  }
+}
