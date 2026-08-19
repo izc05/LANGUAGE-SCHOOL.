@@ -8,6 +8,7 @@ import {
   settingsToInput,
   type SiteSettingsInput,
 } from '../../services/pocketbase/siteManagement'
+import { buildWhatsAppUrl, formatWhatsAppNumber, normalizeWhatsAppNumber } from '../../utils/whatsapp'
 import { adminNav } from './adminNav'
 
 const allowedLogoTypes = new Set(['image/png', 'image/jpeg', 'image/webp'])
@@ -63,6 +64,10 @@ export default function AdminSettingsPage() {
     setLogoName(file?.name ?? 'Sin nuevo logo seleccionado')
   }
 
+  const normalizedWhatsApp = normalizeWhatsAppNumber(form.whatsapp)
+  const whatsappPreviewUrl = buildWhatsAppUrl(form.whatsapp, form.whatsappMessage)
+  const whatsappPreviewNumber = formatWhatsAppNumber(form.whatsapp)
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError(null)
@@ -73,14 +78,23 @@ export default function AdminSettingsPage() {
       return
     }
 
+    if (form.whatsappEnabled && !normalizedWhatsApp) {
+      setError('Introduce un número de WhatsApp válido. Puedes usar un móvil español de 9 cifras o un número internacional con prefijo de país.')
+      return
+    }
+
+    const payload = normalizedWhatsApp ? { ...form, whatsapp: normalizedWhatsApp } : form
+
     if (isDemoMode) {
+      if (normalizedWhatsApp && form.whatsapp !== normalizedWhatsApp) setForm(payload)
       setNotice('Configuración preparada en la demostración. No se ha guardado ningún cambio real.')
       return
     }
 
     setSaving(true)
     try {
-      await saveSiteSettings(form, logo)
+      await saveSiteSettings(payload, logo)
+      setForm(payload)
       setLogo(null)
       setLogoName('Sin nuevo logo seleccionado')
       setNotice('Configuración general guardada correctamente.')
@@ -121,10 +135,26 @@ export default function AdminSettingsPage() {
             <label className="field-stack"><span>Email</span><input type="email" autoComplete="email" value={form.email} onChange={(event) => setField('email', event.target.value)} placeholder="info@..." /></label>
             <div className="field-row">
               <label className="field-stack"><span>Teléfono</span><input type="tel" autoComplete="tel" value={form.phone} onChange={(event) => setField('phone', event.target.value)} /></label>
-              <label className="field-stack"><span>WhatsApp</span><input type="tel" value={form.whatsapp} onChange={(event) => setField('whatsapp', event.target.value)} placeholder="34618218187" /></label>
+              <label className="field-stack"><span>WhatsApp</span><input type="tel" autoComplete="tel" value={form.whatsapp} onChange={(event) => setField('whatsapp', event.target.value)} placeholder="618 218 187 o +34 618 218 187" /><small>Los móviles españoles de 9 cifras se guardan automáticamente con prefijo +34.</small></label>
             </div>
             <label className="settings-toggle-row"><span><strong>Botón flotante de WhatsApp</strong><small>Permite mostrar u ocultar el acceso rápido en toda la web pública.</small></span><input type="checkbox" checked={form.whatsappEnabled} onChange={(event) => setField('whatsappEnabled', event.target.checked)} /></label>
             <label className="field-stack"><span>Mensaje inicial de WhatsApp</span><textarea rows={3} value={form.whatsappMessage} onChange={(event) => setField('whatsappMessage', event.target.value)} placeholder="Hola, quiero información..." /></label>
+
+            <div className={`settings-whatsapp-preview${whatsappPreviewUrl ? ' is-valid' : ' is-invalid'}`} aria-live="polite">
+              <div>
+                <span className="eyebrow">PREVISUALIZACIÓN</span>
+                <strong>{form.whatsappEnabled ? 'Botón público de WhatsApp' : 'Botón de WhatsApp desactivado'}</strong>
+                {whatsappPreviewUrl ? (
+                  <small>{whatsappPreviewNumber} · {form.whatsappMessage.trim() || 'Sin mensaje inicial'}</small>
+                ) : (
+                  <small>Introduce un número válido para poder probar el enlace antes de guardarlo.</small>
+                )}
+              </div>
+              {whatsappPreviewUrl && (
+                <a className="button button-outline settings-whatsapp-test" href={whatsappPreviewUrl} target="_blank" rel="noopener noreferrer">Probar WhatsApp ↗</a>
+              )}
+            </div>
+
             <label className="field-stack"><span>Instagram</span><input type="url" value={form.instagram} onChange={(event) => setField('instagram', event.target.value)} placeholder="https://instagram.com/..." /></label>
             <label className="field-stack"><span>Facebook</span><input type="url" value={form.facebook} onChange={(event) => setField('facebook', event.target.value)} /></label>
             <label className="field-stack"><span>YouTube</span><input type="url" value={form.youtube} onChange={(event) => setField('youtube', event.target.value)} /></label>
