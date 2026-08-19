@@ -16,6 +16,7 @@ const routes = [
   { label: 'Mis alumnos', to: '/profesor/alumnos' },
   { label: 'Niveles', to: '/profesor/niveles' },
   { label: 'Clases', to: '/profesor/clases' },
+  { label: 'Agenda', to: '/profesor/agenda' },
   { label: 'Material', to: '/profesor/material' },
   { label: 'Tareas', to: '/profesor/tareas' },
   { label: 'Correcciones', to: '/profesor/correcciones' },
@@ -42,7 +43,7 @@ async function expectNoHorizontalOverflow(page: Page) {
   expect(overflow).toBeLessThanOrEqual(1)
 }
 
-test('11.9: Portal Profesor mantiene sus ocho rutas dentro de 1440, 1180, 820 y 390', async ({ page }) => {
+test('11.9: Portal Profesor mantiene sus nueve rutas dentro de 1440, 1180, 820 y 390', async ({ page }) => {
   await login(page)
 
   for (const viewport of viewports) {
@@ -81,7 +82,7 @@ test('11.9: tablet conserva etiquetas y móvil ofrece navegación táctil, foco 
   })
   expect(tabletGeometry.sidebarWidth).toBeGreaterThanOrEqual(195)
   expect(tabletGeometry.clippedLabels).toBe(0)
-  expect(tabletGeometry.linkCount).toBe(8)
+  expect(tabletGeometry.linkCount).toBe(9)
   await expectNoHorizontalOverflow(page)
 
   await page.setViewportSize({ width: 390, height: 844 })
@@ -102,7 +103,7 @@ test('11.9: tablet conserva etiquetas y móvil ofrece navegación táctil, foco 
 
   expect(mobileGeometry.display).toBe('flex')
   expect(['auto', 'scroll']).toContain(mobileGeometry.overflowX)
-  expect(mobileGeometry.linkCount).toBe(8)
+  expect(mobileGeometry.linkCount).toBe(9)
   expect(mobileGeometry.minLinkHeight).toBeGreaterThanOrEqual(40)
   await expectNoHorizontalOverflow(page)
 
