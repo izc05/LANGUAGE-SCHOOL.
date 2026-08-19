@@ -1,113 +1,160 @@
-# Language School · FASE 9.7 · Auditoría de rendimiento
+# Language School · FASE 9.7 · Rendimiento
 
 ## Estado
 
-**AUDITORÍA DOCUMENTADA · NO IMPLEMENTAR OPTIMIZACIONES HASTA CERRAR LA PUERTA DE CÓDIGO DE 9.6A**
+**9.7A ✅ · 9.7B ✅ · 9.7C SIGUIENTE**
 
-Medición tomada sobre el build conectado generado por **V3 Frontend CI** para `e2d5632ed05c158b9a0479a50342024a9d18c605`.
+Esta fase optimiza carga sin degradar la dirección visual aprobada. El globo rosa, avión 3D, fotografía, tipografía y composición no se eliminan para perseguir métricas marginales.
 
-Esta auditoría no cambia diseño, contenido, rutas ni comportamiento. Su objetivo es decidir qué optimizaciones tienen impacto real antes de tocar la candidata.
+## 1. Baseline original
 
-## 1. Baseline del build
-
-Artefacto de CI analizado: `v3-frontend-preview-*`.
+Medición inicial del build conectado:
 
 - JavaScript principal minificado: **1.664.973 bytes (~1,66 MB)**.
-- JavaScript principal comprimido con gzip -9: **432.646 bytes (~433 kB)**.
+- JavaScript principal gzip: **432.646 bytes (~433 kB)**.
 - CSS principal: **411.441 bytes (~411 kB)**.
-- CSS comprimido con gzip -9: **71.248 bytes (~71 kB)**.
-- Build descomprimido completo del artefacto: **~2,2 MB**.
-- El build actual concentra prácticamente toda la aplicación en un único chunk JavaScript principal.
+- CSS gzip: **71.248 bytes (~71 kB)**.
+- Build descomprimido completo: **~2,2 MB**.
+- La aplicación estaba prácticamente concentrada en un único chunk JavaScript.
 
-La advertencia histórica de Vite por chunk >500 kB es por tanto real y no un falso positivo.
+La causa principal era que `App.tsx` importaba estáticamente páginas públicas, Campus, Profesor y Administración. Además, la entrada premium incorpora Three.js / React Three Fiber, un coste visual legítimo que no debía arrastrar el resto de la plataforma.
 
-## 2. Causa principal
+## 2. 9.7A · Lazy routes ✅
 
-`v3/frontend/src/app/App.tsx` importa estáticamente las páginas públicas, Alumno, Profesor y Administración. Por ello el navegador recibe desde el arranque código de áreas que el visitante todavía no necesita.
+Cierre técnico: `d14d72108896a9a9263bb81c1e29f6d98760e75e`.
 
-Además, la entrada premium usa Three.js / React Three Fiber. Ese coste visual puede ser legítimo para la portada, pero no debe obligar a empaquetar simultáneamente Admin, Campus, Profesor, Test de nivel y el resto de páginas públicas en el mismo chunk inicial.
+Resultado medido:
 
-## 3. CSS
+- JS común: **~200,5 kB minificado / ~62,6 kB gzip**.
+- reducción aproximada frente al baseline: **~88 % minificado / ~85 % gzip**;
+- Admin, Profesor, Campus y páginas públicas pasan a chunks independientes;
+- rutas y guards no cambian;
+- E2E se adapta a carga asíncrona sin sleeps artificiales;
+- matriz CI completa verde.
 
-El CSS compilado contiene aproximadamente **4.058 bloques** y **192 media queries**.
+Después de 9.7A el coste 3D quedó visible como deuda independiente: `IntroGatePage` seguía pesando aproximadamente **906,73 kB / 246,32 kB gzip**, porque el gate importaba estáticamente el artwork 3D aunque la sesión ya hubiese completado la intro.
 
-No se propone una limpieza agresiva de CSS en la primera pasada porque la V2 ya ha pasado muchas fases responsive y visuales; eliminar reglas sin trazabilidad podría introducir regresiones difíciles de detectar.
+## 3. 9.7B · Entrada premium ✅
 
-Primero debe reducirse JavaScript mediante separación de rutas. Después se medirá de nuevo el CSS antes de decidir si compensa consolidar estilos históricos.
+Cierre técnico: `b84d5a2f58e1f0dc73f06f30a0eec51848784198`.
 
-## 4. Recursos externos detectados
+### Cambio
 
-El CSS compilado mantiene:
+`IntroGatePage` deja de importar estáticamente Home y `IntroOrbitArtwork`.
 
-- Google Fonts para `DM Sans` + `Playfair Display`;
-- Google Fonts para `Montserrat` + `Playball`;
-- varias URLs de Unsplash usadas como recursos/fallbacks visuales.
+Ahora:
 
-No se eliminan todavía. Deben revisarse después del code-splitting para distinguir recursos de la dirección visual actual frente a restos/fallbacks históricos.
+- `HomePage` es lazy e independiente;
+- `IntroPage` es lazy e independiente;
+- Three.js / React Three Fiber permanecen dentro de `IntroPage`;
+- el gate usa un lockup CSS ligero para estado de carga/error;
+- la sesión se sigue controlando mediante `sessionStorage`;
+- el componente 3D normal no cambia.
 
-## 5. Orden de optimización aprobado para 9.7
+### Bundle medido
 
-### 9.7A · Lazy routes — P1
+Antes de 9.7B:
 
-Convertir páginas/rutas a `React.lazy()` + `Suspense` para obtener chunks independientes por experiencia:
+- `IntroGatePage`: **906,73 kB / 246,32 kB gzip**.
 
-1. entrada/Home pública;
-2. resto de web pública;
-3. Campus Alumno;
-4. Profesor;
-5. Administración;
-6. Test de nivel / herramientas pesadas cuando aporte separación adicional.
+Después de 9.7B:
 
-Objetivo: que un visitante no descargue código de Admin/Profesor/Campus antes de necesitarlo.
+- `IntroGatePage`: **3,55 kB / 1,34 kB gzip**;
+- `HomePage`: **20,16 kB / 5,29 kB gzip**;
+- `IntroPage` 3D: **885,95 kB / 240,73 kB gzip**;
+- JS común: **200,74 kB / 62,56 kB gzip**.
 
-### 9.7B · Entrada premium — P1/P2
+El peso 3D no se ha escondido ni recortado: queda **aislado y se descarga solo cuando la sesión necesita mostrar la entrada**.
 
-Después de medir 9.7A:
+### Contrato visual preservado
 
-- comprobar cuánto pesa específicamente la entrada 3D;
-- mantener fallback estático y `prefers-reduced-motion`;
-- diferir capas Three.js que no sean necesarias para el primer frame si el ahorro es material;
-- no degradar el globo rosa, avión 3D ni transición aprobada por ahorrar unos pocos kB.
+No se modificaron:
 
-### 9.7C · CSS y fuentes — P2
+- Tierra/esfera rosa giratoria;
+- cartografía detallada y fallback local;
+- océano transparente/blanco;
+- logo fijo;
+- avión 3D orbitando;
+- transición de entrada;
+- reduced motion del globo/intro.
 
-Solo con la candidata visual estable:
+### Validación E2E
 
-- localizar hojas históricas totalmente superseded;
-- comprobar si `Montserrat` / `Playball` siguen siendo necesarias;
-- valorar preload/preconnect o alojamiento local de fuentes según la política de producción;
-- evitar un refactor masivo de CSS sin beneficio medido.
+`intro-performance-phase9b.spec.ts` comprueba:
 
-### 9.7D · Fotografías y fallbacks — P2
+1. primera visita sin flag de sesión;
+2. marca visible;
+3. canvas real `.intro-orbit-globe-canvas canvas` visible;
+4. botón `ENTRAR` visible;
+5. transición a Home;
+6. `sessionStorage` marcado como completado;
+7. recarga de `/` en la misma sesión;
+8. Home visible sin canvas de intro;
+9. recursos de esa recarga **sin solicitud de `IntroPage-*.js`**.
 
-- inventariar Unsplash hardcoded restantes;
-- preferir CMS/fotografía real ya administrable cuando exista;
-- evitar descargar imágenes que no estén en viewport;
-- preservar `loading=lazy`, tamaños responsivos y encuadre editorial.
+Matriz sobre `b84d5a2f58e1f0dc73f06f30a0eec51848784198`:
 
-## 6. Guardias obligatorias
+- V3 Frontend CI ✅
+- V3 PocketBase CI ✅
+- V3 Infrastructure CI ✅
+- V3 Observability CI ✅
+- V3 Backup Restore CI ✅
+- V3 Zoom Classroom CI ✅
+- V3 E2E CI ✅
+
+## 4. CSS y fuentes
+
+El CSS global carga `DM Sans` + `Playfair Display`, que forman parte del lenguaje editorial actual.
+
+La intro carga además `Montserrat` + `Playball`. La revisión confirma que **sí son usadas por la entrada premium aprobada**, por lo que no deben eliminarse.
+
+Sin embargo, tras 9.7B el gate ligero todavía importa CSS completo de la intro. Ese CSS contiene la petición de Montserrat/Playball, de modo que una sesión que salta directamente a Home puede solicitar fuentes exclusivas de una intro que no va a mostrar.
+
+Esto define el alcance seguro de 9.7C.
+
+## 5. 9.7C · CSS + fuentes — SIGUIENTE
+
+Alcance aprobado:
+
+- separar el CSS mínimo del gate/fallback del CSS completo de la intro;
+- mover `premium-intro.css` + `intro-orbit-refresh.css` al camino lazy de `IntroPage` únicamente;
+- mantener Montserrat + Playball exactamente para la intro real;
+- impedir que una sesión completada las cargue solo por visitar Home;
+- medir de nuevo CSS/chunks;
+- añadir guardia E2E para primera visita y returning session.
+
+No hacer todavía:
+
+- refactor masivo de las numerosas hojas históricas;
+- eliminación de reglas visuales por nombre;
+- cambio de tipografía de la intro;
+- cambio del sistema visual del Campus o la web pública.
+
+## 6. 9.7D · Fotografías y fallbacks
+
+Pendiente después de 9.7C:
+
+- inventariar recursos externos/hardcoded restantes;
+- preferir CMS/fotografía real cuando exista;
+- comprobar lazy loading y tamaños;
+- no sustituir fotografía o composición editorial solo para ahorrar unos pocos kB.
+
+## 7. Guardias obligatorias
 
 Cada optimización debe mantener:
 
 - Frontend CI ✅;
 - PocketBase CI ✅ cuando aplique;
+- Infrastructure / Observability / Backup / Zoom CI ✅;
 - E2E CI ✅;
 - Intro funcional;
 - 1440 / 1180 / 820 / 390 sin overflow;
 - teclado y foco visible;
 - `prefers-reduced-motion`;
 - rutas privadas protegidas;
-- ningún cambio de datos, CMS, roles o permisos.
-
-## 7. Criterio de éxito de 9.7A
-
-No se fija un número arbitrario de Lighthouse antes de desplegar en hardware real. Para la primera optimización se exige:
-
-- múltiples chunks en lugar de un único JS de ~1,66 MB;
-- caída material del JS descargado por una ruta pública normal;
-- Admin/Profesor/Campus fuera del chunk inicial público;
-- ausencia de regresiones funcionales y visuales.
+- ningún cambio de datos, CMS, roles o permisos;
+- PR #11 Draft y `main` intacta.
 
 ## Siguiente acción
 
-Cuando 9.6A Aula Zoom embebida tenga su E2E verde, implementar exclusivamente **9.7A · lazy routes**, volver a medir el artefacto de CI y comparar contra este baseline antes de tocar entrada, CSS, fuentes o imágenes.
+Implementar exclusivamente **9.7C · aislamiento de CSS/fuentes de la intro**, medir el artefacto y volver a exigir 7/7 workflows verdes antes de abrir 9.7D.
