@@ -2,7 +2,7 @@
 
 ## Estado
 
-**9.7A ✅ · 9.7B ✅ · 9.7C SIGUIENTE**
+**9.7A ✅ · 9.7B ✅ · 9.7C IMPLEMENTADA / VALIDACIÓN FINAL · 9.7D AUDITORÍA SIN CAMBIOS DE PRODUCTO**
 
 Esta fase optimiza carga sin degradar la dirección visual aprobada. El globo rosa, avión 3D, fotografía, tipografía y composición no se eliminan para perseguir métricas marginales.
 
@@ -102,44 +102,94 @@ Matriz sobre `b84d5a2f58e1f0dc73f06f30a0eec51848784198`:
 - V3 Zoom Classroom CI ✅
 - V3 E2E CI ✅
 
-## 4. CSS y fuentes
+## 4. 9.7C · CSS + fuentes
 
-El CSS global carga `DM Sans` + `Playfair Display`, que forman parte del lenguaje editorial actual.
+Candidato técnico de aplicación: `c6302ccfe711a36a1dc72af4e2e5cf81156eaf98`.
+
+### Hallazgo
+
+El CSS global carga `DM Sans` + `Playfair Display`, parte del lenguaje editorial actual.
 
 La intro carga además `Montserrat` + `Playball`. La revisión confirma que **sí son usadas por la entrada premium aprobada**, por lo que no deben eliminarse.
 
-Sin embargo, tras 9.7B el gate ligero todavía importa CSS completo de la intro. Ese CSS contiene la petición de Montserrat/Playball, de modo que una sesión que salta directamente a Home puede solicitar fuentes exclusivas de una intro que no va a mostrar.
+Tras 9.7B el gate ligero aún importaba el CSS completo de la intro. Eso permitía que una sesión que saltaba directamente a Home solicitase recursos tipográficos exclusivos de una intro que no iba a mostrar.
 
-Esto define el alcance seguro de 9.7C.
+### Implementación
 
-## 5. 9.7C · CSS + fuentes — SIGUIENTE
+- `IntroGatePage` importa únicamente `intro-gate-light.css`;
+- el fallback/loading usa DM Sans + Playfair ya disponibles;
+- `premium-intro.css` + `intro-orbit-refresh.css` permanecen dentro del camino lazy de `IntroPage`;
+- Montserrat + Playball permanecen exactamente en la intro real;
+- globo, avión, cartografía y transición real no se modifican.
 
-Alcance aprobado:
+### Medición
 
-- separar el CSS mínimo del gate/fallback del CSS completo de la intro;
-- mover `premium-intro.css` + `intro-orbit-refresh.css` al camino lazy de `IntroPage` únicamente;
-- mantener Montserrat + Playball exactamente para la intro real;
-- impedir que una sesión completada las cargue solo por visitar Home;
-- medir de nuevo CSS/chunks;
-- añadir guardia E2E para primera visita y returning session.
+Antes de 9.7C:
 
-No hacer todavía:
+- CSS del gate: **9,97 kB / 2,72 kB gzip**.
 
-- refactor masivo de las numerosas hojas históricas;
-- eliminación de reglas visuales por nombre;
-- cambio de tipografía de la intro;
-- cambio del sistema visual del Campus o la web pública.
+Después de 9.7C:
 
-## 6. 9.7D · Fotografías y fallbacks
+- `IntroGatePage.css`: **4,08 kB / 1,46 kB gzip**;
+- `IntroPage.css` completo: **11,04 kB / 2,90 kB gzip**, solo en la ruta lazy de intro;
+- gate JS: **3,27 kB / 1,23 kB gzip**;
+- Home JS: **20,16 kB / 5,29 kB gzip**;
+- Intro 3D JS: **885,91 kB / 240,72 kB gzip**;
+- JS común: **200,74 kB / 62,57 kB gzip**.
 
-Pendiente después de 9.7C:
+### E2E
 
-- inventariar recursos externos/hardcoded restantes;
-- preferir CMS/fotografía real cuando exista;
-- comprobar lazy loading y tamaños;
-- no sustituir fotografía o composición editorial solo para ahorrar unos pocos kB.
+La returning session está verificada para que no solicite:
 
-## 7. Guardias obligatorias
+- `IntroPage-*.js`;
+- `IntroPage-*.css`;
+- Google Fonts con Montserrat o Playball.
+
+La primera visita sigue conservando el canvas 3D real y el botón `ENTRAR`.
+
+Validaciones que ya han terminado sobre `c6302ccf…`:
+
+- Frontend ✅
+- PocketBase ✅
+- Observability ✅
+- Backup Restore ✅
+- E2E ✅
+
+Infrastructure y Zoom Classroom quedaron anormalmente largos dentro de pasos de instalación/validación Nginx del runner. No hay indicio de regresión de producto; se mantiene la regla de no declarar cierre 7/7 hasta disponer de una matriz completa limpia.
+
+## 5. 9.7D · Fotografías y fallbacks — auditoría
+
+La revisión confirma que la V2 ya sigue, en general, el orden visual correcto:
+
+1. **fotografía/portada publicada desde Admin/CMS**;
+2. fotografía editorial de respaldo cuando no existe material administrado;
+3. SVG local solo como último salvavidas cuando corresponde.
+
+### Programas
+
+`ProgramsPage` prioriza explícitamente:
+
+`coverUrl || adminFallbackUrl || editorialPhoto`
+
+con SVG local como capa final. No debe invertirse este orden: reemplazar fotografía real por ilustración solo para ahorrar peticiones degradaría la dirección visual aprobada.
+
+### Home
+
+Home resuelve imágenes de hero, etapas, método, journal, profesores y sobre nosotros mediante `media_library`/CMS cuando están configuradas. `photography-pass-v2.css` conserva fotografías editoriales remotas como respaldo cuando el CMS no aporta imagen.
+
+### Profesores / Sobre nosotros / Tarifas
+
+Estas páginas consultan `getPublishedHomeVisualUrl(...)`; las imágenes administradas tienen prioridad. En ausencia de foto CMS existe una composición local/ilustrada y/o fotografía editorial de respaldo según la capa visual de cada página.
+
+### Decisión 9.7D
+
+No se justifica un cambio automático de código que sustituya fotografías editoriales por SVG locales. La mejora correcta para producción es **cargar fotografías reales de la academia desde Admin/CMS**; así se reduce la dependencia de fallbacks externos sin perder humanidad ni calidad.
+
+Tampoco se introduce ahora un IntersectionObserver específico para backgrounds CSS: añadir lógica de lazy-loading propia a múltiples heroes y tarjetas tendría más riesgo de regresión visual que beneficio medido en esta etapa.
+
+Por tanto, salvo que una validación real de red detecte una carga problemática concreta, **9.7D debe cerrarse como auditoría sin cambio de producto**.
+
+## 6. Guardias obligatorias
 
 Cada optimización debe mantener:
 
@@ -157,4 +207,4 @@ Cada optimización debe mantener:
 
 ## Siguiente acción
 
-Implementar exclusivamente **9.7C · aislamiento de CSS/fuentes de la intro**, medir el artefacto y volver a exigir 7/7 workflows verdes antes de abrir 9.7D.
+Obtener una matriz 7/7 limpia para cerrar 9.7C. Después cerrar formalmente 9.7D como auditoría de fotografías/fallbacks sin degradar el diseño y pasar a **9.8 · despliegue/piloto**, manteniendo como pendientes externos las credenciales reales, Cloudflare real y backup físico.
