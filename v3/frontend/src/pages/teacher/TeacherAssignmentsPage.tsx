@@ -20,15 +20,38 @@ import { teacherNav } from './teacherNav'
 type TargetOption = { key: string; type: TeacherTarget['type']; id: string; label: string }
 
 function formatDue(value: string): string {
-  if (!value) return 'Sin fecha'
+  if (!value) return 'Sin fecha límite'
   const date = new Date(value)
-  return Number.isNaN(date.getTime()) ? 'Sin fecha' : new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }).format(date)
+  return Number.isNaN(date.getTime()) ? 'Sin fecha límite' : new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }).format(date)
 }
 
 function statusLabel(status: AssignmentRecord['status']): string {
   if (status === 'DRAFT') return 'Borrador'
   if (status === 'CLOSED') return 'Cerrada'
   return 'Publicada'
+}
+
+function assignmentAudience(record: AssignmentRecord, groups: TeacherGroupRecord[], enrollments: TeacherEnrollmentRecord[]): string {
+  if (record.group) {
+    const group = groups.find((item) => item.id === record.group)
+    return group ? `Grupo · ${group.name}` : 'Grupo'
+  }
+
+  if (record.student) {
+    const enrollment = enrollments.find((item) => item.student === record.student)
+    const student = enrollment?.expand?.student
+    const name = student ? [student.name, student.surname].filter(Boolean).join(' ') : ''
+    return name ? `Alumno · ${name}` : 'Alumno'
+  }
+
+  return 'Destino académico'
+}
+
+function dueTone(record: AssignmentRecord): 'none' | 'future' | 'past' {
+  if (!record.due_at || record.status === 'CLOSED') return 'none'
+  const date = new Date(record.due_at)
+  if (Number.isNaN(date.getTime())) return 'none'
+  return date.getTime() < Date.now() ? 'past' : 'future'
 }
 
 export default function TeacherAssignmentsPage() {
@@ -185,28 +208,48 @@ export default function TeacherAssignmentsPage() {
 
   return (
     <DashboardShell role="Profesor" name="Profesor" nav={[...teacherNav]}>
-      <div className="dashboard-content teacher-portal-page">
-        <header className="teacher-page-heading"><div><span className="eyebrow">ACTIVIDADES</span><h2>Tareas</h2><p>Crea actividades para tus grupos o para un alumno concreto de tus grupos.</p></div><span className="status success">Ámbito protegido</span></header>
+      <div className="dashboard-content teacher-portal-page teacher-assignments-page">
+        <header className="teacher-page-heading">
+          <div><span className="eyebrow">ACTIVIDADES</span><h2>Tareas</h2><p>Organiza el trabajo de tus grupos, prepara borradores y publica actividades con instrucciones y fechas claras.</p></div>
+          <span className="status success">Ámbito protegido</span>
+        </header>
         {loading && <div className="cms-notice" role="status">Cargando tareas…</div>}
         {message && <div className="cms-notice success-notice" role="status">{message}</div>}
         {error && <div className="cms-notice auth-error" role="alert">{error}</div>}
-        <div className="teacher-authoring-grid">
-          <form className="panel teacher-authoring-form" onSubmit={submit}>
-            <div className="panel-heading"><div><span className="eyebrow">NUEVA TAREA</span><h3>Crear actividad</h3></div></div>
+        <div className="teacher-authoring-grid teacher-assignment-workspace">
+          <form className="panel teacher-authoring-form teacher-assignment-form" onSubmit={submit}>
+            <div className="panel-heading"><div><span className="eyebrow">PLANIFICAR</span><h3>Nueva actividad</h3></div></div>
+            <p className="teacher-assignment-form-intro">Define el destinatario y las instrucciones. Puedes dejar la actividad en borrador hasta que esté lista para el alumno.</p>
             {noTargets && <PortalEmptyState compact title="Sin destinos disponibles" description="Necesitas al menos un grupo asignado o un alumno activo para crear una tarea." />}
             <label className="field-stack"><span>Destino</span><select value={targetKey} onChange={(e) => setTargetKey(e.target.value)} disabled={noTargets}>{noTargets && <option value="">Sin destinos disponibles</option>}{targets.map((target) => <option key={target.key} value={target.key}>{target.label}</option>)}</select></label>
             <label className="field-stack"><span>Título</span><input value={title} onChange={(e) => setTitle(e.target.value)} required disabled={noTargets} /></label>
             <label className="field-stack"><span>Instrucciones</span><textarea rows={5} value={description} onChange={(e) => setDescription(e.target.value)} disabled={noTargets} /></label>
             <label className="field-stack"><span>Fecha límite</span><input name="due_at" type="datetime-local" value={dueAt} onChange={(e) => setDueAt(e.target.value)} disabled={noTargets} /></label>
-            <label className="upload-dropzone"><input type="file" accept=".pdf,.doc,.docx,.mp3,.jpg,.jpeg,.png,.webp" onChange={chooseAttachment} disabled={noTargets} /><strong>{attachment?.name || 'Adjunto opcional'}</strong><small>Máximo 20 MB</small></label>
-            <label className="teacher-check"><input type="checkbox" checked={draft} onChange={(e) => setDraft(e.target.checked)} disabled={noTargets} /><span>Guardar como borrador</span></label>
+            <label className="upload-dropzone teacher-assignment-dropzone"><input type="file" accept=".pdf,.doc,.docx,.mp3,.jpg,.jpeg,.png,.webp" onChange={chooseAttachment} disabled={noTargets} /><strong>{attachment?.name || 'Adjunto opcional'}</strong><small>Material de apoyo · máximo 20 MB</small></label>
+            <label className="teacher-check teacher-assignment-draft"><input type="checkbox" checked={draft} onChange={(e) => setDraft(e.target.checked)} disabled={noTargets} /><span>Guardar como borrador antes de publicar</span></label>
             <button className="button button-primary" type="submit" disabled={saving || noTargets}>{saving ? 'Guardando…' : draft ? 'Guardar borrador' : 'Publicar tarea'}</button>
           </form>
-          <section className="panel teacher-record-list">
-            <div className="panel-heading"><div><span className="eyebrow">MIS TAREAS</span><h3>{assignments.length} actividades</h3></div></div>
-            <div>
-              {assignments.map((record) => <article key={record.id}><span className="teacher-record-icon">T</span><div><strong>{record.title}</strong><small>{statusLabel(record.status)} · {formatDue(record.due_at)}</small></div><div className="teacher-record-actions">{record.attachment && <button type="button" onClick={() => void openAttachment(record)}>Adjunto</button>}<button type="button" onClick={() => void toggleClosed(record)}>{record.status === 'CLOSED' ? 'Reabrir' : 'Cerrar'}</button>{pendingRemoval?.id === record.id ? <><button type="button" onClick={() => setPendingRemoval(null)}>Cancelar</button><button type="button" className="button-danger" onClick={() => void remove(record)}>Confirmar eliminación</button></> : <button type="button" onClick={() => setPendingRemoval(record)}>Eliminar</button>}</div></article>)}
-              {!loading && assignments.length === 0 && <PortalEmptyState compact title="Todavía no has creado tareas" description="Las actividades que prepares aparecerán aquí con su estado y fecha límite." />}
+          <section className="panel teacher-record-list teacher-assignment-plan">
+            <div className="panel-heading"><div><span className="eyebrow">PLAN DE TRABAJO</span><h3>{assignments.length} actividades</h3></div></div>
+            <div className="teacher-assignment-list">
+              {assignments.map((record) => {
+                const tone = dueTone(record)
+                return <article className={`teacher-assignment-record assignment-${record.status.toLowerCase()}`} key={record.id}>
+                  <span className="teacher-record-icon">T</span>
+                  <div className="teacher-assignment-copy">
+                    <div className="teacher-assignment-title-row"><strong>{record.title}</strong><span className={`teacher-assignment-status status-${record.status.toLowerCase()}`}>{statusLabel(record.status)}</span></div>
+                    <small className="teacher-assignment-audience">{assignmentAudience(record, groups, enrollments)}</small>
+                    <div className={`teacher-assignment-due due-${tone}`}><span>Fecha límite</span><strong>{formatDue(record.due_at)}</strong></div>
+                    {record.description && <p>{record.description}</p>}
+                  </div>
+                  <div className="teacher-record-actions">
+                    {record.attachment && <button type="button" onClick={() => void openAttachment(record)}>Adjunto</button>}
+                    {record.status !== 'DRAFT' && <button type="button" onClick={() => void toggleClosed(record)}>{record.status === 'CLOSED' ? 'Reabrir' : 'Cerrar'}</button>}
+                    {pendingRemoval?.id === record.id ? <><button type="button" onClick={() => setPendingRemoval(null)}>Cancelar</button><button type="button" className="button-danger" onClick={() => void remove(record)}>Confirmar eliminación</button></> : <button type="button" onClick={() => setPendingRemoval(record)}>Eliminar</button>}
+                  </div>
+                </article>
+              })}
+              {!loading && assignments.length === 0 && <PortalEmptyState compact title="Todavía no has creado tareas" description="Las actividades que prepares aparecerán aquí con su estado, destinatario y fecha límite." />}
             </div>
           </section>
         </div>
