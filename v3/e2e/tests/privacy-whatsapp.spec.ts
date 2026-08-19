@@ -6,6 +6,14 @@ function requiredEnv(name: string): string {
   return value
 }
 
+async function loginAdmin(page: import('@playwright/test').Page) {
+  await page.goto('/acceso')
+  await page.getByLabel('Email').fill(requiredEnv('E2E_ADMIN_EMAIL'))
+  await page.getByLabel('Contraseña').fill(requiredEnv('E2E_ADMIN_PASSWORD'))
+  await page.getByRole('button', { name: 'Entrar' }).click()
+  await expect(page).toHaveURL(/\/admin$/)
+}
+
 test('rechazar cookies opcionales mantiene Google Maps sin cargar', async ({ page }) => {
   await page.goto('/contacto')
 
@@ -40,12 +48,58 @@ test('el footer permite reabrir la configuración de cookies', async ({ page }) 
   await expect(page.getByText('Configura tus preferencias.')).toBeVisible()
 })
 
-test('WhatsApp usa número español internacional y mensaje administrable', async ({ page }) => {
+test('15A: WhatsApp usa número normalizado, mensaje administrable y botón móvil accesible', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/programas')
 
   const whatsapp = page.locator('.public-whatsapp-button')
   await expect(whatsapp).toBeVisible()
   await expect(whatsapp).toHaveAttribute('href', /https:\/\/wa\.me\/34618218187\?text=Hola%20desde%20E2E/)
+  await expect(whatsapp).toHaveAttribute('aria-label', /Escribir a .+ por WhatsApp/)
+  await expect(whatsapp).toHaveAttribute('rel', /noopener noreferrer/)
+
+  const box = await whatsapp.boundingBox()
+  expect(box).not.toBeNull()
+  expect(box!.width).toBeGreaterThanOrEqual(52)
+  expect(box!.height).toBeGreaterThanOrEqual(52)
+
+  await whatsapp.focus()
+  const outline = await whatsapp.evaluate((element) => getComputedStyle(element).outlineStyle)
+  expect(outline).not.toBe('none')
+
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
+  expect(overflow).toBeLessThanOrEqual(1)
+})
+
+test('15A: Admin valida, previsualiza y normaliza WhatsApp antes de publicarlo', async ({ page }) => {
+  await loginAdmin(page)
+  await page.goto('/admin/configuracion')
+
+  const whatsappInput = page.getByPlaceholder('618 218 187 o +34 618 218 187')
+  const messageInput = page.getByLabel('Mensaje inicial de WhatsApp')
+  const enabledToggle = page.getByRole('checkbox', { name: /Botón flotante de WhatsApp/ })
+
+  await whatsappInput.fill('618 218 187')
+  await messageInput.fill('Hola desde E2E')
+
+  const testLink = page.getByRole('link', { name: /Probar WhatsApp/ })
+  await expect(testLink).toBeVisible()
+  await expect(testLink).toHaveAttribute('href', 'https://wa.me/34618218187?text=Hola%20desde%20E2E')
+  await expect(page.locator('.settings-whatsapp-preview')).toContainText('+34618218187')
+
+  await enabledToggle.uncheck()
+  await expect(page.locator('.settings-whatsapp-preview')).toContainText('Botón de WhatsApp desactivado')
+  await enabledToggle.check()
+
+  await whatsappInput.fill('12345')
+  await page.getByRole('button', { name: 'Guardar configuración' }).click()
+  await expect(page.getByRole('alert')).toContainText('Introduce un número de WhatsApp válido')
+
+  await whatsappInput.fill('618 218 187')
+  await messageInput.fill('Hola desde E2E')
+  await page.getByRole('button', { name: 'Guardar configuración' }).click()
+  await expect(page.getByRole('status')).toContainText('Configuración general guardada correctamente.')
+  await expect(whatsappInput).toHaveValue('34618218187')
 })
 
 test('contacto muestra información básica de privacidad junto al formulario', async ({ page }) => {
@@ -78,11 +132,7 @@ test('las rutas legales públicas contienen información estructurada y conserva
 })
 
 test('ADMIN configura identidad legal y se publica sin tocar código', async ({ page }) => {
-  await page.goto('/acceso')
-  await page.getByLabel('Email').fill(requiredEnv('E2E_ADMIN_EMAIL'))
-  await page.getByLabel('Contraseña').fill(requiredEnv('E2E_ADMIN_PASSWORD'))
-  await page.getByRole('button', { name: 'Entrar' }).click()
-  await expect(page).toHaveURL(/\/admin$/)
+  await loginAdmin(page)
 
   await page.goto('/admin/configuracion')
   await page.getByLabel('Titular / responsable legal').fill('E2E Academia Responsable')
