@@ -1,0 +1,214 @@
+/* FASE 10.7 · RESPONSIVE + ACCESIBILIDAD + COHERENCIA VISUAL
+   Navegación exclusiva de STUDENT. Profesor y Admin conservan su shell actual. */
+
+.dashboard-shell-student .dashboard-nav a:focus-visible{
+  outline:3px solid rgba(234,125,166,.52);
+  outline-offset:2px;
+}
+
+/* Tablet: evitar el rail histórico de 82 px, que no estaba pensado para NavLink con texto. */
+@media (max-width:1050px) and (min-width:761px){
+  .dashboard-shell-student{
+    grid-template-columns:200px minmax(0,1fr);
+  }
+
+  .dashboard-shell-student .dashboard-sidebar{
+    padding-inline:14px;
+  }
+
+  .dashboard-shell-student .dashboard-brand{
+    justify-content:flex-start;
+    gap:9px;
+    padding-inline:4px;
+  }
+
+  .dashboard-shell-student .dashboard-brand>span:last-child{
+    min-width:0;
+    font-size:inherit;
+  }
+
+  .dashboard-shell-student .dashboard-brand strong{
+    display:block;
+    overflow:hidden;
+    max-width:122px;
+    font-size:.88rem;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
+  .dashboard-shell-student .dashboard-brand small{
+    display:block;
+    font-size:.62rem;
+  }
+
+  .dashboard-shell-student .dashboard-nav{
+    gap:4px;
+    padding-top:19px;
+  }
+
+  .dashboard-shell-student .dashboard-nav a{
+    min-height:42px;
+    padding:0 11px;
+    font-size:.78rem;
+    white-space:nowrap;
+  }
+
+  .dashboard-shell-student .dashboard-nav .nav-dot{
+    flex:0 0 auto;
+  }
+}
+
+/* Móvil: cabecera de academia + carril horizontal de secciones, siempre disponible. */
+@media (max-width:760px){
+  .dashboard-shell-student{
+    display:block;
+  }
+
+  .dashboard-shell-student .dashboard-sidebar{
+    position:sticky;
+    top:0;
+    z-index:60;
+    display:flex;
+    flex-direction:column;
+    align-items:stretch;
+    width:100%;
+    height:auto;
+    padding:10px 12px 9px;
+    overflow:hidden;
+    background:linear-gradient(180deg,#4b2438,#2c1b25);
+    box-shadow:0 10px 30px rgba(39,22,31,.14);
+  }
+
+  .dashboard-shell-student .dashboard-brand{
+    justify-content:flex-start;
+    width:max-content;
+    max-width:100%;
+    gap:9px;
+    padding:0 3px 8px;
+    border:0;
+  }
+
+  .dashboard-shell-student .dashboard-brand .brand-logo-image,
+  .dashboard-shell-student .dashboard-brand .brand-mark{
+    width:36px;
+    height:36px;
+  }
+
+  .dashboard-shell-student .dashboard-brand>span:last-child{
+    display:grid;
+    min-width:0;
+    font-size:inherit;
+  }
+
+  .dashboard-shell-student .dashboard-brand strong{
+    overflow:hidden;
+    max-width:min(72vw,300px);
+    color:#fff;
+    font-size:.9rem;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
+  .dashboard-shell-student .dashboard-brand small{
+    display:block;
+    color:#cfb9c3;
+    font-size:.61rem;
+  }
+
+  .dashboard-shell-student .dashboard-nav{
+    display:flex;
+    width:100%;
+    min-width:0;
+    gap:6px;
+    padding:2px 0 1px;
+    overflow-x:auto;
+    overflow-y:hidden;
+    overscroll-behavior-x:contain;
+    scrollbar-width:none;
+    -webkit-overflow-scrolling:touch;
+  }
+
+  .dashboard-shell-student .dashboard-nav::-webkit-scrollbar{display:none}
+
+  .dashboard-shell-student .dashboard-nav a{
+    flex:0 0 auto;
+    width:auto;
+    min-height:40px;
+    padding:0 12px;
+    border:1px solid rgba(255,255,255,.075);
+    border-radius:999px;
+    color:#d8c6ce;
+    background:rgba(255,255,255,.045);
+    font-size:.74rem;
+    font-weight:750;
+    white-space:nowrap;
+    scroll-snap-align:start;
+  }
+
+  .dashboard-shell-student .dashboard-nav a:hover{
+    color:#fff;
+    background:rgba(255,255,255,.08);
+    transform:none;
+  }
+
+  .dashboard-shell-student .dashboard-nav a.active{
+    color:#fff;
+    border-color:rgba(239,144,180,.23);
+    background:linear-gradient(110deg,rgba(211,67,117,.35),rgba(255,255,255,.07));
+  }
+
+  .dashboard-shell-student .dashboard-nav .nav-dot{
+    width:6px;
+    height:6px;
+    flex:0 0 auto;
+  }
+
+  .dashboard-shell-student .sidebar-footer{display:none}
+
+  .dashboard-shell-student .dashboard-topbar{
+    position:static;
+    min-height:auto;
+    padding:15px 17px;
+    gap:12px;
+    background:rgba(255,252,252,.96);
+    backdrop-filter:none;
+  }
+
+  .dashboard-shell-student .dashboard-topbar .eyebrow{
+    font-size:.62rem;
+  }
+
+  .dashboard-shell-student .dashboard-topbar h1{
+    margin-top:2px;
+    font-size:1.12rem;
+  }
+
+  .dashboard-shell-student .session-actions{
+    gap:8px;
+  }
+
+  .dashboard-shell-student .user-chip>span{
+    width:34px;
+    height:34px;
+  }
+
+  .dashboard-shell-student .session-logout{
+    min-height:38px;
+    padding-inline:11px;
+    border-radius:999px;
+    font-size:.7rem;
+  }
+}
+
+@media (max-width:430px){
+  .dashboard-shell-student .dashboard-sidebar{padding-inline:10px}
+  .dashboard-shell-student .dashboard-nav a{min-height:42px;padding-inline:11px}
+  .dashboard-shell-student .dashboard-topbar{align-items:flex-start}
+  .dashboard-shell-student .dashboard-topbar h1{max-width:210px;line-height:1.2}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .dashboard-shell-student .dashboard-nav a{
+    transition:none;
+  }
+}
