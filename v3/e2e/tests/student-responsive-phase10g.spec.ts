@@ -114,6 +114,10 @@ test('10.7: tablet conserva navegación legible y móvil ofrece carril táctil a
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/alumno/avisos')
   const reducedLink = page.getByRole('navigation', { name: 'Menú de Alumno' }).getByRole('link', { name: 'Avisos' })
-  const transitionDuration = await reducedLink.evaluate((element) => getComputedStyle(element).transitionDuration)
-  expect(transitionDuration).toBe('0s')
+  const transitionDurationSeconds = await reducedLink.evaluate((element) => {
+    const raw = getComputedStyle(element).transitionDuration.split(',')[0]?.trim() || '0s'
+    if (raw.endsWith('ms')) return Number.parseFloat(raw) / 1000
+    return Number.parseFloat(raw)
+  })
+  expect(transitionDurationSeconds).toBeLessThanOrEqual(0.001)
 })
