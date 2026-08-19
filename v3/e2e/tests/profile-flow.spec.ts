@@ -38,13 +38,29 @@ test('STUDENT actualiza teléfono y conserva email/rol protegidos', async ({ pag
   await expect(page).toHaveURL(/\/alumno$/)
 })
 
-test('TEACHER dispone de perfil propio editable', async ({ page }) => {
+test('TEACHER edita su perfil, persiste el contacto y conserva datos protegidos', async ({ page }) => {
   await login(page, requiredEnv('E2E_TEACHER_EMAIL'), requiredEnv('E2E_TEACHER_PASSWORD'), /\/profesor$/)
 
   const nav = page.getByRole('navigation', { name: 'Menú de Profesor' })
   await nav.getByRole('link', { name: 'Mi perfil' }).click()
   await expect(page).toHaveURL(/\/profesor\/perfil$/)
   await expect(page.getByRole('heading', { name: 'Tu información personal' })).toBeVisible()
+
+  const email = page.getByLabel('Email')
+  await expect(email).toHaveValue(requiredEnv('E2E_TEACHER_EMAIL'))
+  await expect(email).toHaveAttribute('readonly', '')
+  await expect(page.getByText('Datos protegidos')).toBeVisible()
+
+  await page.getByLabel('Teléfono').fill('633333333')
+  await page.getByRole('button', { name: 'Guardar cambios' }).click()
+  await expect(page.locator('.cms-notice.success-notice').filter({ hasText: 'Perfil actualizado correctamente.' })).toBeVisible()
+
+  await page.reload()
+  await expect(page.getByLabel('Teléfono')).toHaveValue('633333333')
   await expect(page.getByLabel('Email')).toHaveValue(requiredEnv('E2E_TEACHER_EMAIL'))
-  await expect(page.getByLabel('Email')).toHaveAttribute('readonly', '')
+  await expect(page.locator('.account-profile-teacher11')).toBeVisible()
+
+  await page.setViewportSize({ width: 390, height: 844 })
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
+  expect(overflow).toBeLessThanOrEqual(1)
 })
