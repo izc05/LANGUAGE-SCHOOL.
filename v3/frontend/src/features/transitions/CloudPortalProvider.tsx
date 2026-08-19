@@ -2,11 +2,13 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useRef,
   useState,
   type ComponentType,
   type PropsWithChildren,
 } from 'react'
+import { useNavigate } from 'react-router'
 
 export const CLOUD_PORTAL_WHITEOUT_MS = 2650
 export const CLOUD_PORTAL_DURATION_MS = 3050
@@ -30,7 +32,12 @@ function prefersReducedMotion(): boolean {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
 
+function isStudentClassroomPath(pathname: string): boolean {
+  return /^\/alumno\/aula\/[^/]+\/?$/.test(pathname)
+}
+
 export function CloudPortalProvider({ children }: PropsWithChildren) {
+  const navigate = useNavigate()
   const [TransitionComponent, setTransitionComponent] = useState<ComponentType<CloudPortalTransitionProps> | null>(null)
   const [active, setActive] = useState(false)
   const [preparing, setPreparing] = useState(false)
@@ -80,6 +87,42 @@ export function CloudPortalProvider({ children }: PropsWithChildren) {
       return true
     }
   }, [runActionImmediately])
+
+  useEffect(() => {
+    const handleInternalClassroomLink = (event: MouseEvent) => {
+      if (
+        event.defaultPrevented ||
+        event.button !== 0 ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.altKey
+      ) return
+
+      const target = event.target
+      if (!(target instanceof Element)) return
+      const anchor = target.closest('a[href]')
+      if (!(anchor instanceof HTMLAnchorElement)) return
+      if ((anchor.target && anchor.target !== '_self') || anchor.hasAttribute('download')) return
+
+      let url: URL
+      try {
+        url = new URL(anchor.href, window.location.href)
+      } catch {
+        return
+      }
+
+      if (url.origin !== window.location.origin || !isStudentClassroomPath(url.pathname)) return
+
+      event.preventDefault()
+      if (inFlightRef.current) return
+      const destination = `${url.pathname}${url.search}${url.hash}`
+      void startCloudPortal(() => navigate(destination))
+    }
+
+    document.addEventListener('click', handleInternalClassroomLink, true)
+    return () => document.removeEventListener('click', handleInternalClassroomLink, true)
+  }, [navigate, startCloudPortal])
 
   const handleWhiteout = useCallback(() => {
     if (actionFiredRef.current) return
