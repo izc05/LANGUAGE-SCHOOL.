@@ -1,11 +1,11 @@
 import { lazy, Suspense, useState } from 'react'
+import { useCloudPortal } from '../../features/transitions/CloudPortalProvider'
 import IntroSceneErrorBoundary from './intro/premium/IntroSceneErrorBoundary'
 import './intro/premium/intro-gate-light.css'
 
 const HomePage = lazy(() => import('./HomePage'))
 const IntroPage = lazy(() => import('./intro/IntroPage'))
 const INTRO_SESSION_KEY = 'language-school:intro-completed'
-const SAFE_ENTER_TRANSITION_MS = 520
 
 function introAlreadyCompleted(): boolean {
   try {
@@ -45,17 +45,9 @@ function HomeLoadingFallback() {
   return <div className="intro-home-loading" role="status">Preparando Language School…</div>
 }
 
-function StaticIntroFallback({ onEnter }: { onEnter: () => void }) {
-  const [transitioning, setTransitioning] = useState(false)
-
-  function startEnter() {
-    if (transitioning) return
-    setTransitioning(true)
-    window.setTimeout(onEnter, SAFE_ENTER_TRANSITION_MS)
-  }
-
+function StaticIntroFallback({ onEnter, transitioning }: { onEnter: () => void; transitioning: boolean }) {
   return (
-    <main className={`intro-gate-light${transitioning ? ' is-transitioning' : ''}`}>
+    <main className="intro-gate-light">
       <div className="intro-gate-ambient" aria-hidden="true" />
       <LightweightOrbitLockup />
 
@@ -64,23 +56,22 @@ function StaticIntroFallback({ onEnter }: { onEnter: () => void }) {
         <button
           className="intro-gate-enter"
           type="button"
-          onClick={startEnter}
+          onClick={onEnter}
           disabled={transitioning}
         >
           <span>{transitioning ? 'ENTRANDO…' : 'ENTRAR'}</span>
           {!transitioning && <span aria-hidden="true">↗</span>}
         </button>
       </div>
-
-      <div className="intro-gate-transition" aria-hidden="true" />
     </main>
   )
 }
 
 export default function IntroGatePage() {
   const [completed, setCompleted] = useState(introAlreadyCompleted)
+  const { isTransitioning, startCloudPortal } = useCloudPortal()
 
-  function enterAcademy() {
+  function completeEntry() {
     try {
       window.sessionStorage.setItem(INTRO_SESSION_KEY, 'true')
     } catch {
@@ -88,6 +79,11 @@ export default function IntroGatePage() {
     }
     window.scrollTo({ top: 0, left: 0 })
     setCompleted(true)
+  }
+
+  function enterAcademy() {
+    if (isTransitioning) return
+    void startCloudPortal(completeEntry)
   }
 
   if (completed) {
@@ -99,9 +95,9 @@ export default function IntroGatePage() {
   }
 
   return (
-    <IntroSceneErrorBoundary fallback={<StaticIntroFallback onEnter={enterAcademy} />}>
+    <IntroSceneErrorBoundary fallback={<StaticIntroFallback onEnter={enterAcademy} transitioning={isTransitioning} />}>
       <Suspense fallback={<IntroLoadingFallback />}>
-        <IntroPage onEnter={enterAcademy} />
+        <IntroPage onEnter={enterAcademy} transitioning={isTransitioning} />
       </Suspense>
     </IntroSceneErrorBoundary>
   )

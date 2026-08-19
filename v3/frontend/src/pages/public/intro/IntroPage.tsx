@@ -3,15 +3,13 @@ import IntroOrbitArtwork from './premium/IntroOrbitArtwork'
 import './premium/premium-intro.css'
 import './premium/intro-orbit-refresh.css'
 
-const ENTER_TRANSITION_MS = 520
-
 type IntroPageProps = {
   onEnter: () => void
+  transitioning: boolean
 }
 
-export default function IntroPage({ onEnter }: IntroPageProps) {
+export default function IntroPage({ onEnter, transitioning }: IntroPageProps) {
   const [reducedMotion, setReducedMotion] = useState(false)
-  const [transitioning, setTransitioning] = useState(false)
 
   useEffect(() => {
     document.title = 'Language School · Rocío Ruiz'
@@ -24,14 +22,7 @@ export default function IntroPage({ onEnter }: IntroPageProps) {
 
   function enterAcademy() {
     if (transitioning) return
-
-    if (reducedMotion) {
-      onEnter()
-      return
-    }
-
-    setTransitioning(true)
-    window.setTimeout(onEnter, ENTER_TRANSITION_MS)
+    onEnter()
   }
 
   const classes = [
@@ -41,7 +32,6 @@ export default function IntroPage({ onEnter }: IntroPageProps) {
     'actions-visible',
     'settled',
     reducedMotion ? 'reduced-motion' : '',
-    transitioning ? 'is-transitioning' : '',
   ].filter(Boolean).join(' ')
 
   return (
@@ -61,8 +51,6 @@ export default function IntroPage({ onEnter }: IntroPageProps) {
           {!transitioning && <span aria-hidden="true" className="premium-enter-arrow">↗</span>}
         </button>
       </div>
-
-      <div className="intro-orbit-transition" aria-hidden="true" />
     </main>
   )
 }
