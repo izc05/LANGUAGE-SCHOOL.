@@ -13,6 +13,13 @@ import {
   type AdminEnrollmentRecord,
   type AdminGroupRecord,
 } from '../../services/pocketbase/adminAcademic'
+import {
+  effectivePaymentStatus,
+  listAdminPayments,
+  paymentCoverageUntil,
+  pendingAmountCents,
+  type StudentPaymentRecord,
+} from '../../services/pocketbase/adminPayments'
 import { getPlacementAdminOverview, type PlacementAdminStudentLevel } from '../../services/pocketbase/placementAdmin'
 import type { AppUser } from '../../services/pocketbase/types'
 import type { ClassRecord } from '../../services/pocketbase/studentPortal'
@@ -32,6 +39,8 @@ type StudentView = {
   nextClass: string
 }
 
+const euro = new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' })
+
 const demoUsers = [
   { id: 'demo-1', name: 'Emma', surname: 'Martín', email: 'emma@example.com', phone: '', role: 'STUDENT', status: 'ACTIVE', collectionId: '', collectionName: 'users', created: '', updated: '', expand: {} },
   { id: 'demo-2', name: 'Daniel', surname: 'López', email: 'daniel@example.com', phone: '', role: 'STUDENT', status: 'ACTIVE', collectionId: '', collectionName: 'users', created: '', updated: '', expand: {} },
@@ -41,11 +50,43 @@ const demoLevels: PlacementAdminStudentLevel[] = [
   { studentId: 'demo-1', studentName: 'Emma Martín', email: 'emma@example.com', status: 'ACTIVE', currentLevel: 'B1', currentLevelSource: 'VALIDATED', latestAttempt: null, latestAssessment: null, attemptCount: 2, assessmentCount: 1 },
 ]
 
+function currentMonthStart(): string {
+  const date = new Date()
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-01`
+}
+
+function currentMonthEnd(): string {
+  const now = new Date()
+  const date = new Date(now.getFullYear(), now.getMonth() + 1, 0, 12)
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+}
+
+const demoPayments: StudentPaymentRecord[] = [
+  {
+    id: 'demo-payment-1', collectionId: '', collectionName: 'student_payments', created: '', updated: '',
+    student: 'demo-1', enrollment: 'demo-enrollment', billing_mode: 'MONTHLY', amount_cents: 5500,
+    period_start: currentMonthStart(), period_end: currentMonthEnd(), due_date: currentMonthStart().slice(0, 8) + '05',
+    status: 'PAID', paid_at: currentMonthStart().slice(0, 8) + '03', payment_method: 'BIZUM', reference: '', notes: '', recorded_by: 'demo-admin',
+  },
+]
+
 function formatNextClass(value?: string): string {
   if (!value) return 'Sin programar'
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return 'Sin programar'
   return new Intl.DateTimeFormat('es-ES', { weekday: 'short', hour: '2-digit', minute: '2-digit' }).format(date)
+}
+
+function formatPaymentDate(value?: string): string {
+  if (!value) return '—'
+  const date = new Date(`${value.slice(0, 10)}T12:00:00`)
+  if (Number.isNaN(date.getTime())) return '—'
+  return new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }).format(date)
+}
+
+function todayKey(): string {
+  const date = new Date()
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
 }
 
 function initials(user: AppUser): string {
@@ -58,6 +99,10 @@ function levelSourceLabel(source: PlacementAdminStudentLevel['currentLevelSource
   return 'sin evaluar'
 }
 
+function billingLabel(record: StudentPaymentRecord): string {
+  return record.billing_mode === 'INTENSIVE' ? 'Intensivo' : 'Mensual'
+}
+
 export default function AdminStudentsPage() {
   const { isDemoMode } = useAuth()
   const [users, setUsers] = useState<AppUser[]>(isDemoMode ? demoUsers : [])
@@ -65,6 +110,7 @@ export default function AdminStudentsPage() {
   const [enrollments, setEnrollments] = useState<AdminEnrollmentRecord[]>([])
   const [classes, setClasses] = useState<ClassRecord[]>([])
   const [groups, setGroups] = useState<AdminGroupRecord[]>([])
+  const [payments, setPayments] = useState<StudentPaymentRecord[]>(isDemoMode ? demoPayments : [])
   const [levelSummaries, setLevelSummaries] = useState<PlacementAdminStudentLevel[]>(isDemoMode ? demoLevels : [])
   const [query, setQuery] = useState('')
   const [status, setStatus] = useState<'Todos' | StudentView['status']>('Todos')
@@ -89,8 +135,16 @@ export default function AdminStudentsPage() {
     if (isDemoMode) return
     let mounted = true
     setLoading(true)
-    Promise.all([listAdminUsers('STUDENT'), listAdminUsers('TEACHER'), listAdminEnrollments(), listAdminClasses(), listAdminGroups(), getPlacementAdminOverview()])
-      .then(([studentUsers, teacherUsers, enrollmentRecords, classRecords, groupRecords, placementOverview]) => {
+    Promise.all([
+      listAdminUsers('STUDENT'),
+      listAdminUsers('TEACHER'),
+      listAdminEnrollments(),
+      listAdminClasses(),
+      listAdminGroups(),
+      getPlacementAdminOverview(),
+      listAdminPayments(),
+    ])
+      .then(([studentUsers, teacherUsers, enrollmentRecords, classRecords, groupRecords, placementOverview, paymentRecords]) => {
         if (!mounted) return
         setUsers(studentUsers)
         setTeachers(teacherUsers)
@@ -98,6 +152,7 @@ export default function AdminStudentsPage() {
         setClasses(classRecords)
         setGroups(groupRecords)
         setLevelSummaries(placementOverview.studentLevels)
+        setPayments(paymentRecords)
         if (studentUsers[0]) setSelectedId(studentUsers[0].id)
       })
       .catch(() => { if (mounted) setError('No se han podido cargar los alumnos. Inténtalo de nuevo en unos segundos.') })
@@ -142,6 +197,13 @@ export default function AdminStudentsPage() {
   const selected = studentViews.find((student) => student.user.id === selectedId) || studentViews[0] || null
   const activeCount = studentViews.filter((student) => student.status === 'Activo').length
   const enrolledCount = new Set(enrollments.filter((item) => item.status === 'ACTIVE').map((item) => item.student)).size
+  const selectedPayments = selected ? payments.filter((record) => record.student === selected.user.id) : []
+  const selectedCoverage = paymentCoverageUntil(selectedPayments)
+  const selectedPendingCents = pendingAmountCents(selectedPayments)
+  const selectedOverdue = selectedPayments.some((record) => effectivePaymentStatus(record) === 'OVERDUE')
+  const selectedPending = selectedPayments.some((record) => record.status === 'PENDING')
+  const selectedPaymentState = selectedOverdue ? 'Vencido' : selectedPending ? 'Pendiente' : selectedCoverage >= todayKey() ? 'Al corriente' : selectedPayments.length ? 'Pendiente' : 'Sin cobros'
+  const recentPaid = [...selectedPayments].filter((record) => record.status === 'PAID').sort((a, b) => b.paid_at.localeCompare(a.paid_at)).slice(0, 3)
 
   async function handleCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -156,38 +218,26 @@ export default function AdminStudentsPage() {
       const created = await createAdminStudent({ email, password, name, surname, phone })
       setUsers((current) => [...current, created.user].sort((a, b) => `${a.name} ${a.surname}`.localeCompare(`${b.name} ${b.surname}`, 'es')))
       setSelectedId(created.user.id)
-      setName('')
-      setSurname('')
-      setEmail('')
-      setPhone('')
-      setPassword('')
+      setName(''); setSurname(''); setEmail(''); setPhone(''); setPassword('')
       setShowCreate(false)
       setMessage('Alumno creado correctamente. Ya puede iniciar sesión con su contraseña inicial.')
     } catch (creationError) {
       setError(creationError instanceof Error ? creationError.message : 'No se ha podido crear el alumno.')
-    } finally {
-      setSaving(false)
-    }
+    } finally { setSaving(false) }
   }
 
   async function toggleSelectedStatus() {
     if (!selected) return
-    setError(null)
-    setMessage(null)
+    setError(null); setMessage(null)
     const nextStatus = selected.user.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'
     const actionLabel = nextStatus === 'ACTIVE' ? 'activar' : 'desactivar'
     if (!window.confirm(`¿Quieres ${actionLabel} la cuenta de ${selected.name}?`)) return
-    if (isDemoMode) {
-      setMessage(`Cambio a ${nextStatus === 'ACTIVE' ? 'activo' : 'inactivo'} preparado en la demostración.`)
-      return
-    }
+    if (isDemoMode) { setMessage(`Cambio a ${nextStatus === 'ACTIVE' ? 'activo' : 'inactivo'} preparado en la demostración.`); return }
     try {
       const updated = await updateAdminUser(selected.user, { status: nextStatus })
       setUsers((current) => current.map((item) => item.id === updated.id ? updated : item))
       setMessage(nextStatus === 'ACTIVE' ? 'Alumno activado.' : 'Alumno desactivado.')
-    } catch {
-      setError('No se ha podido cambiar el estado del alumno.')
-    }
+    } catch { setError('No se ha podido cambiar el estado del alumno.') }
   }
 
   function openEdit() {
@@ -230,7 +280,7 @@ export default function AdminStudentsPage() {
           <div>
             <span className="eyebrow">PLATAFORMA · ALUMNOS</span>
             <h2>Alumnos y espacio privado</h2>
-            <p>Gestiona cuentas, matrícula, grupo, profesor, próxima clase y nivel académico real desde un único lugar.</p>
+            <p>Gestiona cuentas, matrícula, grupo, profesor, próxima clase, nivel académico y situación de pagos desde un único lugar.</p>
           </div>
           <button className="button button-primary" type="button" onClick={() => setShowCreate((value) => !value)}>{showCreate ? 'Cerrar alta' : '+ Nuevo alumno'}</button>
         </header>
@@ -291,6 +341,23 @@ export default function AdminStudentsPage() {
                 <div><span>Grupo</span><strong>{selected.group}</strong></div>
                 <div><span>Estado</span><strong>{selected.status}</strong></div>
               </div>
+
+              <section className="student-payment-summary" aria-label={`Pagos de ${selected.name}`}>
+                <div className="student-payment-summary-head">
+                  <div><span className="eyebrow">PAGOS</span><h4>Situación económica</h4></div>
+                  <a className="student-payment-link" href={`/admin/pagos?alumno=${encodeURIComponent(selected.user.id)}`}>Gestionar pagos</a>
+                </div>
+                <div className="student-payment-status-grid">
+                  <div><span>Estado</span><strong>{selectedPaymentState}</strong></div>
+                  <div><span>Cubierto hasta</span><strong>{selectedCoverage ? formatPaymentDate(selectedCoverage) : 'Sin periodo cubierto'}</strong></div>
+                  <div><span>Pendiente</span><strong>{euro.format(selectedPendingCents / 100)}</strong></div>
+                </div>
+                <div className="student-payment-history">
+                  {recentPaid.map((record) => <article key={record.id}><div><b>{billingLabel(record)} · {formatPaymentDate(record.period_start)} → {formatPaymentDate(record.period_end)}</b><small>Pagado {formatPaymentDate(record.paid_at)}</small></div><strong>{euro.format(record.amount_cents / 100)}</strong></article>)}
+                  {recentPaid.length === 0 && <small>Todavía no hay pagos realizados registrados para este alumno.</small>}
+                </div>
+              </section>
+
               <div className="student-private-space">
                 <div className="panel-heading"><div><span className="eyebrow">ESPACIO PRIVADO</span><h3>Acceso protegido</h3></div><span className="status success">Protegido</span></div>
                 <p className="muted">Los archivos y recursos privados del alumno solo son accesibles para su cuenta y para el personal autorizado según su relación académica.</p>
