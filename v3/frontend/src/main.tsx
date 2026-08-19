@@ -6,6 +6,7 @@ import AppErrorBoundary from './components/AppErrorBoundary'
 import ScrollToTop from './components/ScrollToTop'
 import StudentCampusEntryProgress from './components/StudentCampusEntryProgress'
 import { AuthProvider } from './features/auth/AuthProvider'
+import { CloudPortalProvider } from './features/transitions/CloudPortalProvider'
 import './styles/global.css'
 import './styles/public-pages.css'
 import './styles/admin-cms.css'
@@ -136,7 +137,9 @@ createRoot(root).render(
       <BrowserRouter>
         <ScrollToTop />
         <StudentCampusEntryProgress />
-        <AuthProvider><App /></AuthProvider>
+        <CloudPortalProvider>
+          <AuthProvider><App /></AuthProvider>
+        </CloudPortalProvider>
       </BrowserRouter>
     </AppErrorBoundary>
   </StrictMode>,
