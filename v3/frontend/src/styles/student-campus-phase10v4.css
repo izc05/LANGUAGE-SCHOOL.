@@ -1,0 +1,289 @@
+/* FASE 10V.4 · CAMPUS ALUMNO · AULA ONLINE · REVISIÓN VISUAL FINAL
+   Refinamiento exclusivamente visual de la antesala Zoom.
+   Mantiene intactos autorización server-side, SDK embebido, fallback y retorno a Mis clases. */
+
+.student-online-class-phase10b{
+  --aula-v-ink:#342830;
+  --aula-v-muted:#786a71;
+  --aula-v-pink:#c93f72;
+  --aula-v-pink-deep:#983354;
+  --aula-v-line:rgba(108,72,86,.11);
+  --aula-v-plum:#432b37;
+  --aula-v-plum-deep:#30202a;
+  min-height:100vh;
+  padding:clamp(24px,4vw,58px);
+  background:
+    radial-gradient(circle at 87% 4%,rgba(226,112,153,.11),transparent 28rem),
+    linear-gradient(180deg,#fffdfc 0%,#fff9f9 56%,#fdf7f6 100%);
+}
+
+.student-online-class-phase10b .student-online-class-page{
+  width:min(1160px,100%);
+  padding-bottom:64px;
+}
+
+/* Cabecera como recepción de academia, no como pantalla técnica. */
+.student-online-class-phase10b .student-online-class-heading10{
+  align-items:flex-end;
+  gap:32px;
+  margin-bottom:34px;
+  padding:2px 0 25px;
+  border-bottom:1px solid var(--aula-v-line);
+}
+
+.student-online-class-phase10b .student-online-class-brand{
+  color:var(--aula-v-ink);
+}
+
+.student-online-class-phase10b .student-online-class-brand strong,
+.student-online-class-phase10b .student-online-class-brand span{
+  font-size:1.1rem;
+}
+
+.student-online-class-phase10b .student-online-class-brand span{color:var(--aula-v-pink)}
+
+.student-online-class-phase10b .student-online-class-heading-copy>.eyebrow{
+  margin-top:28px;
+  color:var(--aula-v-pink-deep);
+  letter-spacing:.16em;
+}
+
+.student-online-class-phase10b .student-online-class-heading-copy h1{
+  max-width:780px;
+  color:var(--aula-v-ink);
+  font-size:clamp(3rem,5.3vw,5.25rem);
+  line-height:.94;
+  letter-spacing:-.052em;
+}
+
+.student-online-class-phase10b .student-online-class-heading-copy>p{
+  max-width:670px;
+  color:var(--aula-v-muted);
+  line-height:1.78;
+}
+
+.student-online-class-phase10b .student-online-class-heading10>.button{
+  min-height:42px;
+  padding-inline:17px;
+  border-color:var(--aula-v-line);
+  border-radius:999px;
+  background:rgba(255,255,255,.72);
+  color:var(--aula-v-pink-deep);
+  box-shadow:none;
+}
+
+/* La sesión es una única composición, no una suma de cajas. */
+.student-online-class-phase10b .student-online-session10{
+  grid-template-columns:minmax(0,1.38fr) minmax(270px,.5fr);
+  border:1px solid var(--aula-v-line);
+  border-radius:30px;
+  background:#fff;
+  box-shadow:0 24px 62px rgba(54,31,42,.065);
+}
+
+.student-online-class-phase10b .student-online-session10-main{
+  padding:38px clamp(30px,4vw,52px) 42px;
+  background:
+    radial-gradient(circle at 90% 5%,rgba(222,91,139,.07),transparent 20rem),
+    #fff;
+}
+
+.student-online-class-phase10b .student-online-class-summary10{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(205px,.38fr);
+  gap:30px;
+  align-items:end;
+  padding:0 0 28px;
+  border-bottom:1px solid var(--aula-v-line);
+  background:transparent;
+}
+
+.student-online-class-phase10b .student-online-class-summary10 .eyebrow{
+  color:var(--aula-v-pink-deep);
+}
+
+.student-online-class-phase10b .student-online-class-summary10 h2{
+  margin:8px 0 8px;
+  color:var(--aula-v-ink);
+  font-size:clamp(2rem,3.2vw,3.2rem);
+  line-height:1.02;
+  letter-spacing:-.035em;
+}
+
+.student-online-class-phase10b .student-online-class-summary10 p{color:var(--aula-v-muted)}
+
+.student-online-class-phase10b .student-online-class-time{
+  min-width:0;
+  padding:0 0 1px 22px;
+  border:0;
+  border-left:1px solid var(--aula-v-line);
+  border-radius:0;
+  background:transparent;
+}
+
+.student-online-class-phase10b .student-online-class-time strong{
+  color:var(--aula-v-ink);
+  font-size:.9rem;
+}
+
+.student-online-class-phase10b .student-online-class-time span{
+  color:var(--aula-v-pink-deep);
+}
+
+/* Zona de entrada: el único bloque de acción fuerte. */
+.student-online-class-phase10b .student-online-class-actions10{
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:16px 22px;
+  margin-top:30px;
+  padding:28px;
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:24px;
+  color:#fff;
+  background:
+    radial-gradient(circle at 92% 12%,rgba(234,126,166,.22),transparent 13rem),
+    linear-gradient(145deg,var(--aula-v-plum),var(--aula-v-plum-deep));
+  box-shadow:0 18px 42px rgba(52,29,40,.1);
+}
+
+.student-online-class-phase10b .student-online-class-actions10 .student-online-class-explainer{
+  grid-row:1 / span 2;
+}
+
+.student-online-class-phase10b .student-online-class-actions10 .student-online-class-explainer .eyebrow{
+  color:#efb5ca;
+  letter-spacing:.14em;
+}
+
+.student-online-class-phase10b .student-online-class-actions10 .student-online-class-explainer strong{
+  margin-top:2px;
+  color:#fff;
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:1.45rem;
+  font-weight:600;
+}
+
+.student-online-class-phase10b .student-online-class-actions10 .student-online-class-explainer p{
+  color:#d4c3cb;
+  line-height:1.62;
+}
+
+.student-online-class-phase10b .student-online-join10{
+  min-width:190px;
+  min-height:48px;
+  border:1px solid #df5f8c;
+  border-radius:999px;
+  background:linear-gradient(135deg,#dc5685,#c23e70);
+  color:#fff;
+  box-shadow:0 10px 26px rgba(13,5,9,.16);
+}
+
+.student-online-class-phase10b .student-online-join10:hover:not(:disabled){
+  border-color:#eb709b;
+  background:linear-gradient(135deg,#e1608d,#c94475);
+}
+
+.student-online-class-phase10b .student-online-fallback10{
+  min-width:190px;
+  min-height:42px;
+  border-color:rgba(255,255,255,.14);
+  border-radius:999px;
+  background:rgba(255,255,255,.06);
+  color:#f4e8ed;
+}
+
+.student-online-class-phase10b .student-online-fallback10:hover{
+  border-color:rgba(255,255,255,.25);
+  background:rgba(255,255,255,.1);
+  color:#fff;
+}
+
+/* Ficha lateral: información útil + confianza, sin lenguaje de configuración. */
+.student-online-class-phase10b .student-online-session10-side{
+  padding:34px;
+  border-left:1px solid var(--aula-v-line);
+  background:
+    radial-gradient(circle at 78% 5%,rgba(220,92,138,.09),transparent 12rem),
+    linear-gradient(180deg,#fff8fa,#fdf2f5);
+}
+
+.student-online-class-phase10b .student-online-session10-number{
+  margin-bottom:26px;
+  color:var(--aula-v-pink-deep);
+  letter-spacing:.18em;
+}
+
+.student-online-class-phase10b .student-online-session10-side>div:not(.student-online-class-privacy10){
+  padding:16px 0;
+  border-bottom:1px solid rgba(120,79,94,.12);
+}
+
+.student-online-class-phase10b .student-online-session10-side small{
+  color:#9d5871;
+}
+
+.student-online-class-phase10b .student-online-session10-side strong{
+  color:var(--aula-v-ink);
+  font-size:.9rem;
+}
+
+.student-online-class-phase10b .student-online-class-privacy10{
+  margin-top:auto;
+  padding:24px 0 0;
+  border-top:1px solid rgba(120,79,94,.12);
+}
+
+.student-online-class-phase10b .student-online-class-privacy10 strong{
+  color:var(--aula-v-pink-deep);
+}
+
+.student-online-class-phase10b .student-online-class-privacy10 p{
+  color:var(--aula-v-muted);
+  line-height:1.55;
+}
+
+.student-online-class-phase10b .student-online-class-error{
+  margin:22px 0 0;
+  border-radius:18px;
+}
+
+@media(max-width:900px){
+  .student-online-class-phase10b .student-online-class-heading10{align-items:flex-start;flex-direction:column}
+  .student-online-class-phase10b .student-online-class-heading10>.button{margin-top:0}
+  .student-online-class-phase10b .student-online-session10{grid-template-columns:1fr}
+  .student-online-class-phase10b .student-online-session10-side{
+    border-top:1px solid var(--aula-v-line);
+    border-left:0;
+  }
+  .student-online-class-phase10b .student-online-class-summary10{grid-template-columns:1fr}
+  .student-online-class-phase10b .student-online-class-time{
+    padding:18px 0 0;
+    border-top:1px solid var(--aula-v-line);
+    border-left:0;
+  }
+}
+
+@media(max-width:680px){
+  .student-online-class-phase10b{padding:22px 14px 38px}
+  .student-online-class-phase10b .student-online-class-page{padding-bottom:30px}
+  .student-online-class-phase10b .student-online-class-heading10{margin-bottom:24px}
+  .student-online-class-phase10b .student-online-class-heading-copy h1{font-size:clamp(2.75rem,13vw,4rem)}
+  .student-online-class-phase10b .student-online-class-heading10>.button{width:100%;justify-content:center}
+  .student-online-class-phase10b .student-online-session10{border-radius:24px}
+  .student-online-class-phase10b .student-online-session10-main,
+  .student-online-class-phase10b .student-online-session10-side{padding:27px 21px}
+  .student-online-class-phase10b .student-online-class-actions10{grid-template-columns:1fr;padding:24px 20px}
+  .student-online-class-phase10b .student-online-class-actions10 .student-online-class-explainer{grid-row:auto}
+  .student-online-class-phase10b .student-online-join10,
+  .student-online-class-phase10b .student-online-fallback10{width:100%;min-width:0}
+}
+
+@media(max-width:390px){
+  .student-online-class-phase10b{padding-inline:10px}
+  .student-online-class-phase10b .student-online-session10-main,
+  .student-online-class-phase10b .student-online-session10-side{padding-inline:18px}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .student-online-class-phase10b .student-online-join10,
+  .student-online-class-phase10b .student-online-fallback10{transition:none}
+}
