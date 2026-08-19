@@ -257,7 +257,10 @@
 }
 
 @media(prefers-reduced-motion:reduce){
-  .dashboard-shell-admin .dashboard-nav a{
-    transition:none;
+  .dashboard-shell-admin .dashboard-nav a,
+  .dashboard-shell-admin .dashboard-nav button{
+    transition:none!important;
+    transition-duration:0s!important;
+    transition-delay:0s!important;
   }
 }
