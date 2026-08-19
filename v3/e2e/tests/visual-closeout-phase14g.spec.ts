@@ -37,11 +37,23 @@ async function expectNoOverflow(page: Page) {
 
 async function expectLightSurface(locator: Locator) {
   await expect(locator).toBeVisible()
-  const color = await locator.evaluate((element) => getComputedStyle(element).backgroundColor)
-  const match = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/)
-  expect(match, `No se pudo interpretar backgroundColor: ${color}`).not.toBeNull()
-  const channels = match!.slice(1, 4).map(Number)
-  expect(Math.min(...channels)).toBeGreaterThanOrEqual(245)
+  const resolved = await locator.evaluate((element) => {
+    let current: Element | null = element
+    while (current) {
+      const color = getComputedStyle(current).backgroundColor
+      const match = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/)
+      if (match) {
+        const alpha = match[4] === undefined ? 1 : Number.parseFloat(match[4])
+        if (alpha > 0.05) {
+          return { color, channels: match.slice(1, 4).map(Number), alpha }
+        }
+      }
+      current = current.parentElement
+    }
+    return null
+  })
+  expect(resolved, 'La superficie visible debe resolver un fondo real en ella o en su contenedor').not.toBeNull()
+  expect(Math.min(...resolved!.channels)).toBeGreaterThanOrEqual(245)
 }
 
 async function expectExactActiveNav(page: Page, ariaLabel: string, href: string) {
