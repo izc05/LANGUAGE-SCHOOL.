@@ -21,10 +21,6 @@ function roleLabel(role: UserRole): DashboardShellProps['role'] {
   return 'Alumno'
 }
 
-function isPortalRoot(path: string): boolean {
-  return path === '/admin' || path === '/alumno' || path === '/profesor'
-}
-
 export default function DashboardShell({ role, name, nav, children }: DashboardShellProps) {
   const navigate = useNavigate()
   const { academyName, logoUrl, initials } = useAcademyBrand()
@@ -72,7 +68,7 @@ export default function DashboardShell({ role, name, nav, children }: DashboardS
                 {item.section && <span className="dashboard-nav-section" aria-hidden="true">{item.section}</span>}
                 <NavLink
                   to={item.to}
-                  end={isPortalRoot(item.to)}
+                  end
                   className={({ isActive }) => isActive ? 'active' : undefined}
                 >
                   <span className="nav-dot" /> {item.label}
