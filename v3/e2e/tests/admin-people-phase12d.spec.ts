@@ -60,7 +60,7 @@ test('14C: Admin usa directorios filtrables y fichas completas de Alumno y Profe
   await studentDetail.getByRole('button', { name: 'Editar ficha' }).click()
   await expect(studentDetail.getByRole('heading', { name: 'Completar ficha del alumno' })).toBeVisible()
   await expect(studentDetail.getByLabel('Fecha de nacimiento')).toBeVisible()
-  await expect(studentDetail.getByLabel('Tutor/a')).toBeVisible()
+  await expect(studentDetail.getByLabel('Tutor/a', { exact: true })).toBeVisible()
   await expect(studentDetail.getByLabel('Teléfono tutor/a')).toBeVisible()
   await expect(studentDetail.getByLabel('Grupo / aula')).toBeVisible()
   await expect(studentDetail.getByLabel('Notas privadas')).toBeVisible()
