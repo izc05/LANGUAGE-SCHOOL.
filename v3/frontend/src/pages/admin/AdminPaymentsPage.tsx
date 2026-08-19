@@ -18,6 +18,7 @@ import {
 } from '../../services/pocketbase/adminPayments'
 import type { GroupRecord } from '../../services/pocketbase/studentPortal'
 import type { AppUser } from '../../services/pocketbase/types'
+import { downloadPaymentsExcel } from '../../utils/paymentExcel'
 import { adminNav } from './adminNav'
 
 type PaymentFilter = 'ALL' | 'PENDING' | 'OVERDUE' | 'PAID'
@@ -252,12 +253,17 @@ export default function AdminPaymentsPage() {
     try { const updated = await refundAdminPayment(record); setPayments((current) => current.map((item) => item.id === updated.id ? updated : item)); setMessage('Pago marcado como reembolsado.') } catch (actionError) { setError(actionError instanceof Error ? actionError.message : 'No se ha podido registrar el reembolso.') }
   }
 
+  function exportCurrentExcel() {
+    downloadPaymentsExcel({ records: visiblePayments, students, enrollments, periodLabel: monthFilter || 'todos-los-periodos' })
+    setMessage(`Excel preparado con ${visiblePayments.length} ${visiblePayments.length === 1 ? 'registro' : 'registros'} según los filtros actuales.`)
+  }
+
   return (
     <DashboardShell role="Administrador" name="Admin" nav={[...adminNav]}>
       <div className="dashboard-content cms-page admin-payments-page">
-        <header className="cms-page-heading">
+        <header className="cms-page-heading phase14-pink-heading">
           <div><span className="eyebrow">ADMINISTRACIÓN · COBROS</span><h2>Pagos de alumnos</h2><p>Controla mensualidades e intensivos, vencimientos, periodos cubiertos y el histórico de cada alumno.</p></div>
-          <button className="button button-primary" type="button" onClick={() => setShowCreate((value) => !value)}>{showCreate ? 'Cerrar' : '+ Nuevo cobro'}</button>
+          <div className="payment-heading-actions"><button className="button phase14-export-button" type="button" onClick={exportCurrentExcel} disabled={visiblePayments.length === 0}>Descargar Excel</button><button className="button button-primary" type="button" onClick={() => setShowCreate((value) => !value)}>{showCreate ? 'Cerrar' : '+ Nuevo cobro'}</button></div>
         </header>
 
         {loading && <div className="cms-notice" role="status">Cargando pagos…</div>}
