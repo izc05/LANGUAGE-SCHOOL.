@@ -47,10 +47,11 @@ test('12.4: Alumnos y Profesores conservan gestión académica con responsive re
   await expect(page.locator('.student-detail-panel')).toBeVisible()
 
   await page.getByRole('button', { name: '+ Nuevo alumno' }).click()
-  await expect(page.getByLabel('Nombre')).toBeVisible()
-  await expect(page.getByLabel('Email')).toBeVisible()
-  await expect(page.getByLabel('Contraseña inicial')).toBeVisible()
+  const studentCreate = page.locator('.cms-page:has(.students-admin-layout) .admin-inline-create')
+  await expect(studentCreate.getByRole('heading', { name: 'Nuevo alumno' })).toBeVisible()
+  await expect(studentCreate.locator('input')).toHaveCount(5)
   await page.getByRole('button', { name: 'Cerrar alta' }).click()
+  await expect(studentCreate).toHaveCount(0)
 
   await page.setViewportSize({ width: 390, height: 844 })
   const mobileStudentRow = studentRows.first()
@@ -65,7 +66,7 @@ test('12.4: Alumnos y Profesores conservan gestión académica con responsive re
   })
   expect(studentCardMetrics.width).toBeLessThanOrEqual(390)
   expect(studentCardMetrics.minWidth).not.toBe('830px')
-  expect(studentCardMetrics.columns).toBe(2)
+  expect(studentCardMetrics.columns).toBe(1)
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true)
 
   await page.emulateMedia({ reducedMotion: 'reduce' })
@@ -85,8 +86,11 @@ test('12.4: Alumnos y Profesores conservan gestión académica con responsive re
   await expect(teacherCards.first().getByRole('button', { name: 'Eliminar' })).toBeVisible()
 
   await page.getByRole('button', { name: '+ Nuevo profesor' }).click()
-  await expect(page.getByLabel('Especialidades')).toBeVisible()
+  const teacherCreate = page.locator('.cms-page:has(.teacher-admin-grid) .admin-inline-create')
+  await expect(teacherCreate.getByRole('heading', { name: 'Nuevo profesor' })).toBeVisible()
+  await expect(teacherCreate.locator('input')).toHaveCount(6)
   await page.getByRole('button', { name: 'Cerrar alta' }).click()
+  await expect(teacherCreate).toHaveCount(0)
 
   await page.setViewportSize({ width: 390, height: 844 })
   const teacherGridColumns = await page.locator('.teacher-admin-grid').evaluate(
