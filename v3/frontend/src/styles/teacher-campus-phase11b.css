@@ -1,0 +1,316 @@
+/* FASE 11.2 · MIS ALUMNOS
+   Refinamiento visual del seguimiento docente.
+   No modifica permisos, consultas, descargas ni contratos de datos. */
+
+.teacher-portal-page:has(.teacher-students-grid){
+  --teacher-ink:#342a31;
+  --teacher-muted:#7e6d75;
+  --teacher-plum:#4b2c3b;
+  --teacher-rose:#b55178;
+  --teacher-rose-soft:#f7e8ee;
+  --teacher-paper:#fffdfc;
+  --teacher-line:#eadfe3;
+  gap:28px;
+}
+
+.teacher-portal-page:has(.teacher-students-grid)>.teacher-page-heading{
+  position:relative;
+  align-items:flex-start;
+  padding:8px 2px 24px;
+  border-bottom:1px solid var(--teacher-line);
+}
+
+.teacher-portal-page:has(.teacher-students-grid)>.teacher-page-heading::before{
+  content:'Seguimiento docente';
+  position:absolute;
+  left:2px;
+  top:-11px;
+  color:var(--teacher-rose);
+  font-size:.63rem;
+  font-weight:900;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+}
+
+.teacher-portal-page:has(.teacher-students-grid)>.teacher-page-heading .eyebrow{margin-top:10px}
+.teacher-portal-page:has(.teacher-students-grid)>.teacher-page-heading h2{
+  margin:8px 0 9px;
+  color:var(--teacher-ink);
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:clamp(2.65rem,4.5vw,4.45rem);
+  line-height:.96;
+  letter-spacing:-.045em;
+}
+
+.teacher-portal-page:has(.teacher-students-grid)>.teacher-page-heading p{
+  max-width:760px;
+  color:var(--teacher-muted);
+  font-size:.94rem;
+  line-height:1.72;
+}
+
+.teacher-portal-page:has(.teacher-students-grid)>.teacher-page-heading .private-space-badge{
+  min-width:150px;
+  padding:13px 16px;
+  border:1px solid #ead6de;
+  border-radius:18px;
+  background:linear-gradient(145deg,#fff 0%,#fff7fa 100%);
+  box-shadow:none;
+}
+
+.teacher-portal-page:has(.teacher-students-grid)>.teacher-page-heading .private-space-badge strong{
+  color:var(--teacher-plum);
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:1.85rem;
+}
+
+.teacher-portal-page:has(.teacher-students-grid) .teacher-students-grid{
+  grid-template-columns:minmax(270px,.64fr) minmax(0,1.36fr);
+  gap:24px;
+}
+
+.teacher-portal-page:has(.teacher-students-grid) .teacher-student-list-panel,
+.teacher-portal-page:has(.teacher-students-grid) .teacher-student-detail{
+  border-color:var(--teacher-line);
+  border-radius:28px;
+  box-shadow:0 18px 46px rgba(66,39,51,.045);
+}
+
+.teacher-portal-page:has(.teacher-students-grid) .teacher-student-list-panel{
+  position:sticky;
+  top:98px;
+  align-self:start;
+  padding:20px;
+  background:linear-gradient(160deg,#fff 0%,#fff9fb 100%);
+}
+
+.teacher-portal-page:has(.teacher-students-grid) .teacher-student-list-panel .panel-heading{
+  align-items:flex-start;
+  flex-direction:column;
+  gap:14px;
+  padding-bottom:16px;
+}
+
+.teacher-portal-page:has(.teacher-students-grid) .teacher-student-list-panel .panel-heading h3,
+.teacher-portal-page:has(.teacher-students-grid) .teacher-student-detail h3{
+  font-family:'Playfair Display',Georgia,serif;
+  letter-spacing:-.02em;
+}
+
+.teacher-portal-page:has(.teacher-students-grid) .student-files-search{
+  width:100%;
+  min-height:42px;
+  border-radius:999px;
+  padding-inline:15px;
+  background:#fff;
+}
+
+.teacher-portal-page:has(.teacher-students-grid) .teacher-student-picker{
+  gap:6px;
+}
+
+.teacher-portal-page:has(.teacher-students-grid) .teacher-student-picker button{
+  position:relative;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  gap:12px;
+  min-height:62px;
+  margin:0;
+  padding:10px 11px;
+  border:1px solid transparent;
+  border-radius:17px;
+  transition:background .18s ease,border-color .18s ease,transform .18s ease;
+}
+
+.teacher-portal-page:has(.teacher-students-grid) .teacher-student-picker button:hover{
+  transform:translateX(2px);
+  border-color:#ead5dd;
+  background:#fff9fb;
+}
+
+.teacher-portal-page:has(.teacher-students-grid) .teacher-student-picker button.active{
+  width:100%;
+  margin:0;
+  padding:10px 11px;
+  border-color:#e7c8d4;
+  background:linear-gradient(135deg,#fff6f9,#f8e8ee);
+  box-shadow:inset 3px 0 0 var(--teacher-rose);
+}
+
+.teacher-portal-page:has(.teacher-students-grid) .teacher-student-picker .avatar-mini{
+  width:38px;
+  height:38px;
+  border-radius:13px;
+  color:#8f3559;
+  background:#f6dfe8;
+}
+
+.teacher-portal-page:has(.teacher-students-grid) .teacher-student-picker strong{
+  color:var(--teacher-ink);
+  font-size:.87rem;
+}
+
+.teacher-portal-page:has(.teacher-students-grid) .teacher-student-picker small{
+  color:var(--teacher-muted);
+  font-size:.72rem;
+}
+
+.teacher-portal-page:has(.teacher-students-grid) .teacher-student-picker b{
+  color:#b47a90;
+  font-size:.88rem;
+}
+
+.teacher-portal-page:has(.teacher-students-grid) .teacher-student-detail{
+  min-height:470px;
+  padding:28px 30px;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 92% 7%,rgba(188,79,121,.1),transparent 13rem),
+    var(--teacher-paper);
+}
+
+.teacher-portal-page:has(.teacher-students-grid) .teacher-student-profile{
+  position:relative;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  gap:17px;
+  padding:0 0 24px;
+  border-bottom:1px solid var(--teacher-line);
+}
+
+.teacher-portal-page:has(.teacher-students-grid) .teacher-profile-avatar{
+  width:72px;
+  height:72px;
+  border:1px solid #e8c8d4;
+  border-radius:23px;
+  color:#8c3458;
+  background:linear-gradient(145deg,#f9eaf0,#efd2dd);
+  box-shadow:0 0 0 8px rgba(181,81,120,.055);
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:1.35rem;
+}
+
+.teacher-portal-page:has(.teacher-students-grid) .teacher-student-profile h3{
+  margin:5px 0 4px;
+  color:var(--teacher-ink);
+  font-size:clamp(1.65rem,2.2vw,2.2rem);
+}
+
+.teacher-portal-page:has(.teacher-students-grid) .teacher-student-profile p{
+  color:var(--teacher-muted);
+}
+
+.teacher-portal-page:has(.teacher-students-grid) .teacher-student-profile>.status{
+  align-self:flex-start;
+  border-color:#ead0da;
+  color:#8f3659;
+  background:#fff4f7;
+}
+
+.teacher-portal-page:has(.teacher-students-grid) .teacher-student-groups{
+  margin-top:2px;
+  padding:19px 0;
+  border-block:0 0;
+  border-bottom:1px solid var(--teacher-line);
+}
+
+.teacher-portal-page:has(.teacher-students-grid) .teacher-student-groups>strong{
+  color:#80666f;
+  font-size:.66rem;
+  font-weight:900;
+  letter-spacing:.11em;
+  text-transform:uppercase;
+}
+
+.teacher-portal-page:has(.teacher-students-grid) .teacher-student-groups .pill{
+  border:1px solid #ead2db;
+  color:#823952;
+  background:#fff6f9;
+}
+
+.teacher-portal-page:has(.teacher-students-grid) .teacher-profile-note{
+  margin-top:18px;
+  padding:15px 17px;
+  border:0;
+  border-left:3px solid var(--teacher-rose);
+  border-radius:0 16px 16px 0;
+  background:#fff7fa;
+}
+
+.teacher-portal-page:has(.teacher-students-grid) .teacher-file-heading{
+  margin-top:5px;
+  padding:22px 0 13px;
+  border-bottom:0;
+}
+
+.teacher-portal-page:has(.teacher-students-grid) .teacher-file-heading h3{
+  margin-top:3px;
+  font-size:1.5rem;
+}
+
+.teacher-portal-page:has(.teacher-students-grid) .teacher-student-files{
+  gap:0;
+  border-top:1px solid var(--teacher-line);
+}
+
+.teacher-portal-page:has(.teacher-students-grid) .teacher-student-files article{
+  min-height:74px;
+  padding:15px 2px;
+  border-bottom:1px solid #eee5e7;
+}
+
+.teacher-portal-page:has(.teacher-students-grid) .teacher-student-files .teacher-record-icon{
+  width:44px;
+  height:44px;
+  border:1px solid #ead4dc;
+  border-radius:14px;
+  color:#954363;
+  background:#fff4f7;
+}
+
+.teacher-portal-page:has(.teacher-students-grid) .teacher-student-files strong{
+  color:var(--teacher-ink);
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:1.02rem;
+}
+
+.teacher-portal-page:has(.teacher-students-grid) .teacher-student-files button{
+  min-height:36px;
+  padding-inline:13px;
+  border-color:#e5cbd5;
+  border-radius:999px;
+  color:#7f3a55;
+  background:#fff;
+}
+
+.teacher-portal-page:has(.teacher-students-grid) .teacher-student-files button:hover{
+  border-color:#d89bb2;
+  background:#fff5f8;
+}
+
+.teacher-portal-page:has(.teacher-students-grid) button:focus-visible,
+.teacher-portal-page:has(.teacher-students-grid) input:focus-visible{
+  outline:3px solid rgba(181,81,120,.28);
+  outline-offset:3px;
+}
+
+@media(max-width:980px){
+  .teacher-portal-page:has(.teacher-students-grid) .teacher-students-grid{grid-template-columns:1fr}
+  .teacher-portal-page:has(.teacher-students-grid) .teacher-student-list-panel{position:static}
+  .teacher-portal-page:has(.teacher-students-grid) .teacher-student-picker{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+}
+
+@media(max-width:700px){
+  .teacher-portal-page:has(.teacher-students-grid)>.teacher-page-heading{gap:15px}
+  .teacher-portal-page:has(.teacher-students-grid)>.teacher-page-heading .private-space-badge{width:100%}
+  .teacher-portal-page:has(.teacher-students-grid) .teacher-student-picker{grid-template-columns:1fr}
+  .teacher-portal-page:has(.teacher-students-grid) .teacher-student-detail{padding:23px 19px;border-radius:23px}
+  .teacher-portal-page:has(.teacher-students-grid) .teacher-student-profile{grid-template-columns:auto 1fr}
+  .teacher-portal-page:has(.teacher-students-grid) .teacher-student-profile>.status{grid-column:2;justify-self:start}
+  .teacher-portal-page:has(.teacher-students-grid) .teacher-profile-avatar{width:60px;height:60px;border-radius:19px}
+  .teacher-portal-page:has(.teacher-students-grid) .teacher-student-files article{grid-template-columns:auto 1fr}
+  .teacher-portal-page:has(.teacher-students-grid) .teacher-student-files button{grid-column:1/-1;justify-self:start}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .teacher-portal-page:has(.teacher-students-grid) .teacher-student-picker button{transition:none}
+  .teacher-portal-page:has(.teacher-students-grid) .teacher-student-picker button:hover{transform:none}
+}
