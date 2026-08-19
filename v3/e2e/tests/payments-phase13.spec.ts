@@ -92,7 +92,7 @@ test('13B: la colección económica queda bloqueada para Profesor y Alumno', asy
   expect(after).toBe(before)
 })
 
-test('13C-D: Admin registra una mensualidad, la cobra y la ficha del alumno refleja el histórico', async ({ page, request }) => {
+test('13C-D + 14C: Admin cobra, exporta el periodo a Excel y la ficha completa refleja el histórico', async ({ page, request }) => {
   const dates = localDateParts()
   const studentAccount = await authenticate(request, requiredEnv('E2E_STUDENT_EMAIL'), requiredEnv('E2E_STUDENT_PASSWORD'))
   await loginAdmin(page)
@@ -141,17 +141,27 @@ test('13C-D: Admin registra una mensualidad, la cobra y la ficha del alumno refl
   }
   await expect(record.getByText('Pagado')).toBeVisible()
 
+  const downloadPromise = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'Descargar Excel' }).click()
+  const download = await downloadPromise
+  expect(download.suggestedFilename()).toMatch(/^pagos-language-school-.*\.xls$/)
+  await expect(page.getByText(/Excel preparado con \d+ registro/)).toBeVisible()
+
   await page.goto('/admin/alumnos')
-  const row = page.locator('.students-table-row').filter({ hasText: studentEmail }).first()
+  const search = page.locator('.admin-student-directory-phase14').getByLabel('Buscar')
+  await search.fill(studentEmail)
+  const row = page.locator('.phase14-student-row').filter({ hasText: studentEmail }).first()
   await expect(row).toBeVisible()
   await row.click()
-  const summary = page.locator('.student-payment-summary')
-  await expect(summary).toBeVisible()
-  await expect(summary.getByText('Al corriente')).toBeVisible()
-  await expect(summary.getByText('55,00')).toBeVisible()
+  await expect(page).toHaveURL(new RegExp(`/admin/alumnos/${studentAccount.id}$`))
+
+  const paymentCard = page.locator('.phase14-payment-card')
+  await expect(paymentCard).toBeVisible()
+  await expect(paymentCard.getByText('Al corriente')).toBeVisible()
+  await expect(paymentCard.getByText('55,00')).toBeVisible()
 
   await page.setViewportSize({ width: 390, height: 844 })
-  await expect(summary).toBeVisible()
+  await expect(paymentCard).toBeVisible()
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
   expect(overflow).toBeLessThanOrEqual(1)
 })
