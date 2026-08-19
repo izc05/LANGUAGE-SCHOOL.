@@ -37,6 +37,21 @@ function localDateParts() {
   }
 }
 
+function futureMonthParts(monthsAhead = 4) {
+  const now = new Date()
+  const target = new Date(now.getFullYear(), now.getMonth() + monthsAhead, 1, 12)
+  const year = target.getFullYear()
+  const monthNumber = target.getMonth() + 1
+  const month = String(monthNumber).padStart(2, '0')
+  const last = new Date(year, monthNumber, 0, 12).getDate()
+  return {
+    month: `${year}-${month}`,
+    start: `${year}-${month}-01`,
+    end: `${year}-${month}-${String(last).padStart(2, '0')}`,
+    due: `${year}-${month}-05`,
+  }
+}
+
 async function expectNoPaymentRead(request: APIRequestContext, token: string) {
   const list = await request.get(`${PB_URL}/api/collections/student_payments/records?perPage=10`, { headers: { Authorization: token } })
   if (list.status() === 200) {
@@ -162,6 +177,59 @@ test('13C-D + 14C: Admin cobra, exporta el periodo a Excel y la ficha completa r
 
   await page.setViewportSize({ width: 390, height: 844 })
   await expect(paymentCard).toBeVisible()
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
+  expect(overflow).toBeLessThanOrEqual(1)
+})
+
+test('13E: Admin genera mensualidades por grupo y el mismo mes no se duplica', async ({ page, request }) => {
+  const admin = await authenticate(request, requiredEnv('E2E_ADMIN_EMAIL'), requiredEnv('E2E_ADMIN_PASSWORD'))
+  const dates = futureMonthParts(4)
+  await loginAdmin(page)
+  await page.setViewportSize({ width: 1440, height: 1000 })
+  await page.goto('/admin/pagos')
+
+  await page.getByRole('button', { name: 'Generar mensualidades' }).click()
+  const batch = page.locator('.admin-payment-batch')
+  await expect(batch).toBeVisible()
+  await expect(batch.getByRole('heading', { name: 'Mensualidades por grupo' })).toBeVisible()
+
+  const groupSelect = batch.getByLabel('Grupo')
+  await expect.poll(async () => groupSelect.locator('option').count()).toBeGreaterThan(1)
+  const groupId = await groupSelect.locator('option').nth(1).getAttribute('value')
+  expect(groupId).toBeTruthy()
+  await groupSelect.selectOption(groupId!)
+  await batch.getByLabel('Mes').fill(dates.month)
+  await batch.getByLabel('Importe por alumno (€)').fill('61')
+  await batch.getByLabel('Vencimiento').fill(dates.due)
+
+  const active = Number(await batch.getByTestId('batch-active-count').textContent())
+  const existing = Number(await batch.getByTestId('batch-existing-count').textContent())
+  const missing = Number(await batch.getByTestId('batch-missing-count').textContent())
+  expect(active).toBeGreaterThan(0)
+  expect(existing + missing).toBe(active)
+
+  const before = await adminPaymentCount(request, admin.token)
+  if (missing > 0) {
+    await batch.getByRole('button', { name: new RegExp(`Generar ${missing} mensualidad`) }).click()
+    await expect(page.getByText(/mensualidad(?:es)? creada/)).toBeVisible()
+  }
+  await expect(batch.getByTestId('batch-missing-count')).toHaveText('0')
+  await expect(batch.getByRole('button', { name: 'Nada pendiente de generar' })).toBeDisabled()
+  const afterFirst = await adminPaymentCount(request, admin.token)
+  expect(afterFirst).toBe(before + missing)
+
+  await page.reload()
+  await page.getByRole('button', { name: 'Generar mensualidades' }).click()
+  const batchAgain = page.locator('.admin-payment-batch')
+  await batchAgain.getByLabel('Grupo').selectOption(groupId!)
+  await batchAgain.getByLabel('Mes').fill(dates.month)
+  await expect(batchAgain.getByTestId('batch-existing-count')).toHaveText(String(active))
+  await expect(batchAgain.getByTestId('batch-missing-count')).toHaveText('0')
+  await expect(batchAgain.getByRole('button', { name: 'Nada pendiente de generar' })).toBeDisabled()
+  expect(await adminPaymentCount(request, admin.token)).toBe(afterFirst)
+
+  await page.setViewportSize({ width: 390, height: 844 })
+  await expect(batchAgain).toBeVisible()
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
   expect(overflow).toBeLessThanOrEqual(1)
 })
