@@ -1,0 +1,224 @@
+/* FASE 14A · NITIDEZ Y CONTRASTE GLOBAL
+   Segunda pasada humana tras revision visual en local.
+   Objetivo: menos crema/niebla, superficies blancas reales y acentos rosa/ciruela mas definidos.
+   No modifica estructura, datos, permisos ni comportamiento. */
+
+.dashboard-shell-admin,
+.dashboard-shell-teacher{
+  --clarity-ink:#2f2229;
+  --clarity-ink-soft:#503c46;
+  --clarity-muted:#6f5a64;
+  --clarity-line:#e4cfd8;
+  --clarity-line-strong:#d9b9c6;
+  --clarity-pink:#c13f71;
+  --clarity-pink-deep:#a52f5b;
+  --clarity-pink-soft:#fdebf2;
+  --clarity-plum:#472936;
+  --clarity-white:#ffffff;
+  --clarity-shadow:0 16px 42px rgba(66,32,46,.065);
+}
+
+/* El lienzo de trabajo deja de tener tono crema general. */
+.dashboard-shell-admin .dashboard-main,
+.dashboard-shell-teacher .dashboard-main{
+  background:#fff;
+  color:var(--clarity-ink);
+}
+
+.dashboard-shell-admin .dashboard-topbar,
+.dashboard-shell-teacher .dashboard-topbar{
+  background:rgba(255,255,255,.985);
+  border-bottom-color:#ead8df;
+}
+
+.dashboard-shell-admin .dashboard-topbar h1,
+.dashboard-shell-teacher .dashboard-topbar h1,
+.dashboard-shell-admin .dashboard-content h2,
+.dashboard-shell-admin .dashboard-content h3,
+.dashboard-shell-admin .dashboard-content h4,
+.dashboard-shell-teacher .dashboard-content h2,
+.dashboard-shell-teacher .dashboard-content h3,
+.dashboard-shell-teacher .dashboard-content h4{
+  color:var(--clarity-ink);
+}
+
+.dashboard-shell-admin .dashboard-content p,
+.dashboard-shell-admin .dashboard-content small,
+.dashboard-shell-admin .dashboard-content .muted,
+.dashboard-shell-teacher .dashboard-content p,
+.dashboard-shell-teacher .dashboard-content small,
+.dashboard-shell-teacher .dashboard-content .muted{
+  color:var(--clarity-muted);
+}
+
+.dashboard-shell-admin .eyebrow,
+.dashboard-shell-teacher .eyebrow{
+  color:var(--clarity-pink-deep);
+}
+
+/* Paneles y tarjetas: blanco real, contorno legible y sombra limpia. */
+.dashboard-shell-admin .dashboard-content .panel,
+.dashboard-shell-teacher .dashboard-content .panel,
+.dashboard-shell-admin .cms-preview-panel,
+.dashboard-shell-admin .students-list-panel,
+.dashboard-shell-admin .student-detail-panel,
+.dashboard-shell-admin .payment-ledger,
+.dashboard-shell-admin .admin-payment-create,
+.dashboard-shell-admin .admin-agenda-filters,
+.dashboard-shell-teacher .monthly-class-calendar,
+.dashboard-shell-admin .monthly-class-calendar,
+.dashboard-shell-teacher .agenda-day-panel,
+.dashboard-shell-admin .agenda-day-panel{
+  border-color:var(--clarity-line) !important;
+  background:#fff !important;
+  box-shadow:var(--clarity-shadow);
+}
+
+/* La portada oscura del dashboard conserva su identidad. */
+.dashboard-shell-admin .admin-dashboard-phase12a .admin-intro,
+.dashboard-shell-admin .admin-dashboard-phase12a .admin-action-featured,
+.dashboard-shell-teacher .teacher-workspace-hero{
+  color:#fff;
+}
+
+/* Dashboard Admin: las superficies secundarias dejan de ser beige. */
+.dashboard-shell-admin .admin-dashboard-phase12a>.metric-grid,
+.dashboard-shell-admin .admin-dashboard-phase12a .admin-action-card:not(.admin-action-featured),
+.dashboard-shell-admin .admin-dashboard-phase12a .admin-action-grid-secondary .admin-action-card,
+.dashboard-shell-admin .admin-dashboard-phase12a .admin-columns>.panel{
+  border-color:var(--clarity-line);
+  background:#fff;
+  box-shadow:var(--clarity-shadow);
+}
+
+.dashboard-shell-admin .admin-dashboard-phase12a .admin-action-academic,
+.dashboard-shell-admin .admin-dashboard-phase12a .admin-columns>.panel{
+  background:#fff !important;
+}
+
+.dashboard-shell-admin .admin-dashboard-phase12a .admin-action-card .action-icon{
+  color:#9f2855;
+  background:#fde8f0;
+}
+
+/* Formularios: campos nítidos y foco rosa visible. */
+.dashboard-shell-admin .dashboard-content input,
+.dashboard-shell-admin .dashboard-content select,
+.dashboard-shell-admin .dashboard-content textarea,
+.dashboard-shell-teacher .dashboard-content input,
+.dashboard-shell-teacher .dashboard-content select,
+.dashboard-shell-teacher .dashboard-content textarea{
+  border-color:#d9c5cd;
+  background:#fff;
+  color:var(--clarity-ink);
+}
+
+.dashboard-shell-admin .dashboard-content input::placeholder,
+.dashboard-shell-admin .dashboard-content textarea::placeholder,
+.dashboard-shell-teacher .dashboard-content input::placeholder,
+.dashboard-shell-teacher .dashboard-content textarea::placeholder{
+  color:#907a84;
+}
+
+.dashboard-shell-admin .dashboard-content input:focus,
+.dashboard-shell-admin .dashboard-content select:focus,
+.dashboard-shell-admin .dashboard-content textarea:focus,
+.dashboard-shell-teacher .dashboard-content input:focus,
+.dashboard-shell-teacher .dashboard-content select:focus,
+.dashboard-shell-teacher .dashboard-content textarea:focus{
+  border-color:var(--clarity-pink);
+  box-shadow:0 0 0 3px rgba(193,63,113,.14);
+  outline:none;
+}
+
+/* Boton principal y acciones con mas presencia cromatica. */
+.dashboard-shell-admin .dashboard-content .button-primary,
+.dashboard-shell-teacher .dashboard-content .button-primary{
+  border-color:#b73566;
+  background:linear-gradient(135deg,#c64375,#a92f5c);
+  color:#fff;
+  box-shadow:0 10px 24px rgba(171,47,92,.16);
+}
+
+.dashboard-shell-admin .dashboard-content .button-primary:hover,
+.dashboard-shell-teacher .dashboard-content .button-primary:hover{
+  background:linear-gradient(135deg,#d0487d,#ad2d5d);
+}
+
+/* Selecciones activas: rosa mas definido sin convertir toda la interfaz en rosa. */
+.dashboard-shell-teacher .teacher-class-list button.active,
+.dashboard-shell-teacher .teacher-student-picker button.active,
+.dashboard-shell-teacher .teacher-correction-list button.active,
+.dashboard-shell-teacher .teacher-levels-picker button.active,
+.dashboard-shell-teacher .teacher-correction-items>button.active,
+.dashboard-shell-admin .students-table-row.selected{
+  border-color:#dfb0c1;
+  background:#fff0f5;
+}
+
+.dashboard-shell-teacher .teacher-class-list time,
+.dashboard-shell-teacher .teacher-material-audience,
+.dashboard-shell-teacher .teacher-assignment-audience{
+  color:#a6315d;
+}
+
+/* Estados informativos rosa; los estados semanticos success/warning conservan sus colores. */
+.dashboard-shell-admin .status.info,
+.dashboard-shell-teacher .status.info,
+.dashboard-shell-admin .private-space-badge,
+.dashboard-shell-teacher .private-space-badge{
+  border-color:#e4becd;
+  background:#fdebf2;
+  color:#8f2d53;
+}
+
+/* Listas internas: separación perceptible y fondo blanco. */
+.dashboard-shell-admin .settings-list>a,
+.dashboard-shell-admin .content-list>div,
+.dashboard-shell-teacher .teacher-record-list article,
+.dashboard-shell-teacher .teacher-student-files article,
+.dashboard-shell-teacher .teacher-attendance-list article,
+.dashboard-shell-teacher .teacher-material-record,
+.dashboard-shell-teacher .teacher-assignment-record{
+  border-color:#eadce1;
+  background:#fff;
+}
+
+.dashboard-shell-admin .settings-list>a:hover,
+.dashboard-shell-teacher .teacher-class-list button:hover,
+.dashboard-shell-teacher .teacher-student-picker button:hover,
+.dashboard-shell-teacher .teacher-correction-list button:hover{
+  background:#fff5f8;
+}
+
+/* Las tarjetas de calendario se distinguen sin recurrir al beige. */
+.dashboard-shell-admin .calendar-toolbar,
+.dashboard-shell-teacher .calendar-toolbar,
+.dashboard-shell-admin .calendar-weekdays,
+.dashboard-shell-teacher .calendar-weekdays{
+  background:#fff;
+  border-color:var(--clarity-line);
+}
+
+.dashboard-shell-admin .calendar-day,
+.dashboard-shell-teacher .calendar-day{
+  background:#fff;
+}
+.dashboard-shell-admin .calendar-day:hover,
+.dashboard-shell-teacher .calendar-day:hover{
+  border-color:#dfb3c4;
+  background:#fff4f8;
+}
+.dashboard-shell-admin .calendar-day.selected,
+.dashboard-shell-teacher .calendar-day.selected{
+  border-color:#d98eaa;
+  background:#ffedf4;
+}
+
+/* No introducir animaciones nuevas. */
+@media(prefers-reduced-motion:reduce){
+  .dashboard-shell-admin .dashboard-content *,
+  .dashboard-shell-teacher .dashboard-content *{
+    transition:none !important;
+  }
+}
