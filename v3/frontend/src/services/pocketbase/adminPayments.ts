@@ -31,6 +31,12 @@ export type StudentPaymentRecord = RecordModel & {
   }
 }
 
+export type MonthlyPaymentBatchResult = {
+  created: StudentPaymentRecord[]
+  enrollmentCount: number
+  skippedExisting: number
+}
+
 function requireAdmin(): AppUser {
   const user = getCurrentUser()
   if (!user || user.role !== 'ADMIN') throw new Error('Se requiere una sesión de administrador activa.')
@@ -153,6 +159,76 @@ export async function createAdminPayment(input: {
     if (status === 400) throw new Error('Ya existe un cobro para ese alumno, matrícula, modalidad y periodo, o alguno de los datos no es válido.')
     throw error
   }
+}
+
+export async function createAdminMonthlyPaymentsForGroup(input: {
+  groupId: string
+  amountCents: number
+  periodStart: string
+  periodEnd: string
+  dueDate: string
+  reference?: string
+  notes?: string
+}): Promise<MonthlyPaymentBatchResult> {
+  requireAdmin()
+  if (!input.groupId) throw new Error('Selecciona un grupo.')
+  if (!Number.isInteger(input.amountCents) || input.amountCents <= 0 || input.amountCents > 1_000_000) {
+    throw new Error('El importe debe ser mayor que cero.')
+  }
+
+  const periodStart = dateOnly(input.periodStart)
+  const periodEnd = dateOnly(input.periodEnd)
+  const dueDate = dateOnly(input.dueDate)
+  if (compareDate(periodEnd, periodStart) < 0) throw new Error('El final del periodo no puede ser anterior al inicio.')
+
+  const enrollmentResult = await pb.collection(collections.enrollments).getList<AdminEnrollmentRecord>(1, 500, {
+    filter: `group = "${quote(input.groupId)}" && status = "ACTIVE"`,
+    sort: 'created',
+    expand: 'student,group,group.course,group.teacher',
+  })
+  const activeEnrollments = enrollmentResult.items
+  if (activeEnrollments.length === 0) return { created: [], enrollmentCount: 0, skippedExisting: 0 }
+
+  const currentPayments = await listAdminPayments({ billingMode: 'MONTHLY', limit: 500 })
+  const existingEnrollmentIds = new Set(
+    currentPayments
+      .filter((record) => record.period_start.slice(0, 10) === periodStart && record.period_end.slice(0, 10) === periodEnd)
+      .map((record) => record.enrollment),
+  )
+
+  const created: StudentPaymentRecord[] = []
+  let skippedExisting = 0
+
+  for (const enrollment of activeEnrollments) {
+    if (existingEnrollmentIds.has(enrollment.id)) {
+      skippedExisting += 1
+      continue
+    }
+
+    try {
+      const record = await createAdminPayment({
+        studentId: enrollment.student,
+        enrollmentId: enrollment.id,
+        billingMode: 'MONTHLY',
+        amountCents: input.amountCents,
+        periodStart,
+        periodEnd,
+        dueDate,
+        reference: input.reference,
+        notes: input.notes,
+      })
+      created.push(record)
+      existingEnrollmentIds.add(enrollment.id)
+    } catch (error) {
+      if (error instanceof Error && error.message.startsWith('Ya existe un cobro para ese alumno')) {
+        skippedExisting += 1
+        continue
+      }
+      throw error
+    }
+  }
+
+  return { created, enrollmentCount: activeEnrollments.length, skippedExisting }
 }
 
 export async function markAdminPaymentPaid(record: StudentPaymentRecord, input: {
