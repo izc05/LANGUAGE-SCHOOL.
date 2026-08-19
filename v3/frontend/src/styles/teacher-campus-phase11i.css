@@ -1,0 +1,216 @@
+/* FASE 11.9 · RESPONSIVE + NAVEGACION FINAL DEL PROFESOR
+   Shell exclusivo TEACHER: etiquetas legibles en tablet y carril tactil en movil.
+   Admin y Student quedan fuera de alcance. */
+
+.dashboard-shell-teacher .dashboard-main{min-width:0}
+.dashboard-shell-teacher .dashboard-nav a:focus-visible{
+  outline:3px solid rgba(225,121,157,.5);
+  outline-offset:2px;
+}
+
+/* Tablet: conservar nombres de las ocho secciones en lugar del rail generico de 82px. */
+@media(max-width:1050px) and (min-width:761px){
+  .dashboard-shell-teacher{
+    grid-template-columns:205px minmax(0,1fr);
+  }
+
+  .dashboard-shell-teacher .dashboard-sidebar{
+    padding-inline:14px;
+  }
+
+  .dashboard-shell-teacher .dashboard-brand{
+    justify-content:flex-start;
+    gap:9px;
+    padding-inline:4px;
+  }
+
+  .dashboard-shell-teacher .dashboard-brand>span:last-child{
+    display:grid;
+    min-width:0;
+    font-size:inherit;
+  }
+
+  .dashboard-shell-teacher .dashboard-brand strong{
+    display:block;
+    overflow:hidden;
+    max-width:126px;
+    font-size:.88rem;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
+  .dashboard-shell-teacher .dashboard-brand small{
+    display:block;
+    font-size:.62rem;
+  }
+
+  .dashboard-shell-teacher .dashboard-nav{
+    gap:4px;
+    padding-top:19px;
+  }
+
+  .dashboard-shell-teacher .dashboard-nav a{
+    min-height:42px;
+    padding:0 11px;
+    font-size:.77rem;
+    white-space:nowrap;
+  }
+
+  .dashboard-shell-teacher .dashboard-nav .nav-dot{
+    flex:0 0 auto;
+  }
+}
+
+/* Movil: cabecera docente compacta + navegacion horizontal siempre accesible. */
+@media(max-width:760px){
+  .dashboard-shell-teacher{
+    display:block;
+  }
+
+  .dashboard-shell-teacher .dashboard-sidebar{
+    position:sticky;
+    top:0;
+    z-index:60;
+    display:flex;
+    flex-direction:column;
+    align-items:stretch;
+    width:100%;
+    height:auto;
+    padding:10px 12px 9px;
+    overflow:hidden;
+    background:linear-gradient(180deg,#3c2c36,#211b20);
+    box-shadow:0 10px 30px rgba(39,24,32,.14);
+  }
+
+  .dashboard-shell-teacher .dashboard-brand{
+    justify-content:flex-start;
+    width:max-content;
+    max-width:100%;
+    gap:9px;
+    padding:0 3px 8px;
+    border:0;
+  }
+
+  .dashboard-shell-teacher .dashboard-brand .brand-logo-image,
+  .dashboard-shell-teacher .dashboard-brand .brand-mark{
+    width:36px;
+    height:36px;
+  }
+
+  .dashboard-shell-teacher .dashboard-brand>span:last-child{
+    display:grid;
+    min-width:0;
+    font-size:inherit;
+  }
+
+  .dashboard-shell-teacher .dashboard-brand strong{
+    overflow:hidden;
+    max-width:min(72vw,300px);
+    color:#fff;
+    font-size:.9rem;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
+  .dashboard-shell-teacher .dashboard-brand small{
+    display:block;
+    color:#cfbcc5;
+    font-size:.61rem;
+  }
+
+  .dashboard-shell-teacher .dashboard-nav{
+    display:flex;
+    width:100%;
+    min-width:0;
+    gap:6px;
+    padding:2px 0 1px;
+    overflow-x:auto;
+    overflow-y:hidden;
+    overscroll-behavior-x:contain;
+    scrollbar-width:none;
+    -webkit-overflow-scrolling:touch;
+    scroll-snap-type:x proximity;
+  }
+
+  .dashboard-shell-teacher .dashboard-nav::-webkit-scrollbar{display:none}
+
+  .dashboard-shell-teacher .dashboard-nav a{
+    flex:0 0 auto;
+    width:auto;
+    min-height:42px;
+    padding:0 12px;
+    border:1px solid rgba(255,255,255,.075);
+    border-radius:999px;
+    color:#d7c6ce;
+    background:rgba(255,255,255,.045);
+    font-size:.74rem;
+    font-weight:750;
+    white-space:nowrap;
+    scroll-snap-align:start;
+  }
+
+  .dashboard-shell-teacher .dashboard-nav a:hover{
+    color:#fff;
+    background:rgba(255,255,255,.08);
+    transform:none;
+  }
+
+  .dashboard-shell-teacher .dashboard-nav a.active{
+    color:#fff;
+    border-color:rgba(226,133,166,.24);
+    background:linear-gradient(110deg,rgba(172,72,109,.4),rgba(255,255,255,.07));
+  }
+
+  .dashboard-shell-teacher .dashboard-nav .nav-dot{
+    width:6px;
+    height:6px;
+    flex:0 0 auto;
+  }
+
+  .dashboard-shell-teacher .sidebar-footer{display:none}
+
+  .dashboard-shell-teacher .dashboard-topbar{
+    position:static;
+    min-height:auto;
+    padding:15px 17px;
+    gap:12px;
+    background:rgba(255,252,252,.97);
+    backdrop-filter:none;
+  }
+
+  .dashboard-shell-teacher .dashboard-topbar .eyebrow{font-size:.62rem}
+  .dashboard-shell-teacher .dashboard-topbar h1{
+    margin-top:2px;
+    font-size:1.12rem;
+    line-height:1.2;
+  }
+
+  .dashboard-shell-teacher .session-actions{gap:8px}
+  .dashboard-shell-teacher .user-chip>span{
+    width:34px;
+    height:34px;
+  }
+  .dashboard-shell-teacher .session-logout{
+    min-height:40px;
+    padding-inline:11px;
+    border-radius:999px;
+    font-size:.7rem;
+  }
+
+  .dashboard-shell-teacher .dashboard-content{
+    min-width:0;
+  }
+}
+
+@media(max-width:430px){
+  .dashboard-shell-teacher .dashboard-sidebar{padding-inline:10px}
+  .dashboard-shell-teacher .dashboard-nav a{min-height:42px;padding-inline:11px}
+  .dashboard-shell-teacher .dashboard-topbar{align-items:flex-start}
+  .dashboard-shell-teacher .dashboard-topbar h1{max-width:210px}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .dashboard-shell-teacher .dashboard-nav a{
+    transition:none;
+  }
+}
