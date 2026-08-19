@@ -48,7 +48,15 @@ async function expectNoPaymentRead(request: APIRequestContext, token: string) {
   }
 }
 
+async function adminPaymentCount(request: APIRequestContext, token: string): Promise<number> {
+  const list = await request.get(`${PB_URL}/api/collections/student_payments/records?perPage=1`, { headers: { Authorization: token } })
+  expect(list.status(), await list.text()).toBe(200)
+  const body = await list.json() as { totalItems?: number }
+  return body.totalItems || 0
+}
+
 test('13B: la colección económica queda bloqueada para Profesor y Alumno', async ({ request }) => {
+  const admin = await authenticate(request, requiredEnv('E2E_ADMIN_EMAIL'), requiredEnv('E2E_ADMIN_PASSWORD'))
   const teacher = await authenticate(request, requiredEnv('E2E_TEACHER_EMAIL'), requiredEnv('E2E_TEACHER_PASSWORD'))
   const student = await authenticate(request, requiredEnv('E2E_STUDENT_EMAIL'), requiredEnv('E2E_STUDENT_PASSWORD'))
 
@@ -61,6 +69,7 @@ test('13B: la colección económica queda bloqueada para Profesor y Alumno', asy
   await expectNoPaymentRead(request, teacher.token)
   await expectNoPaymentRead(request, student.token)
 
+  const before = await adminPaymentCount(request, admin.token)
   const dates = localDateParts()
   for (const actor of [teacher, student]) {
     const create = await request.post(`${PB_URL}/api/collections/student_payments/records`, {
@@ -74,15 +83,18 @@ test('13B: la colección económica queda bloqueada para Profesor y Alumno', asy
         period_end: dates.end,
         due_date: dates.due,
         status: 'PENDING',
-        recorded_by: actor.id,
+        recorded_by: admin.id,
       },
     })
-    expect([403, 404]).toContain(create.status())
+    expect(create.ok()).toBe(false)
   }
+  const after = await adminPaymentCount(request, admin.token)
+  expect(after).toBe(before)
 })
 
-test('13C-D: Admin registra una mensualidad, la cobra y la ficha del alumno refleja el histórico', async ({ page }) => {
+test('13C-D: Admin registra una mensualidad, la cobra y la ficha del alumno refleja el histórico', async ({ page, request }) => {
   const dates = localDateParts()
+  const studentAccount = await authenticate(request, requiredEnv('E2E_STUDENT_EMAIL'), requiredEnv('E2E_STUDENT_PASSWORD'))
   await loginAdmin(page)
   await page.setViewportSize({ width: 1440, height: 1000 })
   await page.goto('/admin/pagos')
@@ -93,24 +105,13 @@ test('13C-D: Admin registra una mensualidad, la cobra y la ficha del alumno refl
   const create = page.locator('.admin-payment-create')
   const studentSelect = create.getByLabel('Alumno')
   const studentEmail = requiredEnv('E2E_STUDENT_EMAIL')
-  const options = studentSelect.locator('option')
-  await expect.poll(async () => options.count()).toBeGreaterThan(1)
-  const optionCount = await options.count()
-  let optionValue = ''
-  for (let index = 1; index < optionCount; index += 1) {
-    const text = await options.nth(index).textContent()
-    if (text?.toLowerCase().includes(studentEmail.split('@')[0].toLowerCase())) {
-      optionValue = await options.nth(index).getAttribute('value') || ''
-      break
-    }
-  }
-  if (!optionValue) optionValue = await options.nth(1).getAttribute('value') || ''
-  expect(optionValue).toBeTruthy()
-  await studentSelect.selectOption(optionValue)
+  await expect(studentSelect.locator(`option[value="${studentAccount.id}"]`)).toHaveCount(1)
+  await studentSelect.selectOption(studentAccount.id)
 
   const enrollmentSelect = create.getByLabel('Matrícula')
   await expect.poll(async () => enrollmentSelect.locator('option').count()).toBeGreaterThan(1)
   const enrollmentValue = await enrollmentSelect.locator('option').nth(1).getAttribute('value')
+  expect(enrollmentValue).toBeTruthy()
   await enrollmentSelect.selectOption(enrollmentValue!)
 
   await create.getByLabel('Modalidad').selectOption('MONTHLY')
@@ -121,7 +122,7 @@ test('13C-D: Admin registra una mensualidad, la cobra y la ficha del alumno refl
   await create.getByRole('button', { name: 'Crear pendiente' }).click()
   await expect(page.getByText('Cobro pendiente creado correctamente.')).toBeVisible()
 
-  const record = page.locator('.payment-record').filter({ hasText: '55,00' }).first()
+  const record = page.locator('.payment-record').filter({ hasText: '55,00' }).filter({ hasText: studentEmail.split('@')[0] }).first()
   await expect(record).toBeVisible()
   await expect(record.getByText(/Pendiente|Vencido/)).toBeVisible()
   await record.getByRole('button', { name: 'Marcar pagado' }).click()
