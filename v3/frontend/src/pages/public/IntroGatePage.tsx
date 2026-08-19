@@ -1,7 +1,6 @@
 import { lazy, Suspense, useState } from 'react'
 import IntroSceneErrorBoundary from './intro/premium/IntroSceneErrorBoundary'
-import './intro/premium/premium-intro.css'
-import './intro/premium/intro-orbit-refresh.css'
+import './intro/premium/intro-gate-light.css'
 
 const HomePage = lazy(() => import('./HomePage'))
 const IntroPage = lazy(() => import('./intro/IntroPage'))
@@ -18,13 +17,13 @@ function introAlreadyCompleted(): boolean {
 
 function LightweightOrbitLockup() {
   return (
-    <div className="intro-orbit-stage">
-      <div className="intro-orbit-sphere" aria-hidden="true" />
-      <section className="premium-brand-lockup intro-orbit-brand" aria-label="Language School Rocío Ruiz">
-        <span className="premium-brand-language">LANGUAGE</span>
-        <strong className="premium-brand-school">School</strong>
-        <div className="premium-brand-divider" aria-hidden="true" />
-        <span className="premium-brand-rocio">ROCÍO RUIZ</span>
+    <div className="intro-gate-stage">
+      <div className="intro-gate-sphere" aria-hidden="true" />
+      <section className="intro-gate-brand" aria-label="Language School Rocío Ruiz">
+        <span className="intro-gate-language">LANGUAGE</span>
+        <strong className="intro-gate-school">School</strong>
+        <div className="intro-gate-divider" aria-hidden="true" />
+        <span className="intro-gate-rocio">ROCÍO RUIZ</span>
       </section>
     </div>
   )
@@ -32,18 +31,18 @@ function LightweightOrbitLockup() {
 
 function IntroLoadingFallback() {
   return (
-    <main className="premium-intro intro-orbit-refresh brand-visible actions-visible settled" aria-busy="true">
-      <div className="intro-orbit-ambient" aria-hidden="true" />
+    <main className="intro-gate-light" aria-busy="true">
+      <div className="intro-gate-ambient" aria-hidden="true" />
       <LightweightOrbitLockup />
-      <div className="premium-entry-actions intro-orbit-actions" role="status">
-        <p className="premium-instruction">Preparando la entrada…</p>
+      <div className="intro-gate-actions" role="status">
+        <p className="intro-gate-instruction">Preparando la entrada…</p>
       </div>
     </main>
   )
 }
 
 function HomeLoadingFallback() {
-  return <div className="intro-loading" role="status">Preparando Language School…</div>
+  return <div className="intro-home-loading" role="status">Preparando Language School…</div>
 }
 
 function StaticIntroFallback({ onEnter }: { onEnter: () => void }) {
@@ -55,34 +54,25 @@ function StaticIntroFallback({ onEnter }: { onEnter: () => void }) {
     window.setTimeout(onEnter, SAFE_ENTER_TRANSITION_MS)
   }
 
-  const classes = [
-    'premium-intro',
-    'intro-orbit-refresh',
-    'brand-visible',
-    'actions-visible',
-    'settled',
-    transitioning ? 'is-transitioning' : '',
-  ].filter(Boolean).join(' ')
-
   return (
-    <main className={classes}>
-      <div className="intro-orbit-ambient" aria-hidden="true" />
+    <main className={`intro-gate-light${transitioning ? ' is-transitioning' : ''}`}>
+      <div className="intro-gate-ambient" aria-hidden="true" />
       <LightweightOrbitLockup />
 
-      <div className="premium-entry-actions intro-orbit-actions">
-        <p className="premium-instruction">Bienvenido a Language School</p>
+      <div className="intro-gate-actions">
+        <p className="intro-gate-instruction">Bienvenido a Language School</p>
         <button
-          className="premium-enter-button intro-enter-button"
+          className="intro-gate-enter"
           type="button"
           onClick={startEnter}
           disabled={transitioning}
         >
           <span>{transitioning ? 'ENTRANDO…' : 'ENTRAR'}</span>
-          {!transitioning && <span aria-hidden="true" className="premium-enter-arrow">↗</span>}
+          {!transitioning && <span aria-hidden="true">↗</span>}
         </button>
       </div>
 
-      <div className="intro-orbit-transition" aria-hidden="true" />
+      <div className="intro-gate-transition" aria-hidden="true" />
     </main>
   )
 }
