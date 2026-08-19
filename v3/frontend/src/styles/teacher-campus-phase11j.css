@@ -1,0 +1,219 @@
+/* FASE 11.10 · REVISION VISUAL DE TABLAS Y CUADROS DEL PROFESOR
+   Correccion posterior a revision humana: prioriza legibilidad real, no solo ausencia de overflow.
+   No modifica permisos, consultas, estados ni contratos de datos. */
+
+.dashboard-shell-teacher .teacher-portal-page{
+  --teacher-readable-muted:#68575f;
+  --teacher-readable-line:#dfd0d6;
+}
+
+/* Los paneles de trabajo necesitan separacion visual suficiente para no parecer una tabla gris continua. */
+.dashboard-shell-teacher .teacher-portal-page .panel{
+  border-color:var(--teacher-readable-line);
+  background-color:#fffdfc;
+}
+
+.dashboard-shell-teacher .teacher-portal-page .panel-heading{
+  gap:12px;
+}
+
+.dashboard-shell-teacher .teacher-portal-page .panel-heading p,
+.dashboard-shell-teacher .teacher-portal-page small,
+.dashboard-shell-teacher .teacher-portal-page .muted{
+  color:var(--teacher-readable-muted);
+  line-height:1.5;
+}
+
+.dashboard-shell-teacher .teacher-portal-page .field-stack>span,
+.dashboard-shell-teacher .teacher-portal-page form>label{
+  color:#5e4c55;
+  font-size:.78rem;
+  line-height:1.35;
+}
+
+.dashboard-shell-teacher .teacher-portal-page input,
+.dashboard-shell-teacher .teacher-portal-page select,
+.dashboard-shell-teacher .teacher-portal-page textarea{
+  min-height:46px;
+  font-size:.92rem;
+  line-height:1.4;
+}
+
+.dashboard-shell-teacher .teacher-portal-page textarea{
+  padding-block:12px;
+}
+
+.dashboard-shell-teacher .teacher-portal-page .teacher-record-actions button,
+.dashboard-shell-teacher .teacher-portal-page .teacher-student-files button,
+.dashboard-shell-teacher .teacher-portal-page .teacher-class-status-actions button,
+.dashboard-shell-teacher .teacher-portal-page .teacher-attendance-actions button,
+.dashboard-shell-teacher .teacher-portal-page .teacher-review-actions .button{
+  min-height:42px;
+  font-size:.78rem;
+  line-height:1.25;
+}
+
+.dashboard-shell-teacher .teacher-portal-page .status{
+  min-height:28px;
+  display:inline-flex;
+  align-items:center;
+  line-height:1.2;
+}
+
+/* Registros: permitir leer el titulo y el destino sin depender de elipsis prematuras. */
+.dashboard-shell-teacher .teacher-material-copy>strong,
+.dashboard-shell-teacher .teacher-assignment-title-row>strong,
+.dashboard-shell-teacher .teacher-correction-items>button strong,
+.dashboard-shell-teacher .teacher-correction-items>button small{
+  text-overflow:clip;
+}
+
+/*
+  1180 no es realmente ancho dentro del portal: la barra lateral consume parte del viewport.
+  A partir de este punto se prioriza una sola columna amplia. Esto evita paneles de 280-350 px
+  enfrentados a formularios/detalles demasiado estrechos.
+*/
+@media(max-width:1180px){
+  .dashboard-shell-teacher .teacher-students-grid,
+  .dashboard-shell-teacher .teacher-levels-grid,
+  .dashboard-shell-teacher .teacher-class-workspace,
+  .dashboard-shell-teacher .teacher-material-workspace,
+  .dashboard-shell-teacher .teacher-assignment-workspace,
+  .dashboard-shell-teacher .teacher-corrections-workspace{
+    grid-template-columns:minmax(0,1fr) !important;
+    gap:20px;
+  }
+
+  .dashboard-shell-teacher .teacher-student-list-panel,
+  .dashboard-shell-teacher .teacher-levels-students,
+  .dashboard-shell-teacher .teacher-material-form,
+  .dashboard-shell-teacher .teacher-assignment-form,
+  .dashboard-shell-teacher .teacher-correction-list{
+    position:static !important;
+    top:auto !important;
+  }
+
+  /* Ver primero informacion existente; los formularios quedan despues. */
+  .dashboard-shell-teacher .teacher-class-agenda{order:1}
+  .dashboard-shell-teacher .teacher-class-create{order:2}
+  .dashboard-shell-teacher .teacher-material-library{order:1}
+  .dashboard-shell-teacher .teacher-material-form{order:2}
+  .dashboard-shell-teacher .teacher-assignment-plan{order:1}
+  .dashboard-shell-teacher .teacher-assignment-form{order:2}
+
+  /* Listados de seleccion amplios, reconocibles como tarjetas y no como filas comprimidas. */
+  .dashboard-shell-teacher .teacher-student-picker,
+  .dashboard-shell-teacher .teacher-levels-picker,
+  .dashboard-shell-teacher .teacher-correction-items{
+    display:grid !important;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:9px;
+    overflow:visible;
+  }
+
+  .dashboard-shell-teacher .teacher-student-picker button,
+  .dashboard-shell-teacher .teacher-levels-picker button,
+  .dashboard-shell-teacher .teacher-correction-items>button{
+    width:100%;
+    min-width:0;
+    min-height:72px;
+    margin:0;
+    padding:13px 14px;
+    border:1px solid #eadde2;
+    border-radius:16px;
+    background:#fff;
+  }
+
+  .dashboard-shell-teacher .teacher-student-picker button.active,
+  .dashboard-shell-teacher .teacher-levels-picker button.active,
+  .dashboard-shell-teacher .teacher-correction-items>button.active{
+    width:100%;
+    margin:0;
+    border-color:#dfb7c6;
+  }
+
+  .dashboard-shell-teacher .teacher-levels-picker button{
+    min-width:0 !important;
+  }
+
+  .dashboard-shell-teacher .teacher-material-copy>strong,
+  .dashboard-shell-teacher .teacher-assignment-title-row>strong,
+  .dashboard-shell-teacher .teacher-correction-items>button strong,
+  .dashboard-shell-teacher .teacher-correction-items>button small{
+    overflow:visible;
+    white-space:normal;
+  }
+
+  .dashboard-shell-teacher .teacher-material-audience,
+  .dashboard-shell-teacher .teacher-assignment-audience{
+    width:auto;
+    max-width:100%;
+    white-space:normal;
+    line-height:1.35;
+  }
+
+  .dashboard-shell-teacher .teacher-class-list button{
+    min-height:82px;
+    padding-block:15px;
+  }
+
+  .dashboard-shell-teacher .teacher-class-list strong,
+  .dashboard-shell-teacher .teacher-attendance-list strong,
+  .dashboard-shell-teacher .teacher-student-files strong{
+    font-size:.98rem;
+    line-height:1.35;
+  }
+
+  .dashboard-shell-teacher .teacher-attendance-list article,
+  .dashboard-shell-teacher .teacher-student-files article,
+  .dashboard-shell-teacher .teacher-material-record,
+  .dashboard-shell-teacher .teacher-assignment-record{
+    min-height:82px;
+    padding-block:16px;
+  }
+}
+
+@media(max-width:700px){
+  .dashboard-shell-teacher .teacher-student-picker,
+  .dashboard-shell-teacher .teacher-levels-picker,
+  .dashboard-shell-teacher .teacher-correction-items{
+    grid-template-columns:1fr;
+  }
+
+  .dashboard-shell-teacher .teacher-student-picker button,
+  .dashboard-shell-teacher .teacher-levels-picker button,
+  .dashboard-shell-teacher .teacher-correction-items>button{
+    min-height:68px;
+  }
+
+  .dashboard-shell-teacher .teacher-record-actions,
+  .dashboard-shell-teacher .teacher-review-actions,
+  .dashboard-shell-teacher .teacher-class-status-actions{
+    gap:8px;
+  }
+}
+
+@media(max-width:430px){
+  .dashboard-shell-teacher .teacher-portal-page .panel{
+    border-radius:20px;
+  }
+
+  .dashboard-shell-teacher .teacher-portal-page .panel-heading h3{
+    line-height:1.08;
+  }
+
+  .dashboard-shell-teacher .teacher-portal-page .teacher-record-actions button,
+  .dashboard-shell-teacher .teacher-portal-page .teacher-student-files button,
+  .dashboard-shell-teacher .teacher-portal-page .teacher-class-status-actions button,
+  .dashboard-shell-teacher .teacher-portal-page .teacher-attendance-actions button{
+    min-height:44px;
+    font-size:.76rem;
+  }
+
+  .dashboard-shell-teacher .teacher-material-record,
+  .dashboard-shell-teacher .teacher-assignment-record,
+  .dashboard-shell-teacher .teacher-attendance-list article,
+  .dashboard-shell-teacher .teacher-student-files article{
+    row-gap:10px;
+  }
+}
