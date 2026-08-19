@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { Fragment, type ReactNode } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router'
 import BackendStatusBanner from './BackendStatusBanner'
 import { useBackendHealth } from '../hooks/useBackendHealth'
@@ -6,7 +6,7 @@ import { useAcademyBrand } from '../hooks/useAcademyBrand'
 import { useAuth } from '../features/auth/AuthProvider'
 import type { UserRole } from '../services/pocketbase/types'
 
-type NavItem = string | { label: string; to: string }
+type NavItem = string | { label: string; to: string; section?: string }
 
 type DashboardShellProps = {
   role: 'Alumno' | 'Profesor' | 'Administrador'
@@ -68,14 +68,16 @@ export default function DashboardShell({ role, name, nav, children }: DashboardS
             }
 
             return (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={isPortalRoot(item.to)}
-                className={({ isActive }) => isActive ? 'active' : undefined}
-              >
-                <span className="nav-dot" /> {item.label}
-              </NavLink>
+              <Fragment key={item.to}>
+                {item.section && <span className="dashboard-nav-section" aria-hidden="true">{item.section}</span>}
+                <NavLink
+                  to={item.to}
+                  end={isPortalRoot(item.to)}
+                  className={({ isActive }) => isActive ? 'active' : undefined}
+                >
+                  <span className="nav-dot" /> {item.label}
+                </NavLink>
+              </Fragment>
             )
           })}
         </nav>
