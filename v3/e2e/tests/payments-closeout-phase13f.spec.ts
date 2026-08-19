@@ -44,7 +44,7 @@ async function findAdminPayment(request: APIRequestContext, token: string, enrol
   return body.items.find((item) => item.enrollment === enrollmentId && String(item.period_start).slice(0, 10) === start && String(item.period_end).slice(0, 10) === end)
 }
 
-test('13F: pagos queda aislado de Profesor/Alumno y Admin conserva CRUD en céntimos sin datos bancarios sensibles', async ({ request }) => {
+test('13F: pagos queda aislado y Admin gestiona céntimos sin destruir el histórico ni guardar datos bancarios sensibles', async ({ request }) => {
   const admin = await authenticate(request, requiredEnv('E2E_ADMIN_EMAIL'), requiredEnv('E2E_ADMIN_PASSWORD'))
   const teacher = await authenticate(request, requiredEnv('E2E_TEACHER_EMAIL'), requiredEnv('E2E_TEACHER_PASSWORD'))
   const student = await authenticate(request, requiredEnv('E2E_STUDENT_EMAIL'), requiredEnv('E2E_STUDENT_PASSWORD'))
@@ -81,7 +81,7 @@ test('13F: pagos queda aislado de Profesor/Alumno y Admin conserva CRUD en cént
 
   const update = await request.patch(`${PB_URL}/api/collections/student_payments/records/${recordId}`, {
     headers: { Authorization: admin.token },
-    data: { amount_cents: 6300 },
+    data: { amount_cents: 6300, status: 'PENDING' },
   })
   expect(update.status(), await update.text()).toBe(200)
   record = await update.json() as Record<string, unknown>
@@ -110,10 +110,23 @@ test('13F: pagos queda aislado de Profesor/Alumno y Admin conserva CRUD en cént
   const afterIsolationRecord = await afterIsolation.json() as { amount_cents: number }
   expect(afterIsolationRecord.amount_cents).toBe(6300)
 
+  const cancel = await request.patch(`${PB_URL}/api/collections/student_payments/records/${recordId}`, {
+    headers: { Authorization: admin.token },
+    data: { status: 'CANCELLED', notes: '13F cierre: conservar trazabilidad sin borrado físico' },
+  })
+  expect(cancel.status(), await cancel.text()).toBe(200)
+  const cancelled = await cancel.json() as { status: string; amount_cents: number }
+  expect(cancelled.status).toBe('CANCELLED')
+  expect(cancelled.amount_cents).toBe(6300)
+
   const adminDelete = await request.delete(`${PB_URL}/api/collections/student_payments/records/${recordId}`, { headers: { Authorization: admin.token } })
-  expect(adminDelete.ok()).toBe(true)
-  const removed = await request.get(`${PB_URL}/api/collections/student_payments/records/${recordId}`, { headers: { Authorization: admin.token } })
-  expect(removed.status()).toBe(404)
+  expect(adminDelete.status(), await adminDelete.text()).toBe(403)
+
+  const preserved = await request.get(`${PB_URL}/api/collections/student_payments/records/${recordId}`, { headers: { Authorization: admin.token } })
+  expect(preserved.status(), await preserved.text()).toBe(200)
+  const preservedRecord = await preserved.json() as { status: string; amount_cents: number }
+  expect(preservedRecord.status).toBe('CANCELLED')
+  expect(preservedRecord.amount_cents).toBe(6300)
 })
 
 test('13F: lote sigue siendo mensual, intensivo sigue manual y Pagos cierra responsive', async ({ page }) => {
