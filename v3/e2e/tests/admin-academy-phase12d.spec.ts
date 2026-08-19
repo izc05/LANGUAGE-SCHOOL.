@@ -74,7 +74,7 @@ test('12.4: Alumnos y Profesores conservan gestión académica con responsive re
   expect(studentTransition.split(',').every((value) => durationInMs(value) <= 0.01)).toBe(true)
 
   await page.setViewportSize({ width: 1440, height: 1000 })
-  await nav.getByRole('link', { name: 'Profesores' }).click()
+  await nav.getByRole('link', { name: 'Profesores', exact: true }).click()
   await expect(page).toHaveURL(/\/admin\/profesores$/)
   await expect(page.getByRole('heading', { name: 'Equipo docente' })).toBeVisible()
   await expect(page.locator('.cms-page:has(.teacher-admin-grid) > .metric-grid article')).toHaveCount(4)
