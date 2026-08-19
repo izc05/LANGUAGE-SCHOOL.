@@ -22,6 +22,22 @@ function extension(filename: string): string {
   return filename.split('.').pop()?.slice(0, 4).toUpperCase() || 'FILE'
 }
 
+function materialAudience(record: MaterialRecord, groups: TeacherGroupRecord[], enrollments: TeacherEnrollmentRecord[]): string {
+  if (record.visibility === 'GROUP') {
+    const group = groups.find((item) => item.id === record.group)
+    return group ? `Grupo · ${group.name}` : 'Grupo'
+  }
+
+  if (record.visibility === 'STUDENT') {
+    const enrollment = enrollments.find((item) => item.student === record.student)
+    const student = enrollment?.expand?.student
+    const name = student ? [student.name, student.surname].filter(Boolean).join(' ') : ''
+    return name ? `Alumno · ${name}` : 'Alumno'
+  }
+
+  return 'Curso'
+}
+
 export default function TeacherMaterialPage() {
   const { isDemoMode } = useAuth()
   const [groups, setGroups] = useState<TeacherGroupRecord[]>([])
@@ -133,22 +149,39 @@ export default function TeacherMaterialPage() {
 
   return (
     <DashboardShell role="Profesor" name="Profesor" nav={[...teacherNav]}>
-      <div className="dashboard-content teacher-portal-page">
-        <header className="teacher-page-heading"><div><span className="eyebrow">RECURSOS</span><h2>Material</h2><p>Publica recursos únicamente para tus grupos o alumnos activos.</p></div><span className="status success">Ámbito protegido</span></header>
+      <div className="dashboard-content teacher-portal-page teacher-material-page">
+        <header className="teacher-page-heading">
+          <div><span className="eyebrow">RECURSOS</span><h2>Material</h2><p>Prepara recursos para tus clases y publícalos únicamente a los grupos o alumnos activos que tengas asignados.</p></div>
+          <span className="status success">Ámbito protegido</span>
+        </header>
         {loading && <div className="cms-notice" role="status">Cargando recursos…</div>}
         {message && <div className="cms-notice success-notice" role="status">{message}</div>}
         {error && <div className="cms-notice auth-error" role="alert">{error}</div>}
-        <div className="teacher-authoring-grid">
-          <form className="panel teacher-authoring-form" onSubmit={submit}>
-            <div className="panel-heading"><div><span className="eyebrow">NUEVO MATERIAL</span><h3>Publicar recurso</h3></div></div>
+        <div className="teacher-authoring-grid teacher-material-workspace">
+          <form className="panel teacher-authoring-form teacher-material-form" onSubmit={submit}>
+            <div className="panel-heading"><div><span className="eyebrow">PREPARAR RECURSO</span><h3>Nuevo material</h3></div></div>
+            <p className="teacher-material-form-intro">Elige primero a quién va dirigido. Después añade el archivo y una explicación breve para que el alumno sepa cómo utilizarlo.</p>
             {targets.length === 0 && !loading && <PortalEmptyState compact title="Sin destinos disponibles" description="Necesitas al menos un grupo asignado o un alumno activo para publicar material." />}
             <label className="field-stack"><span>Destino</span><select value={targetKey} onChange={(e) => setTargetKey(e.target.value)} disabled={targets.length === 0}>{targets.length === 0 && <option value="">Sin destinos disponibles</option>}{targets.map((target) => <option key={target.key} value={target.key}>{target.label}</option>)}</select></label>
             <label className="field-stack"><span>Título</span><input value={title} onChange={(e) => setTitle(e.target.value)} required disabled={targets.length === 0} /></label>
             <label className="field-stack"><span>Descripción</span><textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} disabled={targets.length === 0} /></label>
-            <label className="upload-dropzone"><input type="file" accept=".pdf,.doc,.docx,.mp3,.m4a,.jpg,.jpeg,.png,.webp" onChange={chooseFile} disabled={targets.length === 0} /><strong>{file?.name || 'Seleccionar archivo'}</strong><small>Máximo 20 MB</small></label>
+            <label className="upload-dropzone teacher-material-dropzone"><input type="file" accept=".pdf,.doc,.docx,.mp3,.m4a,.jpg,.jpeg,.png,.webp" onChange={chooseFile} disabled={targets.length === 0} /><strong>{file?.name || 'Seleccionar archivo'}</strong><small>PDF, documento, audio o imagen · máximo 20 MB</small></label>
             <button className="button button-primary" type="submit" disabled={saving || targets.length === 0}>{saving ? 'Publicando…' : 'Publicar material'}</button>
           </form>
-          <section className="panel teacher-record-list"><div className="panel-heading"><div><span className="eyebrow">MIS RECURSOS</span><h3>{materials.length} materiales</h3></div></div><div>{materials.map((record) => <article key={record.id}><span className="teacher-record-icon">{extension(record.file)}</span><div><strong>{record.title}</strong><small>{record.visibility === 'GROUP' ? 'Grupo' : record.visibility === 'STUDENT' ? 'Alumno' : 'Curso'}</small></div><div className="teacher-record-actions"><button type="button" onClick={() => void download(record)}>Abrir</button><button type="button" onClick={() => void remove(record)}>Eliminar</button></div></article>)}{!loading && materials.length === 0 && <PortalEmptyState compact title="Todavía no has publicado material" description="Tus recursos publicados aparecerán aquí para que puedas revisarlos o eliminarlos." />}</div></section>
+          <section className="panel teacher-record-list teacher-material-library">
+            <div className="panel-heading"><div><span className="eyebrow">BIBLIOTECA DOCENTE</span><h3>{materials.length} materiales</h3></div></div>
+            <div className="teacher-material-list">{materials.map((record) => (
+              <article className="teacher-material-record" key={record.id}>
+                <span className="teacher-record-icon">{extension(record.file)}</span>
+                <div className="teacher-material-copy">
+                  <strong>{record.title}</strong>
+                  <small className="teacher-material-audience">{materialAudience(record, groups, enrollments)}</small>
+                  {record.description && <p>{record.description}</p>}
+                </div>
+                <div className="teacher-record-actions"><button type="button" onClick={() => void download(record)}>Abrir</button><button type="button" onClick={() => void remove(record)}>Eliminar</button></div>
+              </article>
+            ))}{!loading && materials.length === 0 && <PortalEmptyState compact title="Todavía no has publicado material" description="Tus recursos publicados aparecerán aquí para que puedas revisarlos o eliminarlos." />}</div>
+          </section>
         </div>
       </div>
     </DashboardShell>
