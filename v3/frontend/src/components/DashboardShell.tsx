@@ -1,5 +1,5 @@
 import { Fragment, type ReactNode } from 'react'
-import { Link, NavLink, useNavigate } from 'react-router'
+import { Link, useLocation, useNavigate } from 'react-router'
 import BackendStatusBanner from './BackendStatusBanner'
 import { useBackendHealth } from '../hooks/useBackendHealth'
 import { useAcademyBrand } from '../hooks/useAcademyBrand'
@@ -21,8 +21,15 @@ function roleLabel(role: UserRole): DashboardShellProps['role'] {
   return 'Alumno'
 }
 
+function portalRoot(role: DashboardShellProps['role']): string {
+  if (role === 'Administrador') return '/admin'
+  if (role === 'Profesor') return '/profesor'
+  return '/alumno'
+}
+
 export default function DashboardShell({ role, name, nav, children }: DashboardShellProps) {
   const navigate = useNavigate()
+  const location = useLocation()
   const { academyName, logoUrl, initials } = useAcademyBrand()
   const { unavailable, retry } = useBackendHealth()
   const { user, isDemoMode, logout } = useAuth()
@@ -36,6 +43,12 @@ export default function DashboardShell({ role, name, nav, children }: DashboardS
     : effectiveRole === 'Profesor'
       ? 'dashboard-shell-teacher'
       : 'dashboard-shell-admin'
+
+  const rootPath = portalRoot(effectiveRole)
+  const activeNavTo = nav
+    .filter((item): item is Exclude<NavItem, string> => typeof item !== 'string')
+    .filter((item) => location.pathname === item.to || (item.to !== rootPath && location.pathname.startsWith(`${item.to}/`)))
+    .sort((left, right) => right.to.length - left.to.length)[0]?.to
 
   function handleLogout() {
     logout()
@@ -63,16 +76,17 @@ export default function DashboardShell({ role, name, nav, children }: DashboardS
               )
             }
 
+            const isActive = item.to === activeNavTo
             return (
               <Fragment key={item.to}>
                 {item.section && <span className="dashboard-nav-section" aria-hidden="true">{item.section}</span>}
-                <NavLink
+                <Link
                   to={item.to}
-                  end
-                  className={({ isActive }) => isActive ? 'active' : undefined}
+                  className={isActive ? 'active' : undefined}
+                  aria-current={isActive ? 'page' : undefined}
                 >
                   <span className="nav-dot" /> {item.label}
-                </NavLink>
+                </Link>
               </Fragment>
             )
           })}
