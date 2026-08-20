@@ -4,7 +4,10 @@ migrate((app) => {
   const users = app.findCollectionByNameOrId('users')
   const statusField = users.fields.getByName('status')
   statusField.values = ['ACTIVE', 'INVITED', 'INACTIVE', 'SUSPENDED']
-  users.authRule = 'status = "ACTIVE" && verified = true'
+  // Admin accounts are provisioned by the trusted bootstrap/superuser path and
+  // are outside the student/teacher invitation lifecycle. STUDENT/TEACHER
+  // accounts must be ACTIVE + verified before password authentication is allowed.
+  users.authRule = 'status = "ACTIVE" && (role = "ADMIN" || verified = true)'
   app.save(users)
 
   // Preserve current accounts as already activated before enforcing verified.
