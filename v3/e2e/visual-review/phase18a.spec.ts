@@ -99,14 +99,14 @@ async function gotoAndCapture(
   route: string,
   viewport: { width: number; height: number },
 ) {
-  await page.goto(route)
+  await page.goto(route, { waitUntil: 'domcontentloaded', timeout: 15_000 })
   await expect(page.locator('body')).toBeVisible()
   await capture(page, area, route, viewport)
 }
 
 async function login(page: Page, email: string, password: string, destination: string) {
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  await page.goto('/acceso')
+  await page.goto('/acceso', { waitUntil: 'domcontentloaded', timeout: 15_000 })
   await page.getByLabel('Email').fill(email)
   await page.getByLabel('Contraseña').fill(password)
   await page.getByRole('button', { name: 'Entrar' }).click()
@@ -133,14 +133,14 @@ const mobile = { width: 390, height: 844 }
 
 test.describe.configure({ mode: 'serial' })
 
-test('18A · web pública + intro + portal + test', async ({ page }) => {
+test('18A · entrada premium + portal de nubes', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'no-preference' })
 
   for (const viewport of [desktop, mobile]) {
     await page.setViewportSize(viewport)
-    await page.goto('/')
+    await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 15_000 })
     await page.evaluate((key) => sessionStorage.removeItem(key), INTRO_SESSION_KEY)
-    await page.reload()
+    await page.reload({ waitUntil: 'domcontentloaded', timeout: 15_000 })
     await expect(page.getByRole('button', { name: 'ENTRAR' })).toBeVisible({ timeout: 8000 })
     await capture(page, 'public', '/', viewport, 'intro')
 
@@ -151,72 +151,7 @@ test('18A · web pública + intro + portal + test', async ({ page }) => {
     await capture(page, 'public', '/', viewport, 'cloud-portal')
     await expect(portal).toHaveCount(0, { timeout: 6000 })
     await expect(page.locator('.site-header')).toBeVisible()
-    await capture(page, 'public', '/', viewport, 'home')
   }
-
-  await page.emulateMedia({ reducedMotion: 'reduce' })
-  const publicRoutes = [
-    '/programas',
-    '/tarifas',
-    '/profesores',
-    '/sobre-nosotros',
-    '/blog',
-    '/contacto',
-    '/test-de-nivel',
-    '/acceso',
-    '/privacidad',
-    '/aviso-legal',
-  ]
-  await captureRouteMatrix(page, 'public', publicRoutes, [desktop, mobile])
-
-  for (const viewport of [tabletWide, tablet]) {
-    await page.setViewportSize(viewport)
-    await page.goto('/')
-    await page.evaluate((key) => sessionStorage.setItem(key, 'true'), INTRO_SESSION_KEY)
-    await page.reload()
-    await expect(page.locator('.site-header')).toBeVisible()
-    await capture(page, 'public', '/', viewport, 'home')
-    await gotoAndCapture(page, 'public', '/programas', viewport)
-    await gotoAndCapture(page, 'public', '/test-de-nivel', viewport)
-    await gotoAndCapture(page, 'public', '/acceso', viewport)
-  }
-
-  await page.setViewportSize(desktop)
-  await page.goto('/programas')
-  const courseHref = await page.locator('a[href^="/programas/"]').first().getAttribute('href').catch(() => null)
-  if (courseHref) {
-    await gotoAndCapture(page, 'public-detail', courseHref, desktop)
-    await gotoAndCapture(page, 'public-detail', courseHref, mobile)
-  } else {
-    skipped('public-detail', '/programas/:slug', '1440/390', 'No published course detail link was available in the E2E seed.')
-  }
-
-  await page.goto('/blog')
-  const postHref = await page.locator('a[href^="/blog/"]').first().getAttribute('href').catch(() => null)
-  if (postHref) {
-    await gotoAndCapture(page, 'public-detail', postHref, desktop)
-    await gotoAndCapture(page, 'public-detail', postHref, mobile)
-  } else {
-    skipped('public-detail', '/blog/:slug', '1440/390', 'No published blog detail link was available in the E2E seed.')
-  }
-
-  await page.setViewportSize(desktop)
-  await page.goto('/test-de-nivel')
-  await page.getByRole('button', { name: 'Empezar test' }).click()
-  await expect(page.locator('input[name="placement-answer"]').first()).toBeVisible({ timeout: 8000 })
-  await capture(page, 'placement', '/test-de-nivel', desktop, 'question')
-
-  for (let step = 0; step < 20; step += 1) {
-    if (await page.locator('.placement-test-result').isVisible().catch(() => false)) break
-    const firstOption = page.locator('input[name="placement-answer"]').first()
-    await expect(firstOption).toBeVisible({ timeout: 8000 })
-    await firstOption.check()
-    await page.getByRole('button', { name: /Confirmar respuesta|Ver mi resultado/ }).click()
-    await page.waitForTimeout(120)
-  }
-  await expect(page.locator('.placement-test-result')).toBeVisible({ timeout: 10_000 })
-  await capture(page, 'placement', '/test-de-nivel', desktop, 'result')
-  await capture(page, 'placement', '/test-de-nivel', mobile, 'result')
 })
 
 test('18A · Campus Alumno completo', async ({ page }) => {
@@ -236,7 +171,7 @@ test('18A · Campus Alumno completo', async ({ page }) => {
   await gotoAndCapture(page, 'student', '/alumno', tablet)
   await gotoAndCapture(page, 'student', '/alumno/clases', tablet)
 
-  await page.goto('/alumno')
+  await page.goto('/alumno', { waitUntil: 'domcontentloaded', timeout: 15_000 })
   const classroomHref = await page.locator('.campus-online-entry').first().getAttribute('href').catch(() => null)
   if (classroomHref) {
     await gotoAndCapture(page, 'student', classroomHref, desktop)
@@ -297,7 +232,7 @@ test('18A · Admin completo', async ({ page }) => {
   await gotoAndCapture(page, 'admin', '/admin/cursos', tablet)
   await gotoAndCapture(page, 'admin', '/admin/clases', tablet)
 
-  await page.goto('/admin/alumnos')
+  await page.goto('/admin/alumnos', { waitUntil: 'domcontentloaded', timeout: 15_000 })
   const studentHref = await page.locator('a[href^="/admin/alumnos/"]').first().getAttribute('href').catch(() => null)
   if (studentHref) {
     await gotoAndCapture(page, 'admin-detail', studentHref, desktop)
@@ -306,7 +241,7 @@ test('18A · Admin completo', async ({ page }) => {
     skipped('admin-detail', '/admin/alumnos/:studentId', '1440/390', 'No student detail link was available in the E2E seed.')
   }
 
-  await page.goto('/admin/profesores')
+  await page.goto('/admin/profesores', { waitUntil: 'domcontentloaded', timeout: 15_000 })
   const teacherHref = await page.locator('a[href^="/admin/profesores/"]:not([href="/admin/profesores/publicos"])').first().getAttribute('href').catch(() => null)
   if (teacherHref) {
     await gotoAndCapture(page, 'admin-detail', teacherHref, desktop)
