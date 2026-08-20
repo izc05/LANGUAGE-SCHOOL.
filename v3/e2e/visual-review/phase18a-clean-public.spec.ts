@@ -89,11 +89,21 @@ async function capture(page: Page, route: string, viewport: { width: number; hei
 }
 
 async function rejectOptionalCookies(page: Page) {
+  const hasStoredConsent = await page.evaluate((storageKey) => Boolean(localStorage.getItem(storageKey)), COOKIE_STORAGE_KEY).catch(() => false)
+  if (hasStoredConsent) return
+
   const reject = page.getByRole('button', { name: 'Rechazar opcionales' })
+  await reject.waitFor({ state: 'visible', timeout: 3000 }).catch(() => undefined)
   if (await reject.isVisible().catch(() => false)) {
     await reject.click()
     await expect(reject).toBeHidden({ timeout: 5000 })
   }
+}
+
+async function optionalHref(page: Page, selector: string): Promise<string | null> {
+  const links = page.locator(selector)
+  if (await links.count() === 0) return null
+  return links.first().getAttribute('href', { timeout: 2000 }).catch(() => null)
 }
 
 async function prepareHomeWithFreshConsent(page: Page, viewport: { width: number; height: number }) {
@@ -159,7 +169,7 @@ test('18A clean · tablet y detalles públicos dinámicos', async ({ page }) => 
   await page.setViewportSize(desktop)
   await gotoDom(page, '/programas')
   await rejectOptionalCookies(page)
-  const courseHref = await page.locator('a[href^="/programas/"]').first().getAttribute('href').catch(() => null)
+  const courseHref = await optionalHref(page, 'a[href^="/programas/"]')
   if (courseHref) {
     await gotoClean(page, courseHref, desktop)
     await gotoClean(page, courseHref, mobile)
@@ -167,7 +177,7 @@ test('18A clean · tablet y detalles públicos dinámicos', async ({ page }) => 
 
   await gotoDom(page, '/blog')
   await rejectOptionalCookies(page)
-  const postHref = await page.locator('a[href^="/blog/"]').first().getAttribute('href').catch(() => null)
+  const postHref = await optionalHref(page, 'a[href^="/blog/"]')
   if (postHref) {
     await gotoClean(page, postHref, desktop)
     await gotoClean(page, postHref, mobile)
