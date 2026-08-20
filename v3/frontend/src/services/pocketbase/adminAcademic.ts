@@ -309,25 +309,23 @@ export async function moveAdminStudentToGroup(input: {
   if (input.targetGroup.status !== 'ACTIVE') throw new Error('El grupo de destino debe estar activo.')
   if (input.currentEnrollment?.group === input.targetGroup.id) return { current: input.currentEnrollment }
 
-  const activeInTarget = await pb.collection(collections.enrollments).getList<AdminEnrollmentRecord>(1, 1, {
-    filter: `student = "${quote(input.studentId)}" && group = "${quote(input.targetGroup.id)}" && status = "ACTIVE"`,
-  })
-  if (activeInTarget.totalItems > 0) return { current: activeInTarget.items[0] }
+  const result = await pb.send<{ previousId: string | null; currentId: string; unchanged: boolean }>(
+    '/api/language-school/admin/academic/enrollments/move',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ studentId: input.studentId, targetGroupId: input.targetGroup.id }),
+    },
+  )
 
-  const targetCount = await pb.collection(collections.enrollments).getList(1, 1, {
-    filter: `group = "${quote(input.targetGroup.id)}" && status = "ACTIVE"`,
+  const current = await pb.collection(collections.enrollments).getOne<AdminEnrollmentRecord>(result.currentId, {
+    expand: 'student,group,group.course,group.teacher',
   })
-  if (targetCount.totalItems >= input.targetGroup.capacity) throw new Error('El grupo de destino ya ha alcanzado su capacidad.')
-
-  const current = await createAdminEnrollment({ studentId: input.studentId, groupId: input.targetGroup.id })
-  if (!input.currentEnrollment) return { current }
-  try {
-    const previous = await updateAdminEnrollmentStatus(input.currentEnrollment, 'FINISHED')
-    return { previous, current }
-  } catch (error) {
-    try { await updateAdminEnrollmentStatus(current, 'CANCELLED') } catch { /* avoid two active enrollments if closing history fails */ }
-    throw error
-  }
+  if (!result.previousId) return { current }
+  const previous = await pb.collection(collections.enrollments).getOne<AdminEnrollmentRecord>(result.previousId, {
+    expand: 'student,group,group.course,group.teacher',
+  })
+  return { previous, current }
 }
 
 export async function listAdminClasses(limit = 250): Promise<ClassRecord[]> {
