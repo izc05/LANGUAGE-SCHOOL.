@@ -1,7 +1,7 @@
 import type { RecordModel } from 'pocketbase'
 
 export type UserRole = 'ADMIN' | 'TEACHER' | 'STUDENT'
-export type UserStatus = 'ACTIVE' | 'INACTIVE' | 'SUSPENDED'
+export type UserStatus = 'ACTIVE' | 'INVITED' | 'INACTIVE' | 'SUSPENDED'
 
 export type AppUser = RecordModel & {
   email: string
