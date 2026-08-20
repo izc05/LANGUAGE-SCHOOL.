@@ -96,14 +96,6 @@ onRecordUpdate((e) => {
   if (originalStatus !== e.record.getString('status')) syncProfileToAccount(e.app, e.record)
 }, 'users')
 
-onRecordCreateRequest((e) => {
-  syncActiveUser(e.app, syncId(e.record.getString('teacher'), 'Profesor'), 'TEACHER', 'El profesor')
-  let course
-  try { course = e.app.findRecordById('courses', syncId(e.record.getString('course'), 'Curso')) } catch { throw new BadRequestError('El curso no existe.') }
-  if (course.getString('status') !== 'ACTIVE') throw new BadRequestError('El curso debe estar activo.')
-  e.next()
-}, 'groups')
-
 onRecordUpdateRequest((e) => {
   const oldTeacher = e.record.original().getString('teacher')
   const newTeacher = e.record.getString('teacher')
