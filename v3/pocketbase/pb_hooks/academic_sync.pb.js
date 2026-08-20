@@ -1,56 +1,20 @@
 /// <reference path="../pb_data/types.d.ts" />
 
-function syncReadText(value) {
-  return typeof value === 'string' ? value.trim() : ''
-}
-
-function syncRequestBody(e) {
-  const parsed = e.requestInfo().body || {}
-  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-    throw new BadRequestError('El cuerpo de la solicitud no es válido.')
-  }
-  return parsed
-}
-
-function syncHasOwn(body, key) {
-  return Object.prototype.hasOwnProperty.call(body, key)
-}
-
-function syncId(value, label) {
-  const id = syncReadText(value)
-  if (!/^[A-Za-z0-9_-]{8,64}$/.test(id)) throw new BadRequestError(`${label} no válido.`)
-  return id
-}
-
-function syncActiveUser(app, userId, role, label) {
-  let user
-  try { user = app.findRecordById('users', userId) } catch { throw new BadRequestError(`${label} no existe.`) }
-  if (user.getString('role') !== role) throw new BadRequestError(`${label} no tiene el rol esperado.`)
-  if (user.getString('status') !== 'ACTIVE') throw new BadRequestError(`${label} debe tener la cuenta activa.`)
-  return user
-}
-
-function syncActiveEnrollments(app, studentId, excludeId) {
-  const records = app.findRecordsByFilter('enrollments', `student = "${studentId}" && status = "ACTIVE"`, '-joined_at', 10, 0)
-  return excludeId ? records.filter((record) => record.id !== excludeId) : records
-}
-
-function syncProfileToAccount(app, user) {
-  const role = user.getString('role')
-  const collectionName = role === 'STUDENT' ? 'student_profiles' : role === 'TEACHER' ? 'teacher_profiles' : ''
-  if (!collectionName) return
-  const profiles = app.findRecordsByFilter(collectionName, `user = "${user.id}"`, '', 1, 0)
-  if (!profiles.length) return
-  const profile = profiles[0]
-  const shouldBeActive = user.getString('status') === 'ACTIVE'
-  if (profile.getBool('active') === shouldBeActive) return
-  profile.set('active', shouldBeActive)
-  app.save(profile)
-}
-
 onRecordUpdateRequest((e) => {
-  const body = syncRequestBody(e)
-  if (!syncHasOwn(body, 'status')) return e.next()
+  function requestBody() {
+    const parsed = e.requestInfo().body || {}
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      throw new BadRequestError('El cuerpo de la solicitud no es válido.')
+    }
+    return parsed
+  }
+
+  function hasOwn(body, key) {
+    return Object.prototype.hasOwnProperty.call(body, key)
+  }
+
+  const body = requestBody()
+  if (!hasOwn(body, 'status')) return e.next()
 
   let current
   try { current = e.app.findRecordById('users', e.record.id) } catch { throw new BadRequestError('La cuenta no existe.') }
@@ -65,26 +29,70 @@ onRecordUpdateRequest((e) => {
         throw new BadRequestError('No puedes desactivar este profesor mientras tenga grupos activos. Reasigna o pausa primero sus grupos.')
       }
     }
+
     if (currentRole === 'STUDENT') {
-      const activeEnrollments = syncActiveEnrollments(e.app, e.record.id, '')
+      const activeEnrollments = e.app.findAllRecords(
+        'enrollments',
+        $dbx.hashExp({ student: e.record.id, status: 'ACTIVE' }),
+      )
       if (activeEnrollments.length > 0) {
         throw new BadRequestError('No puedes desactivar este alumno mientras tenga una matrícula activa. Finaliza o pausa primero su matrícula.')
       }
     }
   }
+
   e.next()
 }, 'users')
 
 onRecordAfterUpdateSuccess((e) => {
-  syncProfileToAccount(e.app, e.record)
+  const role = e.record.getString('role')
+  const collectionName = role === 'STUDENT' ? 'student_profiles' : role === 'TEACHER' ? 'teacher_profiles' : ''
+  if (!collectionName) return e.next()
+
+  const profiles = e.app.findAllRecords(
+    collectionName,
+    $dbx.hashExp({ user: e.record.id }),
+  )
+  if (!profiles.length) return e.next()
+
+  const profile = profiles[0]
+  const shouldBeActive = e.record.getString('status') === 'ACTIVE'
+  if (profile.getBool('active') !== shouldBeActive) {
+    profile.set('active', shouldBeActive)
+    e.app.save(profile)
+  }
+
   e.next()
 }, 'users')
 
 onRecordUpdateRequest((e) => {
-  const body = syncRequestBody(e)
-  if (syncHasOwn(body, 'teacher')) {
-    syncActiveUser(e.app, syncId(e.record.getString('teacher'), 'Profesor'), 'TEACHER', 'El profesor')
+  function requestBody() {
+    const parsed = e.requestInfo().body || {}
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      throw new BadRequestError('El cuerpo de la solicitud no es válido.')
+    }
+    return parsed
   }
+
+  function hasOwn(body, key) {
+    return Object.prototype.hasOwnProperty.call(body, key)
+  }
+
+  function readId(value, label) {
+    const id = typeof value === 'string' ? value.trim() : ''
+    if (!/^[A-Za-z0-9_-]{8,64}$/.test(id)) throw new BadRequestError(`${label} no válido.`)
+    return id
+  }
+
+  const body = requestBody()
+  if (!hasOwn(body, 'teacher')) return e.next()
+
+  const teacherId = readId(e.record.getString('teacher'), 'Profesor')
+  let teacher
+  try { teacher = e.app.findRecordById('users', teacherId) } catch { throw new BadRequestError('El profesor no existe.') }
+  if (teacher.getString('role') !== 'TEACHER') throw new BadRequestError('El profesor no tiene el rol esperado.')
+  if (teacher.getString('status') !== 'ACTIVE') throw new BadRequestError('El profesor debe tener la cuenta activa.')
+
   e.next()
 }, 'groups')
 
@@ -93,27 +101,54 @@ onRecordAfterUpdateSuccess((e) => {
   if (!newTeacher) return e.next()
 
   const now = Date.now()
-  const scheduled = e.app.findAllRecords('classes', $dbx.hashExp({ group: e.record.id, status: 'SCHEDULED' }))
+  const scheduled = e.app.findAllRecords(
+    'classes',
+    $dbx.hashExp({ group: e.record.id, status: 'SCHEDULED' }),
+  )
   scheduled.forEach((classRecord) => {
     const startsAt = new Date(classRecord.getString('starts_at')).getTime()
     if (!Number.isFinite(startsAt) || startsAt < now || classRecord.getString('teacher') === newTeacher) return
     classRecord.set('teacher', newTeacher)
     e.app.save(classRecord)
   })
+
   e.next()
 }, 'groups')
 
-function syncValidateClassUpdate(e) {
-  const body = syncRequestBody(e)
-  const assignmentChanged = syncHasOwn(body, 'group') || syncHasOwn(body, 'teacher')
-  const scheduledRequested = syncHasOwn(body, 'status') && e.record.getString('status') === 'SCHEDULED'
+onRecordUpdateRequest((e) => {
+  function requestBody() {
+    const parsed = e.requestInfo().body || {}
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      throw new BadRequestError('El cuerpo de la solicitud no es válido.')
+    }
+    return parsed
+  }
+
+  function hasOwn(body, key) {
+    return Object.prototype.hasOwnProperty.call(body, key)
+  }
+
+  function readId(value, label) {
+    const id = typeof value === 'string' ? value.trim() : ''
+    if (!/^[A-Za-z0-9_-]{8,64}$/.test(id)) throw new BadRequestError(`${label} no válido.`)
+    return id
+  }
+
+  const body = requestBody()
+  const assignmentChanged = hasOwn(body, 'group') || hasOwn(body, 'teacher')
+  const scheduledRequested = hasOwn(body, 'status') && e.record.getString('status') === 'SCHEDULED'
   if (!assignmentChanged && !scheduledRequested) return e.next()
 
-  const groupId = syncId(e.record.getString('group'), 'Grupo')
-  const teacherId = syncId(e.record.getString('teacher'), 'Profesor')
+  const groupId = readId(e.record.getString('group'), 'Grupo')
+  const teacherId = readId(e.record.getString('teacher'), 'Profesor')
+
   let group
   try { group = e.app.findRecordById('groups', groupId) } catch { throw new BadRequestError('El grupo de la clase no existe.') }
-  syncActiveUser(e.app, teacherId, 'TEACHER', 'El profesor')
+
+  let teacher
+  try { teacher = e.app.findRecordById('users', teacherId) } catch { throw new BadRequestError('El profesor no existe.') }
+  if (teacher.getString('role') !== 'TEACHER') throw new BadRequestError('El profesor no tiene el rol esperado.')
+  if (teacher.getString('status') !== 'ACTIVE') throw new BadRequestError('El profesor debe tener la cuenta activa.')
 
   if (group.getString('teacher') !== teacherId) {
     throw new BadRequestError('El profesor de la clase debe coincidir con el profesor responsable del grupo.')
@@ -121,10 +156,9 @@ function syncValidateClassUpdate(e) {
   if (e.record.getString('status') === 'SCHEDULED' && group.getString('status') !== 'ACTIVE') {
     throw new BadRequestError('No se pueden programar clases nuevas en un grupo no activo.')
   }
-  e.next()
-}
 
-onRecordUpdateRequest((e) => syncValidateClassUpdate(e), 'classes')
+  e.next()
+}, 'classes')
 
 routerAdd('POST', '/api/language-school/admin/academic/enrollments/move', (e) => {
   if (!e.auth || e.auth.get('role') !== 'ADMIN') {
