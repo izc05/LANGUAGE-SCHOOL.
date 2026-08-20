@@ -10,7 +10,7 @@ import { adminNav } from './adminNav'
 
 const demoTeacher: AppUser = { id: 'agenda-demo-teacher', collectionId: '', collectionName: 'users', created: '', updated: '', expand: {}, email: 'laura@example.com', name: 'Laura', surname: 'García', role: 'TEACHER', status: 'ACTIVE', phone: '' }
 const demoCourse: CourseRecord = { id: 'agenda-demo-course', collectionId: '', collectionName: 'courses', created: '', updated: '', expand: {}, title: 'Adultos', slug: 'adultos', level: 'B1', description: '', status: 'ACTIVE', public_visible: true }
-const demoGroup: AdminGroupRecord = { id: 'agenda-demo-group', collectionId: '', collectionName: 'groups', created: '', updated: '', name: 'Adultos B1', course: demoCourse.id, teacher: demoTeacher.id, academic_year: '2026/27', schedule_text: 'Martes y jueves · 18:00', capacity: 10, status: 'ACTIVE', expand: { course: demoCourse, teacher: demoTeacher } }
+const demoGroup: AdminGroupRecord = { id: 'agenda-demo-group', collectionId: '', collectionName: 'groups', created: '', updated: '', name: 'Adultos B1', course: demoCourse.id, teacher: demoTeacher.id, academic_year: '2026/27', schedule_text: 'Martes y jueves · 18:00', capacity: 10, target_level: 'B1', default_delivery_mode: 'IN_PERSON', status: 'ACTIVE', expand: { course: demoCourse, teacher: demoTeacher } }
 
 function createDemoClasses(): ClassRecord[] {
   const now = new Date()

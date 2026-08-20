@@ -10,7 +10,7 @@ import { teacherNav } from './teacherNav'
 const demoGroup: GroupRecord = {
   id: 'agenda-demo-group', collectionId: '', collectionName: 'groups', created: '', updated: '',
   name: 'Adultos B1', course: 'demo-course', teacher: 'demo-teacher', academic_year: '2026/27',
-  schedule_text: 'Martes y jueves 18:00', capacity: 10, status: 'ACTIVE',
+  schedule_text: 'Martes y jueves 18:00', capacity: 10, target_level: 'B1', default_delivery_mode: 'IN_PERSON', status: 'ACTIVE',
 }
 
 function demoClasses(): ClassRecord[] {

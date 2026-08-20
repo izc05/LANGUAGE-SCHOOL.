@@ -53,7 +53,8 @@ function attendanceLabel(status?: AttendanceRecord['status']): string {
 
 const demoGroup: TeacherGroupRecord = {
   id: 'demo-group', collectionId: '', collectionName: 'groups', created: '', updated: '', expand: {},
-  name: 'Adultos B1', course: 'demo-course', teacher: 'demo-teacher', academic_year: '2026/27', schedule_text: 'Jueves 18:00', capacity: 8, status: 'ACTIVE',
+  name: 'Adultos B1', course: 'demo-course', teacher: 'demo-teacher', academic_year: '2026/27', schedule_text: 'Jueves 18:00', capacity: 8,
+  target_level: 'B1', default_delivery_mode: 'HYBRID', status: 'ACTIVE',
 }
 
 const demoClass: ClassRecord = {

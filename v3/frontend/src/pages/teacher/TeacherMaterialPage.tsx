@@ -79,7 +79,7 @@ export default function TeacherMaterialPage() {
 
   useEffect(() => {
     if (isDemoMode) {
-      setGroups([{ id: 'g1', collectionId: '', collectionName: 'groups', created: '', updated: '', expand: {}, name: 'Adultos B1', course: 'c1', teacher: 'demo', academic_year: '2026/27', schedule_text: 'M/J 18:00', capacity: 8, status: 'ACTIVE' }])
+      setGroups([{ id: 'g1', collectionId: '', collectionName: 'groups', created: '', updated: '', expand: {}, name: 'Adultos B1', course: 'c1', teacher: 'demo', academic_year: '2026/27', schedule_text: 'M/J 18:00', capacity: 8, target_level: 'B1', default_delivery_mode: 'IN_PERSON', status: 'ACTIVE' }])
       setEnrollments([])
       setTargetKey('GROUP:g1')
       return

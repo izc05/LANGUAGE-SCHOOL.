@@ -42,7 +42,7 @@ const demoClass: DeliveryClass = {
   group: 'demo-group', teacher: 'demo-teacher', starts_at: '2026-08-20T18:00:00+02:00', ends_at: '2026-08-20T19:00:00+02:00',
   topic: 'Speaking · Travel & experiences', description: '', status: 'SCHEDULED', delivery_mode: 'HYBRID',
   location_text: 'Aula 2', online_join_url: 'https://example.com/language-school-class',
-  expand: { group: { id: 'demo-group', collectionId: '', collectionName: 'groups', created: '', updated: '', name: 'Adultos B1', course: 'demo-course', teacher: 'demo-teacher', academic_year: '2026/27', schedule_text: '', capacity: 8, status: 'ACTIVE', expand: { course: { id: 'demo-course', collectionId: '', collectionName: 'courses', created: '', updated: '', title: 'Adult English B1', slug: 'adult-english-b1', level: 'B1', description: '', status: 'ACTIVE', public_visible: true } } } },
+  expand: { group: { id: 'demo-group', collectionId: '', collectionName: 'groups', created: '', updated: '', name: 'Adultos B1', course: 'demo-course', teacher: 'demo-teacher', academic_year: '2026/27', schedule_text: '', capacity: 8, target_level: 'B1', default_delivery_mode: 'HYBRID', status: 'ACTIVE', expand: { course: { id: 'demo-course', collectionId: '', collectionName: 'courses', created: '', updated: '', title: 'Adult English B1', slug: 'adult-english-b1', level: 'B1', description: '', status: 'ACTIVE', public_visible: true } } } },
 }
 
 const demoZoomStatus: ZoomIntegrationStatus = {
