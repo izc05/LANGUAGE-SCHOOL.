@@ -37,6 +37,10 @@ function flushManifest() {
   )
 }
 
+async function gotoDom(page: Page, route: string) {
+  await page.goto(route, { waitUntil: 'domcontentloaded', timeout: 15_000 })
+}
+
 async function settle(page: Page) {
   await page.locator('.route-loading').waitFor({ state: 'hidden', timeout: 7000 }).catch(() => undefined)
   await page.waitForTimeout(300)
@@ -46,15 +50,15 @@ async function primeFullPage(page: Page) {
   await page.evaluate(async () => {
     const sleep = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms))
     const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight)
-    const step = Math.max(520, Math.floor(window.innerHeight * 0.78))
+    const step = Math.max(700, Math.floor(window.innerHeight * 0.9))
     for (let y = 0; y <= maxScroll; y += step) {
       window.scrollTo(0, y)
-      await sleep(55)
+      await sleep(30)
     }
     window.scrollTo(0, maxScroll)
-    await sleep(90)
+    await sleep(60)
     window.scrollTo(0, 0)
-    await sleep(140)
+    await sleep(90)
   })
 }
 
@@ -94,19 +98,19 @@ async function rejectOptionalCookies(page: Page) {
 
 async function prepareHomeWithFreshConsent(page: Page, viewport: { width: number; height: number }) {
   await page.setViewportSize(viewport)
-  await page.goto('/')
+  await gotoDom(page, '/')
   await page.evaluate(({ introKey, cookieKey }) => {
     sessionStorage.setItem(introKey, 'true')
     localStorage.removeItem(cookieKey)
   }, { introKey: INTRO_SESSION_KEY, cookieKey: COOKIE_STORAGE_KEY })
-  await page.reload()
+  await page.reload({ waitUntil: 'domcontentloaded', timeout: 15_000 })
   await expect(page.locator('.site-header')).toBeVisible({ timeout: 8000 })
   await expect(page.getByRole('button', { name: 'Rechazar opcionales' })).toBeVisible({ timeout: 8000 })
 }
 
 async function gotoClean(page: Page, route: string, viewport: { width: number; height: number }) {
   await page.setViewportSize(viewport)
-  await page.goto(route)
+  await gotoDom(page, route)
   await rejectOptionalCookies(page)
   await expect(page.locator('body')).toBeVisible()
   await capture(page, route, viewport, 'clean')
@@ -114,7 +118,7 @@ async function gotoClean(page: Page, route: string, viewport: { width: number; h
 
 test.describe.configure({ mode: 'serial' })
 
-test('18A clean · consentimiento y páginas públicas sin overlay', async ({ page }) => {
+test('18A clean · consentimiento y Home sin overlay', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
 
   for (const viewport of [desktop, mobile]) {
@@ -123,7 +127,10 @@ test('18A clean · consentimiento y páginas públicas sin overlay', async ({ pa
     await rejectOptionalCookies(page)
     await capture(page, '/', viewport, 'clean-home')
   }
+})
 
+test('18A clean · páginas públicas desktop y móvil', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
   const routes = [
     '/programas',
     '/tarifas',
@@ -140,13 +147,17 @@ test('18A clean · consentimiento y páginas públicas sin overlay', async ({ pa
   for (const viewport of [desktop, mobile]) {
     for (const route of routes) await gotoClean(page, route, viewport)
   }
+})
+
+test('18A clean · tablet y detalles públicos dinámicos', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
 
   for (const viewport of [tabletWide, tablet]) {
     for (const route of ['/', '/programas', '/test-de-nivel', '/acceso']) await gotoClean(page, route, viewport)
   }
 
   await page.setViewportSize(desktop)
-  await page.goto('/programas')
+  await gotoDom(page, '/programas')
   await rejectOptionalCookies(page)
   const courseHref = await page.locator('a[href^="/programas/"]').first().getAttribute('href').catch(() => null)
   if (courseHref) {
@@ -154,7 +165,7 @@ test('18A clean · consentimiento y páginas públicas sin overlay', async ({ pa
     await gotoClean(page, courseHref, mobile)
   }
 
-  await page.goto('/blog')
+  await gotoDom(page, '/blog')
   await rejectOptionalCookies(page)
   const postHref = await page.locator('a[href^="/blog/"]').first().getAttribute('href').catch(() => null)
   if (postHref) {
@@ -166,7 +177,7 @@ test('18A clean · consentimiento y páginas públicas sin overlay', async ({ pa
 test('18A clean · test de nivel pregunta y resultado sin overlay', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.setViewportSize(desktop)
-  await page.goto('/test-de-nivel')
+  await gotoDom(page, '/test-de-nivel')
   await rejectOptionalCookies(page)
   await page.getByRole('button', { name: 'Empezar test' }).click()
   await expect(page.locator('input[name="placement-answer"]').first()).toBeVisible({ timeout: 8000 })
