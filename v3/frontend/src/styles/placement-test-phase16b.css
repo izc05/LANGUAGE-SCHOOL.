@@ -184,7 +184,7 @@
 }
 
 @media(max-width:900px){
-  .placement-test-intro-grid{gap:2rem}
+  .placement-test-intro-grid{grid-template-columns:1fr;gap:2rem}
   .placement-test-intro-card{max-width:none}
 }
 
