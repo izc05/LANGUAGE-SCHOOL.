@@ -2,6 +2,7 @@ import type { RecordModel } from 'pocketbase'
 import { getCurrentUser } from './auth'
 import { collections } from './collections'
 import { pb } from './client'
+import type { AppUser } from './types'
 import type { TeacherProfileRecord } from './teacherPortal'
 
 function requireAdmin() {
@@ -21,6 +22,11 @@ export type AdminStudentProfilePhase14 = RecordModel & {
   guardian_phone?: string
   notes_private?: string
   active?: boolean
+}
+
+async function accountIsActive(userId: string): Promise<boolean> {
+  const account = await pb.collection(collections.users).getOne<AppUser>(userId, { fields: 'id,status,role,email,name,surname' })
+  return account.status === 'ACTIVE'
 }
 
 export async function getAdminStudentProfilePhase14(userId: string): Promise<AdminStudentProfilePhase14 | null> {
@@ -49,11 +55,12 @@ export async function saveAdminStudentProfilePhase14(userId: string, patch: {
     guardian_name: patch.guardianName?.trim() || '',
     guardian_phone: patch.guardianPhone?.trim() || '',
     notes_private: patch.notesPrivate?.trim() || '',
-    active: patch.active ?? true,
   }
-  return current
-    ? pb.collection(collections.studentProfiles).update<AdminStudentProfilePhase14>(current.id, payload)
-    : pb.collection(collections.studentProfiles).create<AdminStudentProfilePhase14>(payload)
+  if (current) return pb.collection(collections.studentProfiles).update<AdminStudentProfilePhase14>(current.id, payload)
+  return pb.collection(collections.studentProfiles).create<AdminStudentProfilePhase14>({
+    ...payload,
+    active: await accountIsActive(userId),
+  })
 }
 
 export async function getAdminTeacherProfilePhase14(userId: string): Promise<TeacherProfileRecord | null> {
@@ -82,11 +89,12 @@ export async function saveAdminTeacherProfilePhase14(userId: string, patch: {
     bio: patch.bio?.trim() || '',
     specialties: patch.specialties || [],
     public_profile: Boolean(patch.publicProfile),
-    active: patch.active ?? true,
     display_name: patch.displayName?.trim() || '',
     headline: patch.headline?.trim() || '',
   }
-  return current
-    ? pb.collection(collections.teacherProfiles).update<TeacherProfileRecord>(current.id, payload)
-    : pb.collection(collections.teacherProfiles).create<TeacherProfileRecord>(payload)
+  if (current) return pb.collection(collections.teacherProfiles).update<TeacherProfileRecord>(current.id, payload)
+  return pb.collection(collections.teacherProfiles).create<TeacherProfileRecord>({
+    ...payload,
+    active: await accountIsActive(userId),
+  })
 }

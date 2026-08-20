@@ -80,7 +80,7 @@ export async function updateAdminTeacherPublicProfile(
   if (patch.bio !== undefined) payload.set('bio', patch.bio.trim())
   if (patch.specialties !== undefined) payload.set('specialties', JSON.stringify(Array.isArray(patch.specialties) ? patch.specialties : teacherSpecialties({ ...record, specialties: patch.specialties })))
   if (patch.public_profile !== undefined) payload.set('public_profile', String(patch.public_profile))
-  if (patch.active !== undefined) payload.set('active', String(patch.active))
+  // `active` is intentionally account-owned and is never sent by profile editors.
   if (patch.sort_order !== undefined) payload.set('sort_order', String(patch.sort_order))
   if (patch.publicPhoto) payload.set('public_photo', patch.publicPhoto)
 
