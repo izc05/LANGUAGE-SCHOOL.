@@ -28,7 +28,7 @@ async function enterClassroomWithPortal(page: Page, link: import('@playwright/te
 
   await expect(page).toHaveURL(new RegExp(`${href.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`), { timeout: 5000 })
   await expect(page.locator('.cloud-portal-transition')).toHaveCount(0, { timeout: 5000 })
-  await expect(page.getByRole('heading', { name: 'E2E Speaking class' })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1, name: 'E2E Speaking class' })).toBeVisible()
 }
 
 test('17E: el acceso al aula desde Inicio usa el portal durante el whiteout', async ({ page }) => {
