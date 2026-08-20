@@ -115,6 +115,30 @@ onRecordAfterUpdateSuccess((e) => {
   e.next()
 }, 'groups')
 
+onRecordCreateRequest((e) => {
+  function readId(value, label) {
+    const id = typeof value === 'string' ? value.trim() : ''
+    if (!/^[A-Za-z0-9_-]{8,64}$/.test(id)) throw new BadRequestError(`${label} no válido.`)
+    return id
+  }
+
+  const groupId = readId(e.record.getString('group'), 'Grupo')
+  let group
+  try { group = e.app.findRecordById('groups', groupId) } catch { throw new BadRequestError('El grupo de la clase no existe.') }
+  if (group.getString('status') !== 'ACTIVE') {
+    throw new BadRequestError('No se pueden programar clases nuevas en un grupo no activo.')
+  }
+
+  const teacherId = readId(group.getString('teacher'), 'Profesor')
+  let teacher
+  try { teacher = e.app.findRecordById('users', teacherId) } catch { throw new BadRequestError('El profesor del grupo no existe.') }
+  if (teacher.getString('role') !== 'TEACHER') throw new BadRequestError('El responsable del grupo no tiene rol de profesor.')
+  if (teacher.getString('status') !== 'ACTIVE') throw new BadRequestError('El profesor del grupo debe tener la cuenta activa.')
+
+  e.record.set('teacher', teacherId)
+  e.next()
+}, 'classes')
+
 onRecordUpdateRequest((e) => {
   function requestBody() {
     const parsed = e.requestInfo().body || {}
@@ -140,23 +164,20 @@ onRecordUpdateRequest((e) => {
   if (!assignmentChanged && !scheduledRequested) return e.next()
 
   const groupId = readId(e.record.getString('group'), 'Grupo')
-  const teacherId = readId(e.record.getString('teacher'), 'Profesor')
-
   let group
   try { group = e.app.findRecordById('groups', groupId) } catch { throw new BadRequestError('El grupo de la clase no existe.') }
 
+  const teacherId = readId(group.getString('teacher'), 'Profesor')
   let teacher
-  try { teacher = e.app.findRecordById('users', teacherId) } catch { throw new BadRequestError('El profesor no existe.') }
-  if (teacher.getString('role') !== 'TEACHER') throw new BadRequestError('El profesor no tiene el rol esperado.')
-  if (teacher.getString('status') !== 'ACTIVE') throw new BadRequestError('El profesor debe tener la cuenta activa.')
+  try { teacher = e.app.findRecordById('users', teacherId) } catch { throw new BadRequestError('El profesor del grupo no existe.') }
+  if (teacher.getString('role') !== 'TEACHER') throw new BadRequestError('El responsable del grupo no tiene rol de profesor.')
+  if (teacher.getString('status') !== 'ACTIVE') throw new BadRequestError('El profesor del grupo debe tener la cuenta activa.')
 
-  if (group.getString('teacher') !== teacherId) {
-    throw new BadRequestError('El profesor de la clase debe coincidir con el profesor responsable del grupo.')
-  }
   if (e.record.getString('status') === 'SCHEDULED' && group.getString('status') !== 'ACTIVE') {
     throw new BadRequestError('No se pueden programar clases nuevas en un grupo no activo.')
   }
 
+  e.record.set('teacher', teacherId)
   e.next()
 }, 'classes')
 
@@ -220,25 +241,27 @@ routerAdd('POST', '/api/language-school/admin/academic/enrollments/move', (e) =>
   const body = readBody()
   const studentId = readId(body.studentId, 'Alumno')
   const targetGroupId = readId(body.targetGroupId, 'Grupo')
-
-  activeUser(e.app, studentId, 'STUDENT', 'El alumno')
-  const targetGroup = activeGroup(e.app, targetGroupId)
-  const currentBefore = activeEnrollments(e.app, studentId)
-  if (currentBefore.length > 1) throw new BadRequestError('El alumno tiene más de una matrícula activa. Corrige la incoherencia antes de moverlo.')
-  if (currentBefore[0] && currentBefore[0].getString('group') === targetGroupId) {
-    return e.json(200, { previousId: null, currentId: currentBefore[0].id, unchanged: true })
-  }
-
-  const occupied = groupActiveCount(e.app, targetGroupId)
-  if (occupied >= targetGroup.getInt('capacity')) throw new BadRequestError('El grupo de destino ya ha alcanzado su capacidad.')
-
   let previousId = ''
   let currentId = ''
+  let unchanged = false
   const now = new Date().toISOString()
 
   e.app.runInTransaction((txApp) => {
+    activeUser(txApp, studentId, 'STUDENT', 'El alumno')
+    const targetGroup = activeGroup(txApp, targetGroupId)
     const current = activeEnrollments(txApp, studentId)
-    if (current.length > 1) throw new BadRequestError('El alumno tiene más de una matrícula activa.')
+    if (current.length > 1) throw new BadRequestError('El alumno tiene más de una matrícula activa. Corrige la incoherencia antes de moverlo.')
+
+    if (current[0] && current[0].getString('group') === targetGroupId) {
+      currentId = current[0].id
+      unchanged = true
+      return
+    }
+
+    const occupied = groupActiveCount(txApp, targetGroupId)
+    if (occupied >= targetGroup.getInt('capacity')) {
+      throw new BadRequestError('El grupo de destino ya ha alcanzado su capacidad.')
+    }
 
     if (current[0]) {
       current[0].set('status', 'FINISHED')
@@ -258,5 +281,5 @@ routerAdd('POST', '/api/language-school/admin/academic/enrollments/move', (e) =>
     currentId = next.id
   })
 
-  return e.json(200, { previousId: previousId || null, currentId, unchanged: false })
+  return e.json(200, { previousId: previousId || null, currentId, unchanged })
 }, $apis.requireAuth('users'))
