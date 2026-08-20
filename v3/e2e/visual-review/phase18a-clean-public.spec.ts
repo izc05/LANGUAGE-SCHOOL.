@@ -42,9 +42,26 @@ async function settle(page: Page) {
   await page.waitForTimeout(300)
 }
 
+async function primeFullPage(page: Page) {
+  await page.evaluate(async () => {
+    const sleep = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms))
+    const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight)
+    const step = Math.max(520, Math.floor(window.innerHeight * 0.78))
+    for (let y = 0; y <= maxScroll; y += step) {
+      window.scrollTo(0, y)
+      await sleep(55)
+    }
+    window.scrollTo(0, maxScroll)
+    await sleep(90)
+    window.scrollTo(0, 0)
+    await sleep(140)
+  })
+}
+
 async function capture(page: Page, route: string, viewport: { width: number; height: number }, state: string, fullPage = true) {
   await page.setViewportSize(viewport)
   await settle(page)
+  if (fullPage) await primeFullPage(page)
   const metrics = await page.evaluate(() => ({
     scrollWidth: document.documentElement.scrollWidth,
     clientWidth: document.documentElement.clientWidth,
