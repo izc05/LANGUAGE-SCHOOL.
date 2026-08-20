@@ -5,15 +5,11 @@ function syncReadText(value) {
 }
 
 function syncRequestBody(e) {
-  const raw = toString(e.request.body || '').trim()
-  if (!raw) return {}
-  try {
-    const parsed = JSON.parse(raw)
-    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('invalid body')
-    return parsed
-  } catch {
-    throw new BadRequestError('El cuerpo de la solicitud no es JSON válido.')
+  const parsed = e.requestInfo().body || {}
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new BadRequestError('El cuerpo de la solicitud no es válido.')
   }
+  return parsed
 }
 
 function syncRequireAdmin(e) {
