@@ -13,8 +13,9 @@ function syncRequestBody(e) {
 }
 
 function syncRequireAdmin(e) {
-  if (!e.auth) throw new UnauthorizedError('Debes iniciar sesión.')
-  if (e.auth.getString('role') !== 'ADMIN') throw new ForbiddenError('Solo Administración puede realizar esta operación.')
+  if (!e.auth || e.auth.get('role') !== 'ADMIN') {
+    throw new ForbiddenError('Solo Administración puede realizar esta operación.')
+  }
   return e.auth
 }
 
@@ -144,54 +145,36 @@ function syncValidateClass(e, isUpdate) {
 onRecordUpdateRequest((e) => syncValidateClass(e, true), 'classes')
 
 routerAdd('POST', '/api/language-school/admin/academic/enrollments/move', (e) => {
-  let preflightStage = 'validar la sesión de Administración'
-  let studentId = ''
-  let targetGroupId = ''
-  let targetGroup
-  let currentBefore = []
-  try {
-    syncRequireAdmin(e)
-    preflightStage = 'leer la solicitud de cambio de grupo'
-    const body = syncRequestBody(e)
-    studentId = syncId(body.studentId, 'Alumno')
-    targetGroupId = syncId(body.targetGroupId, 'Grupo')
+  syncRequireAdmin(e)
+  const body = syncRequestBody(e)
+  const studentId = syncId(body.studentId, 'Alumno')
+  const targetGroupId = syncId(body.targetGroupId, 'Grupo')
 
-    preflightStage = 'validar el alumno activo'
-    syncActiveUser(e.app, studentId, 'STUDENT', 'El alumno')
-    preflightStage = 'validar el grupo de destino'
-    targetGroup = syncActiveGroup(e.app, targetGroupId)
-    preflightStage = 'leer la matrícula activa actual'
-    currentBefore = syncActiveEnrollments(e.app, studentId, '')
-    if (currentBefore.length > 1) throw new BadRequestError('El alumno tiene más de una matrícula activa. Corrige la incoherencia antes de moverlo.')
-    if (currentBefore[0] && currentBefore[0].getString('group') === targetGroupId) {
-      return e.json(200, { previousId: null, currentId: currentBefore[0].id, unchanged: true })
-    }
-
-    preflightStage = 'comprobar las plazas del grupo de destino'
-    const occupied = syncGroupActiveCount(e.app, targetGroupId, '')
-    if (occupied >= targetGroup.getInt('capacity')) throw new BadRequestError('El grupo de destino ya ha alcanzado su capacidad.')
-  } catch {
-    throw new BadRequestError(`No se ha podido completar la prevalidación al ${preflightStage}. No se ha aplicado ningún cambio.`)
+  syncActiveUser(e.app, studentId, 'STUDENT', 'El alumno')
+  const targetGroup = syncActiveGroup(e.app, targetGroupId)
+  const currentBefore = syncActiveEnrollments(e.app, studentId, '')
+  if (currentBefore.length > 1) throw new BadRequestError('El alumno tiene más de una matrícula activa. Corrige la incoherencia antes de moverlo.')
+  if (currentBefore[0] && currentBefore[0].getString('group') === targetGroupId) {
+    return e.json(200, { previousId: null, currentId: currentBefore[0].id, unchanged: true })
   }
+
+  const occupied = syncGroupActiveCount(e.app, targetGroupId, '')
+  if (occupied >= targetGroup.getInt('capacity')) throw new BadRequestError('El grupo de destino ya ha alcanzado su capacidad.')
 
   let previousId = ''
   let currentId = ''
-  let moveStage = 'abrir la transacción'
   const now = new Date().toISOString()
   try {
     e.app.runInTransaction((txApp) => {
-      moveStage = 'leer la matrícula activa dentro de la transacción'
       const current = syncActiveEnrollments(txApp, studentId, '')
       if (current.length > 1) throw new BadRequestError('El alumno tiene más de una matrícula activa.')
       if (current[0]) {
-        moveStage = 'cerrar la matrícula anterior'
         current[0].set('status', 'FINISHED')
         current[0].set('ended_at', now)
         txApp.save(current[0])
         previousId = current[0].id
       }
 
-      moveStage = 'crear la nueva matrícula activa'
       const collection = txApp.findCollectionByNameOrId('enrollments')
       const next = new Record(collection)
       next.set('student', studentId)
@@ -201,10 +184,9 @@ routerAdd('POST', '/api/language-school/admin/academic/enrollments/move', (e) =>
       next.set('ended_at', '')
       txApp.save(next)
       currentId = next.id
-      moveStage = 'confirmar la transacción'
     })
   } catch {
-    throw new BadRequestError(`No se ha podido mover al alumno al ${moveStage}. No se ha aplicado ningún cambio.`)
+    throw new BadRequestError('No se ha podido completar el cambio de grupo. No se ha aplicado ningún cambio.')
   }
 
   return e.json(200, { previousId: previousId || null, currentId, unchanged: false })
