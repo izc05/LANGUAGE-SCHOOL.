@@ -1,4 +1,5 @@
 import { lazy, Suspense, useState } from 'react'
+import { isDemoMode } from '../../config/environment'
 import { useCloudPortal } from '../../features/transitions/CloudPortalProvider'
 import IntroSceneErrorBoundary from './intro/premium/IntroSceneErrorBoundary'
 import './intro/premium/intro-gate-light.css'
@@ -7,7 +8,17 @@ const HomePage = lazy(() => import('./HomePage'))
 const IntroPage = lazy(() => import('./intro/IntroPage'))
 const INTRO_SESSION_KEY = 'language-school:intro-completed'
 
+function forceIntroReview(): boolean {
+  if (!isDemoMode) return false
+  try {
+    return new URLSearchParams(window.location.search).get('reviewIntro') === '1'
+  } catch {
+    return false
+  }
+}
+
 function introAlreadyCompleted(): boolean {
+  if (forceIntroReview()) return false
   try {
     return window.sessionStorage.getItem(INTRO_SESSION_KEY) === 'true'
   } catch {

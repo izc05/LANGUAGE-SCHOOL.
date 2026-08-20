@@ -9,6 +9,7 @@ import {
   type PropsWithChildren,
 } from 'react'
 import { useNavigate } from 'react-router'
+import { isDemoMode } from '../../config/environment'
 
 export const CLOUD_PORTAL_WHITEOUT_MS = 2650
 export const CLOUD_PORTAL_DURATION_MS = 3050
@@ -27,7 +28,17 @@ type CloudPortalContextValue = {
 
 const CloudPortalContext = createContext<CloudPortalContextValue | null>(null)
 
+function forceCloudReview(): boolean {
+  if (!isDemoMode || typeof window === 'undefined') return false
+  try {
+    return new URLSearchParams(window.location.search).get('reviewClouds') === '1'
+  } catch {
+    return false
+  }
+}
+
 function prefersReducedMotion(): boolean {
+  if (forceCloudReview()) return false
   if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
