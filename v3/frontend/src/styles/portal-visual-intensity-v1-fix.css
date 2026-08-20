@@ -1,0 +1,48 @@
+/* REVISION VISUAL LOCAL · V1.1 · CONTRASTE
+   Ajustes derivados de evidencia 18A: sidebar legible y tarjeta de proxima clase
+   del Alumno con contraste correcto sobre rosa claro. */
+
+.dashboard-shell-student .dashboard-brand>span strong,
+.dashboard-shell-teacher .dashboard-brand>span strong,
+.dashboard-shell-admin .dashboard-brand>span strong{
+  color:#fff !important;
+  text-shadow:0 1px 10px rgba(0,0,0,.12);
+}
+
+.dashboard-shell-student .dashboard-brand>span small,
+.dashboard-shell-teacher .dashboard-brand>span small,
+.dashboard-shell-admin .dashboard-brand>span small{
+  color:#e8ced9 !important;
+}
+
+.dashboard-shell-student .sidebar-footer a,
+.dashboard-shell-teacher .sidebar-footer a,
+.dashboard-shell-admin .sidebar-footer a{
+  color:#fff !important;
+}
+
+.dashboard-shell-student .sidebar-footer small,
+.dashboard-shell-teacher .sidebar-footer small,
+.dashboard-shell-admin .sidebar-footer small{
+  color:#d8bcc8 !important;
+}
+
+.dashboard-shell-student .campus10-home .campus10-next-class>strong{
+  color:#3b2130 !important;
+}
+
+.dashboard-shell-student .campus10-home .campus10-next-class h3{
+  color:#4b2939 !important;
+}
+
+.dashboard-shell-student .campus10-home .campus10-next-class p{
+  color:#765968 !important;
+}
+
+.dashboard-shell-student .campus10-home .campus10-next-class .campus-next-class-top{
+  color:#a92f62 !important;
+}
+
+.dashboard-shell-student .campus10-home .campus10-next-class .campus-next-delivery{
+  color:#674652 !important;
+}

@@ -128,6 +128,7 @@ import './styles/admin-courses-phase14d.css'
 import './styles/admin-classes-phase14e.css'
 import './styles/admin-dashboard-phase14f.css'
 import './styles/portal-visual-intensity-v1.css'
+import './styles/portal-visual-intensity-v1-fix.css'
 
 const root = document.getElementById('root')
 if (!root) throw new Error('No se ha encontrado el elemento #root')
