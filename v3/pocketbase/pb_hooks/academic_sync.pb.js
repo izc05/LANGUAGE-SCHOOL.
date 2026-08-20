@@ -58,33 +58,6 @@ function syncGroupActiveCount(app, groupId, excludeEnrollmentId) {
   return excludeEnrollmentId ? records.filter((record) => record.id !== excludeEnrollmentId).length : records.length
 }
 
-function syncEnsureEnrollmentCapacity(app, record) {
-  const groupId = syncId(record.getString('group'), 'Grupo')
-  let group
-  try { group = app.findRecordById('groups', groupId) } catch { throw new BadRequestError('El grupo no existe.') }
-  const occupied = app.countRecords('enrollments', $dbx.hashExp({ group: groupId, status: 'ACTIVE' }))
-  if (occupied >= group.getInt('capacity')) throw new BadRequestError('El grupo ya ha alcanzado su capacidad.')
-}
-
-function syncValidateEnrollmentActivation(app, record, originalStatus) {
-  const studentId = syncId(record.getString('student'), 'Alumno')
-  const groupId = syncId(record.getString('group'), 'Grupo')
-  syncActiveUser(app, studentId, 'STUDENT', 'El alumno')
-  const group = syncActiveGroup(app, groupId)
-
-  const otherActive = syncActiveEnrollments(app, studentId, record.id)
-  if (otherActive.length > 0) {
-    throw new BadRequestError('El alumno ya tiene una matrícula activa. Utiliza el cambio de grupo para conservar el histórico.')
-  }
-
-  if ((originalStatus === 'FINISHED' || originalStatus === 'CANCELLED') && record.getString('status') === 'ACTIVE') {
-    throw new BadRequestError('Una matrícula finalizada o cancelada no se reactiva. Crea una nueva matrícula para conservar el histórico.')
-  }
-
-  const occupied = syncGroupActiveCount(app, groupId, record.id)
-  if (occupied >= group.getInt('capacity')) throw new BadRequestError('El grupo ya ha alcanzado su capacidad.')
-}
-
 function syncProfileToAccount(app, user) {
   const role = user.getString('role')
   const collectionName = role === 'STUDENT' ? 'student_profiles' : role === 'TEACHER' ? 'teacher_profiles' : ''
@@ -126,21 +99,6 @@ onRecordUpdate((e) => {
     e.app.save(classRecord)
   })
 }, 'groups')
-
-onRecordCreateRequest((e) => {
-  if (e.record.getString('status') === 'ACTIVE') syncEnsureEnrollmentCapacity(e.app, e.record)
-  e.next()
-}, 'enrollments')
-
-onRecordUpdateRequest((e) => {
-  const originalStatus = e.record.original().getString('status')
-  const nextStatus = e.record.getString('status')
-  if ((originalStatus === 'FINISHED' || originalStatus === 'CANCELLED') && nextStatus === 'ACTIVE') {
-    throw new BadRequestError('Una matrícula finalizada o cancelada no se reactiva. Crea una nueva matrícula para conservar el histórico.')
-  }
-  if (originalStatus !== 'ACTIVE' && nextStatus === 'ACTIVE') syncValidateEnrollmentActivation(e.app, e.record, originalStatus)
-  e.next()
-}, 'enrollments')
 
 function syncValidateClass(e, isUpdate) {
   const groupId = syncId(e.record.getString('group'), 'Grupo')
