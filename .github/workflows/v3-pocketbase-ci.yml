@@ -88,6 +88,12 @@ jobs:
       - name: Run learning synchronization smoke test
         run: bash "$GITHUB_WORKSPACE/v3/pocketbase/ci/learning-sync-smoke.sh"
 
+      - name: Print PocketBase diagnostics
+        if: failure()
+        run: |
+          echo '--- PocketBase server log ---'
+          cat "$RUNNER_TEMP/pocketbase-server.log" || true
+
       - name: Stop temporary PocketBase server
         if: always()
         run: |
