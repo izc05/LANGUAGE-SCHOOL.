@@ -10,10 +10,21 @@ mkdir -p "$TMP_DIR"
 
 post_json() {
   local url="$1" token="$2" body="$3"
-  curl -fsS -X POST "$url" \
+  local response_file status
+  response_file="$(mktemp)"
+  status="$(curl -sS -o "$response_file" -w '%{http_code}' -X POST "$url" \
     -H 'Content-Type: application/json' \
     -H "Authorization: $token" \
-    --data "$body"
+    --data "$body")"
+  if [[ ! "$status" =~ ^2 ]]; then
+    echo "HTTP $status · POST $url" >&2
+    cat "$response_file" >&2
+    echo >&2
+    rm -f "$response_file"
+    return 22
+  fi
+  cat "$response_file"
+  rm -f "$response_file"
 }
 
 authenticate() {
