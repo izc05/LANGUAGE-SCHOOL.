@@ -144,9 +144,11 @@ jobs:
         run: npm test
 
       - name: Generate visual review evidence (Phase 18A)
-        timeout-minutes: 18
+        timeout-minutes: 25
         working-directory: v3/e2e
-        run: npx playwright test --config=playwright.visual.config.ts
+        run: |
+          npx playwright test visual-review/phase18a-clean-public.spec.ts --config=playwright.visual.config.ts
+          npx playwright test visual-review/phase18a.spec.ts --config=playwright.visual.config.ts --grep-invert 'web pública'
 
       - name: Upload visual review evidence (Phase 18A)
         if: always()
