@@ -208,4 +208,4 @@ routerAdd('POST', '/api/language-school/admin/academic/enrollments/move', (e) =>
   }
 
   return e.json(200, { previousId: previousId || null, currentId, unchanged: false })
-})
+}, $apis.requireAuth('users'))
