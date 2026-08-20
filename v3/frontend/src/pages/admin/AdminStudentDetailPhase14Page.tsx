@@ -32,6 +32,20 @@ function initials(user?: AppUser): string {
   return `${user.name?.charAt(0) || ''}${user.surname?.charAt(0) || ''}`.toUpperCase() || 'AL'
 }
 
+function accountStatusLabel(user?: AppUser): string {
+  if (user?.status === 'ACTIVE') return 'Activo'
+  if (user?.status === 'INVITED') return 'Invitado'
+  if (user?.status === 'SUSPENDED') return 'Suspendido'
+  return 'Pausado'
+}
+
+function accountStateLabel(user?: AppUser): string {
+  if (user?.status === 'ACTIVE') return 'Habilitada'
+  if (user?.status === 'INVITED') return 'Pendiente de activación'
+  if (user?.status === 'SUSPENDED') return 'Suspendida'
+  return 'No activa'
+}
+
 function formatDate(value?: string): string {
   if (!value) return '—'
   const normalized = value.slice(0, 10)
@@ -134,15 +148,16 @@ export default function AdminStudentDetailPhase14Page() {
     event.preventDefault()
     if (!student) return
     setSaving(true); setError(null); setMessage(null)
+    const profileActive = student.status === 'ACTIVE'
     if (isDemoMode) {
       setStudent({ ...student, name, surname, phone })
-      setProfile({ ...(profile || ({ id: 'demo-profile', collectionId: '', collectionName: 'student_profiles', created: '', updated: '', expand: {}, user: student.id } as AdminStudentProfilePhase14)), birth_date: birthDate, guardian_name: guardianName, guardian_phone: guardianPhone, notes_private: notes, active: true })
+      setProfile({ ...(profile || ({ id: 'demo-profile', collectionId: '', collectionName: 'student_profiles', created: '', updated: '', expand: {}, user: student.id } as AdminStudentProfilePhase14)), birth_date: birthDate, guardian_name: guardianName, guardian_phone: guardianPhone, notes_private: notes, active: profileActive })
       setEditing(false); setSaving(false); setMessage('Ficha actualizada en la demostración.'); return
     }
     try {
       const updatedUser = await updateAdminUser(student, { name: name.trim(), surname: surname.trim(), phone: phone.trim() })
-      const updatedProfile = await saveAdminStudentProfilePhase14(student.id, { birthDate, guardianName, guardianPhone, notesPrivate: notes, active: true })
-      if (groupId && groupId !== activeEnrollment?.group) {
+      const updatedProfile = await saveAdminStudentProfilePhase14(student.id, { birthDate, guardianName, guardianPhone, notesPrivate: notes, active: profileActive })
+      if (student.status === 'ACTIVE' && groupId && groupId !== activeEnrollment?.group) {
         const targetGroup = groups.find((item) => item.id === groupId)
         if (!targetGroup) throw new Error('Selecciona un grupo válido.')
         const moved = await moveAdminStudentToGroup({ studentId: student.id, currentEnrollment: activeEnrollment, targetGroup })
@@ -156,6 +171,10 @@ export default function AdminStudentDetailPhase14Page() {
 
   async function toggleStatus() {
     if (!student) return
+    if (student.status === 'INVITED') {
+      setError('La cuenta está pendiente de activación segura. El alumno debe completar la invitación para elegir su contraseña.')
+      return
+    }
     const next = student.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'
     if (!window.confirm(`${next === 'ACTIVE' ? '¿Activar' : '¿Desactivar'} la cuenta de ${fullName(student)}?`)) return
     if (isDemoMode) { setStudent({ ...student, status: next }); return }
@@ -172,7 +191,7 @@ export default function AdminStudentDetailPhase14Page() {
         <div className="phase14-back-row"><Link to="/admin/alumnos">← Volver a alumnos</Link></div>
         <header className="phase14-profile-hero phase14-pink-heading">
           <div className="phase14-profile-identity"><span className="phase14-profile-avatar">{initials(student || undefined)}</span><div><span className="eyebrow">FICHA DEL ALUMNO</span><h2>{fullName(student || undefined)}</h2><p>{student?.email || '—'}{student?.phone ? ` · ${student.phone}` : ''}</p></div></div>
-          <div className="phase14-profile-actions"><span className={`status ${student?.status === 'ACTIVE' ? 'success' : 'warning'}`}>{student?.status === 'ACTIVE' ? 'Activo' : 'Pausado'}</span><button type="button" onClick={openEdit}>Editar ficha</button><button className="button button-primary" type="button" onClick={() => void toggleStatus()}>{student?.status === 'ACTIVE' ? 'Desactivar' : 'Activar'}</button></div>
+          <div className="phase14-profile-actions"><span className={`status ${student?.status === 'ACTIVE' ? 'success' : 'warning'}`}>{accountStatusLabel(student || undefined)}</span><button type="button" onClick={openEdit}>Editar ficha</button>{student?.status !== 'INVITED' && <button className="button button-primary" type="button" onClick={() => void toggleStatus()}>{student?.status === 'ACTIVE' ? 'Desactivar' : 'Activar'}</button>}</div>
         </header>
 
         {loading && <div className="cms-notice" role="status">Cargando ficha…</div>}
@@ -190,7 +209,7 @@ export default function AdminStudentDetailPhase14Page() {
           <article className="panel phase14-profile-card"><div className="panel-heading"><div><span className="eyebrow">CONTACTO</span><h3>Datos personales</h3></div></div><div className="phase14-data-grid">
             <div><span>Email</span><strong>{student?.email || '—'}</strong></div><div><span>Teléfono</span><strong>{student?.phone || 'Sin teléfono'}</strong></div>
             <div><span>Fecha de nacimiento</span><strong>{formatDate(profile?.birth_date)}</strong></div><div><span>Tutor/a</span><strong>{profile?.guardian_name || 'No indicado'}</strong></div>
-            <div><span>Teléfono tutor/a</span><strong>{profile?.guardian_phone || 'No indicado'}</strong></div><div><span>Cuenta</span><strong>{student?.status === 'ACTIVE' ? 'Habilitada' : 'No activa'}</strong></div>
+            <div><span>Teléfono tutor/a</span><strong>{profile?.guardian_phone || 'No indicado'}</strong></div><div><span>Cuenta</span><strong>{accountStateLabel(student || undefined)}</strong></div>
           </div></article>
 
           <article className="panel phase14-profile-card phase14-payment-card"><div className="panel-heading"><div><span className="eyebrow">PAGOS</span><h3>Situación económica</h3></div><Link className="student-payment-link" to={`/admin/pagos?alumno=${encodeURIComponent(student?.id || '')}`}>Gestionar pagos</Link></div><div className="phase14-payment-summary"><div><span>Estado</span><strong>{paymentState}</strong></div><div><span>Cubierto hasta</span><strong>{coverage ? formatDate(coverage) : 'Sin cobertura'}</strong></div><div><span>Pendiente</span><strong>{euro.format(pendingCents / 100)}</strong></div></div><div className="phase14-payment-history">{recentPayments.map((record) => <div key={record.id}><span><strong>{record.billing_mode === 'INTENSIVE' ? 'Intensivo' : 'Mensual'}</strong><small>{formatDate(record.period_start)} → {formatDate(record.period_end)}</small></span><b>{euro.format(record.amount_cents / 100)}</b><i className={`payment-state ${effectivePaymentStatus(record).toLowerCase()}`}>{effectivePaymentStatus(record) === 'PAID' ? 'Pagado' : effectivePaymentStatus(record) === 'OVERDUE' ? 'Vencido' : effectivePaymentStatus(record) === 'PENDING' ? 'Pendiente' : effectivePaymentStatus(record)}</i></div>)}{recentPayments.length === 0 && <small>Sin pagos registrados todavía.</small>}</div></article>
@@ -202,7 +221,7 @@ export default function AdminStudentDetailPhase14Page() {
           <label>Nombre<input value={name} onChange={(event) => setName(event.target.value)} required /></label><label>Apellidos<input value={surname} onChange={(event) => setSurname(event.target.value)} required /></label>
           <label>Teléfono<input type="tel" value={phone} onChange={(event) => setPhone(event.target.value)} /></label><label>Fecha de nacimiento<input type="date" value={birthDate} onChange={(event) => setBirthDate(event.target.value)} /></label>
           <label>Tutor/a<input value={guardianName} onChange={(event) => setGuardianName(event.target.value)} /></label><label>Teléfono tutor/a<input type="tel" value={guardianPhone} onChange={(event) => setGuardianPhone(event.target.value)} /></label>
-          <label className="phase14-wide">Grupo / aula<select value={groupId} onChange={(event) => setGroupId(event.target.value)}><option value="">Sin grupo activo</option>{groups.filter((group) => group.status === 'ACTIVE').map((group) => <option value={group.id} key={group.id}>{group.expand?.course?.title || 'Curso'} · {group.name} · {group.expand?.teacher ? fullName(group.expand.teacher) : 'Sin profesor'}</option>)}</select></label>
+          <label className="phase14-wide">Grupo / aula<select value={groupId} disabled={student?.status === 'INVITED'} onChange={(event) => setGroupId(event.target.value)}><option value="">Sin grupo activo</option>{groups.filter((group) => group.status === 'ACTIVE').map((group) => <option value={group.id} key={group.id}>{group.expand?.course?.title || 'Curso'} · {group.name} · {group.expand?.teacher ? fullName(group.expand.teacher) : 'Sin profesor'}</option>)}</select>{student?.status === 'INVITED' && <small>El grupo queda fijado hasta que el alumno complete la activación segura.</small>}</label>
           <label className="phase14-wide">Notas privadas<textarea rows={5} value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Seguimiento, necesidades, observaciones administrativas…" /></label>
           <div className="phase14-form-actions"><button type="button" onClick={() => setEditing(false)}>Cancelar</button><button className="button button-primary" disabled={saving}>{saving ? 'Guardando…' : 'Guardar ficha'}</button></div>
         </form></section>}

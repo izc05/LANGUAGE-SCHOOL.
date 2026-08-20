@@ -106,18 +106,20 @@ test('14C: Admin usa directorios filtrables y fichas completas de Alumno y Profe
   await expectNoPageOverflow(page)
 })
 
-test('14C: las altas ampliadas mantienen datos personales y docentes sin comprimir la ficha', async ({ page }) => {
+test('14C: el alta guiada conserva los datos personales y elimina la contraseña administrada', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 })
   await login(page)
 
   await page.goto('/admin/alumnos')
   const studentPage = page.locator('.admin-student-directory-phase14')
   await studentPage.getByRole('button', { name: '+ Nuevo alumno' }).click()
-  const studentCreate = studentPage.locator('.phase14-create-card')
+  const studentCreate = studentPage.locator('.student-onboarding-card')
   await expect(studentCreate.getByRole('heading', { name: 'Nuevo alumno' })).toBeVisible()
   await expect(studentCreate.getByLabel('Fecha de nacimiento')).toBeVisible()
   await expect(studentCreate.getByLabel('Nombre tutor/a')).toBeVisible()
   await expect(studentCreate.getByLabel('Teléfono tutor/a')).toBeVisible()
+  await expect(studentCreate.getByText('Sin contraseña inicial')).toBeVisible()
+  await expect(studentCreate.getByLabel('Contraseña inicial')).toHaveCount(0)
   await studentPage.getByRole('button', { name: 'Cerrar alta' }).click()
 
   await page.goto('/admin/profesores')
