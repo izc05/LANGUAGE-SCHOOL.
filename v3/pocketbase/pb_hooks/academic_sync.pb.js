@@ -119,7 +119,6 @@ function syncValidateClass(e, isUpdate) {
   e.next()
 }
 
-onRecordCreateRequest((e) => syncValidateClass(e, false), 'classes')
 onRecordUpdateRequest((e) => syncValidateClass(e, true), 'classes')
 
 routerAdd('POST', '/api/language-school/admin/academic/enrollments/move', (e) => {
