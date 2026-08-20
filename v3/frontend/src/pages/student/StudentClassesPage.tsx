@@ -76,9 +76,7 @@ function ClassDelivery({ item, upcoming = false, isDemoMode = false, prominent =
       {item.deliveryMode !== 'ONLINE' && <span className="student-class-location">📍 {item.locationText || 'Aula pendiente'}</span>}
       {upcoming && item.deliveryMode !== 'IN_PERSON' && (
         item.onlineJoinUrl
-          ? isDemoMode
-            ? <a className="student-online-class-link" href={item.onlineJoinUrl} target="_blank" rel="noreferrer">Entrar en clase online ↗</a>
-            : <Link className="student-online-class-link" to={`/alumno/aula/${encodeURIComponent(item.id)}`}>Entrar al aula online →</Link>
+          ? <Link className="student-online-class-link" to={`/alumno/aula/${encodeURIComponent(item.id)}`}>{isDemoMode ? 'Entrar en clase online →' : 'Entrar al aula online →'}</Link>
           : <span className="student-online-pending">Acceso online pendiente</span>
       )}
     </div>
