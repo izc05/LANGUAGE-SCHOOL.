@@ -12,6 +12,10 @@ function syncRequestBody(e) {
   return parsed
 }
 
+function syncHasOwn(body, key) {
+  return Object.prototype.hasOwnProperty.call(body, key)
+}
+
 function syncRequireAdmin(e) {
   if (!e.auth || e.auth.get('role') !== 'ADMIN') {
     throw new ForbiddenError('Solo Administración puede realizar esta operación.')
@@ -51,8 +55,13 @@ function syncActiveEnrollments(app, studentId, excludeId) {
 }
 
 function syncGroupActiveCount(app, groupId, excludeEnrollmentId) {
-  const records = app.findRecordsByFilter('enrollments', `group = "${groupId}" && status = "ACTIVE"`, '', 500, 0)
-  return excludeEnrollmentId ? records.filter((record) => record.id !== excludeEnrollmentId).length : records.length
+  const activeGroup = $dbx.hashExp({ group: groupId, status: 'ACTIVE' })
+  if (!excludeEnrollmentId) return app.countRecords('enrollments', activeGroup)
+  return app.countRecords(
+    'enrollments',
+    activeGroup,
+    $dbx.exp('[[id]] != {:excludeId}', { excludeId: excludeEnrollmentId }),
+  )
 }
 
 function syncProfileToAccount(app, user) {
@@ -69,22 +78,23 @@ function syncProfileToAccount(app, user) {
 }
 
 onRecordUpdateRequest((e) => {
-  const oldRole = e.record.original().getString('role')
-  const newRole = e.record.getString('role')
-  if (oldRole !== newRole) {
-    throw new BadRequestError('El rol de una cuenta existente no puede cambiarse. Crea una cuenta nueva con el rol correcto.')
-  }
+  const body = syncRequestBody(e)
+  if (!syncHasOwn(body, 'status')) return e.next()
 
-  const oldStatus = e.record.original().getString('status')
-  const newStatus = e.record.getString('status')
-  if (oldStatus === 'ACTIVE' && newStatus !== 'ACTIVE') {
-    if (oldRole === 'TEACHER') {
+  let current
+  try { current = e.app.findRecordById('users', e.record.id) } catch { throw new BadRequestError('La cuenta no existe.') }
+  const currentRole = current.getString('role')
+  const currentStatus = current.getString('status')
+  const nextStatus = e.record.getString('status')
+
+  if (currentStatus === 'ACTIVE' && nextStatus !== 'ACTIVE') {
+    if (currentRole === 'TEACHER') {
       const activeGroups = e.app.findRecordsByFilter('groups', `teacher = "${e.record.id}" && status = "ACTIVE"`, '', 1, 0)
       if (activeGroups.length > 0) {
         throw new BadRequestError('No puedes desactivar este profesor mientras tenga grupos activos. Reasigna o pausa primero sus grupos.')
       }
     }
-    if (oldRole === 'STUDENT') {
+    if (currentRole === 'STUDENT') {
       const activeEnrollments = syncActiveEnrollments(e.app, e.record.id, '')
       if (activeEnrollments.length > 0) {
         throw new BadRequestError('No puedes desactivar este alumno mientras tenga una matrícula activa. Finaliza o pausa primero su matrícula.')
@@ -94,55 +104,56 @@ onRecordUpdateRequest((e) => {
   e.next()
 }, 'users')
 
-onRecordUpdate((e) => {
-  const originalStatus = e.record.original().getString('status')
+onRecordAfterUpdateSuccess((e) => {
+  syncProfileToAccount(e.app, e.record)
   e.next()
-  if (originalStatus !== e.record.getString('status')) syncProfileToAccount(e.app, e.record)
 }, 'users')
 
 onRecordUpdateRequest((e) => {
-  const oldTeacher = e.record.original().getString('teacher')
-  const newTeacher = e.record.getString('teacher')
-  if (oldTeacher !== newTeacher) syncActiveUser(e.app, syncId(newTeacher, 'Profesor'), 'TEACHER', 'El profesor')
+  const body = syncRequestBody(e)
+  if (syncHasOwn(body, 'teacher')) {
+    syncActiveUser(e.app, syncId(e.record.getString('teacher'), 'Profesor'), 'TEACHER', 'El profesor')
+  }
   e.next()
 }, 'groups')
 
-onRecordUpdate((e) => {
-  const oldTeacher = e.record.original().getString('teacher')
+onRecordAfterUpdateSuccess((e) => {
   const newTeacher = e.record.getString('teacher')
-  e.next()
-  if (!newTeacher || oldTeacher === newTeacher) return
+  if (!newTeacher) return e.next()
 
   const now = Date.now()
-  const scheduled = e.app.findRecordsByFilter('classes', `group = "${e.record.id}" && status = "SCHEDULED"`, 'starts_at', 500, 0)
+  const scheduled = e.app.findAllRecords('classes', $dbx.hashExp({ group: e.record.id, status: 'SCHEDULED' }))
   scheduled.forEach((classRecord) => {
     const startsAt = new Date(classRecord.getString('starts_at')).getTime()
     if (!Number.isFinite(startsAt) || startsAt < now || classRecord.getString('teacher') === newTeacher) return
     classRecord.set('teacher', newTeacher)
     e.app.save(classRecord)
   })
+  e.next()
 }, 'groups')
 
-function syncValidateClass(e, isUpdate) {
+function syncValidateClassUpdate(e) {
+  const body = syncRequestBody(e)
+  const assignmentChanged = syncHasOwn(body, 'group') || syncHasOwn(body, 'teacher')
+  const scheduledRequested = syncHasOwn(body, 'status') && e.record.getString('status') === 'SCHEDULED'
+  if (!assignmentChanged && !scheduledRequested) return e.next()
+
   const groupId = syncId(e.record.getString('group'), 'Grupo')
   const teacherId = syncId(e.record.getString('teacher'), 'Profesor')
   let group
   try { group = e.app.findRecordById('groups', groupId) } catch { throw new BadRequestError('El grupo de la clase no existe.') }
   syncActiveUser(e.app, teacherId, 'TEACHER', 'El profesor')
 
-  const scheduled = e.record.getString('status') === 'SCHEDULED'
-  const assignmentChanged = isUpdate && (
-    e.record.original().getString('group') !== groupId ||
-    e.record.original().getString('teacher') !== teacherId
-  )
-  if ((scheduled || assignmentChanged) && group.getString('teacher') !== teacherId) {
+  if (group.getString('teacher') !== teacherId) {
     throw new BadRequestError('El profesor de la clase debe coincidir con el profesor responsable del grupo.')
   }
-  if (scheduled && group.getString('status') !== 'ACTIVE') throw new BadRequestError('No se pueden programar clases nuevas en un grupo no activo.')
+  if (e.record.getString('status') === 'SCHEDULED' && group.getString('status') !== 'ACTIVE') {
+    throw new BadRequestError('No se pueden programar clases nuevas en un grupo no activo.')
+  }
   e.next()
 }
 
-onRecordUpdateRequest((e) => syncValidateClass(e, true), 'classes')
+onRecordUpdateRequest((e) => syncValidateClassUpdate(e), 'classes')
 
 routerAdd('POST', '/api/language-school/admin/academic/enrollments/move', (e) => {
   syncRequireAdmin(e)
