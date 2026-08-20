@@ -96,7 +96,7 @@ onRecordUpdate((e) => {
   if (originalStatus !== e.record.getString('status')) syncProfileToAccount(e.app, e.record)
 }, 'users')
 
-function syncProfileRequest(e) {
+function syncProfileModel(e) {
   const userId = syncId(e.record.getString('user'), 'Usuario')
   let user
   try { user = e.app.findRecordById('users', userId) } catch { throw new BadRequestError('La cuenta asociada no existe.') }
@@ -104,8 +104,8 @@ function syncProfileRequest(e) {
   e.next()
 }
 
-onRecordCreateRequest(syncProfileRequest, 'student_profiles', 'teacher_profiles')
-onRecordUpdateRequest(syncProfileRequest, 'student_profiles', 'teacher_profiles')
+onRecordCreate(syncProfileModel, 'student_profiles', 'teacher_profiles')
+onRecordUpdate(syncProfileModel, 'student_profiles', 'teacher_profiles')
 
 onRecordCreateRequest((e) => {
   syncActiveUser(e.app, syncId(e.record.getString('teacher'), 'Profesor'), 'TEACHER', 'El profesor')
