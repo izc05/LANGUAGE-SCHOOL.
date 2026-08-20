@@ -1,0 +1,170 @@
+import { expect, test, type Page } from '@playwright/test'
+import { mkdirSync, writeFileSync } from 'node:fs'
+import path from 'node:path'
+
+const INTRO_SESSION_KEY = 'language-school:intro-completed'
+const COOKIE_STORAGE_KEY = 'language-school-cookie-consent-v1'
+const outputRoot = path.resolve('visual-review-artifacts/phase18a/clean-public')
+mkdirSync(outputRoot, { recursive: true })
+
+type EvidenceRow = {
+  route: string
+  viewport: string
+  file: string
+  title: string
+  scrollWidth: number
+  clientWidth: number
+  scrollHeight: number
+  overflowX: number
+  state: string
+}
+
+const evidence: EvidenceRow[] = []
+const desktop = { width: 1440, height: 900 }
+const tabletWide = { width: 1180, height: 900 }
+const tablet = { width: 820, height: 900 }
+const mobile = { width: 390, height: 844 }
+
+function safeName(value: string) {
+  return value.replace(/^\/+/, '').replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'home'
+}
+
+function flushManifest() {
+  writeFileSync(
+    path.join(outputRoot, 'manifest.json'),
+    JSON.stringify({ generatedAt: new Date().toISOString(), evidence }, null, 2),
+    'utf8',
+  )
+}
+
+async function settle(page: Page) {
+  await page.locator('.route-loading').waitFor({ state: 'hidden', timeout: 7000 }).catch(() => undefined)
+  await page.waitForTimeout(300)
+}
+
+async function capture(page: Page, route: string, viewport: { width: number; height: number }, state: string, fullPage = true) {
+  await page.setViewportSize(viewport)
+  await settle(page)
+  const metrics = await page.evaluate(() => ({
+    scrollWidth: document.documentElement.scrollWidth,
+    clientWidth: document.documentElement.clientWidth,
+    scrollHeight: document.documentElement.scrollHeight,
+    title: document.title,
+  }))
+  const file = `${safeName(route)}-${state}-${viewport.width}.jpg`
+  await page.screenshot({ path: path.join(outputRoot, file), fullPage, type: 'jpeg', quality: 72 })
+  evidence.push({
+    route,
+    viewport: `${viewport.width}x${viewport.height}`,
+    file,
+    title: metrics.title,
+    scrollWidth: metrics.scrollWidth,
+    clientWidth: metrics.clientWidth,
+    scrollHeight: metrics.scrollHeight,
+    overflowX: Math.max(0, metrics.scrollWidth - metrics.clientWidth),
+    state,
+  })
+  flushManifest()
+}
+
+async function rejectOptionalCookies(page: Page) {
+  const reject = page.getByRole('button', { name: 'Rechazar opcionales' })
+  if (await reject.isVisible().catch(() => false)) {
+    await reject.click()
+    await expect(reject).toBeHidden({ timeout: 5000 })
+  }
+}
+
+async function prepareHomeWithFreshConsent(page: Page, viewport: { width: number; height: number }) {
+  await page.setViewportSize(viewport)
+  await page.goto('/')
+  await page.evaluate(({ introKey, cookieKey }) => {
+    sessionStorage.setItem(introKey, 'true')
+    localStorage.removeItem(cookieKey)
+  }, { introKey: INTRO_SESSION_KEY, cookieKey: COOKIE_STORAGE_KEY })
+  await page.reload()
+  await expect(page.locator('.site-header')).toBeVisible({ timeout: 8000 })
+  await expect(page.getByRole('button', { name: 'Rechazar opcionales' })).toBeVisible({ timeout: 8000 })
+}
+
+async function gotoClean(page: Page, route: string, viewport: { width: number; height: number }) {
+  await page.setViewportSize(viewport)
+  await page.goto(route)
+  await rejectOptionalCookies(page)
+  await expect(page.locator('body')).toBeVisible()
+  await capture(page, route, viewport, 'clean')
+}
+
+test.describe.configure({ mode: 'serial' })
+
+test('18A clean · consentimiento y páginas públicas sin overlay', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+
+  for (const viewport of [desktop, mobile]) {
+    await prepareHomeWithFreshConsent(page, viewport)
+    await capture(page, '/', viewport, 'cookie-consent', false)
+    await rejectOptionalCookies(page)
+    await capture(page, '/', viewport, 'clean-home')
+  }
+
+  const routes = [
+    '/programas',
+    '/tarifas',
+    '/profesores',
+    '/sobre-nosotros',
+    '/blog',
+    '/contacto',
+    '/test-de-nivel',
+    '/acceso',
+    '/privacidad',
+    '/aviso-legal',
+  ]
+
+  for (const viewport of [desktop, mobile]) {
+    for (const route of routes) await gotoClean(page, route, viewport)
+  }
+
+  for (const viewport of [tabletWide, tablet]) {
+    for (const route of ['/', '/programas', '/test-de-nivel', '/acceso']) await gotoClean(page, route, viewport)
+  }
+
+  await page.setViewportSize(desktop)
+  await page.goto('/programas')
+  await rejectOptionalCookies(page)
+  const courseHref = await page.locator('a[href^="/programas/"]').first().getAttribute('href').catch(() => null)
+  if (courseHref) {
+    await gotoClean(page, courseHref, desktop)
+    await gotoClean(page, courseHref, mobile)
+  }
+
+  await page.goto('/blog')
+  await rejectOptionalCookies(page)
+  const postHref = await page.locator('a[href^="/blog/"]').first().getAttribute('href').catch(() => null)
+  if (postHref) {
+    await gotoClean(page, postHref, desktop)
+    await gotoClean(page, postHref, mobile)
+  }
+})
+
+test('18A clean · test de nivel pregunta y resultado sin overlay', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.setViewportSize(desktop)
+  await page.goto('/test-de-nivel')
+  await rejectOptionalCookies(page)
+  await page.getByRole('button', { name: 'Empezar test' }).click()
+  await expect(page.locator('input[name="placement-answer"]').first()).toBeVisible({ timeout: 8000 })
+  await capture(page, '/test-de-nivel', desktop, 'question-clean')
+
+  for (let step = 0; step < 20; step += 1) {
+    if (await page.locator('.placement-test-result').isVisible().catch(() => false)) break
+    const firstOption = page.locator('input[name="placement-answer"]').first()
+    await expect(firstOption).toBeVisible({ timeout: 8000 })
+    await firstOption.check()
+    await page.getByRole('button', { name: /Confirmar respuesta|Ver mi resultado/ }).click()
+    await page.waitForTimeout(120)
+  }
+
+  await expect(page.locator('.placement-test-result')).toBeVisible({ timeout: 10_000 })
+  await capture(page, '/test-de-nivel', desktop, 'result-clean')
+  await capture(page, '/test-de-nivel', mobile, 'result-clean')
+})
