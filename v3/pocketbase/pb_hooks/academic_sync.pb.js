@@ -67,6 +67,32 @@ function syncProfileToAccount(app, user) {
   app.save(profile)
 }
 
+onRecordUpdateRequest((e) => {
+  const oldRole = e.record.original().getString('role')
+  const newRole = e.record.getString('role')
+  if (oldRole !== newRole) {
+    throw new BadRequestError('El rol de una cuenta existente no puede cambiarse. Crea una cuenta nueva con el rol correcto.')
+  }
+
+  const oldStatus = e.record.original().getString('status')
+  const newStatus = e.record.getString('status')
+  if (oldStatus === 'ACTIVE' && newStatus !== 'ACTIVE') {
+    if (oldRole === 'TEACHER') {
+      const activeGroups = e.app.findRecordsByFilter('groups', `teacher = "${e.record.id}" && status = "ACTIVE"`, '', 1, 0)
+      if (activeGroups.length > 0) {
+        throw new BadRequestError('No puedes desactivar este profesor mientras tenga grupos activos. Reasigna o pausa primero sus grupos.')
+      }
+    }
+    if (oldRole === 'STUDENT') {
+      const activeEnrollments = syncActiveEnrollments(e.app, e.record.id, '')
+      if (activeEnrollments.length > 0) {
+        throw new BadRequestError('No puedes desactivar este alumno mientras tenga una matrícula activa. Finaliza o pausa primero su matrícula.')
+      }
+    }
+  }
+  e.next()
+}, 'users')
+
 onRecordUpdate((e) => {
   const originalStatus = e.record.original().getString('status')
   e.next()
