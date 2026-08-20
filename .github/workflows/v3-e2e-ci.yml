@@ -143,6 +143,20 @@ jobs:
         working-directory: v3/e2e
         run: npm test
 
+      - name: Generate visual review evidence (Phase 18A)
+        timeout-minutes: 18
+        working-directory: v3/e2e
+        run: npx playwright test --config=playwright.visual.config.ts
+
+      - name: Upload visual review evidence (Phase 18A)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: language-school-v2-visual-review-phase18a
+          path: v3/e2e/visual-review-artifacts/phase18a
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Print backend diagnostics
         if: failure()
         run: |
@@ -163,6 +177,7 @@ jobs:
           path: |
             v3/e2e/playwright-report
             v3/e2e/test-results
+            v3/e2e/visual-review-results
           if-no-files-found: ignore
           retention-days: 7
 
