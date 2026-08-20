@@ -204,6 +204,14 @@ test('15B sync: Admin, Profesor y Alumno conservan una única verdad académica'
     expect(activeAfterReturn[0].group).toBe(groupOneId)
     expect(afterReturn.body.items.filter((item: any) => item.group === groupOneId)).toHaveLength(2)
 
+    const blockedDisableStudent = await apiRequest(page, `/api/collections/users/records/${tempStudentId}`, 'PATCH', { status: 'INACTIVE' })
+    expect(blockedDisableStudent.status).toBe(400)
+
+    const finishCurrentEnrollment = await apiRequest(page, `/api/collections/enrollments/records/${activeAfterReturn[0].id}`, 'PATCH', {
+      status: 'FINISHED', ended_at: new Date().toISOString(),
+    })
+    expect(finishCurrentEnrollment.status).toBe(200)
+
     const disableStudent = await apiRequest(page, `/api/collections/users/records/${tempStudentId}`, 'PATCH', { status: 'INACTIVE' })
     expect(disableStudent.status).toBe(200)
     const disabledStudentProfile = await apiRequest(page, `/api/collections/student_profiles/records/${tempStudentProfileId}`)
