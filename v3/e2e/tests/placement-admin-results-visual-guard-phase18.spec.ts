@@ -23,13 +23,24 @@ test('18C: Resultados de nivel mantiene la escala de Admin aislada del resultado
     const levelStyle = level ? getComputedStyle(level) : null
     const sourceStyle = source ? getComputedStyle(source) : null
     return {
+      hasLevel: Boolean(level),
+      hasSource: Boolean(source),
       levelFontSize: Number.parseFloat(levelStyle?.fontSize || '0'),
       sourceFontSize: Number.parseFloat(sourceStyle?.fontSize || '0'),
-      sourceLineHeight: Number.parseFloat(sourceStyle?.lineHeight || '0'),
+      sourceLineHeight: sourceStyle?.lineHeight || '',
     }
   })
 
+  expect(typography.hasLevel).toBe(true)
+  expect(typography.hasSource).toBe(true)
+  expect(typography.levelFontSize).toBeGreaterThan(0)
   expect(typography.levelFontSize).toBeLessThanOrEqual(20)
+  expect(typography.sourceFontSize).toBeGreaterThan(0)
   expect(typography.sourceFontSize).toBeLessThanOrEqual(18)
-  expect(typography.sourceLineHeight).toBeLessThanOrEqual(30)
+
+  if (typography.sourceLineHeight !== 'normal') {
+    const sourceLineHeight = Number.parseFloat(typography.sourceLineHeight)
+    expect(Number.isFinite(sourceLineHeight)).toBe(true)
+    expect(sourceLineHeight).toBeLessThanOrEqual(30)
+  }
 })
