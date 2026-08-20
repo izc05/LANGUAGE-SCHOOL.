@@ -1,0 +1,236 @@
+/* REVISION VISUAL LOCAL · V1 · BLANCO + COLOR
+   Feedback 2026-08-20: lienzo blanco real, mayor intensidad cromatica y
+   mas presencia premium en Admin, Profesor y Alumno.
+   Capa puramente visual: no modifica estructura, datos ni comportamiento. */
+
+.dashboard-shell-student{
+  --portal-accent:#d62f78;
+  --portal-accent-soft:#ffe1ec;
+  --portal-sidebar-a:#681b3e;
+  --portal-sidebar-b:#240d19;
+  --portal-surface:#fff;
+  --portal-ink:#2d1b24;
+}
+
+.dashboard-shell-teacher{
+  --portal-accent:#bf3477;
+  --portal-accent-soft:#fbe1ec;
+  --portal-sidebar-a:#5a1d3f;
+  --portal-sidebar-b:#211019;
+  --portal-surface:#fff;
+  --portal-ink:#2e1d25;
+}
+
+.dashboard-shell-admin{
+  --portal-accent:#ae2c66;
+  --portal-accent-soft:#f9dfE9;
+  --portal-sidebar-a:#4b1d33;
+  --portal-sidebar-b:#190d14;
+  --portal-surface:#fff;
+  --portal-ink:#291a21;
+}
+
+.dashboard-shell-student,
+.dashboard-shell-teacher,
+.dashboard-shell-admin,
+.dashboard-shell-student .dashboard-main,
+.dashboard-shell-teacher .dashboard-main,
+.dashboard-shell-admin .dashboard-main{
+  background:#fff !important;
+}
+
+.dashboard-shell-student .dashboard-topbar,
+.dashboard-shell-teacher .dashboard-topbar,
+.dashboard-shell-admin .dashboard-topbar{
+  background:rgba(255,255,255,.985) !important;
+  border-bottom-color:color-mix(in srgb,var(--portal-accent) 18%,#eee) !important;
+  box-shadow:0 10px 34px rgba(54,22,38,.055) !important;
+}
+
+.dashboard-shell-student .dashboard-sidebar,
+.dashboard-shell-teacher .dashboard-sidebar,
+.dashboard-shell-admin .dashboard-sidebar{
+  background:
+    radial-gradient(circle at 18% 8%,color-mix(in srgb,var(--portal-accent) 32%,transparent),transparent 18rem),
+    linear-gradient(180deg,var(--portal-sidebar-a),var(--portal-sidebar-b)) !important;
+  border-right:1px solid rgba(255,255,255,.06);
+  box-shadow:20px 0 54px rgba(37,12,25,.12) !important;
+}
+
+.dashboard-shell-student .dashboard-nav a,
+.dashboard-shell-student .dashboard-nav button,
+.dashboard-shell-teacher .dashboard-nav a,
+.dashboard-shell-teacher .dashboard-nav button,
+.dashboard-shell-admin .dashboard-nav a,
+.dashboard-shell-admin .dashboard-nav button{
+  color:#eadce3 !important;
+}
+
+.dashboard-shell-student .dashboard-nav a:hover,
+.dashboard-shell-student .dashboard-nav button:hover,
+.dashboard-shell-teacher .dashboard-nav a:hover,
+.dashboard-shell-teacher .dashboard-nav button:hover,
+.dashboard-shell-admin .dashboard-nav a:hover,
+.dashboard-shell-admin .dashboard-nav button:hover{
+  color:#fff !important;
+  background:rgba(255,255,255,.09) !important;
+}
+
+.dashboard-shell-student .dashboard-nav a.active,
+.dashboard-shell-student .dashboard-nav button.active,
+.dashboard-shell-teacher .dashboard-nav a.active,
+.dashboard-shell-teacher .dashboard-nav button.active,
+.dashboard-shell-admin .dashboard-nav a.active,
+.dashboard-shell-admin .dashboard-nav button.active{
+  color:#fff !important;
+  border-color:color-mix(in srgb,var(--portal-accent) 58%,rgba(255,255,255,.2)) !important;
+  background:linear-gradient(100deg,color-mix(in srgb,var(--portal-accent) 55%,transparent),rgba(255,255,255,.09)) !important;
+  box-shadow:inset 3px 0 0 color-mix(in srgb,var(--portal-accent) 72%,#ffb6d1),0 9px 24px rgba(0,0,0,.09);
+}
+
+.dashboard-shell-student .dashboard-brand .brand-mark,
+.dashboard-shell-teacher .dashboard-brand .brand-mark,
+.dashboard-shell-admin .dashboard-brand .brand-mark{
+  color:#fff !important;
+  background:linear-gradient(145deg,color-mix(in srgb,var(--portal-accent) 62%,#f48db5),var(--portal-accent)) !important;
+  box-shadow:0 10px 28px color-mix(in srgb,var(--portal-accent) 28%,transparent);
+}
+
+.dashboard-shell-student .user-chip>span,
+.dashboard-shell-teacher .user-chip>span,
+.dashboard-shell-admin .user-chip>span{
+  color:color-mix(in srgb,var(--portal-accent) 88%,#53152e) !important;
+  background:var(--portal-accent-soft) !important;
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--portal-accent) 15%,transparent);
+}
+
+.dashboard-shell-student .dashboard-content .panel,
+.dashboard-shell-teacher .dashboard-content .panel,
+.dashboard-shell-admin .dashboard-content .panel{
+  background:#fff !important;
+  border-color:color-mix(in srgb,var(--portal-accent) 18%,#ece7e9) !important;
+  box-shadow:0 16px 42px rgba(60,24,42,.065) !important;
+}
+
+.dashboard-shell-student .dashboard-content input,
+.dashboard-shell-student .dashboard-content select,
+.dashboard-shell-student .dashboard-content textarea,
+.dashboard-shell-teacher .dashboard-content input,
+.dashboard-shell-teacher .dashboard-content select,
+.dashboard-shell-teacher .dashboard-content textarea,
+.dashboard-shell-admin .dashboard-content input,
+.dashboard-shell-admin .dashboard-content select,
+.dashboard-shell-admin .dashboard-content textarea{
+  background:#fff !important;
+  border-color:color-mix(in srgb,var(--portal-accent) 20%,#d7d0d3) !important;
+}
+
+.dashboard-shell-student .dashboard-content input:focus,
+.dashboard-shell-student .dashboard-content select:focus,
+.dashboard-shell-student .dashboard-content textarea:focus,
+.dashboard-shell-teacher .dashboard-content input:focus,
+.dashboard-shell-teacher .dashboard-content select:focus,
+.dashboard-shell-teacher .dashboard-content textarea:focus,
+.dashboard-shell-admin .dashboard-content input:focus,
+.dashboard-shell-admin .dashboard-content select:focus,
+.dashboard-shell-admin .dashboard-content textarea:focus{
+  border-color:var(--portal-accent) !important;
+  box-shadow:0 0 0 4px color-mix(in srgb,var(--portal-accent) 13%,transparent) !important;
+}
+
+.dashboard-shell-student .dashboard-content .button-primary,
+.dashboard-shell-teacher .dashboard-content .button-primary,
+.dashboard-shell-admin .dashboard-content .button-primary{
+  color:#fff !important;
+  border-color:transparent !important;
+  background:linear-gradient(135deg,color-mix(in srgb,var(--portal-accent) 88%,#e84c87),color-mix(in srgb,var(--portal-accent) 86%,#7b1846)) !important;
+  box-shadow:0 12px 28px color-mix(in srgb,var(--portal-accent) 22%,transparent) !important;
+}
+
+.dashboard-shell-student .dashboard-content .button-primary:hover,
+.dashboard-shell-teacher .dashboard-content .button-primary:hover,
+.dashboard-shell-admin .dashboard-content .button-primary:hover{
+  filter:saturate(1.1) brightness(1.035);
+  box-shadow:0 15px 32px color-mix(in srgb,var(--portal-accent) 28%,transparent) !important;
+}
+
+.dashboard-shell-student .dashboard-content .status.info,
+.dashboard-shell-teacher .dashboard-content .status.info,
+.dashboard-shell-admin .dashboard-content .status.info,
+.dashboard-shell-student .private-space-badge,
+.dashboard-shell-teacher .private-space-badge,
+.dashboard-shell-admin .private-space-badge{
+  border-color:color-mix(in srgb,var(--portal-accent) 28%,#eee) !important;
+  background:color-mix(in srgb,var(--portal-accent) 10%,#fff) !important;
+  color:color-mix(in srgb,var(--portal-accent) 82%,#55172f) !important;
+}
+
+/* ADMIN · las cabeceras editoriales ganan profundidad y contraste. */
+.dashboard-shell-admin .cms-page-heading{
+  border-color:rgba(178,67,110,.28) !important;
+  background:
+    radial-gradient(circle at 91% 18%,rgba(230,89,144,.18),transparent 25rem),
+    linear-gradient(135deg,#641f42 0%,#401728 56%,#2c1420 100%) !important;
+  box-shadow:0 22px 52px rgba(61,20,39,.16) !important;
+}
+.dashboard-shell-admin .cms-page-heading .eyebrow{color:#f4a3c2 !important}
+.dashboard-shell-admin .cms-page-heading h1,
+.dashboard-shell-admin .cms-page-heading h2,
+.dashboard-shell-admin .cms-page-heading h3{color:#fff !important}
+.dashboard-shell-admin .cms-page-heading p{color:#f1dfe6 !important}
+.dashboard-shell-admin .placement-admin-new-version{
+  border-color:#e5bdcc !important;
+  box-shadow:0 18px 44px rgba(91,31,57,.075) !important;
+}
+
+/* PROFESOR · hero con identidad mas rica y menos grisacea. */
+.dashboard-shell-teacher .teacher-workspace-hero{
+  border-color:rgba(198,65,119,.28) !important;
+  background:
+    radial-gradient(circle at 86% 14%,rgba(235,98,154,.24),transparent 19rem),
+    linear-gradient(135deg,#672044 0%,#42172e 63%,#2b121f 100%) !important;
+  box-shadow:0 22px 54px rgba(62,20,40,.16) !important;
+}
+.dashboard-shell-teacher .teacher-workspace-hero .eyebrow{color:#f3a4c3 !important}
+.dashboard-shell-teacher .teacher-workspace-hero h2,
+.dashboard-shell-teacher .teacher-workspace-hero p{color:#fff !important}
+.dashboard-shell-teacher .teacher-workspace-hero h2 em{color:#ffb4cf !important}
+
+/* ALUMNO · blanco real y rosa mas definido en la pantalla de inicio. */
+.dashboard-shell-student .campus10-home{
+  background:#fff !important;
+}
+.dashboard-shell-student .campus10-intro{
+  border-color:#ead2dc !important;
+  background:#fff !important;
+  box-shadow:0 18px 48px rgba(72,27,48,.065) !important;
+}
+.dashboard-shell-student .campus10-intro h2 em{color:#d62f78 !important}
+.dashboard-shell-student .campus10-context>span,
+.dashboard-shell-student .campus10-context>a{
+  border-color:#ead0db !important;
+  background:#fff7fa !important;
+}
+.dashboard-shell-student .campus10-home .campus10-next-class{
+  border-color:#e3acc1 !important;
+  background:linear-gradient(145deg,#fff 0%,#fff4f8 46%,#f8d8e5 100%) !important;
+  box-shadow:0 20px 52px rgba(111,34,67,.1) !important;
+}
+.dashboard-shell-student .campus10-home .campus10-class-actions .campus-online-entry{
+  border-color:#d62f78 !important;
+  background:linear-gradient(135deg,#dc397d,#ba285f) !important;
+  box-shadow:0 10px 24px rgba(190,39,96,.18) !important;
+}
+.dashboard-shell-student .campus10-action-card{
+  border-color:#ead7df !important;
+  background:#fff !important;
+  box-shadow:0 12px 30px rgba(70,28,47,.05) !important;
+}
+
+@media(prefers-reduced-motion:reduce){
+  .dashboard-shell-student *,
+  .dashboard-shell-teacher *,
+  .dashboard-shell-admin *{
+    transition-duration:.01ms !important;
+  }
+}
