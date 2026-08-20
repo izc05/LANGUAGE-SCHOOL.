@@ -1,10 +1,9 @@
-import { type FormEvent, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router'
 import DashboardShell from '../../components/DashboardShell'
 import PortalEmptyState from '../../components/PortalEmptyState'
 import { useAuth } from '../../features/auth/AuthProvider'
 import {
-  createAdminStudent,
   listAdminClasses,
   listAdminEnrollments,
   listAdminGroups,
@@ -15,9 +14,10 @@ import {
 import { getPlacementAdminOverview, type PlacementAdminStudentLevel } from '../../services/pocketbase/placementAdmin'
 import type { AppUser } from '../../services/pocketbase/types'
 import type { ClassDeliveryMode, ClassRecord } from '../../services/pocketbase/studentPortal'
+import AdminStudentOnboardingWizard from './AdminStudentOnboardingWizard'
 import { adminNav } from './adminNav'
 
-type StatusFilter = 'ALL' | 'ACTIVE' | 'INACTIVE'
+type StatusFilter = 'ALL' | 'ACTIVE' | 'INVITED' | 'INACTIVE'
 type ModeFilter = 'ALL' | ClassDeliveryMode
 
 type StudentRow = {
@@ -60,6 +60,18 @@ function sourceLabel(source: PlacementAdminStudentLevel['currentLevelSource']): 
   return 'sin evaluar'
 }
 
+function accountStatusLabel(status: string): string {
+  if (status === 'ACTIVE') return 'Activo'
+  if (status === 'INVITED') return 'Invitado'
+  return 'Pausado'
+}
+
+function accountStatusClass(status: string): string {
+  if (status === 'ACTIVE') return 'active'
+  if (status === 'INVITED') return 'invited'
+  return 'paused'
+}
+
 function nextClassLabel(record?: ClassRecord): string {
   if (!record) return 'Sin programar'
   const date = new Date(record.starts_at)
@@ -77,9 +89,7 @@ export default function AdminStudentsPhase14Page() {
   const [levels, setLevels] = useState<PlacementAdminStudentLevel[]>(isDemoMode ? demoLevels : [])
   const [loading, setLoading] = useState(!isDemoMode)
   const [error, setError] = useState<string | null>(null)
-  const [message, setMessage] = useState<string | null>(null)
   const [showCreate, setShowCreate] = useState(false)
-  const [saving, setSaving] = useState(false)
 
   const [query, setQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL')
@@ -88,15 +98,6 @@ export default function AdminStudentsPhase14Page() {
   const [levelFilter, setLevelFilter] = useState('ALL')
   const [teacherFilter, setTeacherFilter] = useState('ALL')
   const [modeFilter, setModeFilter] = useState<ModeFilter>('ALL')
-
-  const [name, setName] = useState('')
-  const [surname, setSurname] = useState('')
-  const [email, setEmail] = useState('')
-  const [phone, setPhone] = useState('')
-  const [password, setPassword] = useState('')
-  const [birthDate, setBirthDate] = useState('')
-  const [guardianName, setGuardianName] = useState('')
-  const [guardianPhone, setGuardianPhone] = useState('')
 
   useEffect(() => {
     if (isDemoMode) return
@@ -144,7 +145,7 @@ export default function AdminStudentsPhase14Page() {
     return rows.filter((row) => {
       const course = row.group?.expand?.course
       const text = `${fullName(row.user)} ${row.user.email} ${row.level} ${row.group?.name || ''} ${course?.title || ''} ${row.teacherName}`.toLowerCase()
-      const statusOk = statusFilter === 'ALL' || (statusFilter === 'ACTIVE' ? row.user.status === 'ACTIVE' : row.user.status !== 'ACTIVE')
+      const statusOk = statusFilter === 'ALL' || row.user.status === statusFilter
       const courseOk = courseFilter === 'ALL' || course?.id === courseFilter
       const groupOk = groupFilter === 'ALL' || row.group?.id === groupFilter
       const levelOk = levelFilter === 'ALL' || row.level === levelFilter
@@ -154,22 +155,8 @@ export default function AdminStudentsPhase14Page() {
     })
   }, [courseFilter, groupFilter, levelFilter, modeFilter, query, rows, statusFilter, teacherFilter])
 
-  async function createStudent(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setError(null); setMessage(null)
-    if (isDemoMode) { setMessage('Alta preparada en la demostración.'); setShowCreate(false); return }
-    setSaving(true)
-    try {
-      const created = await createAdminStudent({ email, password, name, surname, phone, birthDate, guardianName, guardianPhone })
-      setUsers((current) => [...current, created.user].sort((a, b) => fullName(a).localeCompare(fullName(b), 'es')))
-      setName(''); setSurname(''); setEmail(''); setPhone(''); setPassword(''); setBirthDate(''); setGuardianName(''); setGuardianPhone(''); setShowCreate(false)
-      setMessage('Alumno creado. Abre su ficha para completar matrícula, notas privadas y seguimiento.')
-    } catch (creationError) {
-      setError(creationError instanceof Error ? creationError.message : 'No se ha podido crear el alumno.')
-    } finally { setSaving(false) }
-  }
-
   const activeCount = rows.filter((row) => row.user.status === 'ACTIVE').length
+  const invitedCount = rows.filter((row) => row.user.status === 'INVITED').length
   const enrolledCount = rows.filter((row) => row.enrollment).length
   const evaluatedCount = rows.filter((row) => row.level !== '—').length
 
@@ -182,24 +169,13 @@ export default function AdminStudentsPhase14Page() {
         </header>
 
         {loading && <div className="cms-notice" role="status">Cargando alumnos…</div>}
-        {message && <div className="cms-notice success-notice" role="status">{message}</div>}
         {error && <div className="cms-notice auth-error" role="alert">{error}</div>}
 
-        {showCreate && <section className="panel phase14-create-card"><div className="panel-heading"><div><span className="eyebrow">ALTA</span><h3>Nuevo alumno</h3></div></div><form className="phase14-form-grid" onSubmit={createStudent}>
-          <label>Nombre<input value={name} onChange={(event) => setName(event.target.value)} required /></label>
-          <label>Apellidos<input value={surname} onChange={(event) => setSurname(event.target.value)} required /></label>
-          <label>Email<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required /></label>
-          <label>Teléfono<input type="tel" value={phone} onChange={(event) => setPhone(event.target.value)} /></label>
-          <label>Fecha de nacimiento<input type="date" value={birthDate} onChange={(event) => setBirthDate(event.target.value)} /></label>
-          <label>Contraseña inicial<input type="password" minLength={8} value={password} onChange={(event) => setPassword(event.target.value)} required /></label>
-          <label>Nombre tutor/a<input value={guardianName} onChange={(event) => setGuardianName(event.target.value)} /></label>
-          <label>Teléfono tutor/a<input type="tel" value={guardianPhone} onChange={(event) => setGuardianPhone(event.target.value)} /></label>
-          <div className="phase14-form-actions"><button type="button" onClick={() => setShowCreate(false)}>Cancelar</button><button className="button button-primary" disabled={saving}>{saving ? 'Creando…' : 'Crear alumno'}</button></div>
-        </form></section>}
+        {showCreate && <AdminStudentOnboardingWizard isDemoMode={isDemoMode} onCancel={() => setShowCreate(false)} />}
 
         <section className="metric-grid student-metrics phase14-metrics">
           <article><span>Alumnos</span><strong>{rows.length}</strong><small>Total registrado</small></article>
-          <article><span>Activos</span><strong>{activeCount}</strong><small>Cuentas habilitadas</small></article>
+          <article><span>Activos</span><strong>{activeCount}</strong><small>{invitedCount ? `${invitedCount} pendientes de activar` : 'Cuentas habilitadas'}</small></article>
           <article><span>Matriculados</span><strong>{enrolledCount}</strong><small>Con grupo activo</small></article>
           <article><span>Evaluados</span><strong>{evaluatedCount}</strong><small>Con nivel registrado</small></article>
         </section>
@@ -211,7 +187,7 @@ export default function AdminStudentsPhase14Page() {
           <label>Nivel<select value={levelFilter} onChange={(event) => setLevelFilter(event.target.value)}><option value="ALL">Todos</option>{levelOptions.map((level) => <option value={level} key={level}>{level}</option>)}</select></label>
           <label>Profesor<select value={teacherFilter} onChange={(event) => setTeacherFilter(event.target.value)}><option value="ALL">Todos</option>{teachers.map((teacher) => <option value={teacher.id} key={teacher.id}>{fullName(teacher)}</option>)}</select></label>
           <label>Modalidad<select value={modeFilter} onChange={(event) => setModeFilter(event.target.value as ModeFilter)}><option value="ALL">Todas</option><option value="IN_PERSON">Presencial</option><option value="ONLINE">Online</option><option value="HYBRID">Híbrida</option></select></label>
-          <label>Estado<select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as StatusFilter)}><option value="ALL">Todos</option><option value="ACTIVE">Activo</option><option value="INACTIVE">Pausado / inactivo</option></select></label>
+          <label>Estado<select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as StatusFilter)}><option value="ALL">Todos</option><option value="ACTIVE">Activo</option><option value="INVITED">Invitado</option><option value="INACTIVE">Pausado / inactivo</option></select></label>
           <button className="phase14-clear-filters" type="button" onClick={() => { setQuery(''); setCourseFilter('ALL'); setGroupFilter('ALL'); setLevelFilter('ALL'); setTeacherFilter('ALL'); setModeFilter('ALL'); setStatusFilter('ALL') }}>Limpiar filtros</button>
         </section>
 
@@ -226,7 +202,7 @@ export default function AdminStudentsPhase14Page() {
               <span>{row.teacherName}</span>
               <span>{row.deliveryModes.size ? [...row.deliveryModes].map(modeLabel).join(' · ') : 'Sin definir'}</span>
               <span>{nextClassLabel(row.nextClass)}</span>
-              <span><i className={`student-status ${row.user.status === 'ACTIVE' ? 'active' : 'paused'}`}>{row.user.status === 'ACTIVE' ? 'Activo' : 'Pausado'}</i></span>
+              <span><i className={`student-status ${accountStatusClass(row.user.status)}`}>{accountStatusLabel(row.user.status)}</i></span>
             </Link>)}
             {!loading && visibleRows.length === 0 && <PortalEmptyState compact title="No hay alumnos con estos filtros" description="Prueba otra combinación o limpia los filtros." />}
           </div>
