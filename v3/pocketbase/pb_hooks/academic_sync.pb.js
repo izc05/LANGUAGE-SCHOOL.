@@ -16,13 +16,6 @@ function syncHasOwn(body, key) {
   return Object.prototype.hasOwnProperty.call(body, key)
 }
 
-function syncRequireAdmin(e) {
-  if (!e.auth || e.auth.get('role') !== 'ADMIN') {
-    throw new ForbiddenError('Solo Administración puede realizar esta operación.')
-  }
-  return e.auth
-}
-
 function syncId(value, label) {
   const id = syncReadText(value)
   if (!/^[A-Za-z0-9_-]{8,64}$/.test(id)) throw new BadRequestError(`${label} no válido.`)
@@ -37,31 +30,9 @@ function syncActiveUser(app, userId, role, label) {
   return user
 }
 
-function syncActiveGroup(app, groupId) {
-  let group
-  try { group = app.findRecordById('groups', groupId) } catch { throw new BadRequestError('El grupo no existe.') }
-  if (group.getString('status') !== 'ACTIVE') throw new BadRequestError('El grupo debe estar activo.')
-
-  let course
-  try { course = app.findRecordById('courses', group.getString('course')) } catch { throw new BadRequestError('El curso del grupo no existe.') }
-  if (course.getString('status') !== 'ACTIVE') throw new BadRequestError('El curso del grupo debe estar activo.')
-  syncActiveUser(app, group.getString('teacher'), 'TEACHER', 'El profesor del grupo')
-  return group
-}
-
 function syncActiveEnrollments(app, studentId, excludeId) {
   const records = app.findRecordsByFilter('enrollments', `student = "${studentId}" && status = "ACTIVE"`, '-joined_at', 10, 0)
   return excludeId ? records.filter((record) => record.id !== excludeId) : records
-}
-
-function syncGroupActiveCount(app, groupId, excludeEnrollmentId) {
-  const activeGroup = $dbx.hashExp({ group: groupId, status: 'ACTIVE' })
-  if (!excludeEnrollmentId) return app.countRecords('enrollments', activeGroup)
-  return app.countRecords(
-    'enrollments',
-    activeGroup,
-    $dbx.exp('[[id]] != {:excludeId}', { excludeId: excludeEnrollmentId }),
-  )
 }
 
 function syncProfileToAccount(app, user) {
@@ -156,55 +127,102 @@ function syncValidateClassUpdate(e) {
 onRecordUpdateRequest((e) => syncValidateClassUpdate(e), 'classes')
 
 routerAdd('POST', '/api/language-school/admin/academic/enrollments/move', (e) => {
-  syncRequireAdmin(e)
-  const body = syncRequestBody(e)
-  const studentId = syncId(body.studentId, 'Alumno')
-  const targetGroupId = syncId(body.targetGroupId, 'Grupo')
+  if (!e.auth || e.auth.get('role') !== 'ADMIN') {
+    throw new ForbiddenError('Solo Administración puede realizar esta operación.')
+  }
 
-  syncActiveUser(e.app, studentId, 'STUDENT', 'El alumno')
-  const targetGroup = syncActiveGroup(e.app, targetGroupId)
-  const currentBefore = syncActiveEnrollments(e.app, studentId, '')
+  function readText(value) {
+    return typeof value === 'string' ? value.trim() : ''
+  }
+
+  function readBody() {
+    const parsed = e.requestInfo().body || {}
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      throw new BadRequestError('El cuerpo de la solicitud no es válido.')
+    }
+    return parsed
+  }
+
+  function readId(value, label) {
+    const id = readText(value)
+    if (!/^[A-Za-z0-9_-]{8,64}$/.test(id)) throw new BadRequestError(`${label} no válido.`)
+    return id
+  }
+
+  function activeUser(app, userId, role, label) {
+    let user
+    try { user = app.findRecordById('users', userId) } catch { throw new BadRequestError(`${label} no existe.`) }
+    if (user.getString('role') !== role) throw new BadRequestError(`${label} no tiene el rol esperado.`)
+    if (user.getString('status') !== 'ACTIVE') throw new BadRequestError(`${label} debe tener la cuenta activa.`)
+    return user
+  }
+
+  function activeGroup(app, groupId) {
+    let group
+    try { group = app.findRecordById('groups', groupId) } catch { throw new BadRequestError('El grupo no existe.') }
+    if (group.getString('status') !== 'ACTIVE') throw new BadRequestError('El grupo debe estar activo.')
+
+    let course
+    try { course = app.findRecordById('courses', group.getString('course')) } catch { throw new BadRequestError('El curso del grupo no existe.') }
+    if (course.getString('status') !== 'ACTIVE') throw new BadRequestError('El curso del grupo debe estar activo.')
+    activeUser(app, group.getString('teacher'), 'TEACHER', 'El profesor del grupo')
+    return group
+  }
+
+  function activeEnrollments(app, studentId) {
+    return app.findAllRecords(
+      'enrollments',
+      $dbx.hashExp({ student: studentId, status: 'ACTIVE' }),
+    )
+  }
+
+  function groupActiveCount(app, groupId) {
+    return app.countRecords(
+      'enrollments',
+      $dbx.hashExp({ group: groupId, status: 'ACTIVE' }),
+    )
+  }
+
+  const body = readBody()
+  const studentId = readId(body.studentId, 'Alumno')
+  const targetGroupId = readId(body.targetGroupId, 'Grupo')
+
+  activeUser(e.app, studentId, 'STUDENT', 'El alumno')
+  const targetGroup = activeGroup(e.app, targetGroupId)
+  const currentBefore = activeEnrollments(e.app, studentId)
   if (currentBefore.length > 1) throw new BadRequestError('El alumno tiene más de una matrícula activa. Corrige la incoherencia antes de moverlo.')
   if (currentBefore[0] && currentBefore[0].getString('group') === targetGroupId) {
     return e.json(200, { previousId: null, currentId: currentBefore[0].id, unchanged: true })
   }
 
-  const occupied = syncGroupActiveCount(e.app, targetGroupId, '')
+  const occupied = groupActiveCount(e.app, targetGroupId)
   if (occupied >= targetGroup.getInt('capacity')) throw new BadRequestError('El grupo de destino ya ha alcanzado su capacidad.')
 
   let previousId = ''
   let currentId = ''
-  let moveStage = 'abrir la transacción'
   const now = new Date().toISOString()
-  try {
-    e.app.runInTransaction((txApp) => {
-      moveStage = 'leer la matrícula activa'
-      const current = syncActiveEnrollments(txApp, studentId, '')
-      if (current.length > 1) throw new BadRequestError('El alumno tiene más de una matrícula activa.')
-      if (current[0]) {
-        moveStage = 'cerrar la matrícula anterior'
-        current[0].set('status', 'FINISHED')
-        current[0].set('ended_at', now)
-        txApp.save(current[0])
-        previousId = current[0].id
-      }
 
-      moveStage = 'crear la nueva matrícula'
-      const collection = txApp.findCollectionByNameOrId('enrollments')
-      const next = new Record(collection)
-      next.set('student', studentId)
-      next.set('group', targetGroupId)
-      next.set('status', 'ACTIVE')
-      next.set('joined_at', now)
-      next.set('ended_at', '')
-      txApp.save(next)
-      currentId = next.id
-      moveStage = 'confirmar la transacción'
-    })
-  } catch (error) {
-    console.error('Academic enrollment move failed at ' + moveStage, error)
-    throw new BadRequestError(`No se ha podido mover al alumno al ${moveStage}. No se ha aplicado ningún cambio.`)
-  }
+  e.app.runInTransaction((txApp) => {
+    const current = activeEnrollments(txApp, studentId)
+    if (current.length > 1) throw new BadRequestError('El alumno tiene más de una matrícula activa.')
+
+    if (current[0]) {
+      current[0].set('status', 'FINISHED')
+      current[0].set('ended_at', now)
+      txApp.save(current[0])
+      previousId = current[0].id
+    }
+
+    const collection = txApp.findCollectionByNameOrId('enrollments')
+    const next = new Record(collection)
+    next.set('student', studentId)
+    next.set('group', targetGroupId)
+    next.set('status', 'ACTIVE')
+    next.set('joined_at', now)
+    next.set('ended_at', '')
+    txApp.save(next)
+    currentId = next.id
+  })
 
   return e.json(200, { previousId: previousId || null, currentId, unchanged: false })
 }, $apis.requireAuth('users'))
