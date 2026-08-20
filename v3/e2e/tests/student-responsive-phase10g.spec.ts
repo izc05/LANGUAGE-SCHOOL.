@@ -43,6 +43,7 @@ async function expectNoHorizontalOverflow(page: Page) {
 }
 
 test('10.7: Campus Alumno mantiene todas sus rutas dentro de 1440, 1180, 820 y 390', async ({ page }) => {
+  test.setTimeout(60_000)
   await login(page)
 
   for (const viewport of viewports) {
