@@ -174,18 +174,22 @@ routerAdd('POST', '/api/language-school/admin/academic/enrollments/move', (e) =>
 
   let previousId = ''
   let currentId = ''
+  let moveStage = 'abrir la transacción'
   const now = new Date().toISOString()
   try {
     e.app.runInTransaction((txApp) => {
+      moveStage = 'leer la matrícula activa'
       const current = syncActiveEnrollments(txApp, studentId, '')
       if (current.length > 1) throw new BadRequestError('El alumno tiene más de una matrícula activa.')
       if (current[0]) {
+        moveStage = 'cerrar la matrícula anterior'
         current[0].set('status', 'FINISHED')
         current[0].set('ended_at', now)
         txApp.save(current[0])
         previousId = current[0].id
       }
 
+      moveStage = 'crear la nueva matrícula'
       const collection = txApp.findCollectionByNameOrId('enrollments')
       const next = new Record(collection)
       next.set('student', studentId)
@@ -195,9 +199,11 @@ routerAdd('POST', '/api/language-school/admin/academic/enrollments/move', (e) =>
       next.set('ended_at', '')
       txApp.save(next)
       currentId = next.id
+      moveStage = 'confirmar la transacción'
     })
-  } catch {
-    throw new BadRequestError('No se ha podido completar el cambio de grupo. No se ha aplicado ningún cambio.')
+  } catch (error) {
+    console.error('Academic enrollment move failed at ' + moveStage, error)
+    throw new BadRequestError(`No se ha podido mover al alumno al ${moveStage}. No se ha aplicado ningún cambio.`)
   }
 
   return e.json(200, { previousId: previousId || null, currentId, unchanged: false })
