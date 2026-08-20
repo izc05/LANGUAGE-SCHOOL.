@@ -50,7 +50,7 @@ function syncActiveEnrollments(app, studentId, excludeId) {
 }
 
 function syncGroupActiveCount(app, groupId, excludeEnrollmentId) {
-  const records = app.findRecordsByFilter('enrollments', `group = "${groupId}" && status = "ACTIVE"`, '', 0, 0)
+  const records = app.findRecordsByFilter('enrollments', `group = "${groupId}" && status = "ACTIVE"`, '', 500, 0)
   return excludeEnrollmentId ? records.filter((record) => record.id !== excludeEnrollmentId).length : records.length
 }
 
@@ -113,7 +113,7 @@ onRecordUpdate((e) => {
   if (!newTeacher || oldTeacher === newTeacher) return
 
   const now = Date.now()
-  const scheduled = e.app.findRecordsByFilter('classes', `group = "${e.record.id}" && status = "SCHEDULED"`, 'starts_at', 0, 0)
+  const scheduled = e.app.findRecordsByFilter('classes', `group = "${e.record.id}" && status = "SCHEDULED"`, 'starts_at', 500, 0)
   scheduled.forEach((classRecord) => {
     const startsAt = new Date(classRecord.getString('starts_at')).getTime()
     if (!Number.isFinite(startsAt) || startsAt < now || classRecord.getString('teacher') === newTeacher) return
@@ -144,21 +144,35 @@ function syncValidateClass(e, isUpdate) {
 onRecordUpdateRequest((e) => syncValidateClass(e, true), 'classes')
 
 routerAdd('POST', '/api/language-school/admin/academic/enrollments/move', (e) => {
-  syncRequireAdmin(e)
-  const body = syncRequestBody(e)
-  const studentId = syncId(body.studentId, 'Alumno')
-  const targetGroupId = syncId(body.targetGroupId, 'Grupo')
+  let preflightStage = 'validar la sesión de Administración'
+  let studentId = ''
+  let targetGroupId = ''
+  let targetGroup
+  let currentBefore = []
+  try {
+    syncRequireAdmin(e)
+    preflightStage = 'leer la solicitud de cambio de grupo'
+    const body = syncRequestBody(e)
+    studentId = syncId(body.studentId, 'Alumno')
+    targetGroupId = syncId(body.targetGroupId, 'Grupo')
 
-  syncActiveUser(e.app, studentId, 'STUDENT', 'El alumno')
-  const targetGroup = syncActiveGroup(e.app, targetGroupId)
-  const currentBefore = syncActiveEnrollments(e.app, studentId, '')
-  if (currentBefore.length > 1) throw new BadRequestError('El alumno tiene más de una matrícula activa. Corrige la incoherencia antes de moverlo.')
-  if (currentBefore[0] && currentBefore[0].getString('group') === targetGroupId) {
-    return e.json(200, { previousId: null, currentId: currentBefore[0].id, unchanged: true })
+    preflightStage = 'validar el alumno activo'
+    syncActiveUser(e.app, studentId, 'STUDENT', 'El alumno')
+    preflightStage = 'validar el grupo de destino'
+    targetGroup = syncActiveGroup(e.app, targetGroupId)
+    preflightStage = 'leer la matrícula activa actual'
+    currentBefore = syncActiveEnrollments(e.app, studentId, '')
+    if (currentBefore.length > 1) throw new BadRequestError('El alumno tiene más de una matrícula activa. Corrige la incoherencia antes de moverlo.')
+    if (currentBefore[0] && currentBefore[0].getString('group') === targetGroupId) {
+      return e.json(200, { previousId: null, currentId: currentBefore[0].id, unchanged: true })
+    }
+
+    preflightStage = 'comprobar las plazas del grupo de destino'
+    const occupied = syncGroupActiveCount(e.app, targetGroupId, '')
+    if (occupied >= targetGroup.getInt('capacity')) throw new BadRequestError('El grupo de destino ya ha alcanzado su capacidad.')
+  } catch {
+    throw new BadRequestError(`No se ha podido completar la prevalidación al ${preflightStage}. No se ha aplicado ningún cambio.`)
   }
-
-  const occupied = syncGroupActiveCount(e.app, targetGroupId, '')
-  if (occupied >= targetGroup.getInt('capacity')) throw new BadRequestError('El grupo de destino ya ha alcanzado su capacidad.')
 
   let previousId = ''
   let currentId = ''
