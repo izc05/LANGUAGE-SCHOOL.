@@ -24,6 +24,17 @@ test('16B: la entrada pública del test es directa, clara y responsive', async (
 
     const startBox = await start.boundingBox()
     expect(startBox?.height || 0).toBeGreaterThanOrEqual(48)
+
+    if (viewport.width <= 900) {
+      const copyBox = await page.locator('.placement-test-intro-copy').boundingBox()
+      const cardBox = await page.locator('.placement-test-intro-card').boundingBox()
+      expect(copyBox).not.toBeNull()
+      expect(cardBox).not.toBeNull()
+      if (copyBox && cardBox) {
+        expect(cardBox.y).toBeGreaterThanOrEqual(copyBox.y + copyBox.height - 1)
+      }
+    }
+
     await expectNoOverflow(page)
   }
 })
