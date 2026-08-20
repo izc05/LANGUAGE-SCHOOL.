@@ -136,6 +136,15 @@ test('15B: matrículas finalizadas y canceladas son histórico terminal', async 
     expect(cancelledAfterReject.status).toBe(200)
     expect(cancelledAfterReject.body.status).toBe('CANCELLED')
     expect(cancelledAfterReject.body.ended_at).toBeTruthy()
+
+    await page.goto('/admin/cursos')
+    await expect(page.getByRole('heading', { name: 'Cursos, grupos y matrículas' })).toBeVisible()
+    await page.locator('.admin-group-row').filter({ hasText: group.name }).click()
+
+    const terminalRows = page.locator('.admin-enrollment-row').filter({ hasText: 'Terminal Student' })
+    await expect(terminalRows).toHaveCount(2)
+    await expect(terminalRows.getByText('Histórico cerrado')).toHaveCount(2)
+    await expect(terminalRows.locator('select')).toHaveCount(0)
   } finally {
     for (const remove of cleanup.reverse()) {
       try { await remove() } catch { /* best-effort cleanup */ }
