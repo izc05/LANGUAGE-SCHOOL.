@@ -102,8 +102,8 @@ STUDENT_TOKEN="$(jq -r '.token' <<<"$(authenticate "$STUDENT_EMAIL" "$PASSWORD")
 echo '2/10 Create course, Group A/B and initial ACTIVE enrollment in Group A'
 COURSE="$(create_record 'courses' "$ADMIN_TOKEN" '{"title":"CI Learning Sync B1","slug":"ci-learning-sync-b1","level":"B1","description":"Learning synchronization smoke","status":"ACTIVE","public_visible":false}')"
 COURSE_ID="$(jq -r '.id' <<<"$COURSE")"
-GROUP_A="$(create_record 'groups' "$ADMIN_TOKEN" "$(jq -nc --arg course "$COURSE_ID" --arg teacher "$TEACHER_A_ID" '{name:"CI Learning Group A",course:$course,teacher:$teacher,academic_year:"2026/27",schedule_text:"A",capacity:8,status:"ACTIVE"}')")"
-GROUP_B="$(create_record 'groups' "$ADMIN_TOKEN" "$(jq -nc --arg course "$COURSE_ID" --arg teacher "$TEACHER_B_ID" '{name:"CI Learning Group B",course:$course,teacher:$teacher,academic_year:"2026/27",schedule_text:"B",capacity:8,status:"ACTIVE"}')")"
+GROUP_A="$(create_record 'groups' "$ADMIN_TOKEN" "$(jq -nc --arg course "$COURSE_ID" --arg teacher "$TEACHER_A_ID" '{name:"CI Learning Group A",course:$course,teacher:$teacher,academic_year:"2026/27",schedule_text:"A",capacity:8,target_level:"B1",default_delivery_mode:"IN_PERSON",status:"ACTIVE"}')")"
+GROUP_B="$(create_record 'groups' "$ADMIN_TOKEN" "$(jq -nc --arg course "$COURSE_ID" --arg teacher "$TEACHER_B_ID" '{name:"CI Learning Group B",course:$course,teacher:$teacher,academic_year:"2026/27",schedule_text:"B",capacity:8,target_level:"B1",default_delivery_mode:"IN_PERSON",status:"ACTIVE"}')")"
 GROUP_A_ID="$(jq -r '.id' <<<"$GROUP_A")"
 GROUP_B_ID="$(jq -r '.id' <<<"$GROUP_B")"
 OLD_ENROLLMENT="$(create_record 'enrollments' "$ADMIN_TOKEN" "$(jq -nc --arg student "$STUDENT_ID" --arg group "$GROUP_A_ID" '{student:$student,group:$group,status:"ACTIVE",joined_at:"2026-08-20 09:00:00.000Z"}')")"

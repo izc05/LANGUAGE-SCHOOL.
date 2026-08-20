@@ -61,7 +61,8 @@ test('15B sync: una cuenta no puede romper relaciones académicas activas', asyn
     expect(teacherProfile.status).toBe(200)
 
     const teacherGroup = await api(page, '/api/collections/groups/records', 'POST', {
-      name: `State Teacher Group ${suffix}`, course: course.id, teacher: teacherId, academic_year: '2098/99', schedule_text: '', capacity: 4, status: 'ACTIVE',
+      name: `State Teacher Group ${suffix}`, course: course.id, teacher: teacherId, academic_year: '2098/99', schedule_text: '', capacity: 4,
+      target_level: 'MIXED', default_delivery_mode: 'IN_PERSON', status: 'ACTIVE',
     })
     expect(teacherGroup.status).toBe(200)
     const teacherGroupId = teacherGroup.body.id
@@ -89,7 +90,8 @@ test('15B sync: una cuenta no puede romper relaciones académicas activas', asyn
     expect(studentProfile.status).toBe(200)
 
     const studentGroup = await api(page, '/api/collections/groups/records', 'POST', {
-      name: `State Student Group ${suffix}`, course: course.id, teacher: originalTeacherId, academic_year: '2098/99', schedule_text: '', capacity: 4, status: 'ACTIVE',
+      name: `State Student Group ${suffix}`, course: course.id, teacher: originalTeacherId, academic_year: '2098/99', schedule_text: '', capacity: 4,
+      target_level: 'MIXED', default_delivery_mode: 'IN_PERSON', status: 'ACTIVE',
     })
     expect(studentGroup.status).toBe(200)
     const studentGroupId = studentGroup.body.id

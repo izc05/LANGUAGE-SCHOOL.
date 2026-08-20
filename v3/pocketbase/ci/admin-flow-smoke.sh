@@ -129,9 +129,11 @@ create_record 'student_profiles' "$ADMIN_TOKEN" "$(jq -nc --arg user "$STUDENT_I
 echo '6/21 Create course + group with assigned teacher'
 COURSE="$(create_record 'courses' "$ADMIN_TOKEN" '{"title":"CI English B1","slug":"ci-english-b1","level":"B1","description":"CI smoke course","status":"ACTIVE","public_visible":false}')"
 COURSE_ID="$(jq -r '.id' <<<"$COURSE")"
-GROUP="$(create_record 'groups' "$ADMIN_TOKEN" "$(jq -nc --arg course "$COURSE_ID" --arg teacher "$TEACHER_ID" '{name:"CI B1 Group",course:$course,teacher:$teacher,academic_year:"2026/27",schedule_text:"Thursday 18:00",capacity:8,status:"ACTIVE"}')")"
+GROUP="$(create_record 'groups' "$ADMIN_TOKEN" "$(jq -nc --arg course "$COURSE_ID" --arg teacher "$TEACHER_ID" '{name:"CI B1 Group",course:$course,teacher:$teacher,academic_year:"2026/27",schedule_text:"Thursday 18:00",capacity:8,target_level:"B1",default_delivery_mode:"IN_PERSON",status:"ACTIVE"}')")"
 GROUP_ID="$(jq -r '.id' <<<"$GROUP")"
 assert_equal "$(jq -r '.teacher' <<<"$GROUP")" "$TEACHER_ID" 'group is assigned to created teacher'
+assert_equal "$(jq -r '.target_level' <<<"$GROUP")" 'B1' 'group persists target level'
+assert_equal "$(jq -r '.default_delivery_mode' <<<"$GROUP")" 'IN_PERSON' 'group persists default delivery mode'
 
 echo '7/21 Enroll student in group'
 ENROLLMENT="$(create_record 'enrollments' "$ADMIN_TOKEN" "$(jq -nc --arg student "$STUDENT_ID" --arg group "$GROUP_ID" '{student:$student,group:$group,status:"ACTIVE",joined_at:"2026-08-12 10:00:00.000Z"}')")"
@@ -149,8 +151,9 @@ STUDENT_PATCH="$(update_record 'users' "$STUDENT_ID" "$ADMIN_TOKEN" '{"phone":"6
 assert_equal "$(jq -r '.phone' <<<"$STUDENT_PATCH")" '611111111' 'student PATCH survives account/profile synchronization hooks'
 
 echo '10/21 PATCH group through teacher assignment hooks'
-GROUP_PATCH="$(update_record 'groups' "$GROUP_ID" "$ADMIN_TOKEN" "$(jq -nc --arg teacher "$TEACHER_ID" '{teacher:$teacher}')")"
+GROUP_PATCH="$(update_record 'groups' "$GROUP_ID" "$ADMIN_TOKEN" "$(jq -nc --arg teacher "$TEACHER_ID" '{teacher:$teacher,target_level:"B1",default_delivery_mode:"HYBRID"}')")"
 assert_equal "$(jq -r '.teacher' <<<"$GROUP_PATCH")" "$TEACHER_ID" 'group PATCH validates active teacher without JSVM scope errors'
+assert_equal "$(jq -r '.default_delivery_mode' <<<"$GROUP_PATCH")" 'HYBRID' 'group PATCH updates default delivery mode'
 
 echo '11/21 PATCH class through class update hooks'
 CLASS_PATCH="$(update_record 'classes' "$CLASS_ID" "$ADMIN_TOKEN" '{"description":"Smoke test updated"}')"

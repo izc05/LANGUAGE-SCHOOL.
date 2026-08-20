@@ -21,6 +21,9 @@ export type CourseRecord = RecordModel & {
   public_visible: boolean
 }
 
+export type GroupTargetLevel = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2' | 'MIXED'
+export type GroupDeliveryMode = 'IN_PERSON' | 'ONLINE' | 'HYBRID'
+
 export type GroupRecord = RecordModel & {
   name: string
   course: string
@@ -28,6 +31,8 @@ export type GroupRecord = RecordModel & {
   academic_year: string
   schedule_text: string
   capacity: number
+  target_level: GroupTargetLevel
+  default_delivery_mode: GroupDeliveryMode
   status: 'ACTIVE' | 'PAUSED' | 'FINISHED' | 'CANCELLED'
   expand?: { course?: CourseRecord }
 }
@@ -41,7 +46,7 @@ export type EnrollmentRecord = RecordModel & {
   expand?: { group?: GroupRecord }
 }
 
-export type ClassDeliveryMode = 'IN_PERSON' | 'ONLINE' | 'HYBRID'
+export type ClassDeliveryMode = GroupDeliveryMode
 
 export type ClassRecord = RecordModel & {
   group: string

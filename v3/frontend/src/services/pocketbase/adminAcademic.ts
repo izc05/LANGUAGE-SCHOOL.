@@ -3,7 +3,7 @@ import { getCurrentUser } from './auth'
 import { collections } from './collections'
 import { pb } from './client'
 import type { AppUser, UserRole, UserStatus } from './types'
-import type { AttendanceRecord, ClassRecord, CourseRecord, GroupRecord } from './studentPortal'
+import type { AttendanceRecord, ClassRecord, CourseRecord, GroupDeliveryMode, GroupRecord, GroupTargetLevel } from './studentPortal'
 import type { TeacherProfileRecord } from './teacherPortal'
 
 export type AdminStudentProfileRecord = RecordModel & {
@@ -242,6 +242,8 @@ export async function createAdminGroup(input: {
   academicYear: string
   scheduleText?: string
   capacity: number
+  targetLevel: GroupTargetLevel
+  defaultDeliveryMode: GroupDeliveryMode
   status?: GroupRecord['status']
 }): Promise<AdminGroupRecord> {
   requireAdmin()
@@ -252,6 +254,8 @@ export async function createAdminGroup(input: {
     academic_year: input.academicYear.trim(),
     schedule_text: input.scheduleText?.trim() || '',
     capacity: input.capacity,
+    target_level: input.targetLevel,
+    default_delivery_mode: input.defaultDeliveryMode,
     status: input.status || 'ACTIVE',
   }, { expand: 'course,teacher' })
 }
@@ -263,6 +267,8 @@ export async function updateAdminGroup(record: AdminGroupRecord, patch: Partial<
   academic_year: string
   schedule_text: string
   capacity: number
+  target_level: GroupTargetLevel
+  default_delivery_mode: GroupDeliveryMode
   status: GroupRecord['status']
 }>): Promise<AdminGroupRecord> {
   requireAdmin()

@@ -161,7 +161,8 @@ test('15B sync: Admin, Profesor y Alumno conservan una única verdad académica'
     cleanup.push(async () => { await apiRequest(page, `/api/collections/student_profiles/records/${tempStudentProfileId}`, 'DELETE') })
 
     const makeGroup = async (name: string) => apiRequest(page, '/api/collections/groups/records', 'POST', {
-      name, course: course.id, teacher: originalTeacherId, academic_year: '2098/99', schedule_text: 'E2E sync', capacity: 4, status: 'ACTIVE',
+      name, course: course.id, teacher: originalTeacherId, academic_year: '2098/99', schedule_text: 'E2E sync', capacity: 4,
+      target_level: 'MIXED', default_delivery_mode: 'IN_PERSON', status: 'ACTIVE',
     })
     const groupOneCreate = await makeGroup(`Sync A ${suffix}`)
     const groupTwoCreate = await makeGroup(`Sync B ${suffix}`)

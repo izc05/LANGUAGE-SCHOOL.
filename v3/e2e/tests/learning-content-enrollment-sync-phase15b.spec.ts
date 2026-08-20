@@ -101,7 +101,8 @@ test('15B sync: el cambio de grupo actualiza contenido sin borrar histórico ent
     expect(profile.status).toBe(200)
 
     const makeGroup = (name: string) => adminRequest(page, '/api/collections/groups/records', 'POST', {
-      name, course: course.id, teacher: teacherId, academic_year: '2098/99', schedule_text: 'E2E sync', capacity: 4, status: 'ACTIVE',
+      name, course: course.id, teacher: teacherId, academic_year: '2098/99', schedule_text: 'E2E sync', capacity: 4,
+      target_level: 'MIXED', default_delivery_mode: 'IN_PERSON', status: 'ACTIVE',
     })
     const groupAResult = await makeGroup(`Learning A ${suffix}`)
     const groupBResult = await makeGroup(`Learning B ${suffix}`)

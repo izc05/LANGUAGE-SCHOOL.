@@ -89,9 +89,13 @@ test('15B: Grupo/Aula mantiene capacidad y dependencias activas en cualquier PAT
       academic_year: '2026/27',
       schedule_text: 'Martes y jueves · 18:00',
       capacity: 2,
+      target_level: 'B1',
+      default_delivery_mode: 'IN_PERSON',
       status: 'ACTIVE',
     })
     expect(group.status).toBe(200)
+    expect(group.body.target_level).toBe('B1')
+    expect(group.body.default_delivery_mode).toBe('IN_PERSON')
     const groupId = group.body.id
     cleanup.push(async () => { await api(page, `/api/collections/groups/records/${groupId}`, 'DELETE') })
 
@@ -108,6 +112,10 @@ test('15B: Grupo/Aula mantiene capacidad y dependencias activas en cualquier PAT
       enrollmentIds.push(enrollment.body.id)
       cleanup.push(async () => { await api(page, `/api/collections/enrollments/records/${enrollment.body.id}`, 'DELETE') })
     }
+
+    const contractPatch = await api(page, `/api/collections/groups/records/${groupId}`, 'PATCH', { target_level: 'B1', default_delivery_mode: 'HYBRID' })
+    expect(contractPatch.status).toBe(200)
+    expect(contractPatch.body.default_delivery_mode).toBe('HYBRID')
 
     const capacityBelowOccupancy = await api(page, `/api/collections/groups/records/${groupId}`, 'PATCH', { capacity: 1 })
     expect(capacityBelowOccupancy.status).toBe(400)

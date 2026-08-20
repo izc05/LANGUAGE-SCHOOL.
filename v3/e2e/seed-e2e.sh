@@ -67,7 +67,7 @@ create_record 'student_profiles' "$ADMIN_TOKEN" "$(jq -nc --arg user "$OUTSIDER_
 echo 'E2E seed: creating academic chain'
 COURSE="$(create_record 'courses' "$ADMIN_TOKEN" '{"title":"E2E English B1","slug":"e2e-english-b1","level":"B1","description":"Browser test course","status":"ACTIVE","public_visible":true}')"
 COURSE_ID="$(jq -r '.id' <<<"$COURSE")"
-GROUP="$(create_record 'groups' "$ADMIN_TOKEN" "$(jq -nc --arg course "$COURSE_ID" --arg teacher "$TEACHER_ID" '{name:"E2E B1 Group",course:$course,teacher:$teacher,academic_year:"2026/27",schedule_text:"Thursday 18:00",capacity:8,status:"ACTIVE"}')")"
+GROUP="$(create_record 'groups' "$ADMIN_TOKEN" "$(jq -nc --arg course "$COURSE_ID" --arg teacher "$TEACHER_ID" '{name:"E2E B1 Group",course:$course,teacher:$teacher,academic_year:"2026/27",schedule_text:"Thursday 18:00",capacity:8,target_level:"B1",default_delivery_mode:"HYBRID",status:"ACTIVE"}')")"
 GROUP_ID="$(jq -r '.id' <<<"$GROUP")"
 create_record 'enrollments' "$ADMIN_TOKEN" "$(jq -nc --arg student "$STUDENT_ID" --arg group "$GROUP_ID" '{student:$student,group:$group,status:"ACTIVE",joined_at:"2026-08-12 10:00:00.000Z"}')" >/dev/null
 
