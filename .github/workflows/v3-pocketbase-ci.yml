@@ -60,6 +60,7 @@ jobs:
       - name: Start temporary PocketBase server with production hooks
         run: |
           nohup "$RUNNER_TEMP/pocketbase/pocketbase" serve \
+            --dev \
             --http=127.0.0.1:8090 \
             --dir="$RUNNER_TEMP/language-school-pb-data" \
             --migrationsDir="$GITHUB_WORKSPACE/v3/pocketbase/pb_migrations" \
