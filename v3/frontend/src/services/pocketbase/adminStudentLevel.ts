@@ -32,6 +32,7 @@ export type CreateAdminStudentLevelAssessmentInput = {
   reason: 'INITIAL' | 'REVIEW' | 'PROGRESS' | 'OTHER'
   notes?: string
   sourceAttemptId?: string
+  acknowledgeLevelMismatch?: boolean
 }
 
 const jsonHeaders = { 'Content-Type': 'application/json' }
