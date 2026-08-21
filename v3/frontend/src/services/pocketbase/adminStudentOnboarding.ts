@@ -1,4 +1,3 @@
-import type { RecordModel } from 'pocketbase'
 import type { CefrLevel } from './placementTest'
 import { getCurrentUser } from './auth'
 import { pb } from './client'
@@ -6,7 +5,6 @@ import {
   listAdminCourses,
   listAdminEnrollments,
   listAdminGroups,
-  type AdminEnrollmentRecord,
   type AdminGroupRecord,
 } from './adminAcademic'
 
@@ -44,29 +42,6 @@ export type StudentOnboardingInvitation = {
   emailSent: boolean
 }
 
-export type StudentOnboardingAssessment = RecordModel & {
-  student: string
-  source_attempt: string
-  automatic_level: CefrLevel | ''
-  speaking_level: CefrLevel | ''
-  validated_level: CefrLevel
-  notes: string
-  assessed_by: string
-  assessed_at: string
-  reason: 'INITIAL'
-}
-
-type StudentOnboardingEnrollmentResponse = {
-  currentId: string
-  unchanged: boolean
-  studentStatus: 'INVITED' | 'ACTIVE'
-  currentLevel: CefrLevel | ''
-  targetLevel: AdminGroupRecord['target_level']
-  levelMismatch: boolean
-  courseId: string
-  teacherId: string
-}
-
 export type CreateAdminStudentOnboardingInput = {
   email: string
   name: string
@@ -87,12 +62,27 @@ export type CreateAdminStudentOnboardingInput = {
 
 export type AdminStudentOnboardingResult = {
   userId: string
+  profileId: string
+  assessmentId: string | null
+  enrollmentId: string
   invitation: StudentOnboardingInvitation
-  assessment: StudentOnboardingAssessment | null
-  enrollment: AdminEnrollmentRecord
   group: StudentOnboardingGroupOption
   levelMode: StudentOnboardingLevelMode
   levelMismatch: boolean
+}
+
+type AtomicStudentOnboardingResponse = {
+  userId: string
+  profileId: string
+  assessmentId: string | null
+  enrollmentId: string
+  studentStatus: 'INVITED'
+  currentLevel: CefrLevel | ''
+  targetLevel: AdminGroupRecord['target_level']
+  levelMismatch: boolean
+  courseId: string
+  teacherId: string
+  invitation: StudentOnboardingInvitation
 }
 
 export class AdminStudentOnboardingError extends Error {
@@ -126,6 +116,17 @@ function teacherLabel(group: AdminGroupRecord): string {
   const teacher = group.expand?.teacher
   if (!teacher) return 'Profesor asignado'
   return `${teacher.name || ''} ${teacher.surname || ''}`.trim() || teacher.email
+}
+
+function onboardingErrorMessage(error: unknown): string {
+  if (typeof error === 'object' && error) {
+    const response = 'response' in error ? (error as { response?: unknown }).response : null
+    if (typeof response === 'object' && response && 'message' in response) {
+      const message = (response as { message?: unknown }).message
+      if (typeof message === 'string' && message.trim()) return message.trim()
+    }
+  }
+  return 'No se ha podido completar el alta del alumno. No se ha guardado ningún alta parcial.'
 }
 
 export function hasStudentGroupLevelMismatch(level: CefrLevel | '', targetLevel: AdminGroupRecord['target_level']): boolean {
@@ -172,73 +173,6 @@ export async function loadAdminStudentOnboardingCatalog(): Promise<StudentOnboar
   }
 }
 
-async function createStudentInvitation(input: CreateAdminStudentOnboardingInput): Promise<StudentOnboardingInvitation> {
-  return pb.send<StudentOnboardingInvitation>('/api/language-school/admin/accounts/invite', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      role: 'STUDENT',
-      email: input.email.trim().toLowerCase(),
-      name: input.name.trim(),
-      surname: input.surname.trim(),
-      phone: input.phone?.trim() || '',
-      birthDate: input.birthDate || '',
-      guardianName: input.guardianName?.trim() || '',
-      guardianPhone: input.guardianPhone?.trim() || '',
-      notesPrivate: input.notesPrivate?.trim() || '',
-      activationBaseUrl: '',
-    }),
-  })
-}
-
-async function createInitialAssessment(studentId: string, level: CefrLevel, notes: string): Promise<StudentOnboardingAssessment> {
-  const admin = requireAdmin()
-  return pb.collection('student_level_assessments').create<StudentOnboardingAssessment>({
-    student: studentId,
-    source_attempt: '',
-    automatic_level: '',
-    speaking_level: '',
-    validated_level: level,
-    notes: notes.trim(),
-    assessed_by: admin.id,
-    assessed_at: new Date().toISOString(),
-    reason: 'INITIAL',
-  })
-}
-
-async function createInitialEnrollment(input: {
-  studentId: string
-  groupId: string
-  courseId: string
-  acknowledgeLevelMismatch: boolean
-}): Promise<{ response: StudentOnboardingEnrollmentResponse; record: AdminEnrollmentRecord }> {
-  const response = await pb.send<StudentOnboardingEnrollmentResponse>(
-    '/api/language-school/admin/academic/enrollments/onboard',
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        studentId: input.studentId,
-        targetGroupId: input.groupId,
-        expectedCourseId: input.courseId,
-        acknowledgeLevelMismatch: input.acknowledgeLevelMismatch,
-      }),
-    },
-  )
-  const record = await pb.collection('enrollments').getOne<AdminEnrollmentRecord>(response.currentId, {
-    expand: 'student,group,group.course,group.teacher',
-  })
-  return { response, record }
-}
-
-async function sendFinalInvitation(userId: string, baseUrl: string): Promise<StudentOnboardingInvitation> {
-  return pb.send<StudentOnboardingInvitation>('/api/language-school/admin/accounts/invite/resend', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ userId, activationBaseUrl: baseUrl }),
-  })
-}
-
 export async function createAdminStudentOnboarding(input: CreateAdminStudentOnboardingInput): Promise<AdminStudentOnboardingResult> {
   requireAdmin()
   const catalog = await loadAdminStudentOnboardingCatalog()
@@ -263,53 +197,47 @@ export async function createAdminStudentOnboarding(input: CreateAdminStudentOnbo
     )
   }
 
-  let userId: string | null = null
-  let assessment: StudentOnboardingAssessment | null = null
-  let enrollment: AdminEnrollmentRecord
-  let enrollmentResponse: StudentOnboardingEnrollmentResponse
-  let invitation: StudentOnboardingInvitation
-
   try {
-    const created = await createStudentInvitation(input)
-    userId = created.userId
-  } catch (error) {
-    throw new AdminStudentOnboardingError('INVITATION', 'No se ha podido crear la cuenta invitada del alumno.', null, error)
-  }
+    const response = await pb.send<AtomicStudentOnboardingResponse>(
+      '/api/language-school/admin/student-onboarding/complete',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: input.email.trim().toLowerCase(),
+          name: input.name.trim(),
+          surname: input.surname.trim(),
+          phone: input.phone?.trim() || '',
+          birthDate: input.birthDate || '',
+          guardianName: input.guardianName?.trim() || '',
+          guardianPhone: input.guardianPhone?.trim() || '',
+          notesPrivate: input.notesPrivate?.trim() || '',
+          levelMode: input.levelMode,
+          initialLevel: input.initialLevel || '',
+          levelNotes: input.levelNotes?.trim() || '',
+          expectedCourseId: input.courseId,
+          targetGroupId: input.groupId,
+          acknowledgeLevelMismatch: Boolean(input.acknowledgeLevelMismatch),
+          activationBaseUrl: activationBaseUrl(input.activationBaseUrl),
+        }),
+      },
+    )
 
-  if (input.levelMode === 'INITIAL' && chosenLevel) {
-    try {
-      assessment = await createInitialAssessment(userId, chosenLevel, input.levelNotes || '')
-    } catch (error) {
-      throw new AdminStudentOnboardingError('LEVEL', 'La cuenta se ha creado, pero no se ha podido registrar el nivel inicial.', userId, error)
+    if (response.courseId !== group.courseId || response.teacherId !== group.teacherId) {
+      throw new Error('La respuesta académica no coincide con el grupo confirmado.')
     }
-  }
 
-  try {
-    const created = await createInitialEnrollment({
-      studentId: userId,
-      groupId: input.groupId,
-      courseId: input.courseId,
-      acknowledgeLevelMismatch: Boolean(input.acknowledgeLevelMismatch),
-    })
-    enrollment = created.record
-    enrollmentResponse = created.response
+    return {
+      userId: response.userId,
+      profileId: response.profileId,
+      assessmentId: response.assessmentId,
+      enrollmentId: response.enrollmentId,
+      invitation: response.invitation,
+      group,
+      levelMode: input.levelMode,
+      levelMismatch: response.levelMismatch,
+    }
   } catch (error) {
-    throw new AdminStudentOnboardingError('ENROLLMENT', 'La cuenta se ha creado, pero no se ha podido completar la matrícula.', userId, error)
-  }
-
-  try {
-    invitation = await sendFinalInvitation(userId, activationBaseUrl(input.activationBaseUrl))
-  } catch (error) {
-    throw new AdminStudentOnboardingError('SEND', 'La ficha académica está preparada, pero no se ha podido emitir la invitación final.', userId, error)
-  }
-
-  return {
-    userId,
-    invitation,
-    assessment,
-    enrollment,
-    group,
-    levelMode: input.levelMode,
-    levelMismatch: enrollmentResponse.levelMismatch,
+    throw new AdminStudentOnboardingError('ENROLLMENT', onboardingErrorMessage(error), null, error)
   }
 }

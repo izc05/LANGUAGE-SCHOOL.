@@ -41,85 +41,155 @@ assert_equal() {
   echo "OK: $label"
 }
 
-invite_student() {
-  local token="$1" email="$2" name="$3"
-  json_request 'POST' "$PB_URL/api/language-school/admin/accounts/invite" "$token" \
-    "$(jq -nc --arg email "$email" --arg name "$name" '{role:"STUDENT",email:$email,name:$name,surname:"Onboarding",phone:"",birthDate:"",guardianName:"",guardianPhone:"",notesPrivate:"",activationBaseUrl:""}')"
+assert_nonempty() {
+  local actual="$1" label="$2"
+  if [[ -z "$actual" || "$actual" == 'null' ]]; then
+    echo "ASSERTION FAILED: $label (value is empty)" >&2
+    exit 1
+  fi
+  echo "OK: $label"
 }
 
-onboard_status() {
-  local token="$1" student="$2" group="$3" course="$4" acknowledge="$5"
-  request_status 'POST' "$PB_URL/api/language-school/admin/academic/enrollments/onboard" "$token" \
-    "$(jq -nc --arg studentId "$student" --arg targetGroupId "$group" --arg expectedCourseId "$course" --argjson acknowledgeLevelMismatch "$acknowledge" '{studentId:$studentId,targetGroupId:$targetGroupId,expectedCourseId:$expectedCourseId,acknowledgeLevelMismatch:$acknowledgeLevelMismatch}')"
+encoded_filter() {
+  printf '%s' "$1" | jq -sRr @uri
 }
 
-onboard() {
-  local token="$1" student="$2" group="$3" course="$4" acknowledge="$5"
-  json_request 'POST' "$PB_URL/api/language-school/admin/academic/enrollments/onboard" "$token" \
-    "$(jq -nc --arg studentId "$student" --arg targetGroupId "$group" --arg expectedCourseId "$course" --argjson acknowledgeLevelMismatch "$acknowledge" '{studentId:$studentId,targetGroupId:$targetGroupId,expectedCourseId:$expectedCourseId,acknowledgeLevelMismatch:$acknowledgeLevelMismatch}')"
+record_list() {
+  local token="$1" collection="$2" filter="$3"
+  json_request 'GET' "$PB_URL/api/collections/$collection/records?perPage=50&filter=$(encoded_filter "$filter")" "$token" ''
 }
 
-echo '1/9 Authenticate ADMIN and resolve academic dependencies'
+collection_total() {
+  local token="$1" collection="$2"
+  json_request 'GET' "$PB_URL/api/collections/$collection/records?perPage=1" "$token" '' | jq -r '.totalItems'
+}
+
+user_count_by_email() {
+  local token="$1" email="$2"
+  record_list "$token" 'users' "email = \"$email\"" | jq -r '.totalItems'
+}
+
+complete_body() {
+  local email="$1" name="$2" group="$3" course="$4" mode="$5" level="$6" acknowledge="$7"
+  jq -nc \
+    --arg email "$email" --arg name "$name" --arg targetGroupId "$group" --arg expectedCourseId "$course" \
+    --arg levelMode "$mode" --arg initialLevel "$level" --argjson acknowledgeLevelMismatch "$acknowledge" \
+    '{email:$email,name:$name,surname:"Atomic",phone:"600000000",birthDate:"2001-05-14",guardianName:"",guardianPhone:"",notesPrivate:"CI atomic onboarding",levelMode:$levelMode,initialLevel:$initialLevel,levelNotes:"CI initial assessment",targetGroupId:$targetGroupId,expectedCourseId:$expectedCourseId,acknowledgeLevelMismatch:$acknowledgeLevelMismatch,activationBaseUrl:"http://127.0.0.1:4173"}'
+}
+
+complete_status() {
+  local token="$1" email="$2" name="$3" group="$4" course="$5" mode="$6" level="$7" acknowledge="$8"
+  request_status 'POST' "$PB_URL/api/language-school/admin/student-onboarding/complete" "$token" \
+    "$(complete_body "$email" "$name" "$group" "$course" "$mode" "$level" "$acknowledge")"
+}
+
+complete_onboarding() {
+  local token="$1" email="$2" name="$3" group="$4" course="$5" mode="$6" level="$7" acknowledge="$8"
+  json_request 'POST' "$PB_URL/api/language-school/admin/student-onboarding/complete" "$token" \
+    "$(complete_body "$email" "$name" "$group" "$course" "$mode" "$level" "$acknowledge")"
+}
+
+echo '1/10 Authenticate ADMIN and resolve active course/teacher'
 ADMIN_AUTH="$(json_request 'POST' "$PB_URL/api/collections/users/auth-with-password" '' "$(jq -nc --arg identity "$ADMIN_EMAIL" --arg password "$ADMIN_PASSWORD" '{identity:$identity,password:$password}')")"
 ADMIN_TOKEN="$(jq -r '.token' <<<"$ADMIN_AUTH")"
-ADMIN_ID="$(jq -r '.record.id' <<<"$ADMIN_AUTH")"
-COURSE_LIST="$(json_request 'GET' "$PB_URL/api/collections/courses/records?perPage=1&filter=$(printf '%s' 'status = "ACTIVE"' | jq -sRr @uri)" "$ADMIN_TOKEN" '')"
+COURSE_LIST="$(json_request 'GET' "$PB_URL/api/collections/courses/records?perPage=1&filter=$(encoded_filter 'status = "ACTIVE"')" "$ADMIN_TOKEN" '')"
 COURSE_ID="$(jq -r '.items[0].id' <<<"$COURSE_LIST")"
-TEACHER_LIST="$(json_request 'GET' "$PB_URL/api/collections/users/records?perPage=1&filter=$(printf '%s' 'role = "TEACHER" && status = "ACTIVE"' | jq -sRr @uri)" "$ADMIN_TOKEN" '')"
+TEACHER_LIST="$(json_request 'GET' "$PB_URL/api/collections/users/records?perPage=1&filter=$(encoded_filter 'role = "TEACHER" && status = "ACTIVE"')" "$ADMIN_TOKEN" '')"
 TEACHER_ID="$(jq -r '.items[0].id' <<<"$TEACHER_LIST")"
-test -n "$ADMIN_TOKEN" && test "$COURSE_ID" != 'null' && test "$TEACHER_ID" != 'null'
+assert_nonempty "$ADMIN_TOKEN" 'ADMIN authenticated'
+assert_nonempty "$COURSE_ID" 'active course resolved'
+assert_nonempty "$TEACHER_ID" 'active teacher resolved'
 
-echo '2/9 Create B1 onboarding group with two seats'
-GROUP="$(json_request 'POST' "$PB_URL/api/collections/groups/records" "$ADMIN_TOKEN" "$(jq -nc --arg course "$COURSE_ID" --arg teacher "$TEACHER_ID" '{name:"CI 15B3C Onboarding",course:$course,teacher:$teacher,academic_year:"2099/00",schedule_text:"Tue 18:00",capacity:2,target_level:"B1",default_delivery_mode:"HYBRID",status:"ACTIVE"}')")"
-GROUP_ID="$(jq -r '.id' <<<"$GROUP")"
+echo '2/10 Create B1 atomic group with exactly one seat'
+GROUP_ONE="$(json_request 'POST' "$PB_URL/api/collections/groups/records" "$ADMIN_TOKEN" "$(jq -nc --arg course "$COURSE_ID" --arg teacher "$TEACHER_ID" '{name:"CI 15B3C Atomic One",course:$course,teacher:$teacher,academic_year:"2099/00",schedule_text:"Tue 18:00",capacity:1,target_level:"B1",default_delivery_mode:"HYBRID",status:"ACTIVE"}')")"
+GROUP_ONE_ID="$(jq -r '.id' <<<"$GROUP_ONE")"
+assert_nonempty "$GROUP_ONE_ID" 'single-seat onboarding group created'
 
-echo '3/9 Create genuine INVITED student and B2 INITIAL assessment'
-INVITE_A="$(invite_student "$ADMIN_TOKEN" 'ci-15b3c-a@example.com' 'Mismatch')"
-STUDENT_A_ID="$(jq -r '.userId' <<<"$INVITE_A")"
-assert_equal "$(jq -r '.emailSent' <<<"$INVITE_A")" 'false' 'draft invitation is not sent before academic setup'
-ASSESSMENT_A="$(json_request 'POST' "$PB_URL/api/collections/student_level_assessments/records" "$ADMIN_TOKEN" "$(jq -nc --arg student "$STUDENT_A_ID" --arg admin "$ADMIN_ID" '{student:$student,validated_level:"B2",notes:"CI initial level",assessed_by:$admin,assessed_at:"2099-01-01 10:00:00.000Z",reason:"INITIAL"}')")"
-assert_equal "$(jq -r '.validated_level' <<<"$ASSESSMENT_A")" 'B2' 'INITIAL assessment uses existing level history'
+echo '3/10 Mismatch is rejected before persistence when acknowledgement is missing'
+NO_ACK_EMAIL='ci-15b3c-atomic-noack@example.com'
+NO_ACK_STATUS="$(complete_status "$ADMIN_TOKEN" "$NO_ACK_EMAIL" 'NoAck' "$GROUP_ONE_ID" "$COURSE_ID" 'INITIAL' 'B2' false)"
+assert_equal "$NO_ACK_STATUS" '400' 'B2 -> B1 requires explicit pedagogical acknowledgement'
+assert_equal "$(user_count_by_email "$ADMIN_TOKEN" "$NO_ACK_EMAIL")" '0' 'rejected mismatch creates no user'
 
-echo '4/9 Mismatch is rejected until ADMIN acknowledges it'
-STATUS_MISMATCH="$(onboard_status "$ADMIN_TOKEN" "$STUDENT_A_ID" "$GROUP_ID" "$COURSE_ID" false)"
-assert_equal "$STATUS_MISMATCH" '400' 'B2 student cannot enter B1 group without explicit acknowledgement'
-NO_ENROLLMENT_A="$(json_request 'GET' "$PB_URL/api/collections/enrollments/records?perPage=10&filter=$(printf '%s' "student = \"$STUDENT_A_ID\" && status = \"ACTIVE\"" | jq -sRr @uri)" "$ADMIN_TOKEN" '')"
-assert_equal "$(jq -r '.totalItems' <<<"$NO_ENROLLMENT_A")" '0' 'rejected mismatch creates no enrollment'
+echo '4/10 Atomic success creates account, profile, INITIAL level, enrollment and invitation contract'
+SUCCESS_EMAIL='ci-15b3c-atomic-success@example.com'
+SUCCESS="$(complete_onboarding "$ADMIN_TOKEN" "$SUCCESS_EMAIL" 'AtomicSuccess' "$GROUP_ONE_ID" "$COURSE_ID" 'INITIAL' 'B2' true)"
+SUCCESS_USER_ID="$(jq -r '.userId' <<<"$SUCCESS")"
+SUCCESS_PROFILE_ID="$(jq -r '.profileId' <<<"$SUCCESS")"
+SUCCESS_ASSESSMENT_ID="$(jq -r '.assessmentId' <<<"$SUCCESS")"
+SUCCESS_ENROLLMENT_ID="$(jq -r '.enrollmentId' <<<"$SUCCESS")"
+assert_nonempty "$SUCCESS_USER_ID" 'atomic response contains user'
+assert_nonempty "$SUCCESS_PROFILE_ID" 'atomic response contains profile'
+assert_nonempty "$SUCCESS_ASSESSMENT_ID" 'atomic response contains INITIAL assessment'
+assert_nonempty "$SUCCESS_ENROLLMENT_ID" 'atomic response contains enrollment'
+assert_equal "$(jq -r '.studentStatus' <<<"$SUCCESS")" 'INVITED' 'new account remains invited'
+assert_equal "$(jq -r '.currentLevel' <<<"$SUCCESS")" 'B2' 'INITIAL level is returned as current level'
+assert_equal "$(jq -r '.targetLevel' <<<"$SUCCESS")" 'B1' 'target level is derived from group'
+assert_equal "$(jq -r '.levelMismatch' <<<"$SUCCESS")" 'true' 'acknowledged mismatch is preserved'
+assert_equal "$(jq -r '.courseId' <<<"$SUCCESS")" "$COURSE_ID" 'course is derived from group'
+assert_equal "$(jq -r '.teacherId' <<<"$SUCCESS")" "$TEACHER_ID" 'teacher is derived from group'
+assert_equal "$(jq -r '.invitation.status' <<<"$SUCCESS")" 'PENDING' 'invitation is pending after atomic commit'
+assert_equal "$(jq -r '.invitation.role' <<<"$SUCCESS")" 'STUDENT' 'invitation belongs to student lifecycle'
+assert_nonempty "$(jq -r '.invitation.activationUrl' <<<"$SUCCESS")" 'activation fallback URL is returned'
 
-echo '5/9 Acknowledged mismatch enrolls INVITED student and derives group truth'
-ONBOARD_A="$(onboard "$ADMIN_TOKEN" "$STUDENT_A_ID" "$GROUP_ID" "$COURSE_ID" true)"
-assert_equal "$(jq -r '.studentStatus' <<<"$ONBOARD_A")" 'INVITED' 'pending account can be academically enrolled'
-assert_equal "$(jq -r '.currentLevel' <<<"$ONBOARD_A")" 'B2' 'server reads current validated level'
-assert_equal "$(jq -r '.targetLevel' <<<"$ONBOARD_A")" 'B1' 'server reads target group level'
-assert_equal "$(jq -r '.levelMismatch' <<<"$ONBOARD_A")" 'true' 'server reports acknowledged mismatch'
-assert_equal "$(jq -r '.teacherId' <<<"$ONBOARD_A")" "$TEACHER_ID" 'professor is derived from group'
-assert_equal "$(jq -r '.courseId' <<<"$ONBOARD_A")" "$COURSE_ID" 'course is derived from group'
-USER_A="$(json_request 'GET' "$PB_URL/api/collections/users/records/$STUDENT_A_ID" "$ADMIN_TOKEN" '')"
-assert_equal "$(jq -r '.status' <<<"$USER_A")" 'INVITED' 'academic setup does not activate login account'
+USER_RECORD="$(json_request 'GET' "$PB_URL/api/collections/users/records/$SUCCESS_USER_ID" "$ADMIN_TOKEN" '')"
+assert_equal "$(jq -r '.status' <<<"$USER_RECORD")" 'INVITED' 'persisted user is INVITED'
+assert_equal "$(jq -r '.verified' <<<"$USER_RECORD")" 'false' 'invited user is not verified'
+PROFILE_LIST="$(record_list "$ADMIN_TOKEN" 'student_profiles' "user = \"$SUCCESS_USER_ID\"")"
+assert_equal "$(jq -r '.totalItems' <<<"$PROFILE_LIST")" '1' 'exactly one student profile exists'
+assert_equal "$(jq -r '.items[0].active' <<<"$PROFILE_LIST")" 'false' 'profile remains inactive until account activation'
+ASSESSMENT_LIST="$(record_list "$ADMIN_TOKEN" 'student_level_assessments' "student = \"$SUCCESS_USER_ID\"")"
+assert_equal "$(jq -r '.totalItems' <<<"$ASSESSMENT_LIST")" '1' 'exactly one INITIAL assessment exists'
+assert_equal "$(jq -r '.items[0].validated_level' <<<"$ASSESSMENT_LIST")" 'B2' 'persisted INITIAL level is B2'
+assert_equal "$(jq -r '.items[0].reason' <<<"$ASSESSMENT_LIST")" 'INITIAL' 'assessment reason is INITIAL'
+ENROLLMENT_LIST="$(record_list "$ADMIN_TOKEN" 'enrollments' "student = \"$SUCCESS_USER_ID\" && status = \"ACTIVE\"")"
+assert_equal "$(jq -r '.totalItems' <<<"$ENROLLMENT_LIST")" '1' 'exactly one active enrollment exists'
+assert_equal "$(jq -r '.items[0].group' <<<"$ENROLLMENT_LIST")" "$GROUP_ONE_ID" 'enrollment targets confirmed group'
+INVITE_STATUS="$(json_request 'POST' "$PB_URL/api/language-school/admin/accounts/invite/status" "$ADMIN_TOKEN" "$(jq -nc --arg userId "$SUCCESS_USER_ID" '{userId:$userId}')")"
+assert_equal "$(jq -r '.invitationStatus' <<<"$INVITE_STATUS")" 'PENDING' 'secure status endpoint sees pending invitation'
 
-echo '6/9 Same onboarding target is idempotent'
-ONBOARD_A_RETRY="$(onboard "$ADMIN_TOKEN" "$STUDENT_A_ID" "$GROUP_ID" "$COURSE_ID" true)"
-assert_equal "$(jq -r '.unchanged' <<<"$ONBOARD_A_RETRY")" 'true' 'same initial group creates no duplicate enrollment'
+echo '5/10 Capture collection totals before deliberate post-write capacity failure'
+USERS_BEFORE="$(collection_total "$ADMIN_TOKEN" 'users')"
+PROFILES_BEFORE="$(collection_total "$ADMIN_TOKEN" 'student_profiles')"
+ASSESSMENTS_BEFORE="$(collection_total "$ADMIN_TOKEN" 'student_level_assessments')"
+ENROLLMENTS_BEFORE="$(collection_total "$ADMIN_TOKEN" 'enrollments')"
 
-echo '7/9 INVITED student without known level can enroll without mismatch acknowledgement'
-INVITE_B="$(invite_student "$ADMIN_TOKEN" 'ci-15b3c-b@example.com' 'Unevaluated')"
-STUDENT_B_ID="$(jq -r '.userId' <<<"$INVITE_B")"
-ONBOARD_B="$(onboard "$ADMIN_TOKEN" "$STUDENT_B_ID" "$GROUP_ID" "$COURSE_ID" false)"
-assert_equal "$(jq -r '.currentLevel' <<<"$ONBOARD_B")" '' 'unevaluated student has no invented level'
-assert_equal "$(jq -r '.levelMismatch' <<<"$ONBOARD_B")" 'false' 'unknown level does not create false mismatch'
+echo '6/10 Full group aborts after transaction writes and rolls everything back'
+FULL_EMAIL='ci-15b3c-atomic-full@example.com'
+FULL_STATUS="$(complete_status "$ADMIN_TOKEN" "$FULL_EMAIL" 'Rollback' "$GROUP_ONE_ID" "$COURSE_ID" 'INITIAL' 'B1' false)"
+assert_equal "$FULL_STATUS" '400' 'full group rejects atomic onboarding'
+assert_equal "$(user_count_by_email "$ADMIN_TOKEN" "$FULL_EMAIL")" '0' 'rolled-back account does not exist'
+assert_equal "$(collection_total "$ADMIN_TOKEN" 'users')" "$USERS_BEFORE" 'user count unchanged after rollback'
+assert_equal "$(collection_total "$ADMIN_TOKEN" 'student_profiles')" "$PROFILES_BEFORE" 'profile count unchanged after rollback'
+assert_equal "$(collection_total "$ADMIN_TOKEN" 'student_level_assessments')" "$ASSESSMENTS_BEFORE" 'assessment count unchanged after rollback'
+assert_equal "$(collection_total "$ADMIN_TOKEN" 'enrollments')" "$ENROLLMENTS_BEFORE" 'enrollment count unchanged after rollback'
 
-echo '8/9 Capacity is still enforced inside onboarding transaction'
-INVITE_C="$(invite_student "$ADMIN_TOKEN" 'ci-15b3c-c@example.com' 'Full')"
-STUDENT_C_ID="$(jq -r '.userId' <<<"$INVITE_C")"
-FULL_STATUS="$(onboard_status "$ADMIN_TOKEN" "$STUDENT_C_ID" "$GROUP_ID" "$COURSE_ID" false)"
-assert_equal "$FULL_STATUS" '400' 'full onboarding group rejects another student'
-C_ENROLLMENT="$(json_request 'GET' "$PB_URL/api/collections/enrollments/records?perPage=10&filter=$(printf '%s' "student = \"$STUDENT_C_ID\" && status = \"ACTIVE\"" | jq -sRr @uri)" "$ADMIN_TOKEN" '')"
-assert_equal "$(jq -r '.totalItems' <<<"$C_ENROLLMENT")" '0' 'capacity rejection leaves no enrollment'
+echo '7/10 Create open B1 group for UNEVALUATED and TEST modes'
+GROUP_OPEN="$(json_request 'POST' "$PB_URL/api/collections/groups/records" "$ADMIN_TOKEN" "$(jq -nc --arg course "$COURSE_ID" --arg teacher "$TEACHER_ID" '{name:"CI 15B3C Atomic Open",course:$course,teacher:$teacher,academic_year:"2099/00",schedule_text:"Thu 10:00",capacity:2,target_level:"B1",default_delivery_mode:"IN_PERSON",status:"ACTIVE"}')")"
+GROUP_OPEN_ID="$(jq -r '.id' <<<"$GROUP_OPEN")"
+assert_nonempty "$GROUP_OPEN_ID" 'open onboarding group created'
 
-echo '9/9 INACTIVE students remain rejected'
-INACTIVE="$(json_request 'POST' "$PB_URL/api/collections/users/records" "$ADMIN_TOKEN" '{"email":"ci-15b3c-inactive@example.com","password":"Ci15B3cInactivePass!","passwordConfirm":"Ci15B3cInactivePass!","name":"Inactive","surname":"Onboarding","role":"STUDENT","status":"INACTIVE","phone":""}')"
-INACTIVE_ID="$(jq -r '.id' <<<"$INACTIVE")"
-INACTIVE_STATUS="$(onboard_status "$ADMIN_TOKEN" "$INACTIVE_ID" "$GROUP_ID" "$COURSE_ID" false)"
-assert_equal "$INACTIVE_STATUS" '400' 'inactive student cannot be onboarded'
+echo '8/10 UNEVALUATED creates no invented level and still enrolls securely'
+UNEVALUATED_EMAIL='ci-15b3c-atomic-unevaluated@example.com'
+UNEVALUATED="$(complete_onboarding "$ADMIN_TOKEN" "$UNEVALUATED_EMAIL" 'Unevaluated' "$GROUP_OPEN_ID" "$COURSE_ID" 'UNEVALUATED' '' false)"
+UNEVALUATED_ID="$(jq -r '.userId' <<<"$UNEVALUATED")"
+assert_equal "$(jq -r '.assessmentId' <<<"$UNEVALUATED")" 'null' 'UNEVALUATED creates no assessment'
+assert_equal "$(jq -r '.currentLevel' <<<"$UNEVALUATED")" '' 'UNEVALUATED invents no current level'
+assert_equal "$(jq -r '.levelMismatch' <<<"$UNEVALUATED")" 'false' 'unknown level creates no false mismatch'
+assert_equal "$(record_list "$ADMIN_TOKEN" 'student_level_assessments' "student = \"$UNEVALUATED_ID\"" | jq -r '.totalItems')" '0' 'UNEVALUATED persists no level assessment'
 
-echo 'STUDENT ONBOARDING 15B.3C.1 SMOKE TEST: SUCCESS'
+echo '9/10 TEST mode also keeps level pending without fabricating an assessment'
+TEST_EMAIL='ci-15b3c-atomic-test@example.com'
+TEST_RESULT="$(complete_onboarding "$ADMIN_TOKEN" "$TEST_EMAIL" 'TestPending' "$GROUP_OPEN_ID" "$COURSE_ID" 'TEST' '' false)"
+TEST_ID="$(jq -r '.userId' <<<"$TEST_RESULT")"
+assert_equal "$(jq -r '.assessmentId' <<<"$TEST_RESULT")" 'null' 'TEST mode creates no INITIAL assessment'
+assert_equal "$(jq -r '.currentLevel' <<<"$TEST_RESULT")" '' 'TEST mode leaves current level pending'
+assert_equal "$(record_list "$ADMIN_TOKEN" 'student_level_assessments' "student = \"$TEST_ID\"" | jq -r '.totalItems')" '0' 'TEST mode persists no fake level assessment'
+
+echo '10/10 Final atomic state keeps one active enrollment per created student'
+UNEVALUATED_ENROLLMENTS="$(record_list "$ADMIN_TOKEN" 'enrollments' "student = \"$UNEVALUATED_ID\" && status = \"ACTIVE\"")"
+TEST_ENROLLMENTS="$(record_list "$ADMIN_TOKEN" 'enrollments' "student = \"$TEST_ID\" && status = \"ACTIVE\"")"
+assert_equal "$(jq -r '.totalItems' <<<"$UNEVALUATED_ENROLLMENTS")" '1' 'UNEVALUATED student has one active enrollment'
+assert_equal "$(jq -r '.totalItems' <<<"$TEST_ENROLLMENTS")" '1' 'TEST student has one active enrollment'
+
+echo 'STUDENT ONBOARDING 15B.3C.3 ATOMIC SMOKE TEST: SUCCESS'
