@@ -1,7 +1,8 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import SiteShell from '../../components/SiteShell'
+import { isDemoMode } from '../../config/environment'
 import { demoSiteSettings } from '../../services/pocketbase/siteManagement'
-import { getPublicSettings, type PublicSettings } from '../../services/pocketbase/publicAcademy'
+import { connectedPublicSettingsFallback, getPublicSettings, type PublicSettings } from '../../services/pocketbase/publicAcademy'
 
 type LegalPageKind = 'cookies' | 'privacy' | 'legal'
 type LegalPageProps = { kind: LegalPageKind }
@@ -42,7 +43,9 @@ function AdditionalText({ text }: { text: string }) {
 }
 
 export default function LegalPage({ kind }: LegalPageProps) {
-  const [settings, setSettings] = useState<PublicSettings>({ ...demoSiteSettings, logoUrl: '' })
+  const [settings, setSettings] = useState<PublicSettings>(() => isDemoMode
+    ? { ...demoSiteSettings, logoUrl: '' }
+    : { ...connectedPublicSettingsFallback })
   const page = metadata[kind]
 
   useEffect(() => {
