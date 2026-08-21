@@ -91,14 +91,6 @@ async function createTemporaryStudentEnrollment(request: APIRequestContext, admi
   return { studentId: student.id, enrollmentId: enrollment.id }
 }
 
-async function listRecords(request: APIRequestContext, superToken: string, collection: string) {
-  const response = await request.get(`${PB_URL}/api/collections/${collection}/records?perPage=500`, {
-    headers: { Authorization: superToken },
-  })
-  expect(response.status(), await response.text()).toBe(200)
-  return (await response.json() as { items: Array<Record<string, unknown> & { id: string }> }).items
-}
-
 async function deleteRecord(request: APIRequestContext, superToken: string, collection: string, id: string) {
   const response = await request.delete(`${PB_URL}/api/collections/${collection}/records/${id}`, {
     headers: { Authorization: superToken },
@@ -106,9 +98,14 @@ async function deleteRecord(request: APIRequestContext, superToken: string, coll
   expect([200, 204]).toContain(response.status())
 }
 
-async function cleanupTemporaryPaymentStudent(request: APIRequestContext, superToken: string, studentId: string, enrollmentId: string) {
-  const payments = (await listRecords(request, superToken, 'student_payments')).filter((item) => item.student === studentId)
-  for (const payment of payments) await deleteRecord(request, superToken, 'student_payments', payment.id)
+async function cleanupTemporaryPaymentStudent(
+  request: APIRequestContext,
+  superToken: string,
+  studentId: string,
+  enrollmentId: string,
+  paymentIds: string[],
+) {
+  for (const paymentId of paymentIds) await deleteRecord(request, superToken, 'student_payments', paymentId)
   await deleteRecord(request, superToken, 'enrollments', enrollmentId)
   await deleteRecord(request, superToken, 'users', studentId)
 }
@@ -120,9 +117,10 @@ test('15B.4A: resumen económico responde al contexto, método y situación del 
   const superuser = await authenticate(request, '_superusers', requiredEnv('PB_SUPERUSER_EMAIL'), requiredEnv('PB_SUPERUSER_PASSWORD'))
   const fixture = await createTemporaryStudentEnrollment(request, admin)
   const dates = localMonth()
+  const paymentIds: string[] = []
 
   try {
-    await createPayment(request, admin, {
+    const paid = await createPayment(request, admin, {
       student: fixture.studentId,
       enrollment: fixture.enrollmentId,
       billing_mode: 'INTENSIVE',
@@ -136,8 +134,9 @@ test('15B.4A: resumen económico responde al contexto, método y situación del 
       reference: 'E2E-15B4A-PAID',
       notes: 'Pago operativo 15B.4A',
     })
+    paymentIds.push(paid.id)
 
-    await createPayment(request, admin, {
+    const overdue = await createPayment(request, admin, {
       student: fixture.studentId,
       enrollment: fixture.enrollmentId,
       billing_mode: 'INTENSIVE',
@@ -151,6 +150,7 @@ test('15B.4A: resumen económico responde al contexto, método y situación del 
       reference: 'E2E-15B4A-OVERDUE',
       notes: 'Deuda operativa 15B.4A',
     })
+    paymentIds.push(overdue.id)
 
     const refunded = await createPayment(request, admin, {
       student: fixture.studentId,
@@ -166,6 +166,7 @@ test('15B.4A: resumen económico responde al contexto, método y situación del 
       reference: 'E2E-15B4A-REFUND',
       notes: 'Reembolso operativo 15B.4A',
     })
+    paymentIds.push(refunded.id)
     const refundResponse = await request.patch(`${PB_URL}/api/collections/student_payments/records/${refunded.id}`, {
       headers: { Authorization: admin.token },
       data: { status: 'REFUNDED' },
@@ -177,9 +178,11 @@ test('15B.4A: resumen económico responde al contexto, método y situación del 
     await page.goto('/admin/pagos')
     await expect(page.getByRole('heading', { name: 'Pagos de alumnos' })).toBeVisible()
 
-    await page.getByLabel('Alumno', { exact: true }).selectOption(fixture.studentId)
-    await page.getByLabel('Modalidad').selectOption('INTENSIVE')
-    await page.getByLabel('Mes').fill(dates.month)
+    const toolbar = page.locator('.admin-payments-toolbar')
+    await expect(toolbar).toBeVisible()
+    await toolbar.getByLabel('Alumno', { exact: true }).selectOption(fixture.studentId)
+    await toolbar.getByLabel('Modalidad').selectOption('INTENSIVE')
+    await toolbar.getByLabel('Mes').fill(dates.month)
 
     await expect(page.getByTestId('payment-summary-obligations')).toContainText('129,00')
     await expect(page.getByTestId('payment-summary-paid')).toContainText('61,00')
@@ -197,13 +200,13 @@ test('15B.4A: resumen económico responde al contexto, método y situación del 
     await expect(page.getByTestId('payment-summary-obligations')).toContainText('129,00')
 
     await page.getByRole('button', { name: 'Todos', exact: true }).click()
-    await page.getByLabel('Método').selectOption('BIZUM')
+    await toolbar.getByLabel('Método').selectOption('BIZUM')
     await expect(page.getByTestId('payment-summary-obligations')).toContainText('61,00')
     await expect(page.getByTestId('payment-summary-paid')).toContainText('61,00')
     await expect(page.getByTestId('payment-summary-debt-students')).toHaveText('0')
     await expect(page.getByTestId('payment-summary-current-students')).toHaveText('1')
 
-    await page.getByLabel('Método').selectOption('ALL')
+    await toolbar.getByLabel('Método').selectOption('ALL')
     await page.getByRole('button', { name: 'Reembolsados' }).click()
     await expect(page.locator('.payment-record')).toHaveCount(1)
     await expect(page.locator('.payment-record').first()).toContainText('25,00')
@@ -219,6 +222,6 @@ test('15B.4A: resumen económico responde al contexto, método y situación del 
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
     expect(overflow).toBeLessThanOrEqual(1)
   } finally {
-    await cleanupTemporaryPaymentStudent(request, superuser.token, fixture.studentId, fixture.enrollmentId)
+    await cleanupTemporaryPaymentStudent(request, superuser.token, fixture.studentId, fixture.enrollmentId, paymentIds)
   }
 })
