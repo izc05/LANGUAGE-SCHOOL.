@@ -4,10 +4,11 @@ import BackendStatusBanner from './BackendStatusBanner'
 import CookieConsentBanner from './CookieConsentBanner'
 import PublicVisualMotion from './PublicVisualMotion'
 import PublicWhatsAppButton from './PublicWhatsAppButton'
+import { isDemoMode } from '../config/environment'
 import { useBackendHealth } from '../hooks/useBackendHealth'
 import { requestCookieSettings } from '../services/cookieConsent'
 import { demoSiteSettings } from '../services/pocketbase/siteManagement'
-import { getPublicSettings, type PublicSettings } from '../services/pocketbase/publicAcademy'
+import { connectedPublicSettingsFallback, getPublicSettings, type PublicSettings } from '../services/pocketbase/publicAcademy'
 
 type SiteShellProps = { children: ReactNode }
 type PageMeta = { title: string; description: string }
@@ -41,7 +42,9 @@ function applyPageMeta(pathname: string) {
 export default function SiteShell({ children }: SiteShellProps) {
   const location = useLocation()
   const { unavailable, retry } = useBackendHealth()
-  const [settings, setSettings] = useState<PublicSettings>({ ...demoSiteSettings, logoUrl: '' })
+  const [settings, setSettings] = useState<PublicSettings>(() => isDemoMode
+    ? { ...demoSiteSettings, logoUrl: '' }
+    : { ...connectedPublicSettingsFallback })
   const [navOpen, setNavOpen] = useState(false)
   const [isCompactNav, setIsCompactNav] = useState(false)
   const menuButtonRef = useRef<HTMLButtonElement>(null)
