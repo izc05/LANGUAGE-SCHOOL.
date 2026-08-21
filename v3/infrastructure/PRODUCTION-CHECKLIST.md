@@ -45,6 +45,11 @@ Los puertos de esta lista corresponden a la plantilla actual (`PROXY_URL=127.0.0
 - [ ] Login ADMIN con contraseña correcta devuelve desafío MFA y no una sesión completa.
 - [ ] El ADMIN recibe por correo el código de 6 cifras y puede completar el acceso dentro de su ventana de validez.
 - [ ] Código MFA incorrecto o caducado no permite entrar en Administración.
+- [ ] Desde Admin → Administradores, invitar temporalmente un segundo ADMIN y confirmar que el formulario no solicita ninguna contraseña.
+- [ ] La invitación del segundo ADMIN llega a su email real; el enlace/token de activación no aparece en el panel ni se devuelve al ADMIN que invita.
+- [ ] Si el SMTP de la invitación ADMIN falla, el panel NO muestra un enlace manual: se corrige SMTP y se regenera/reenvía la invitación.
+- [ ] El segundo ADMIN abre su enlace de un solo uso, elige su propia contraseña y la activación deja el token consumido.
+- [ ] El primer login del segundo ADMIN exige automáticamente contraseña + código MFA por email antes de abrir `/admin`.
 - [ ] Crear temporalmente una invitación STUDENT y una TEACHER, recibir/abrir el enlace real, elegir contraseña propia y confirmar que el token queda usado y no se puede reutilizar.
 - [ ] Solicitar recuperación de contraseña de una cuenta temporal, confirmar que el email usa el dominio final, establecer una contraseña nueva y comprobar que la anterior y el token consumido ya no sirven.
 - [ ] La solicitud de recuperación con un email no registrado mantiene respuesta pública neutral y no revela si la cuenta existe.
@@ -90,6 +95,9 @@ Los puertos de esta lista corresponden a la plantilla actual (`PROXY_URL=127.0.0
 - [ ] Confirmar que STUDENT y TEACHER siguen accediendo con su flujo normal y que OTP no funciona como login alternativo para esos roles.
 - [ ] Confirmar que un ADMIN no obtiene token válido mediante contraseña solamente ni accediendo directamente a `/admin`.
 - [ ] Confirmar que una sesión ADMIN no puede crear directamente un usuario con contraseña ni modificar la contraseña/`verified` de STUDENT o TEACHER.
+- [ ] Confirmar que un ADMIN no puede hacer PATCH genérico sobre otra cuenta ADMIN: contraseña, `verified`, email, estado y datos de perfil quedan bloqueados.
+- [ ] Confirmar que una cuenta ADMIN no puede eliminarse mediante la API genérica de `users`.
+- [ ] Confirmar que el secreto de activación de una invitación ADMIN solo se entrega al email invitado y nunca al ADMIN que inicia la invitación.
 - [ ] Probar archivo privado + token protegido.
 - [ ] Pausar matrícula y confirmar revocación inmediata del profesor.
 - [ ] Probar rechazo de asistencia fuera del grupo.
@@ -134,6 +142,7 @@ Los puertos de esta lista corresponden a la plantilla actual (`PROXY_URL=127.0.0
 - [ ] 2–3 alumnos reales de prueba.
 - [ ] 1–2 profesores de prueba.
 - [ ] Flujo ADMIN completo, incluido MFA por correo en un navegador/sesión nueva.
+- [ ] Alta temporal de un segundo ADMIN desde `/admin/administradores` y recorrido real email → activación → contraseña propia → MFA → `/admin`.
 - [ ] Flujo PROFESOR completo.
 - [ ] Flujo ALUMNO completo.
 - [ ] Test de nivel público y Campus.
