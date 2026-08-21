@@ -109,7 +109,9 @@ test('15B.3D.2: Admin decide desde la UI qué ocurre con las clases futuras al c
     await expect(groupRow).toBeVisible()
     await groupRow.click()
     await page.getByRole('button', { name: 'Editar grupo' }).click()
-    await page.getByLabel('Profesor').selectOption(teacherB.body.id)
+    const teacherSelect = page.locator('.class-edit-form select').first()
+    await expect(teacherSelect).toBeVisible()
+    await teacherSelect.selectOption(teacherB.body.id)
 
     const decision = page.getByRole('checkbox', { name: /Reasignar clases futuras programadas al nuevo profesor/i })
     await expect(decision).toBeVisible()
@@ -130,7 +132,7 @@ test('15B.3D.2: Admin decide desde la UI qué ocurre con las clases futuras al c
     expect(classAfterReassign.body.teacher).toBe(teacherB.body.id)
 
     await page.getByRole('button', { name: 'Editar grupo' }).click()
-    await page.getByLabel('Profesor').selectOption(teacherA.body.id)
+    await teacherSelect.selectOption(teacherA.body.id)
     await expect(decision).toBeVisible()
     await expect(decision).toBeChecked()
     await decision.uncheck()
@@ -149,7 +151,7 @@ test('15B.3D.2: Admin decide desde la UI qué ocurre con las clases futuras al c
 
     await page.setViewportSize({ width: 390, height: 844 })
     await page.getByRole('button', { name: 'Editar grupo' }).click()
-    await page.getByLabel('Profesor').selectOption(teacherB.body.id)
+    await teacherSelect.selectOption(teacherB.body.id)
     await expect(decision).toBeVisible()
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
     expect(overflow).toBeLessThanOrEqual(1)
