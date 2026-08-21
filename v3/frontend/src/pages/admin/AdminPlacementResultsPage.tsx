@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router'
 import DashboardShell from '../../components/DashboardShell'
 import PortalEmptyState from '../../components/PortalEmptyState'
 import { useAuth } from '../../features/auth/AuthProvider'
@@ -32,6 +33,10 @@ function sourceLabel(source: PlacementAdminStudentLevel['currentLevelSource']): 
 
 function attemptLabel(attempt: PlacementAdminAttempt): string {
   return attempt.mode === 'PUBLIC' ? 'Público' : 'Campus'
+}
+
+function studentHref(studentId: string): string {
+  return `/admin/alumnos/${encodeURIComponent(studentId)}`
 }
 
 export default function AdminPlacementResultsPage() {
@@ -82,7 +87,7 @@ export default function AdminPlacementResultsPage() {
             <div className="placement-results-student-list">
               {students.map((student) => <article key={student.studentId}>
                 <div className="placement-result-level"><strong>{student.currentLevel || '—'}</strong><small>{sourceLabel(student.currentLevelSource)}</small></div>
-                <div className="placement-result-student"><strong>{student.studentName}</strong><span>{student.email}</span><small>{student.attemptCount} evaluaciones Campus · {student.assessmentCount} valoraciones docentes</small></div>
+                <div className="placement-result-student"><Link className="placement-result-student-link" to={studentHref(student.studentId)} aria-label={`Abrir ficha de ${student.studentName}`}>{student.studentName}</Link><span>{student.email}</span><small>{student.attemptCount} evaluaciones Campus · {student.assessmentCount} valoraciones docentes</small></div>
                 <div className="placement-result-evidence">
                   <span>Automático: <b>{student.latestAttempt?.estimatedLevel || '—'}</b></span>
                   <span>Speaking: <b>{student.latestAssessment?.speakingLevel || '—'}</b></span>
@@ -100,7 +105,7 @@ export default function AdminPlacementResultsPage() {
               <div className="placement-attempt-row placement-attempt-head" role="row"><span>Modo</span><span>Persona</span><span>Versión</span><span>Resultado</span><span>Fecha</span></div>
               {overview.recentAttempts.map((attempt) => <div className="placement-attempt-row" role="row" key={attempt.id}>
                 <span><b>{attemptLabel(attempt)}</b><small>{attempt.status}</small></span>
-                <span>{attempt.studentName}</span>
+                <span>{attempt.studentId ? <Link className="placement-attempt-student-link" to={studentHref(attempt.studentId)} aria-label={`Abrir ficha de ${attempt.studentName}`}>{attempt.studentName}</Link> : attempt.studentName}</span>
                 <span>{attempt.testVersion || '—'}</span>
                 <span><b>{attempt.estimatedLevel || '—'}</b><small>{attempt.status === 'COMPLETED' ? `${Math.round(attempt.scorePercent)}%` : 'En curso'}</small></span>
                 <span>{dateLabel(attempt.completedAt || attempt.startedAt)}</span>
