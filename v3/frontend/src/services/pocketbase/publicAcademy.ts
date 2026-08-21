@@ -41,6 +41,28 @@ export const demoPublicPricing: PublicPricingRecord[] = [
   { id: 'plus', collectionId: 'demo', collectionName: collections.pricingPlans, created: '', updated: '', expand: {}, name: 'Plus', description: 'Ejemplo visual. Precio definitivo pendiente de confirmar.', price: 49, billing_text: 'al mes', features: ['Clases en grupo', 'Material', 'Seguimiento'], sort_order: 20, active: true, featured: true },
 ]
 
+const connectedSettingsFallback: PublicSettings = {
+  academyName: 'Language School',
+  phone: '',
+  email: '',
+  whatsapp: '',
+  whatsappEnabled: false,
+  whatsappMessage: '',
+  address: '',
+  instagram: '',
+  facebook: '',
+  youtube: '',
+  cookieBannerEnabled: true,
+  cookieIntro: 'Usamos almacenamiento técnico necesario para que la web funcione correctamente. Puedes configurar las preferencias opcionales cuando estén disponibles.',
+  legalOwnerName: '',
+  legalTaxId: '',
+  legalRegistryDetails: '',
+  cookiePolicyText: '',
+  privacyPolicyText: '',
+  legalNoticeText: '',
+  logoUrl: '',
+}
+
 function normalizeFeatures(value: unknown): string[] {
   if (!Array.isArray(value)) return []
   return value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
@@ -87,21 +109,21 @@ export async function getPublicSettings(): Promise<PublicSettings> {
   if (isDemoMode) return { ...demoSiteSettings, logoUrl: '' }
   const result = await pb.collection(collections.siteSettings).getList<SiteSettingsRecord>(1, 1)
   const record = result.items[0]
-  if (!record) return { ...demoSiteSettings, logoUrl: '' }
+  if (!record) return { ...connectedSettingsFallback }
 
   return {
-    academyName: record.academy_name || demoSiteSettings.academyName,
+    academyName: record.academy_name || connectedSettingsFallback.academyName,
     phone: record.phone || '',
     email: record.email || '',
     whatsapp: record.whatsapp || '',
-    whatsappEnabled: readBoolean(record.social_links?.whatsapp_enabled, true),
-    whatsappMessage: record.social_links?.whatsapp_message || demoSiteSettings.whatsappMessage,
+    whatsappEnabled: readBoolean(record.social_links?.whatsapp_enabled, false),
+    whatsappMessage: record.social_links?.whatsapp_message || '',
     address: record.address || '',
     instagram: record.social_links?.instagram || '',
     facebook: record.social_links?.facebook || '',
     youtube: record.social_links?.youtube || '',
     cookieBannerEnabled: readBoolean(record.legal_texts?.cookie_banner_enabled, true),
-    cookieIntro: record.legal_texts?.cookie_intro || demoSiteSettings.cookieIntro,
+    cookieIntro: record.legal_texts?.cookie_intro || connectedSettingsFallback.cookieIntro,
     legalOwnerName: record.legal_texts?.legal_owner_name || '',
     legalTaxId: record.legal_texts?.legal_tax_id || '',
     legalRegistryDetails: record.legal_texts?.legal_registry_details || '',
