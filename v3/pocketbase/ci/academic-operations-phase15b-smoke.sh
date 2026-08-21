@@ -2,6 +2,8 @@
 set -euo pipefail
 
 PB_URL="${PB_URL:-http://127.0.0.1:8090}"
+SUPERUSER_EMAIL="${PB_SUPERUSER_EMAIL:-ci-superuser@example.com}"
+SUPERUSER_PASSWORD="${PB_SUPERUSER_PASSWORD:-CiSuperuserPass123!}"
 ADMIN_EMAIL="ci-admin@example.com"
 ADMIN_PASSWORD="CiAdminPass123!"
 
@@ -41,9 +43,10 @@ assert_equal() {
   echo "OK: $label"
 }
 
-authenticate() {
-  json_request 'POST' "$PB_URL/api/collections/users/auth-with-password" '' \
-    "$(jq -nc --arg identity "$ADMIN_EMAIL" --arg password "$ADMIN_PASSWORD" '{identity:$identity,password:$password}')"
+authenticate_collection() {
+  local collection="$1" email="$2" password="$3"
+  json_request 'POST' "$PB_URL/api/collections/$collection/auth-with-password" '' \
+    "$(jq -nc --arg identity "$email" --arg password "$password" '{identity:$identity,password:$password}')"
 }
 
 create_record() {
@@ -56,15 +59,18 @@ move_student() {
     "$(jq -nc --arg studentId "$student" --arg targetGroupId "$group" '{studentId:$studentId,targetGroupId:$targetGroupId}')"
 }
 
-echo '1/10 Authenticate ADMIN created by admin-flow smoke'
-ADMIN_AUTH="$(authenticate)"
+echo '1/10 Authenticate ADMIN created by admin-flow smoke and temporary CI superuser'
+ADMIN_AUTH="$(authenticate_collection 'users' "$ADMIN_EMAIL" "$ADMIN_PASSWORD")"
 ADMIN_TOKEN="$(jq -r '.token' <<<"$ADMIN_AUTH")"
 test -n "$ADMIN_TOKEN" && test "$ADMIN_TOKEN" != 'null'
+SUPER_AUTH="$(authenticate_collection '_superusers' "$SUPERUSER_EMAIL" "$SUPERUSER_PASSWORD")"
+SUPER_TOKEN="$(jq -r '.token' <<<"$SUPER_AUTH")"
+test -n "$SUPER_TOKEN" && test "$SUPER_TOKEN" != 'null'
 
 echo '2/10 Resolve an ACTIVE course and TEACHER'
-COURSE_LIST="$(json_request 'GET' "$PB_URL/api/collections/courses/records?perPage=1&filter=$(printf '%s' 'status = "ACTIVE"' | jq -sRr @uri)" "$ADMIN_TOKEN" '')"
+COURSE_LIST="$(json_request 'GET' "$PB_URL/api/collections/courses/records?perPage=1&filter=$(printf '%s' 'status = \"ACTIVE\"' | jq -sRr @uri)" "$ADMIN_TOKEN" '')"
 COURSE_ID="$(jq -r '.items[0].id' <<<"$COURSE_LIST")"
-TEACHER_LIST="$(json_request 'GET' "$PB_URL/api/collections/users/records?perPage=1&filter=$(printf '%s' 'role = "TEACHER" && status = "ACTIVE"' | jq -sRr @uri)" "$ADMIN_TOKEN" '')"
+TEACHER_LIST="$(json_request 'GET' "$PB_URL/api/collections/users/records?perPage=1&filter=$(printf '%s' 'role = \"TEACHER\" && status = \"ACTIVE\"' | jq -sRr @uri)" "$ADMIN_TOKEN" '')"
 TEACHER_ID="$(jq -r '.items[0].id' <<<"$TEACHER_LIST")"
 test -n "$COURSE_ID" && test "$COURSE_ID" != 'null'
 test -n "$TEACHER_ID" && test "$TEACHER_ID" != 'null'
@@ -75,15 +81,15 @@ SOURCE_GROUP_ID="$(jq -r '.id' <<<"$SOURCE_GROUP")"
 TARGET_GROUP="$(create_record 'groups' "$ADMIN_TOKEN" "$(jq -nc --arg course "$COURSE_ID" --arg teacher "$TEACHER_ID" '{name:"CI 15B3B Target",course:$course,teacher:$teacher,academic_year:"2099/00",schedule_text:"Target",capacity:1,target_level:"B1",default_delivery_mode:"HYBRID",status:"ACTIVE"}')")"
 TARGET_GROUP_ID="$(jq -r '.id' <<<"$TARGET_GROUP")"
 
-echo '4/10 Create two ACTIVE students and enroll both in source through the canonical route'
-STUDENT_A="$(create_record 'users' "$ADMIN_TOKEN" '{"email":"ci-15b3b-a@example.com","password":"Ci15B3bStudentAPass!","passwordConfirm":"Ci15B3bStudentAPass!","name":"Race","surname":"Student A","role":"STUDENT","status":"ACTIVE","phone":""}')"
-STUDENT_B="$(create_record 'users' "$ADMIN_TOKEN" '{"email":"ci-15b3b-b@example.com","password":"Ci15B3bStudentBPass!","passwordConfirm":"Ci15B3bStudentBPass!","name":"Race","surname":"Student B","role":"STUDENT","status":"ACTIVE","phone":""}')"
+echo '4/10 Bootstrap two ACTIVE technical students and enroll both through the canonical route'
+STUDENT_A="$(create_record 'users' "$SUPER_TOKEN" '{"email":"ci-15b3b-a@example.com","password":"Ci15B3bStudentAPass!","passwordConfirm":"Ci15B3bStudentAPass!","name":"Race","surname":"Student A","role":"STUDENT","status":"ACTIVE","verified":true,"phone":""}')"
+STUDENT_B="$(create_record 'users' "$SUPER_TOKEN" '{"email":"ci-15b3b-b@example.com","password":"Ci15B3bStudentBPass!","passwordConfirm":"Ci15B3bStudentBPass!","name":"Race","surname":"Student B","role":"STUDENT","status":"ACTIVE","verified":true,"phone":""}')"
 STUDENT_A_ID="$(jq -r '.id' <<<"$STUDENT_A")"
 STUDENT_B_ID="$(jq -r '.id' <<<"$STUDENT_B")"
 SOURCE_A="$(move_student "$ADMIN_TOKEN" "$STUDENT_A_ID" "$SOURCE_GROUP_ID")"
 SOURCE_B="$(move_student "$ADMIN_TOKEN" "$STUDENT_B_ID" "$SOURCE_GROUP_ID")"
-assert_equal "$(jq -r '.unchanged' <<<"$SOURCE_A")" 'false' 'student A created through canonical enrollment route'
-assert_equal "$(jq -r '.unchanged' <<<"$SOURCE_B")" 'false' 'student B created through canonical enrollment route'
+assert_equal "$(jq -r '.unchanged' <<<"$SOURCE_A")" 'false' 'student A enrolled through canonical enrollment route'
+assert_equal "$(jq -r '.unchanged' <<<"$SOURCE_B")" 'false' 'student B enrolled through canonical enrollment route'
 
 echo '5/10 Race both students for the single destination seat'
 STATUS_A_FILE="$(mktemp)"
