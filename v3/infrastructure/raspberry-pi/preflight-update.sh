@@ -93,7 +93,20 @@ printf 'Repository: %s\n' "$REPO_DIR"
 
 for command in git curl node npm rsync sha256sum jq; do require_command "$command"; done
 if [[ "$HOST_CHECKS" == '1' ]]; then
-  for command in systemctl mountpoint ss; do require_command "$command"; done
+  for command in systemctl mountpoint ss stat; do require_command "$command"; done
+fi
+
+NODE_VERSION="$(node --version 2>/dev/null || true)"
+NODE_VERSION="${NODE_VERSION#v}"
+IFS='.' read -r NODE_MAJOR NODE_MINOR _ <<< "$NODE_VERSION"
+if [[ "$NODE_MAJOR" =~ ^[0-9]+$ && "$NODE_MINOR" =~ ^[0-9]+$ ]] && {
+  (( NODE_MAJOR == 20 && NODE_MINOR >= 19 )) ||
+  (( NODE_MAJOR == 22 && NODE_MINOR >= 12 )) ||
+  (( NODE_MAJOR > 22 ));
+}; then
+  ok "Node.js $NODE_VERSION satisfies Vite 8"
+else
+  fail "Node.js ${NODE_VERSION:-unknown} is not compatible with Vite 8; require 20.19+ or 22.12+"
 fi
 
 if [[ -z "$EXPECTED_SHA" ]]; then
@@ -148,6 +161,10 @@ secret_present SMTP_PASSWORD
 secret_present SMTP_SENDER_ADDRESS
 secret_present TURNSTILE_SITE_KEY
 secret_present TURNSTILE_SECRET_KEY
+TURNSTILE_TEST_SITE_KEY='1x00000000000000000000AA'
+TURNSTILE_TEST_SECRET_KEY='1x0000000000000000000000000000000AA'
+if [[ "$TURNSTILE_SITE_KEY" == "$TURNSTILE_TEST_SITE_KEY" ]]; then fail 'Turnstile production site key is the official test key'; else ok 'Turnstile site key is not the official test key'; fi
+if [[ "$TURNSTILE_SECRET_KEY" == "$TURNSTILE_TEST_SECRET_KEY" ]]; then fail 'Turnstile production secret is the official test secret'; else ok 'Turnstile secret is not the official test secret'; fi
 if [[ "$TURNSTILE_EXPECTED_ACTION" == 'contact' ]]; then ok 'Turnstile action is contact'; else fail 'TURNSTILE_EXPECTED_ACTION must be contact'; fi
 
 public_host="${PUBLIC_ORIGIN#https://}"
@@ -161,6 +178,12 @@ done
 if [[ "$allowed" == true ]]; then ok 'Turnstile hostname allowlist contains PUBLIC_ORIGIN host'; else fail 'Turnstile hostname allowlist does not contain PUBLIC_ORIGIN host'; fi
 
 if [[ "$HOST_CHECKS" == '1' ]]; then
+  ENV_OWNER_MODE="$(stat -c '%U:%G %a' "$PRODUCTION_ENV" 2>/dev/null || true)"
+  case "$ENV_OWNER_MODE" in
+    'root:root 600'|'root:root 640') ok "production.env ownership/mode is $ENV_OWNER_MODE" ;;
+    *) fail "production.env must be root:root with mode 0600 or 0640 (got ${ENV_OWNER_MODE:-unknown})" ;;
+  esac
+
   if [[ -n "$BACKUP_MOUNT" && -d "$BACKUP_MOUNT" ]] && mountpoint -q "$BACKUP_MOUNT"; then ok 'backup destination is a real mountpoint'; else fail 'BACKUP_MOUNT is not an active mountpoint'; fi
 
   if systemctl is-active --quiet "$SERVICE"; then ok 'PocketBase service is active'; else fail 'PocketBase service is not active'; fi
