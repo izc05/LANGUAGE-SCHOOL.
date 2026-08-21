@@ -8,8 +8,8 @@ function requiredEnv(name: string): string {
   return value
 }
 
-async function authenticate(request: APIRequestContext, email: string, password: string): Promise<{ token: string; id: string }> {
-  const response = await request.post(`${PB_URL}/api/collections/users/auth-with-password`, { data: { identity: email, password } })
+async function authenticate(request: APIRequestContext, collection: string, email: string, password: string): Promise<{ token: string; id: string }> {
+  const response = await request.post(`${PB_URL}/api/collections/${collection}/auth-with-password`, { data: { identity: email, password } })
   expect(response.status(), await response.text()).toBe(200)
   const body = await response.json() as { token: string; record: { id: string } }
   return { token: body.token, id: body.record.id }
@@ -49,111 +49,174 @@ async function createPayment(request: APIRequestContext, admin: { token: string;
   return await response.json() as { id: string }
 }
 
+async function createTemporaryStudentEnrollment(request: APIRequestContext, admin: { token: string; id: string }) {
+  const groupsResponse = await request.get(`${PB_URL}/api/collections/groups/records?perPage=100`, {
+    headers: { Authorization: admin.token },
+  })
+  expect(groupsResponse.status(), await groupsResponse.text()).toBe(200)
+  const groups = await groupsResponse.json() as { items: Array<{ id: string; name: string; status: string }> }
+  const group = groups.items.find((item) => item.name === 'E2E B1 Group' && item.status === 'ACTIVE')
+    || groups.items.find((item) => item.status === 'ACTIVE')
+  expect(group).toBeTruthy()
+
+  const unique = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+  const password = 'E2eTempPaymentPass123!'
+  const userResponse = await request.post(`${PB_URL}/api/collections/users/records`, {
+    headers: { Authorization: admin.token },
+    data: {
+      email: `e2e-payment-${unique}@example.com`,
+      password,
+      passwordConfirm: password,
+      name: 'Payment',
+      surname: 'Summary',
+      role: 'STUDENT',
+      status: 'ACTIVE',
+      phone: '',
+    },
+  })
+  expect([200, 201]).toContain(userResponse.status())
+  const student = await userResponse.json() as { id: string }
+
+  const enrollmentResponse = await request.post(`${PB_URL}/api/collections/enrollments/records`, {
+    headers: { Authorization: admin.token },
+    data: {
+      student: student.id,
+      group: group!.id,
+      status: 'ACTIVE',
+      joined_at: new Date().toISOString(),
+    },
+  })
+  expect([200, 201]).toContain(enrollmentResponse.status())
+  const enrollment = await enrollmentResponse.json() as { id: string }
+  return { studentId: student.id, enrollmentId: enrollment.id }
+}
+
+async function listRecords(request: APIRequestContext, superToken: string, collection: string) {
+  const response = await request.get(`${PB_URL}/api/collections/${collection}/records?perPage=500`, {
+    headers: { Authorization: superToken },
+  })
+  expect(response.status(), await response.text()).toBe(200)
+  return (await response.json() as { items: Array<Record<string, unknown> & { id: string }> }).items
+}
+
+async function deleteRecord(request: APIRequestContext, superToken: string, collection: string, id: string) {
+  const response = await request.delete(`${PB_URL}/api/collections/${collection}/records/${id}`, {
+    headers: { Authorization: superToken },
+  })
+  expect([200, 204]).toContain(response.status())
+}
+
+async function cleanupTemporaryPaymentStudent(request: APIRequestContext, superToken: string, studentId: string, enrollmentId: string) {
+  const payments = (await listRecords(request, superToken, 'student_payments')).filter((item) => item.student === studentId)
+  for (const payment of payments) await deleteRecord(request, superToken, 'student_payments', payment.id)
+  await deleteRecord(request, superToken, 'enrollments', enrollmentId)
+  await deleteRecord(request, superToken, 'users', studentId)
+}
+
 test('15B.4A: resumen económico responde al contexto, método y situación del alumno sin romper móvil', async ({ page, request }) => {
-  const admin = await authenticate(request, requiredEnv('E2E_ADMIN_EMAIL'), requiredEnv('E2E_ADMIN_PASSWORD'))
-  const student = await authenticate(request, requiredEnv('E2E_STUDENT_EMAIL'), requiredEnv('E2E_STUDENT_PASSWORD'))
+  const admin = await authenticate(request, 'users', requiredEnv('E2E_ADMIN_EMAIL'), requiredEnv('E2E_ADMIN_PASSWORD'))
+  const superuser = await authenticate(request, '_superusers', requiredEnv('PB_SUPERUSER_EMAIL'), requiredEnv('PB_SUPERUSER_PASSWORD'))
+  const fixture = await createTemporaryStudentEnrollment(request, admin)
   const dates = localMonth()
 
-  const enrollmentsResponse = await request.get(`${PB_URL}/api/collections/enrollments/records?perPage=50`, { headers: { Authorization: student.token } })
-  expect(enrollmentsResponse.status(), await enrollmentsResponse.text()).toBe(200)
-  const enrollmentBody = await enrollmentsResponse.json() as { items: Array<{ id: string; student: string; status: string }> }
-  const enrollment = enrollmentBody.items.find((item) => item.student === student.id && item.status === 'ACTIVE')
-  expect(enrollment).toBeTruthy()
+  try {
+    await createPayment(request, admin, {
+      student: fixture.studentId,
+      enrollment: fixture.enrollmentId,
+      billing_mode: 'INTENSIVE',
+      amount_cents: 6100,
+      period_start: dates.day(6),
+      period_end: dates.end,
+      due_date: dates.day(6),
+      status: 'PAID',
+      paid_at: dates.today,
+      payment_method: 'BIZUM',
+      reference: 'E2E-15B4A-PAID',
+      notes: 'Pago operativo 15B.4A',
+    })
 
-  await createPayment(request, admin, {
-    student: student.id,
-    enrollment: enrollment!.id,
-    billing_mode: 'INTENSIVE',
-    amount_cents: 6100,
-    period_start: dates.day(6),
-    period_end: dates.end,
-    due_date: dates.day(6),
-    status: 'PAID',
-    paid_at: dates.today,
-    payment_method: 'BIZUM',
-    reference: 'E2E-15B4A-PAID',
-    notes: 'Pago operativo 15B.4A',
-  })
+    await createPayment(request, admin, {
+      student: fixture.studentId,
+      enrollment: fixture.enrollmentId,
+      billing_mode: 'INTENSIVE',
+      amount_cents: 4300,
+      period_start: dates.day(7),
+      period_end: dates.day(8),
+      due_date: dates.yesterday,
+      status: 'PENDING',
+      paid_at: '',
+      payment_method: '',
+      reference: 'E2E-15B4A-OVERDUE',
+      notes: 'Deuda operativa 15B.4A',
+    })
 
-  await createPayment(request, admin, {
-    student: student.id,
-    enrollment: enrollment!.id,
-    billing_mode: 'INTENSIVE',
-    amount_cents: 4300,
-    period_start: dates.day(7),
-    period_end: dates.day(8),
-    due_date: dates.yesterday,
-    status: 'PENDING',
-    paid_at: '',
-    payment_method: '',
-    reference: 'E2E-15B4A-OVERDUE',
-    notes: 'Deuda operativa 15B.4A',
-  })
+    const refunded = await createPayment(request, admin, {
+      student: fixture.studentId,
+      enrollment: fixture.enrollmentId,
+      billing_mode: 'INTENSIVE',
+      amount_cents: 2500,
+      period_start: dates.day(9),
+      period_end: dates.day(10),
+      due_date: dates.day(9),
+      status: 'PAID',
+      paid_at: dates.today,
+      payment_method: 'TRANSFER',
+      reference: 'E2E-15B4A-REFUND',
+      notes: 'Reembolso operativo 15B.4A',
+    })
+    const refundResponse = await request.patch(`${PB_URL}/api/collections/student_payments/records/${refunded.id}`, {
+      headers: { Authorization: admin.token },
+      data: { status: 'REFUNDED' },
+    })
+    expect(refundResponse.status(), await refundResponse.text()).toBe(200)
 
-  const refunded = await createPayment(request, admin, {
-    student: student.id,
-    enrollment: enrollment!.id,
-    billing_mode: 'INTENSIVE',
-    amount_cents: 2500,
-    period_start: dates.day(9),
-    period_end: dates.day(10),
-    due_date: dates.day(9),
-    status: 'PAID',
-    paid_at: dates.today,
-    payment_method: 'TRANSFER',
-    reference: 'E2E-15B4A-REFUND',
-    notes: 'Reembolso operativo 15B.4A',
-  })
-  const refundResponse = await request.patch(`${PB_URL}/api/collections/student_payments/records/${refunded.id}`, {
-    headers: { Authorization: admin.token },
-    data: { status: 'REFUNDED' },
-  })
-  expect(refundResponse.status(), await refundResponse.text()).toBe(200)
+    await loginAdmin(page)
+    await page.setViewportSize({ width: 1440, height: 1000 })
+    await page.goto('/admin/pagos')
+    await expect(page.getByRole('heading', { name: 'Pagos de alumnos' })).toBeVisible()
 
-  await loginAdmin(page)
-  await page.setViewportSize({ width: 1440, height: 1000 })
-  await page.goto('/admin/pagos')
-  await expect(page.getByRole('heading', { name: 'Pagos de alumnos' })).toBeVisible()
+    await page.getByLabel('Alumno', { exact: true }).selectOption(fixture.studentId)
+    await page.getByLabel('Modalidad').selectOption('INTENSIVE')
+    await page.getByLabel('Mes').fill(dates.month)
 
-  await page.getByLabel('Alumno').selectOption(student.id)
-  await page.getByLabel('Modalidad').selectOption('INTENSIVE')
-  await page.getByLabel('Mes').fill(dates.month)
+    await expect(page.getByTestId('payment-summary-obligations')).toContainText('129,00')
+    await expect(page.getByTestId('payment-summary-paid')).toContainText('61,00')
+    await expect(page.getByTestId('payment-summary-pending')).toContainText('0,00')
+    await expect(page.getByTestId('payment-summary-overdue')).toContainText('43,00')
+    await expect(page.getByTestId('payment-summary-refunded')).toContainText('25,00')
+    await expect(page.getByTestId('payment-summary-debt-students')).toHaveText('1')
+    await expect(page.getByTestId('payment-summary-current-students')).toHaveText('0')
+    await expect(page.getByTestId('payment-method-bizum')).toContainText('61,00')
+    await expect(page.getByTestId('payment-method-bizum')).toContainText('1 cobro')
 
-  await expect(page.getByTestId('payment-summary-obligations')).toContainText('129,00')
-  await expect(page.getByTestId('payment-summary-paid')).toContainText('61,00')
-  await expect(page.getByTestId('payment-summary-pending')).toContainText('0,00')
-  await expect(page.getByTestId('payment-summary-overdue')).toContainText('43,00')
-  await expect(page.getByTestId('payment-summary-refunded')).toContainText('25,00')
-  await expect(page.getByTestId('payment-summary-debt-students')).toHaveText('1')
-  await expect(page.getByTestId('payment-summary-current-students')).toHaveText('0')
-  await expect(page.getByTestId('payment-method-bizum')).toContainText('61,00')
-  await expect(page.getByTestId('payment-method-bizum')).toContainText('1 cobro')
+    await page.getByRole('button', { name: 'Vencidos' }).click()
+    await expect(page.locator('.payment-record')).toHaveCount(1)
+    await expect(page.locator('.payment-record').first()).toContainText('43,00')
+    await expect(page.getByTestId('payment-summary-obligations')).toContainText('129,00')
 
-  await page.getByRole('button', { name: 'Vencidos' }).click()
-  await expect(page.locator('.payment-record')).toHaveCount(1)
-  await expect(page.locator('.payment-record').first()).toContainText('43,00')
-  await expect(page.getByTestId('payment-summary-obligations')).toContainText('129,00')
+    await page.getByRole('button', { name: 'Todos', exact: true }).click()
+    await page.getByLabel('Método').selectOption('BIZUM')
+    await expect(page.getByTestId('payment-summary-obligations')).toContainText('61,00')
+    await expect(page.getByTestId('payment-summary-paid')).toContainText('61,00')
+    await expect(page.getByTestId('payment-summary-debt-students')).toHaveText('0')
+    await expect(page.getByTestId('payment-summary-current-students')).toHaveText('1')
 
-  await page.getByRole('button', { name: 'Todos', exact: true }).click()
-  await page.getByLabel('Método').selectOption('BIZUM')
-  await expect(page.getByTestId('payment-summary-obligations')).toContainText('61,00')
-  await expect(page.getByTestId('payment-summary-paid')).toContainText('61,00')
-  await expect(page.getByTestId('payment-summary-debt-students')).toHaveText('0')
-  await expect(page.getByTestId('payment-summary-current-students')).toHaveText('1')
+    await page.getByLabel('Método').selectOption('ALL')
+    await page.getByRole('button', { name: 'Reembolsados' }).click()
+    await expect(page.locator('.payment-record')).toHaveCount(1)
+    await expect(page.locator('.payment-record').first()).toContainText('25,00')
+    await expect(page.locator('.payment-record').first()).toContainText('Reembolsado')
 
-  await page.getByLabel('Método').selectOption('ALL')
-  await page.getByRole('button', { name: 'Reembolsados' }).click()
-  await expect(page.locator('.payment-record')).toHaveCount(1)
-  await expect(page.locator('.payment-record').first()).toContainText('25,00')
-  await expect(page.locator('.payment-record').first()).toContainText('Reembolsado')
+    await page.getByRole('button', { name: 'Todos', exact: true }).click()
+    await page.getByRole('button', { name: 'Con deuda' }).click()
+    await expect(page.locator('.payment-record')).toHaveCount(3)
 
-  await page.getByRole('button', { name: 'Todos', exact: true }).click()
-  await page.getByRole('button', { name: 'Con deuda' }).click()
-  await expect(page.locator('.payment-record')).toHaveCount(3)
-
-  await page.setViewportSize({ width: 390, height: 844 })
-  await expect(page.getByTestId('payment-summary-obligations')).toBeVisible()
-  await expect(page.getByTestId('payment-method-bizum')).toBeVisible()
-  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
-  expect(overflow).toBeLessThanOrEqual(1)
+    await page.setViewportSize({ width: 390, height: 844 })
+    await expect(page.getByTestId('payment-summary-obligations')).toBeVisible()
+    await expect(page.getByTestId('payment-method-bizum')).toBeVisible()
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
+    expect(overflow).toBeLessThanOrEqual(1)
+  } finally {
+    await cleanupTemporaryPaymentStudent(request, superuser.token, fixture.studentId, fixture.enrollmentId)
+  }
 })
