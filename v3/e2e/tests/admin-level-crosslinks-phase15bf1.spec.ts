@@ -1,4 +1,5 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
+import { createPrivilegedUser } from '../helpers/privileged-users'
 
 const PB_URL = 'http://127.0.0.1:8090'
 
@@ -9,9 +10,7 @@ function requiredEnv(name: string): string {
 }
 
 async function authenticate(request: APIRequestContext, collection: string, email: string, password: string) {
-  const response = await request.post(`${PB_URL}/api/collections/${collection}/auth-with-password`, {
-    data: { identity: email, password },
-  })
+  const response = await request.post(`${PB_URL}/api/collections/${collection}/auth-with-password`, { data: { identity: email, password } })
   expect(response.status(), await response.text()).toBe(200)
   return response.json() as Promise<{ token: string; record: { id: string } }>
 }
@@ -22,48 +21,28 @@ async function createTemporaryEvaluatedStudent(request: APIRequestContext, admin
   const password = 'E2eCrossLinkPass123!'
   const name = 'Cross Link'
   const surname = 'Student'
-  const userResponse = await request.post(`${PB_URL}/api/collections/users/records`, {
-    headers: { Authorization: adminToken },
-    data: {
-      email,
-      password,
-      passwordConfirm: password,
-      name,
-      surname,
-      role: 'STUDENT',
-      status: 'ACTIVE',
-      phone: '',
-    },
+  const userResponse = await createPrivilegedUser<{ id: string }>(request, {
+    email, password, name, surname, role: 'STUDENT', status: 'ACTIVE', phone: '',
   })
-  expect([200, 201]).toContain(userResponse.status())
-  const user = await userResponse.json() as { id: string }
+  expect([200, 201]).toContain(userResponse.status)
+  const user = userResponse.body
 
   const assessmentResponse = await request.post(`${PB_URL}/api/language-school/placement/admin/students/${user.id}/assessments`, {
     headers: { Authorization: adminToken },
-    data: {
-      validatedLevel: 'B1',
-      speakingLevel: 'B1',
-      reason: 'INITIAL',
-      notes: 'Valoración temporal para comprobar navegación cruzada 15B.3F.1.',
-    },
+    data: { validatedLevel: 'B1', speakingLevel: 'B1', reason: 'INITIAL', notes: 'Valoración temporal para comprobar navegación cruzada 15B.3F.1.' },
   })
   expect(assessmentResponse.status(), await assessmentResponse.text()).toBe(201)
-
   return { userId: user.id, email, fullName: `${name} ${surname}` }
 }
 
 async function listRecords(request: APIRequestContext, superToken: string, collection: string) {
-  const response = await request.get(`${PB_URL}/api/collections/${collection}/records?perPage=500`, {
-    headers: { Authorization: superToken },
-  })
+  const response = await request.get(`${PB_URL}/api/collections/${collection}/records?perPage=500`, { headers: { Authorization: superToken } })
   expect(response.status(), await response.text()).toBe(200)
   return (await response.json() as { items: Array<Record<string, unknown> & { id: string }> }).items
 }
 
 async function deleteRecord(request: APIRequestContext, superToken: string, collection: string, id: string) {
-  const response = await request.delete(`${PB_URL}/api/collections/${collection}/records/${id}`, {
-    headers: { Authorization: superToken },
-  })
+  const response = await request.delete(`${PB_URL}/api/collections/${collection}/records/${id}`, { headers: { Authorization: superToken } })
   expect([200, 204]).toContain(response.status())
 }
 
@@ -92,7 +71,6 @@ test('15B.3F.1: Resultados y ficha Alumno quedan enlazados en ambos sentidos', a
     await page.setViewportSize({ width: 1440, height: 1000 })
     await login(page)
     await page.goto('/admin/test-de-nivel/resultados')
-
     await expect(page.getByRole('heading', { name: 'Resultados de nivel' })).toBeVisible()
     await page.getByLabel('Buscar alumno').fill(student.email)
 

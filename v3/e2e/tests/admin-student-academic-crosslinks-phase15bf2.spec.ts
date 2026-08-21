@@ -6,11 +6,7 @@ function requiredEnv(name: string): string {
   return value
 }
 
-const admin = {
-  email: requiredEnv('E2E_ADMIN_EMAIL'),
-  password: requiredEnv('E2E_ADMIN_PASSWORD'),
-}
-const studentEmail = requiredEnv('E2E_STUDENT_EMAIL')
+const admin = { email: requiredEnv('E2E_ADMIN_EMAIL'), password: requiredEnv('E2E_ADMIN_PASSWORD') }
 
 async function loginAdmin(page: Page) {
   await page.goto('/acceso')
@@ -23,9 +19,7 @@ async function loginAdmin(page: Page) {
 async function apiGet(page: Page, path: string) {
   return page.evaluate(async (requestPath) => {
     const stored = JSON.parse(localStorage.getItem('pocketbase_auth') || '{}') as { token?: string }
-    const response = await fetch(`http://127.0.0.1:8090${requestPath}`, {
-      headers: stored.token ? { Authorization: stored.token } : {},
-    })
+    const response = await fetch(`http://127.0.0.1:8090${requestPath}`, { headers: stored.token ? { Authorization: stored.token } : {} })
     let body: any = null
     try { body = await response.json() } catch { body = null }
     return { status: response.status, body }
@@ -39,31 +33,30 @@ function recordsPath(collection: string, filter: string, perPage = 50) {
 test('15B.3F.2: ficha Alumno conserva contexto al abrir profesor, grupo y próxima clase', async ({ page }) => {
   await loginAdmin(page)
 
-  const students = await apiGet(page, recordsPath('users', `email = "${studentEmail}"`, 1))
-  expect(students.status).toBe(200)
-  const student = students.body.items[0]
-  expect(student?.id).toBeTruthy()
-
-  const enrollments = await apiGet(page, recordsPath('enrollments', `student = "${student.id}" && status = "ACTIVE"`, 1))
-  expect(enrollments.status).toBe(200)
-  const enrollment = enrollments.body.items[0]
-  expect(enrollment?.group).toBeTruthy()
-
-  const groupResponse = await apiGet(page, `/api/collections/groups/records/${enrollment.group}`)
-  expect(groupResponse.status).toBe(200)
-  const group = groupResponse.body
+  const groups = await apiGet(page, recordsPath('groups', 'name = "E2E B1 Group" && status = "ACTIVE"', 1))
+  expect(groups.status).toBe(200)
+  const group = groups.body.items[0]
+  expect(group?.id).toBeTruthy()
   expect(group?.teacher).toBeTruthy()
   expect(group?.course).toBeTruthy()
 
-  const [teacherResponse, courseResponse, classesResponse] = await Promise.all([
+  const enrollments = await apiGet(page, recordsPath('enrollments', `group = "${group.id}" && status = "ACTIVE"`, 10))
+  expect(enrollments.status).toBe(200)
+  const enrollment = enrollments.body.items[0]
+  expect(enrollment?.student).toBeTruthy()
+
+  const [studentResponse, teacherResponse, courseResponse, classesResponse] = await Promise.all([
+    apiGet(page, `/api/collections/users/records/${enrollment.student}`),
     apiGet(page, `/api/collections/users/records/${group.teacher}`),
     apiGet(page, `/api/collections/courses/records/${group.course}`),
     apiGet(page, recordsPath('classes', `group = "${group.id}"`, 50)),
   ])
+  expect(studentResponse.status).toBe(200)
   expect(teacherResponse.status).toBe(200)
   expect(courseResponse.status).toBe(200)
   expect(classesResponse.status).toBe(200)
 
+  const student = studentResponse.body
   const teacher = teacherResponse.body
   const course = courseResponse.body
   const teacherName = [teacher.name, teacher.surname].filter(Boolean).join(' ') || teacher.email

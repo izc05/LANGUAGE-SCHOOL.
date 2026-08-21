@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { createPrivilegedUser } from '../helpers/privileged-users'
 
 function requiredEnv(name: string): string {
   const value = process.env[name]
@@ -47,8 +48,8 @@ test('15B sync: una cuenta no puede romper relaciones académicas activas', asyn
     expect(course?.id).toBeTruthy()
     expect(originalTeacherId).toBeTruthy()
 
-    const teacher = await api(page, '/api/collections/users/records', 'POST', {
-      email: `state-teacher-${suffix}@example.com`, password: 'StateTeacherPass123!', passwordConfirm: 'StateTeacherPass123!',
+    const teacher = await createPrivilegedUser<{ id: string }>(page.request, {
+      email: `state-teacher-${suffix}@example.com`, password: 'StateTeacherPass123!',
       name: 'State', surname: 'Teacher', role: 'TEACHER', status: 'ACTIVE', phone: '',
     })
     expect(teacher.status).toBe(200)
@@ -72,15 +73,14 @@ test('15B sync: una cuenta no puede romper relaciones académicas activas', asyn
     expect((await api(page, `/api/collections/users/records/${teacherId}`, 'PATCH', { status: 'INACTIVE' })).status).toBe(400)
 
     expect((await api(page, `/api/language-school/admin/academic/groups/${teacherGroupId}/update`, 'POST', {
-      patch: { teacher: originalTeacherId },
-      reassignFutureScheduledClasses: false,
+      patch: { teacher: originalTeacherId }, reassignFutureScheduledClasses: false,
     })).status).toBe(200)
     expect((await api(page, `/api/collections/users/records/${teacherId}`, 'PATCH', { status: 'INACTIVE' })).status).toBe(200)
     const inactiveTeacherProfile = await api(page, `/api/collections/teacher_profiles/records/${teacherProfile.body.id}`)
     expect(inactiveTeacherProfile.body.active).toBe(false)
 
-    const student = await api(page, '/api/collections/users/records', 'POST', {
-      email: `state-student-${suffix}@example.com`, password: 'StateStudentPass123!', passwordConfirm: 'StateStudentPass123!',
+    const student = await createPrivilegedUser<{ id: string }>(page.request, {
+      email: `state-student-${suffix}@example.com`, password: 'StateStudentPass123!',
       name: 'State', surname: 'Student', role: 'STUDENT', status: 'ACTIVE', phone: '',
     })
     expect(student.status).toBe(200)

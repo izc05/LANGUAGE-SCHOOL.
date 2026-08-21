@@ -12,10 +12,7 @@ function durationInMs(value: string): number {
   return normalized.endsWith('ms') ? amount : amount * 1000
 }
 
-const admin = {
-  email: requiredEnv('E2E_ADMIN_EMAIL'),
-  password: requiredEnv('E2E_ADMIN_PASSWORD'),
-}
+const admin = { email: requiredEnv('E2E_ADMIN_EMAIL'), password: requiredEnv('E2E_ADMIN_PASSWORD') }
 
 async function login(page: import('@playwright/test').Page) {
   await page.goto('/acceso')
@@ -32,13 +29,11 @@ async function expectNoPageOverflow(page: import('@playwright/test').Page) {
 test('14C: Alumnos y Profesores conservan gestión académica con directorios responsive', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 })
   await login(page)
-
   const nav = page.getByRole('navigation', { name: 'Menú de Administrador' })
 
   await nav.getByRole('link', { name: 'Alumnos' }).click()
   await expect(page).toHaveURL(/\/admin\/alumnos$/)
   await expect(page.getByRole('heading', { name: 'Directorio de alumnos' })).toBeVisible()
-
   const studentPage = page.locator('.admin-student-directory-phase14')
   await expect(studentPage.locator('.phase14-metrics article')).toHaveCount(4)
   const filters = studentPage.getByLabel('Filtros de alumnos')
@@ -54,7 +49,6 @@ test('14C: Alumnos y Profesores conservan gestión académica con directorios re
   const studentRows = studentPage.locator('.phase14-student-row:not(.phase14-student-header)')
   await expect(studentRows.first()).toBeVisible()
   await expect(studentRows.first()).toHaveAttribute('href', /\/admin\/alumnos\/[^/]+$/)
-
   await studentPage.getByRole('button', { name: '+ Nuevo alumno' }).click()
   const studentCreate = studentPage.locator('.student-onboarding-card')
   await expect(studentCreate.getByRole('heading', { name: 'Nuevo alumno' })).toBeVisible()
@@ -68,9 +62,7 @@ test('14C: Alumnos y Profesores conservan gestión académica con directorios re
   await expectNoPageOverflow(page)
   const tableOverflow = await studentPage.locator('.phase14-student-table').evaluate((element) => getComputedStyle(element).overflowX)
   expect(['auto', 'scroll']).toContain(tableOverflow)
-  const studentRowHeight = await studentRows.first().evaluate((element) => element.getBoundingClientRect().height)
-  expect(studentRowHeight).toBeGreaterThanOrEqual(40)
-
+  expect(await studentRows.first().evaluate((element) => element.getBoundingClientRect().height)).toBeGreaterThanOrEqual(40)
   await page.emulateMedia({ reducedMotion: 'reduce' })
   const studentTransition = await studentRows.first().evaluate((element) => getComputedStyle(element).transitionDuration)
   expect(studentTransition.split(',').every((value) => durationInMs(value) <= 0.01)).toBe(true)
@@ -91,7 +83,7 @@ test('14C: Alumnos y Profesores conservan gestión académica con directorios re
   await teacherPage.getByRole('button', { name: '+ Nuevo profesor' }).click()
   const teacherCreate = teacherPage.locator('.phase14-create-card')
   await expect(teacherCreate.getByRole('heading', { name: 'Nuevo profesor' })).toBeVisible()
-  await expect(teacherCreate.locator('input')).toHaveCount(6)
+  await expect(teacherCreate.locator('input')).toHaveCount(5)
   await expect(teacherCreate.getByLabel('Bio docente')).toBeVisible()
   await teacherPage.getByRole('button', { name: 'Cerrar alta' }).click()
   await expect(teacherCreate).toHaveCount(0)
@@ -101,10 +93,8 @@ test('14C: Alumnos y Profesores conservan gestión académica con directorios re
     (element) => getComputedStyle(element).gridTemplateColumns.trim().split(/\s+/).filter(Boolean).length,
   )
   expect(teacherGridColumns).toBe(1)
-  const teacherCardHeight = await teacherCards.first().evaluate((element) => element.getBoundingClientRect().height)
-  expect(teacherCardHeight).toBeGreaterThanOrEqual(44)
+  expect(await teacherCards.first().evaluate((element) => element.getBoundingClientRect().height)).toBeGreaterThanOrEqual(44)
   await expectNoPageOverflow(page)
-
   await page.emulateMedia({ reducedMotion: 'reduce' })
   const teacherTransition = await teacherCards.first().evaluate((element) => getComputedStyle(element).transitionDuration)
   expect(teacherTransition.split(',').every((value) => durationInMs(value) <= 0.01)).toBe(true)

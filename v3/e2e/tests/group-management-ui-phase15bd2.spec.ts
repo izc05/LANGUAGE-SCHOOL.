@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { createPrivilegedUser } from '../helpers/privileged-users'
 
 function requiredEnv(name: string): string {
   const value = process.env[name]
@@ -14,20 +15,12 @@ async function loginAdmin(page: Page) {
   await expect(page).toHaveURL(/\/admin$/)
 }
 
-async function api(
-  page: Page,
-  path: string,
-  method: 'GET' | 'POST' | 'PATCH' | 'DELETE' = 'GET',
-  body?: Record<string, unknown>,
-) {
+async function api(page: Page, path: string, method: 'GET' | 'POST' | 'PATCH' | 'DELETE' = 'GET', body?: Record<string, unknown>) {
   return page.evaluate(async ({ path, method, body }) => {
     const stored = JSON.parse(localStorage.getItem('pocketbase_auth') || '{}') as { token?: string }
     const response = await fetch(`http://127.0.0.1:8090${path}`, {
       method,
-      headers: {
-        ...(stored.token ? { Authorization: stored.token } : {}),
-        ...(body ? { 'Content-Type': 'application/json' } : {}),
-      },
+      headers: { ...(stored.token ? { Authorization: stored.token } : {}), ...(body ? { 'Content-Type': 'application/json' } : {}) },
       body: body ? JSON.stringify(body) : undefined,
     })
     let payload: any = null
@@ -46,59 +39,32 @@ test('15B.3D.2: Admin decide desde la UI qué ocurre con las clases futuras al c
 
   try {
     const course = await api(page, '/api/collections/courses/records', 'POST', {
-      title: `D2 Course ${suffix}`,
-      slug: `d2-course-${suffix}`,
-      level: 'B1',
-      description: '15B.3D.2 E2E',
-      status: 'ACTIVE',
-      public_visible: false,
+      title: `D2 Course ${suffix}`, slug: `d2-course-${suffix}`, level: 'B1', description: '15B.3D.2 E2E', status: 'ACTIVE', public_visible: false,
     })
     expect(course.status).toBe(200)
     cleanup.push(async () => { await api(page, `/api/collections/courses/records/${course.body.id}`, 'DELETE') })
 
-    const teacherA = await api(page, '/api/collections/users/records', 'POST', {
-      email: `d2-teacher-a-${suffix}@example.com`,
-      password: 'D2TeacherPass123!',
-      passwordConfirm: 'D2TeacherPass123!',
-      name: 'D2', surname: 'Teacher A', role: 'TEACHER', status: 'ACTIVE', phone: '',
+    const teacherA = await createPrivilegedUser<{ id: string }>(page.request, {
+      email: `d2-teacher-a-${suffix}@example.com`, password: 'D2TeacherPass123!', name: 'D2', surname: 'Teacher A', role: 'TEACHER', status: 'ACTIVE', phone: '',
     })
     expect(teacherA.status).toBe(200)
     cleanup.push(async () => { await api(page, `/api/collections/users/records/${teacherA.body.id}`, 'DELETE') })
-
-    const teacherB = await api(page, '/api/collections/users/records', 'POST', {
-      email: `d2-teacher-b-${suffix}@example.com`,
-      password: 'D2TeacherPass123!',
-      passwordConfirm: 'D2TeacherPass123!',
-      name: 'D2', surname: 'Teacher B', role: 'TEACHER', status: 'ACTIVE', phone: '',
+    const teacherB = await createPrivilegedUser<{ id: string }>(page.request, {
+      email: `d2-teacher-b-${suffix}@example.com`, password: 'D2TeacherPass123!', name: 'D2', surname: 'Teacher B', role: 'TEACHER', status: 'ACTIVE', phone: '',
     })
     expect(teacherB.status).toBe(200)
     cleanup.push(async () => { await api(page, `/api/collections/users/records/${teacherB.body.id}`, 'DELETE') })
 
     const group = await api(page, '/api/collections/groups/records', 'POST', {
-      name: groupName,
-      course: course.body.id,
-      teacher: teacherA.body.id,
-      academic_year: '2026/27',
-      schedule_text: 'Martes y jueves · 18:00',
-      capacity: 8,
-      target_level: 'B1',
-      default_delivery_mode: 'IN_PERSON',
-      status: 'ACTIVE',
+      name: groupName, course: course.body.id, teacher: teacherA.body.id, academic_year: '2026/27', schedule_text: 'Martes y jueves · 18:00', capacity: 8,
+      target_level: 'B1', default_delivery_mode: 'IN_PERSON', status: 'ACTIVE',
     })
     expect(group.status).toBe(200)
     cleanup.push(async () => { await api(page, `/api/collections/groups/records/${group.body.id}`, 'DELETE') })
 
     const scheduled = await api(page, '/api/collections/classes/records', 'POST', {
-      group: group.body.id,
-      teacher: teacherB.body.id,
-      starts_at: futureStart,
-      ends_at: futureEnd,
-      topic: 'D2 Future scheduled',
-      description: '15B.3D.2 UI decision',
-      status: 'SCHEDULED',
-      delivery_mode: 'ONLINE',
-      location_text: '',
-      online_join_url: '',
+      group: group.body.id, teacher: teacherB.body.id, starts_at: futureStart, ends_at: futureEnd, topic: 'D2 Future scheduled', description: '15B.3D.2 UI decision',
+      status: 'SCHEDULED', delivery_mode: 'ONLINE', location_text: '', online_join_url: '',
     })
     expect(scheduled.status).toBe(200)
     expect(scheduled.body.teacher).toBe(teacherA.body.id)
@@ -126,10 +92,8 @@ test('15B.3D.2: Admin decide desde la UI qué ocurre con las clases futuras al c
     await page.getByRole('button', { name: 'Guardar grupo' }).click()
     await expect(page.getByText(/Las clases futuras programadas pasan al nuevo profesor/i)).toBeVisible()
 
-    const groupAfterReassign = await api(page, `/api/collections/groups/records/${group.body.id}`)
-    const classAfterReassign = await api(page, `/api/collections/classes/records/${scheduled.body.id}`)
-    expect(groupAfterReassign.body.teacher).toBe(teacherB.body.id)
-    expect(classAfterReassign.body.teacher).toBe(teacherB.body.id)
+    expect((await api(page, `/api/collections/groups/records/${group.body.id}`)).body.teacher).toBe(teacherB.body.id)
+    expect((await api(page, `/api/collections/classes/records/${scheduled.body.id}`)).body.teacher).toBe(teacherB.body.id)
 
     await page.getByRole('button', { name: 'Editar grupo' }).click()
     await teacherSelect.selectOption(teacherA.body.id)
@@ -144,10 +108,8 @@ test('15B.3D.2: Admin decide desde la UI qué ocurre con las clases futuras al c
     await page.getByRole('button', { name: 'Guardar grupo' }).click()
     await expect(page.getByText(/Las clases futuras ya programadas conservan su profesor/i)).toBeVisible()
 
-    const groupAfterKeep = await api(page, `/api/collections/groups/records/${group.body.id}`)
-    const classAfterKeep = await api(page, `/api/collections/classes/records/${scheduled.body.id}`)
-    expect(groupAfterKeep.body.teacher).toBe(teacherA.body.id)
-    expect(classAfterKeep.body.teacher).toBe(teacherB.body.id)
+    expect((await api(page, `/api/collections/groups/records/${group.body.id}`)).body.teacher).toBe(teacherA.body.id)
+    expect((await api(page, `/api/collections/classes/records/${scheduled.body.id}`)).body.teacher).toBe(teacherB.body.id)
 
     await page.setViewportSize({ width: 390, height: 844 })
     await page.getByRole('button', { name: 'Editar grupo' }).click()

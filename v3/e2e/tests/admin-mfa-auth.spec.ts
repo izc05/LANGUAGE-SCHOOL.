@@ -22,18 +22,14 @@ test('SECURITY-AUTH.1: ADMIN no recibe sesión hasta completar el segundo factor
 
   await page.route('**/api/collections/users/request-otp', async (route) => {
     otpRequests += 1
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ otpId: `e2e-otp-${otpRequests}` }),
-    })
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ otpId: `e2e-otp-${otpRequests}` }) })
   })
 
-  await page.route('**/api/collections/users/auth-with-otp', async (route) => {
+  await page.route('**/api/collections/users/auth-with-otp**', async (route) => {
     otpVerifications += 1
-    const requestBody = route.request().postDataJSON() as { password?: string; mfaId?: string }
+    const requestBody = route.request().postDataJSON() as { password?: string }
     expect(requestBody.password).toBe('123456')
-    expect(requestBody.mfaId).toBe('e2e-mfa-id')
+    expect(new URL(route.request().url()).searchParams.get('mfaId')).toBe('e2e-mfa-id')
 
     await route.fulfill({
       status: 200,
@@ -41,20 +37,10 @@ test('SECURITY-AUTH.1: ADMIN no recibe sesión hasta completar el segundo factor
       body: JSON.stringify({
         token: futureJwt(),
         record: {
-          id: 'e2emfaadmin0001',
-          collectionId: '_pb_users_auth_',
-          collectionName: 'users',
-          email: 'mfa-admin@example.com',
-          emailVisibility: false,
-          verified: true,
-          name: 'MFA',
-          surname: 'Admin',
-          role: 'ADMIN',
-          status: 'ACTIVE',
-          avatar: '',
-          phone: '',
-          created: '2026-08-21 17:00:00.000Z',
-          updated: '2026-08-21 17:00:00.000Z',
+          id: 'e2emfaadmin0001', collectionId: '_pb_users_auth_', collectionName: 'users',
+          email: 'mfa-admin@example.com', emailVisibility: false, verified: true,
+          name: 'MFA', surname: 'Admin', role: 'ADMIN', status: 'ACTIVE', avatar: '', phone: '',
+          created: '2026-08-21 17:00:00.000Z', updated: '2026-08-21 17:00:00.000Z',
         },
       }),
     })
@@ -93,12 +79,8 @@ test('SECURITY-AUTH.1: código inválido mantiene el ADMIN fuera', async ({ page
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ otpId: 'e2e-otp-invalid' }) })
   })
 
-  await page.route('**/api/collections/users/auth-with-otp', async (route) => {
-    await route.fulfill({
-      status: 400,
-      contentType: 'application/json',
-      body: JSON.stringify({ status: 400, message: 'Failed to authenticate.', data: {} }),
-    })
+  await page.route('**/api/collections/users/auth-with-otp**', async (route) => {
+    await route.fulfill({ status: 400, contentType: 'application/json', body: JSON.stringify({ status: 400, message: 'Failed to authenticate.', data: {} }) })
   })
 
   await page.goto('/acceso')

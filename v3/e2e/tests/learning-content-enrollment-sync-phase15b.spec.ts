@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { createPrivilegedUser } from '../helpers/privileged-users'
 
 function requiredEnv(name: string): string {
   const value = process.env[name]
@@ -6,10 +7,7 @@ function requiredEnv(name: string): string {
   return value
 }
 
-const admin = {
-  email: requiredEnv('E2E_ADMIN_EMAIL'),
-  password: requiredEnv('E2E_ADMIN_PASSWORD'),
-}
+const admin = { email: requiredEnv('E2E_ADMIN_EMAIL'), password: requiredEnv('E2E_ADMIN_PASSWORD') }
 
 async function loginAdmin(page: Page) {
   await page.goto('/acceso')
@@ -24,10 +22,7 @@ async function adminRequest(page: Page, path: string, method: 'GET' | 'POST' | '
     const stored = JSON.parse(localStorage.getItem('pocketbase_auth') || '{}') as { token?: string }
     const response = await fetch(`http://127.0.0.1:8090${path}`, {
       method,
-      headers: {
-        ...(stored.token ? { Authorization: stored.token } : {}),
-        ...(body ? { 'Content-Type': 'application/json' } : {}),
-      },
+      headers: { ...(stored.token ? { Authorization: stored.token } : {}), ...(body ? { 'Content-Type': 'application/json' } : {}) },
       body: body ? JSON.stringify(body) : undefined,
     })
     let payload: any = null
@@ -39,9 +34,7 @@ async function adminRequest(page: Page, path: string, method: 'GET' | 'POST' | '
 async function tokenRequest(page: Page, token: string, path: string, method: 'GET' | 'POST' = 'GET', body?: Record<string, unknown>) {
   return page.evaluate(async ({ token, path, method, body }) => {
     const response = await fetch(`http://127.0.0.1:8090${path}`, {
-      method,
-      headers: { Authorization: token, ...(body ? { 'Content-Type': 'application/json' } : {}) },
-      body: body ? JSON.stringify(body) : undefined,
+      method, headers: { Authorization: token, ...(body ? { 'Content-Type': 'application/json' } : {}) }, body: body ? JSON.stringify(body) : undefined,
     })
     let payload: any = null
     try { payload = await response.json() } catch { payload = null }
@@ -53,16 +46,9 @@ async function createGroupMaterial(page: Page, teacher: string, group: string, t
   return page.evaluate(async ({ teacher, group, title }) => {
     const stored = JSON.parse(localStorage.getItem('pocketbase_auth') || '{}') as { token?: string }
     const data = new FormData()
-    data.set('title', title)
-    data.set('description', 'Material E2E de sincronización')
-    data.set('teacher', teacher)
-    data.set('group', group)
-    data.set('visibility', 'GROUP')
-    data.set('published', 'true')
-    data.set('file', new File(['%PDF-1.4\n% E2E sync\n'], 'sync.pdf', { type: 'application/pdf' }))
-    const response = await fetch('http://127.0.0.1:8090/api/collections/materials/records', {
-      method: 'POST', headers: stored.token ? { Authorization: stored.token } : {}, body: data,
-    })
+    data.set('title', title); data.set('description', 'Material E2E de sincronización'); data.set('teacher', teacher); data.set('group', group)
+    data.set('visibility', 'GROUP'); data.set('published', 'true'); data.set('file', new File(['%PDF-1.4\n% E2E sync\n'], 'sync.pdf', { type: 'application/pdf' }))
+    const response = await fetch('http://127.0.0.1:8090/api/collections/materials/records', { method: 'POST', headers: stored.token ? { Authorization: stored.token } : {}, body: data })
     let payload: any = null
     try { payload = await response.json() } catch { payload = null }
     return { status: response.status, body: payload }
@@ -88,8 +74,8 @@ test('15B sync: el cambio de grupo actualiza contenido sin borrar histórico ent
 
     const email = `learning-sync-${suffix}@example.com`
     const password = 'LearningSyncPass123!'
-    const student = await adminRequest(page, '/api/collections/users/records', 'POST', {
-      email, password, passwordConfirm: password, name: 'Learning', surname: 'Sync', role: 'STUDENT', status: 'ACTIVE', phone: '',
+    const student = await createPrivilegedUser<{ id: string }>(page.request, {
+      email, password, name: 'Learning', surname: 'Sync', role: 'STUDENT', status: 'ACTIVE', phone: '',
     })
     expect(student.status).toBe(200)
     const studentId = student.body.id
@@ -106,10 +92,8 @@ test('15B sync: el cambio de grupo actualiza contenido sin borrar histórico ent
     })
     const groupAResult = await makeGroup(`Learning A ${suffix}`)
     const groupBResult = await makeGroup(`Learning B ${suffix}`)
-    expect(groupAResult.status).toBe(200)
-    expect(groupBResult.status).toBe(200)
-    const groupA = groupAResult.body.id
-    const groupB = groupBResult.body.id
+    expect(groupAResult.status).toBe(200); expect(groupBResult.status).toBe(200)
+    const groupA = groupAResult.body.id; const groupB = groupBResult.body.id
     cleanup.push(async () => { await adminRequest(page, `/api/collections/groups/records/${groupA}`, 'DELETE') })
     cleanup.push(async () => { await adminRequest(page, `/api/collections/groups/records/${groupB}`, 'DELETE') })
 
@@ -124,14 +108,11 @@ test('15B sync: el cambio de grupo actualiza contenido sin borrar histórico ent
     const submittedOld = await makeAssignment(groupA, `Entregada A ${suffix}`)
     const unsubmittedOld = await makeAssignment(groupA, `Pendiente A ${suffix}`)
     const newGroupAssignment = await makeAssignment(groupB, `Tarea B ${suffix}`)
-    expect(submittedOld.status).toBe(200)
-    expect(unsubmittedOld.status).toBe(200)
-    expect(newGroupAssignment.status).toBe(200)
+    expect(submittedOld.status).toBe(200); expect(unsubmittedOld.status).toBe(200); expect(newGroupAssignment.status).toBe(200)
 
     const oldMaterial = await createGroupMaterial(page, teacherId, groupA, `Material A ${suffix}`)
     const newMaterial = await createGroupMaterial(page, teacherId, groupB, `Material B ${suffix}`)
-    expect(oldMaterial.status).toBe(200)
-    expect(newMaterial.status).toBe(200)
+    expect(oldMaterial.status).toBe(200); expect(newMaterial.status).toBe(200)
 
     const auth = await page.evaluate(async ({ email, password }) => {
       const response = await fetch('http://127.0.0.1:8090/api/collections/users/auth-with-password', {
@@ -148,14 +129,9 @@ test('15B sync: el cambio de grupo actualiza contenido sin borrar histórico ent
     expect((await tokenRequest(page, token, recordsPath('assignments', `id = "${newGroupAssignment.body.id}"`, 1))).body.totalItems).toBe(0)
 
     const submission = await tokenRequest(page, token, '/api/collections/assignment_submissions/records', 'POST', {
-      assignment: submittedOld.body.id,
-      student: studentId,
-      text_answer: 'Entrega histórica antes del cambio de grupo.',
-      submitted_at: new Date().toISOString(),
-      status: 'SUBMITTED',
+      assignment: submittedOld.body.id, student: studentId, text_answer: 'Entrega histórica antes del cambio de grupo.', submitted_at: new Date().toISOString(), status: 'SUBMITTED',
     })
     expect(submission.status).toBe(200)
-
     const move = await adminRequest(page, '/api/language-school/admin/academic/enrollments/move', 'POST', { studentId, targetGroupId: groupB })
     expect(move.status).toBe(200)
 

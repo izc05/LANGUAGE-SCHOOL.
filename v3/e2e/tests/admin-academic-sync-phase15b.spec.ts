@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { createPrivilegedUser } from '../helpers/privileged-users'
 
 function requiredEnv(name: string): string {
   const value = process.env[name]
@@ -6,10 +7,7 @@ function requiredEnv(name: string): string {
   return value
 }
 
-const admin = {
-  email: requiredEnv('E2E_ADMIN_EMAIL'),
-  password: requiredEnv('E2E_ADMIN_PASSWORD'),
-}
+const admin = { email: requiredEnv('E2E_ADMIN_EMAIL'), password: requiredEnv('E2E_ADMIN_PASSWORD') }
 
 async function loginAdmin(page: Page) {
   await page.goto('/acceso')
@@ -19,21 +17,12 @@ async function loginAdmin(page: Page) {
   await expect(page).toHaveURL(/\/admin$/)
 }
 
-async function apiRequest(
-  page: Page,
-  path: string,
-  method: 'GET' | 'POST' | 'PATCH' | 'DELETE' = 'GET',
-  body?: Record<string, unknown>,
-  authenticated = true,
-) {
+async function apiRequest(page: Page, path: string, method: 'GET' | 'POST' | 'PATCH' | 'DELETE' = 'GET', body?: Record<string, unknown>, authenticated = true) {
   return page.evaluate(async ({ path, method, body, authenticated }) => {
     const stored = authenticated ? JSON.parse(localStorage.getItem('pocketbase_auth') || '{}') as { token?: string } : {}
     const response = await fetch(`http://127.0.0.1:8090${path}`, {
       method,
-      headers: {
-        ...(stored.token ? { Authorization: stored.token } : {}),
-        ...(body ? { 'Content-Type': 'application/json' } : {}),
-      },
+      headers: { ...(stored.token ? { Authorization: stored.token } : {}), ...(body ? { 'Content-Type': 'application/json' } : {}) },
       body: body ? JSON.stringify(body) : undefined,
     })
     let payload: any = null
@@ -63,10 +52,8 @@ test('15B sync: Admin, Profesor y Alumno conservan una única verdad académica'
     expect(baseGroup?.id).toBeTruthy()
     const originalTeacherId = baseGroup.teacher
 
-    const teacherCreate = await apiRequest(page, '/api/collections/users/records', 'POST', {
-      email: `sync-teacher-${suffix}@example.com`,
-      password: 'SyncTeacherPass123!',
-      passwordConfirm: 'SyncTeacherPass123!',
+    const teacherCreate = await createPrivilegedUser<{ id: string }>(page.request, {
+      email: `sync-teacher-${suffix}@example.com`, password: 'SyncTeacherPass123!',
       name: 'Sync', surname: 'Teacher', role: 'TEACHER', status: 'ACTIVE', phone: '',
     })
     expect(teacherCreate.status).toBe(200)
@@ -74,22 +61,14 @@ test('15B sync: Admin, Profesor y Alumno conservan una única verdad académica'
     cleanup.push(async () => { await apiRequest(page, `/api/collections/users/records/${tempTeacherId}`, 'DELETE') })
 
     const teacherProfileCreate = await apiRequest(page, '/api/collections/teacher_profiles/records', 'POST', {
-      user: tempTeacherId,
-      display_name: 'Sync Teacher',
-      headline: 'Teacher',
-      bio: '',
-      specialties: ['B1'],
-      public_profile: true,
-      active: true,
-      sort_order: 999,
+      user: tempTeacherId, display_name: 'Sync Teacher', headline: 'Teacher', bio: '', specialties: ['B1'], public_profile: true, active: true, sort_order: 999,
     })
     expect(teacherProfileCreate.status).toBe(200)
     const teacherProfileId = teacherProfileCreate.body.id
     cleanup.push(async () => { await apiRequest(page, `/api/collections/teacher_profiles/records/${teacherProfileId}`, 'DELETE') })
     cleanup.push(async () => {
       await apiRequest(page, `/api/language-school/admin/academic/groups/${baseGroup.id}/update`, 'POST', {
-        patch: { teacher: originalTeacherId },
-        reassignFutureScheduledClasses: true,
+        patch: { teacher: originalTeacherId }, reassignFutureScheduledClasses: true,
       })
     })
 
@@ -112,34 +91,23 @@ test('15B sync: Admin, Profesor y Alumno conservan una única verdad académica'
     expect(enabledProfile.body.active).toBe(true)
 
     const futureClassCreate = await apiRequest(page, '/api/collections/classes/records', 'POST', {
-      group: baseGroup.id,
-      teacher: originalTeacherId,
-      starts_at: '2099-01-10T18:00:00.000Z',
-      ends_at: '2099-01-10T19:00:00.000Z',
-      topic: `Sync future ${suffix}`,
-      description: '',
-      status: 'SCHEDULED',
+      group: baseGroup.id, teacher: originalTeacherId, starts_at: '2099-01-10T18:00:00.000Z', ends_at: '2099-01-10T19:00:00.000Z',
+      topic: `Sync future ${suffix}`, description: '', status: 'SCHEDULED',
     })
     expect(futureClassCreate.status).toBe(200)
     const futureClassId = futureClassCreate.body.id
     cleanup.push(async () => { await apiRequest(page, `/api/collections/classes/records/${futureClassId}`, 'DELETE') })
 
     const completedClassCreate = await apiRequest(page, '/api/collections/classes/records', 'POST', {
-      group: baseGroup.id,
-      teacher: originalTeacherId,
-      starts_at: '2025-01-10T18:00:00.000Z',
-      ends_at: '2025-01-10T19:00:00.000Z',
-      topic: `Sync history ${suffix}`,
-      description: '',
-      status: 'COMPLETED',
+      group: baseGroup.id, teacher: originalTeacherId, starts_at: '2025-01-10T18:00:00.000Z', ends_at: '2025-01-10T19:00:00.000Z',
+      topic: `Sync history ${suffix}`, description: '', status: 'COMPLETED',
     })
     expect(completedClassCreate.status).toBe(200)
     const completedClassId = completedClassCreate.body.id
     cleanup.push(async () => { await apiRequest(page, `/api/collections/classes/records/${completedClassId}`, 'DELETE') })
 
     const reassign = await apiRequest(page, `/api/language-school/admin/academic/groups/${baseGroup.id}/update`, 'POST', {
-      patch: { teacher: tempTeacherId },
-      reassignFutureScheduledClasses: true,
+      patch: { teacher: tempTeacherId }, reassignFutureScheduledClasses: true,
     })
     expect(reassign.status).toBe(200)
     const futureAfter = await apiRequest(page, `/api/collections/classes/records/${futureClassId}`)
@@ -148,17 +116,13 @@ test('15B sync: Admin, Profesor y Alumno conservan una única verdad académica'
     expect(historyAfter.body.teacher).toBe(originalTeacherId)
 
     const restoreGroupTeacher = await apiRequest(page, `/api/language-school/admin/academic/groups/${baseGroup.id}/update`, 'POST', {
-      patch: { teacher: originalTeacherId },
-      reassignFutureScheduledClasses: true,
+      patch: { teacher: originalTeacherId }, reassignFutureScheduledClasses: true,
     })
     expect(restoreGroupTeacher.status).toBe(200)
-    const futureRestored = await apiRequest(page, `/api/collections/classes/records/${futureClassId}`)
-    expect(futureRestored.body.teacher).toBe(originalTeacherId)
+    expect((await apiRequest(page, `/api/collections/classes/records/${futureClassId}`)).body.teacher).toBe(originalTeacherId)
 
-    const studentCreate = await apiRequest(page, '/api/collections/users/records', 'POST', {
-      email: `sync-student-${suffix}@example.com`,
-      password: 'SyncStudentPass123!',
-      passwordConfirm: 'SyncStudentPass123!',
+    const studentCreate = await createPrivilegedUser<{ id: string }>(page.request, {
+      email: `sync-student-${suffix}@example.com`, password: 'SyncStudentPass123!',
       name: 'Sync', surname: 'Student', role: 'STUDENT', status: 'ACTIVE', phone: '',
     })
     expect(studentCreate.status).toBe(200)
@@ -195,9 +159,7 @@ test('15B sync: Admin, Profesor y Alumno conservan una única verdad académica'
     })
     expect(duplicateActive.status).toBe(400)
 
-    const moveToSecond = await apiRequest(page, '/api/language-school/admin/academic/enrollments/move', 'POST', {
-      studentId: tempStudentId, targetGroupId: groupTwoId,
-    })
+    const moveToSecond = await apiRequest(page, '/api/language-school/admin/academic/enrollments/move', 'POST', { studentId: tempStudentId, targetGroupId: groupTwoId })
     expect(moveToSecond.status).toBe(200)
 
     const afterFirstMove = await apiRequest(page, recordsPath('enrollments', `student = "${tempStudentId}"`, 20))
@@ -206,9 +168,7 @@ test('15B sync: Admin, Profesor y Alumno conservan una única verdad académica'
     expect(activeAfterFirstMove[0].group).toBe(groupTwoId)
     expect(afterFirstMove.body.items.find((item: any) => item.id === firstEnrollment.body.id)?.status).toBe('FINISHED')
 
-    const moveBack = await apiRequest(page, '/api/language-school/admin/academic/enrollments/move', 'POST', {
-      studentId: tempStudentId, targetGroupId: groupOneId,
-    })
+    const moveBack = await apiRequest(page, '/api/language-school/admin/academic/enrollments/move', 'POST', { studentId: tempStudentId, targetGroupId: groupOneId })
     expect(moveBack.status).toBe(200)
 
     const afterReturn = await apiRequest(page, recordsPath('enrollments', `student = "${tempStudentId}"`, 20))
@@ -217,16 +177,12 @@ test('15B sync: Admin, Profesor y Alumno conservan una única verdad académica'
     expect(activeAfterReturn[0].group).toBe(groupOneId)
     expect(afterReturn.body.items.filter((item: any) => item.group === groupOneId)).toHaveLength(2)
 
-    const blockedDisableStudent = await apiRequest(page, `/api/collections/users/records/${tempStudentId}`, 'PATCH', { status: 'INACTIVE' })
-    expect(blockedDisableStudent.status).toBe(400)
-
+    expect((await apiRequest(page, `/api/collections/users/records/${tempStudentId}`, 'PATCH', { status: 'INACTIVE' })).status).toBe(400)
     const finishCurrentEnrollment = await apiRequest(page, `/api/collections/enrollments/records/${activeAfterReturn[0].id}`, 'PATCH', {
       status: 'FINISHED', ended_at: new Date().toISOString(),
     })
     expect(finishCurrentEnrollment.status).toBe(200)
-
-    const disableStudent = await apiRequest(page, `/api/collections/users/records/${tempStudentId}`, 'PATCH', { status: 'INACTIVE' })
-    expect(disableStudent.status).toBe(200)
+    expect((await apiRequest(page, `/api/collections/users/records/${tempStudentId}`, 'PATCH', { status: 'INACTIVE' })).status).toBe(200)
     const disabledStudentProfile = await apiRequest(page, `/api/collections/student_profiles/records/${tempStudentProfileId}`)
     expect(disabledStudentProfile.body.active).toBe(false)
   } finally {

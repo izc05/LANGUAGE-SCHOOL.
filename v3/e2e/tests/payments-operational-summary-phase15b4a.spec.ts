@@ -1,4 +1,5 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
+import { createPrivilegedUser } from '../helpers/privileged-users'
 
 const PB_URL = process.env.PB_URL || 'http://127.0.0.1:8090'
 
@@ -29,8 +30,7 @@ function localMonth() {
   const monthNumber = now.getMonth() + 1
   const month = String(monthNumber).padStart(2, '0')
   const lastDay = new Date(year, monthNumber, 0, 12).getDate()
-  const yesterday = new Date(now)
-  yesterday.setDate(now.getDate() - 1)
+  const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1)
   return {
     month: `${year}-${month}`,
     day: (day: number) => `${year}-${month}-${String(Math.min(day, lastDay)).padStart(2, '0')}`,
@@ -42,49 +42,30 @@ function localMonth() {
 
 async function createPayment(request: APIRequestContext, admin: { token: string; id: string }, data: Record<string, unknown>) {
   const response = await request.post(`${PB_URL}/api/collections/student_payments/records`, {
-    headers: { Authorization: admin.token },
-    data: { ...data, recorded_by: admin.id },
+    headers: { Authorization: admin.token }, data: { ...data, recorded_by: admin.id },
   })
   expect(response.status(), await response.text()).toBe(200)
   return await response.json() as { id: string }
 }
 
 async function createTemporaryStudentEnrollment(request: APIRequestContext, admin: { token: string; id: string }) {
-  const groupsResponse = await request.get(`${PB_URL}/api/collections/groups/records?perPage=100`, {
-    headers: { Authorization: admin.token },
-  })
+  const groupsResponse = await request.get(`${PB_URL}/api/collections/groups/records?perPage=100`, { headers: { Authorization: admin.token } })
   expect(groupsResponse.status(), await groupsResponse.text()).toBe(200)
   const groups = await groupsResponse.json() as { items: Array<{ id: string; name: string; status: string }> }
-  const group = groups.items.find((item) => item.name === 'E2E B1 Group' && item.status === 'ACTIVE')
-    || groups.items.find((item) => item.status === 'ACTIVE')
+  const group = groups.items.find((item) => item.name === 'E2E B1 Group' && item.status === 'ACTIVE') || groups.items.find((item) => item.status === 'ACTIVE')
   expect(group).toBeTruthy()
 
   const unique = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
   const password = 'E2eTempPaymentPass123!'
-  const userResponse = await request.post(`${PB_URL}/api/collections/users/records`, {
-    headers: { Authorization: admin.token },
-    data: {
-      email: `e2e-payment-${unique}@example.com`,
-      password,
-      passwordConfirm: password,
-      name: 'Payment',
-      surname: 'Summary',
-      role: 'STUDENT',
-      status: 'ACTIVE',
-      phone: '',
-    },
+  const userResponse = await createPrivilegedUser<{ id: string }>(request, {
+    email: `e2e-payment-${unique}@example.com`, password,
+    name: 'Payment', surname: 'Summary', role: 'STUDENT', status: 'ACTIVE', phone: '',
   })
-  expect([200, 201]).toContain(userResponse.status())
-  const student = await userResponse.json() as { id: string }
+  expect([200, 201]).toContain(userResponse.status)
+  const student = userResponse.body
 
   const enrollmentResponse = await request.post(`${PB_URL}/api/collections/enrollments/records`, {
-    headers: { Authorization: admin.token },
-    data: {
-      student: student.id,
-      group: group!.id,
-      status: 'ACTIVE',
-      joined_at: new Date().toISOString(),
-    },
+    headers: { Authorization: admin.token }, data: { student: student.id, group: group!.id, status: 'ACTIVE', joined_at: new Date().toISOString() },
   })
   expect([200, 201]).toContain(enrollmentResponse.status())
   const enrollment = await enrollmentResponse.json() as { id: string }
@@ -92,19 +73,11 @@ async function createTemporaryStudentEnrollment(request: APIRequestContext, admi
 }
 
 async function deleteRecord(request: APIRequestContext, superToken: string, collection: string, id: string) {
-  const response = await request.delete(`${PB_URL}/api/collections/${collection}/records/${id}`, {
-    headers: { Authorization: superToken },
-  })
+  const response = await request.delete(`${PB_URL}/api/collections/${collection}/records/${id}`, { headers: { Authorization: superToken } })
   expect([200, 204]).toContain(response.status())
 }
 
-async function cleanupTemporaryPaymentStudent(
-  request: APIRequestContext,
-  superToken: string,
-  studentId: string,
-  enrollmentId: string,
-  paymentIds: string[],
-) {
+async function cleanupTemporaryPaymentStudent(request: APIRequestContext, superToken: string, studentId: string, enrollmentId: string, paymentIds: string[]) {
   for (const paymentId of paymentIds) await deleteRecord(request, superToken, 'student_payments', paymentId)
   await deleteRecord(request, superToken, 'enrollments', enrollmentId)
   await deleteRecord(request, superToken, 'users', studentId)
@@ -112,7 +85,6 @@ async function cleanupTemporaryPaymentStudent(
 
 test('15B.4A: resumen económico responde al contexto, método y situación del alumno sin romper móvil', async ({ page, request }) => {
   test.setTimeout(45_000)
-
   const admin = await authenticate(request, 'users', requiredEnv('E2E_ADMIN_EMAIL'), requiredEnv('E2E_ADMIN_PASSWORD'))
   const superuser = await authenticate(request, '_superusers', requiredEnv('PB_SUPERUSER_EMAIL'), requiredEnv('PB_SUPERUSER_PASSWORD'))
   const fixture = await createTemporaryStudentEnrollment(request, admin)
@@ -121,55 +93,25 @@ test('15B.4A: resumen económico responde al contexto, método y situación del 
 
   try {
     const paid = await createPayment(request, admin, {
-      student: fixture.studentId,
-      enrollment: fixture.enrollmentId,
-      billing_mode: 'INTENSIVE',
-      amount_cents: 6100,
-      period_start: dates.day(6),
-      period_end: dates.end,
-      due_date: dates.day(6),
-      status: 'PAID',
-      paid_at: dates.today,
-      payment_method: 'BIZUM',
-      reference: 'E2E-15B4A-PAID',
-      notes: 'Pago operativo 15B.4A',
+      student: fixture.studentId, enrollment: fixture.enrollmentId, billing_mode: 'INTENSIVE', amount_cents: 6100,
+      period_start: dates.day(6), period_end: dates.end, due_date: dates.day(6), status: 'PAID', paid_at: dates.today,
+      payment_method: 'BIZUM', reference: 'E2E-15B4A-PAID', notes: 'Pago operativo 15B.4A',
     })
     paymentIds.push(paid.id)
-
     const overdue = await createPayment(request, admin, {
-      student: fixture.studentId,
-      enrollment: fixture.enrollmentId,
-      billing_mode: 'INTENSIVE',
-      amount_cents: 4300,
-      period_start: dates.day(7),
-      period_end: dates.day(8),
-      due_date: dates.yesterday,
-      status: 'PENDING',
-      paid_at: '',
-      payment_method: '',
-      reference: 'E2E-15B4A-OVERDUE',
-      notes: 'Deuda operativa 15B.4A',
+      student: fixture.studentId, enrollment: fixture.enrollmentId, billing_mode: 'INTENSIVE', amount_cents: 4300,
+      period_start: dates.day(7), period_end: dates.day(8), due_date: dates.yesterday, status: 'PENDING', paid_at: '',
+      payment_method: '', reference: 'E2E-15B4A-OVERDUE', notes: 'Deuda operativa 15B.4A',
     })
     paymentIds.push(overdue.id)
-
     const refunded = await createPayment(request, admin, {
-      student: fixture.studentId,
-      enrollment: fixture.enrollmentId,
-      billing_mode: 'INTENSIVE',
-      amount_cents: 2500,
-      period_start: dates.day(9),
-      period_end: dates.day(10),
-      due_date: dates.day(9),
-      status: 'PAID',
-      paid_at: dates.today,
-      payment_method: 'TRANSFER',
-      reference: 'E2E-15B4A-REFUND',
-      notes: 'Reembolso operativo 15B.4A',
+      student: fixture.studentId, enrollment: fixture.enrollmentId, billing_mode: 'INTENSIVE', amount_cents: 2500,
+      period_start: dates.day(9), period_end: dates.day(10), due_date: dates.day(9), status: 'PAID', paid_at: dates.today,
+      payment_method: 'TRANSFER', reference: 'E2E-15B4A-REFUND', notes: 'Reembolso operativo 15B.4A',
     })
     paymentIds.push(refunded.id)
     const refundResponse = await request.patch(`${PB_URL}/api/collections/student_payments/records/${refunded.id}`, {
-      headers: { Authorization: admin.token },
-      data: { status: 'REFUNDED' },
+      headers: { Authorization: admin.token }, data: { status: 'REFUNDED' },
     })
     expect(refundResponse.status(), await refundResponse.text()).toBe(200)
 

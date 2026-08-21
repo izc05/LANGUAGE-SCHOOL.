@@ -1,4 +1,5 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
+import { createPrivilegedUser } from '../helpers/privileged-users'
 
 const PB_URL = 'http://127.0.0.1:8090'
 const CEFR_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
@@ -10,24 +11,16 @@ function requiredEnv(name: string): string {
 }
 
 async function authenticate(request: APIRequestContext, collection: string, email: string, password: string) {
-  const response = await request.post(`${PB_URL}/api/collections/${collection}/auth-with-password`, {
-    data: { identity: email, password },
-  })
+  const response = await request.post(`${PB_URL}/api/collections/${collection}/auth-with-password`, { data: { identity: email, password } })
   expect(response.status(), await response.text()).toBe(200)
   return response.json() as Promise<{ token: string; record: { id: string } }>
 }
 
 async function createTemporaryStudentWithGroup(request: APIRequestContext, adminToken: string) {
-  const groupsResponse = await request.get(`${PB_URL}/api/collections/groups/records?perPage=100`, {
-    headers: { Authorization: adminToken },
-  })
+  const groupsResponse = await request.get(`${PB_URL}/api/collections/groups/records?perPage=100`, { headers: { Authorization: adminToken } })
   expect(groupsResponse.status(), await groupsResponse.text()).toBe(200)
-  const groups = await groupsResponse.json() as {
-    items: Array<{ id: string; name: string; status: string; capacity: number; target_level: string }>
-  }
-  const enrollmentsResponse = await request.get(`${PB_URL}/api/collections/enrollments/records?perPage=500`, {
-    headers: { Authorization: adminToken },
-  })
+  const groups = await groupsResponse.json() as { items: Array<{ id: string; name: string; status: string; capacity: number; target_level: string }> }
+  const enrollmentsResponse = await request.get(`${PB_URL}/api/collections/enrollments/records?perPage=500`, { headers: { Authorization: adminToken } })
   expect(enrollmentsResponse.status(), await enrollmentsResponse.text()).toBe(200)
   const enrollments = await enrollmentsResponse.json() as { items: Array<{ group: string; status: string }> }
   const group = groups.items.find((candidate) => {
@@ -39,30 +32,15 @@ async function createTemporaryStudentWithGroup(request: APIRequestContext, admin
 
   const unique = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
   const password = 'E2eTempLevelUiPass123!'
-  const userResponse = await request.post(`${PB_URL}/api/collections/users/records`, {
-    headers: { Authorization: adminToken },
-    data: {
-      email: `e2e-level-ui-${unique}@example.com`,
-      password,
-      passwordConfirm: password,
-      name: 'Level UI',
-      surname: 'Student',
-      role: 'STUDENT',
-      status: 'ACTIVE',
-      phone: '',
-    },
+  const userResponse = await createPrivilegedUser<{ id: string }>(request, {
+    email: `e2e-level-ui-${unique}@example.com`, password,
+    name: 'Level UI', surname: 'Student', role: 'STUDENT', status: 'ACTIVE', phone: '',
   })
-  expect([200, 201]).toContain(userResponse.status())
-  const user = await userResponse.json() as { id: string }
+  expect([200, 201]).toContain(userResponse.status)
+  const user = userResponse.body
 
   const enrollmentResponse = await request.post(`${PB_URL}/api/collections/enrollments/records`, {
-    headers: { Authorization: adminToken },
-    data: {
-      student: user.id,
-      group: group!.id,
-      status: 'ACTIVE',
-      joined_at: new Date().toISOString(),
-    },
+    headers: { Authorization: adminToken }, data: { student: user.id, group: group!.id, status: 'ACTIVE', joined_at: new Date().toISOString() },
   })
   expect([200, 201]).toContain(enrollmentResponse.status())
   const enrollment = await enrollmentResponse.json() as { id: string }
@@ -70,17 +48,13 @@ async function createTemporaryStudentWithGroup(request: APIRequestContext, admin
 }
 
 async function listRecords(request: APIRequestContext, superToken: string, collection: string) {
-  const response = await request.get(`${PB_URL}/api/collections/${collection}/records?perPage=500`, {
-    headers: { Authorization: superToken },
-  })
+  const response = await request.get(`${PB_URL}/api/collections/${collection}/records?perPage=500`, { headers: { Authorization: superToken } })
   expect(response.status(), await response.text()).toBe(200)
   return (await response.json() as { items: Array<Record<string, unknown> & { id: string }> }).items
 }
 
 async function deleteRecord(request: APIRequestContext, superToken: string, collection: string, id: string) {
-  const response = await request.delete(`${PB_URL}/api/collections/${collection}/records/${id}`, {
-    headers: { Authorization: superToken },
-  })
+  const response = await request.delete(`${PB_URL}/api/collections/${collection}/records/${id}`, { headers: { Authorization: superToken } })
   expect([200, 204]).toContain(response.status())
 }
 
@@ -112,12 +86,7 @@ test('15B.3E.2: Admin gestiona nivel e histórico desde la ficha del alumno sin 
   try {
     const rejectedMismatch = await request.post(assessmentUrl, {
       headers: { Authorization: admin.token },
-      data: {
-        validatedLevel: mismatchLevel,
-        reason: 'INITIAL',
-        notes: 'Existe justificación, pero falta la confirmación explícita E2E.',
-        acknowledgeLevelMismatch: false,
-      },
+      data: { validatedLevel: mismatchLevel, reason: 'INITIAL', notes: 'Existe justificación, pero falta la confirmación explícita E2E.', acknowledgeLevelMismatch: false },
     })
     expect(rejectedMismatch.status(), await rejectedMismatch.text()).toBe(400)
     const afterRejected = await request.get(summaryUrl, { headers: { Authorization: admin.token } })
