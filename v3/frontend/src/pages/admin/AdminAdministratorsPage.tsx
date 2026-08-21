@@ -42,23 +42,6 @@ function formatDate(value?: string | null): string {
   return new Intl.DateTimeFormat('es-ES', { dateStyle: 'medium', timeStyle: 'short' }).format(date)
 }
 
-async function copyText(value: string): Promise<void> {
-  if (navigator.clipboard && window.isSecureContext) {
-    await navigator.clipboard.writeText(value)
-    return
-  }
-  const area = document.createElement('textarea')
-  area.value = value
-  area.setAttribute('readonly', '')
-  area.style.position = 'fixed'
-  area.style.opacity = '0'
-  document.body.appendChild(area)
-  area.select()
-  const copied = document.execCommand('copy')
-  area.remove()
-  if (!copied) throw new Error('No se ha podido copiar el enlace.')
-}
-
 export default function AdminAdministratorsPage() {
   const currentAdmin = getCurrentUser()
   const [accounts, setAccounts] = useState<AdminAccountRow[]>([])
@@ -68,7 +51,6 @@ export default function AdminAdministratorsPage() {
   const [busyId, setBusyId] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [manualActivationUrl, setManualActivationUrl] = useState('')
 
   async function refresh() {
     if (isDemoMode) return
@@ -102,14 +84,12 @@ export default function AdminAdministratorsPage() {
     setForm((current) => ({ ...current, [key]: value }))
     setNotice(null)
     setError(null)
-    setManualActivationUrl('')
   }
 
   async function handleInvite(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setNotice(null)
     setError(null)
-    setManualActivationUrl('')
 
     if (!form.name.trim() || !form.surname.trim() || !form.email.trim()) {
       setError('Nombre, apellidos y email son obligatorios.')
@@ -125,10 +105,9 @@ export default function AdminAdministratorsPage() {
     try {
       const issued = await inviteAdminAccount(form)
       setForm(emptyForm)
-      setManualActivationUrl(issued.emailSent ? '' : issued.activationUrl)
       setNotice(issued.emailSent
-        ? 'Administrador invitado. El enlace de activación se ha enviado por correo.'
-        : 'Administrador invitado. El correo no se ha podido enviar; conserva el enlace manual de activación.')
+        ? 'Administrador invitado. El enlace privado de activación se ha enviado únicamente a su correo.'
+        : 'Administrador invitado, pero el correo no se ha podido enviar. Por seguridad el enlace privado no se muestra: revisa SMTP y regenera la invitación.')
       await refresh()
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : 'No se ha podido crear la invitación de administrador.')
@@ -142,13 +121,11 @@ export default function AdminAdministratorsPage() {
     setBusyId(account.id)
     setNotice(null)
     setError(null)
-    setManualActivationUrl('')
     try {
       const issued = await resendAdminAccountInvitation(account.id)
-      setManualActivationUrl(issued.emailSent ? '' : issued.activationUrl)
       setNotice(issued.emailSent
-        ? `Nueva invitación enviada a ${account.email}. El enlace anterior ha quedado invalidado.`
-        : `Nueva invitación creada para ${account.email}. El enlace anterior ha quedado invalidado.`)
+        ? `Nueva invitación enviada únicamente a ${account.email}. El enlace anterior ha quedado invalidado.`
+        : `Se ha rotado la invitación de ${account.email}, pero el correo no se ha podido enviar. El enlace secreto no se muestra; revisa SMTP y vuelve a reenviar.`)
       await refresh()
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : 'No se ha podido reenviar la invitación.')
@@ -162,7 +139,6 @@ export default function AdminAdministratorsPage() {
     setBusyId(account.id)
     setNotice(null)
     setError(null)
-    setManualActivationUrl('')
     try {
       await revokeAdminInvitation(account.id)
       setNotice(`Invitación de ${account.email} revocada. El enlace actual ya no puede utilizarse.`)
@@ -171,16 +147,6 @@ export default function AdminAdministratorsPage() {
       setError(requestError instanceof Error ? requestError.message : 'No se ha podido revocar la invitación.')
     } finally {
       setBusyId(null)
-    }
-  }
-
-  async function copyActivationLink() {
-    if (!manualActivationUrl) return
-    try {
-      await copyText(manualActivationUrl)
-      setNotice('Enlace de activación copiado.')
-    } catch (copyError) {
-      setError(copyError instanceof Error ? copyError.message : 'No se ha podido copiar el enlace.')
     }
   }
 
@@ -197,25 +163,16 @@ export default function AdminAdministratorsPage() {
         </header>
 
         <div className="cms-notice" role="note">
-          <strong>Acceso protegido.</strong> Cada nuevo administrador recibe un enlace personal, crea su propia contraseña y deberá completar el segundo factor por email al iniciar sesión. Ningún administrador puede ver ni sustituir la contraseña de otro.
+          <strong>Acceso protegido.</strong> Cada nuevo administrador recibe por email un enlace secreto que no se muestra a quien invita, crea su propia contraseña y deberá completar el segundo factor al iniciar sesión. Ningún administrador puede ver ni sustituir las credenciales de otro.
         </div>
         {loading && <div className="cms-notice" role="status">Cargando administradores…</div>}
         {notice && <div className="cms-notice success-notice" role="status">{notice}</div>}
         {error && <div className="cms-notice auth-error" role="alert">{error}</div>}
 
-        {manualActivationUrl && (
-          <section className="panel cms-form">
-            <div className="panel-heading"><div><span className="eyebrow">ENTREGA MANUAL</span><h3>Enlace de activación</h3></div></div>
-            <p className="muted">El correo no pudo enviarse. Este enlace contiene un token de un solo uso: entrégalo únicamente a la persona invitada.</p>
-            <label className="field-stack"><span>Enlace temporal</span><input readOnly value={manualActivationUrl} /></label>
-            <div className="phase14-profile-actions"><button type="button" onClick={() => void copyActivationLink()}>Copiar enlace</button></div>
-          </section>
-        )}
-
         <div className="admin-settings-grid">
           <form className="panel cms-form" onSubmit={handleInvite}>
             <div className="panel-heading"><div><span className="eyebrow">NUEVO ACCESO</span><h3>Invitar administrador</h3></div></div>
-            <p className="muted">Aquí no se solicita contraseña. La persona invitada la elegirá desde su enlace privado de activación.</p>
+            <p className="muted">Aquí no se solicita contraseña ni se muestra el token de activación. La persona invitada recibirá su enlace privado directamente por email.</p>
             <div className="field-row">
               <label className="field-stack"><span>Nombre</span><input autoComplete="given-name" value={form.name} onChange={(event) => setField('name', event.target.value)} required /></label>
               <label className="field-stack"><span>Apellidos</span><input autoComplete="family-name" value={form.surname} onChange={(event) => setField('surname', event.target.value)} required /></label>
@@ -232,6 +189,7 @@ export default function AdminAdministratorsPage() {
               <div><span>Contraseña</span><strong>La elige únicamente el titular</strong></div>
               <div><span>Segundo factor</span><strong>Obligatorio para todos los ADMIN</strong></div>
               <div><span>Invitación</span><strong>Un solo uso · 48 horas</strong></div>
+              <div><span>Enlace secreto</span><strong>Solo se entrega al email invitado</strong></div>
               <div><span>Reenvío</span><strong>Invalida el enlace anterior</strong></div>
               <div><span>Credenciales ajenas</span><strong>No modificables por otro ADMIN</strong></div>
               <div><span>Perfil académico</span><strong>No se crea para administradores</strong></div>
