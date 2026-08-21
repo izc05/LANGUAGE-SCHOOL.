@@ -46,7 +46,7 @@ test('todas las rutas ADMIN cargan sin errores runtime', async ({ page }) => {
   await visitRoutes(page, [
     '/admin', '/admin/web', '/admin/web/sobre-nosotros', '/admin/blog', '/admin/multimedia', '/admin/contactos', '/admin/avisos',
     '/admin/alumnos', '/admin/profesores', '/admin/profesores/publicos', '/admin/cursos', '/admin/clases', '/admin/agenda', '/admin/pagos',
-    '/admin/aula-online', '/admin/zoom', '/admin/test-de-nivel', '/admin/test-de-nivel/resultados', '/admin/tarifas', '/admin/configuracion', '/admin/sistema',
+    '/admin/aula-online', '/admin/zoom', '/admin/test-de-nivel', '/admin/test-de-nivel/resultados', '/admin/tarifas', '/admin/administradores', '/admin/configuracion', '/admin/sistema',
   ], errors)
 })
 
