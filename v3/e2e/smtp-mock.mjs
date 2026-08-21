@@ -18,24 +18,57 @@ function json(res, status, value) {
   res.end(body)
 }
 
+function decodeQuotedPrintableBytes(value) {
+  const bytes = []
+  for (let index = 0; index < value.length; index += 1) {
+    if (value[index] === '=' && /^[A-Fa-f0-9]{2}$/.test(value.slice(index + 1, index + 3))) {
+      bytes.push(Number.parseInt(value.slice(index + 1, index + 3), 16))
+      index += 2
+      continue
+    }
+    bytes.push(value.charCodeAt(index) & 255)
+  }
+  return Buffer.from(bytes)
+}
+
 function decodeQuotedPrintable(value) {
-  return value
-    .replace(/=\r?\n/g, '')
-    .replace(/=([A-Fa-f0-9]{2})/g, (_, hex) => String.fromCharCode(Number.parseInt(hex, 16)))
+  const normalized = value.replace(/=\r?\n/g, '')
+  return decodeQuotedPrintableBytes(normalized).toString('utf8')
+}
+
+function decodeMimeHeader(value) {
+  return value.replace(/=\?([^?]+)\?([bq])\?([^?]*)\?=/gi, (_match, charset, encoding, payload) => {
+    const mode = String(encoding).toUpperCase()
+    const bytes = mode === 'B'
+      ? Buffer.from(payload, 'base64')
+      : decodeQuotedPrintableBytes(String(payload).replace(/_/g, ' '))
+    return bytes.toString(String(charset).toLowerCase().includes('utf') ? 'utf8' : 'latin1')
+  })
+}
+
+function readHeader(headers, name) {
+  const match = headers.match(new RegExp(`^${name}:\\s*(.+)$`, 'im'))
+  return match?.[1]?.trim() || ''
 }
 
 function normalizedMessage(raw, envelope) {
-  const decoded = decodeQuotedPrintable(raw)
-  const subjectMatch = decoded.match(/^Subject:\s*(.+)$/im)
-  const toMatch = decoded.match(/^To:\s*(.+)$/im)
-  const fromMatch = decoded.match(/^From:\s*(.+)$/im)
+  const separator = raw.search(/\r?\n\r?\n/)
+  const rawHeaders = separator >= 0 ? raw.slice(0, separator) : raw
+  const rawBody = separator >= 0 ? raw.slice(separator).replace(/^\r?\n\r?\n/, '') : ''
+  const headers = rawHeaders.replace(/\r?\n[ \t]+/g, ' ')
+  const decodedBody = decodeQuotedPrintable(rawBody)
+  const decoded = `${headers}\r\n\r\n${decodedBody}`
+  const subject = decodeMimeHeader(readHeader(headers, 'Subject'))
+  const to = decodeMimeHeader(readHeader(headers, 'To'))
+  const from = decodeMimeHeader(readHeader(headers, 'From'))
+
   return {
     id: messages.length + 1,
     receivedAt: new Date().toISOString(),
     envelope,
-    subject: subjectMatch?.[1]?.trim() || '',
-    to: toMatch?.[1]?.trim() || envelope.to.join(', '),
-    from: fromMatch?.[1]?.trim() || envelope.from,
+    subject,
+    to: to || envelope.to.join(', '),
+    from: from || envelope.from,
     raw,
     decoded,
   }
