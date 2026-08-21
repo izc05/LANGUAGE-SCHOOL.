@@ -21,6 +21,7 @@ export const adminNav = [
   { label: 'Multimedia', to: '/admin/multimedia' },
   { label: 'Tarifas', to: '/admin/tarifas' },
 
-  { label: 'Configuración', to: '/admin/configuracion', section: 'Sistema' },
+  { label: 'Administradores', to: '/admin/administradores', section: 'Sistema' },
+  { label: 'Configuración', to: '/admin/configuracion' },
   { label: 'Sistema', to: '/admin/sistema' },
 ] as const
