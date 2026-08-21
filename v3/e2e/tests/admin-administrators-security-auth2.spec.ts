@@ -77,7 +77,7 @@ test('SECURITY-AUTH.2: Admin invita otro ADMIN, titular activa su cuenta y prime
   try {
     await loginExistingAdmin(page)
     await page.goto('/admin/administradores')
-    await expect(page.getByRole('heading', { name: 'Administradores' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Administradores', exact: true })).toBeVisible()
     await expect(page.getByText('2FA obligatorio')).toBeVisible()
     await expect(page.locator('input[type="password"]')).toHaveCount(0)
 
