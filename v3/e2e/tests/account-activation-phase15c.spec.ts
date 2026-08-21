@@ -29,7 +29,7 @@ type InvitedRole = 'STUDENT' | 'TEACHER'
 type Invitation = {
   userId: string
   invitationId: string
-  role: InvitedRole
+  role?: InvitedRole
   status: 'PENDING'
   activationUrl: string
   emailSent: boolean
@@ -66,6 +66,19 @@ async function createInvitation(
     },
   })
   expect(response.status(), await response.text()).toBe(201)
+  return response.json() as Promise<Invitation>
+}
+
+async function reissueInvitation(
+  request: APIRequestContext,
+  adminToken: string,
+  userId: string,
+): Promise<Invitation> {
+  const response = await request.post(`${PB_URL}/api/language-school/admin/accounts/invite/resend`, {
+    headers: { Authorization: adminToken },
+    data: { userId, activationBaseUrl: requiredEnv('E2E_BASE_URL') },
+  })
+  expect(response.status(), await response.text()).toBe(200)
   return response.json() as Promise<Invitation>
 }
 
@@ -139,11 +152,28 @@ async function activateAndLogin(
     expect(invitation.activationUrl).toBe('')
     expect(invitation.emailSent).toBe(true)
 
+    const firstActivationUrl = await activationUrlFromMail(request, email)
+    const firstActivation = new URL(firstActivationUrl)
+    const firstToken = firstActivation.searchParams.get('token') || ''
+    expect(firstToken).toMatch(/^[A-Za-z0-9]{40,100}$/)
+
+    // Regenerar rota el token anterior y el nuevo vuelve a viajar solo por email.
+    await request.delete(`${SMTP_HTTP}/messages`)
+    const reissued = await reissueInvitation(request, adminToken, userId)
+    expect(reissued.activationUrl).toBe('')
+    expect(reissued.emailSent).toBe(true)
+
     const activationUrl = await activationUrlFromMail(request, email)
+    expect(activationUrl).not.toBe(firstActivationUrl)
     const activation = new URL(activationUrl)
     const token = activation.searchParams.get('token') || ''
     expect(activation.pathname).toBe('/activar-cuenta')
     expect(token).toMatch(/^[A-Za-z0-9]{40,100}$/)
+
+    const revokedOldToken = await request.post(`${PB_URL}/api/language-school/account/activate`, {
+      data: { token: firstToken, password, passwordConfirm: password },
+    })
+    expect(revokedOldToken.status()).toBe(400)
 
     const before = await request.post(`${PB_URL}/api/collections/users/auth-with-password`, {
       data: { identity: email, password },
@@ -187,13 +217,13 @@ async function activateAndLogin(
   }
 }
 
-test('15C: Alumno recibe activación solo por email, elige su contraseña y entra', async ({ request, page }) => {
+test('15C: Alumno recibe activación solo por email, la rotación invalida el enlace anterior y entra', async ({ request, page }) => {
   const admin = await authenticate(request, 'users', requiredEnv('E2E_ADMIN_EMAIL'), requiredEnv('E2E_ADMIN_PASSWORD'))
   const superuser = await authenticate(request, '_superusers', requiredEnv('PB_SUPERUSER_EMAIL'), requiredEnv('PB_SUPERUSER_PASSWORD'))
   await activateAndLogin(page, request, admin.token, superuser.token, 'STUDENT')
 })
 
-test('15C: Profesor recibe activación solo por email, elige su contraseña y entra', async ({ request, page }) => {
+test('15C: Profesor recibe activación solo por email, la rotación invalida el enlace anterior y entra', async ({ request, page }) => {
   const admin = await authenticate(request, 'users', requiredEnv('E2E_ADMIN_EMAIL'), requiredEnv('E2E_ADMIN_PASSWORD'))
   const superuser = await authenticate(request, '_superusers', requiredEnv('PB_SUPERUSER_EMAIL'), requiredEnv('PB_SUPERUSER_PASSWORD'))
   await activateAndLogin(page, request, admin.token, superuser.token, 'TEACHER')
