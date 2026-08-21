@@ -39,7 +39,7 @@ test('15B.3C.3: alta guiada completa cuenta, nivel, matrícula e invitación sin
   await initialLevelChoice.focus()
   await page.keyboard.press('Space')
   await expect(initialLevelChoice).toBeChecked()
-  await wizard.getByLabel('Nivel inicial').selectOption('B2')
+  await wizard.getByRole('combobox', { name: /Nivel inicial/ }).selectOption('B2')
   await wizard.getByLabel('Observación').fill('Entrevista inicial E2E · asignación pedagógica consciente')
   await wizard.getByRole('button', { name: /Continuar/ }).click()
 
