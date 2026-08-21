@@ -136,8 +136,7 @@ routerAdd('POST', '/api/language-school/admin/accounts/invite', (e) => {
   const invitation = e.app.findRecordById('account_invitations', invitationId)
   const activationUrl = activationBaseUrl ? `${activationBaseUrl}/activar-cuenta?token=${encodeURIComponent(rawToken)}` : ''
   const emailSent = trySend(e.app, user, invitation, activationUrl)
-  const responseActivationUrl = role === 'ADMIN' ? '' : activationUrl
-  return e.json(201, { userId, invitationId, role, status: 'PENDING', expiresAt, activationUrl: responseActivationUrl, emailSent })
+  return e.json(201, { userId, invitationId, role, status: 'PENDING', expiresAt, activationUrl: '', emailSent })
 }, $apis.requireAuth('users'))
 
 routerAdd('POST', '/api/language-school/admin/accounts/invite/resend', (e) => {
@@ -231,8 +230,7 @@ routerAdd('POST', '/api/language-school/admin/accounts/invite/resend', (e) => {
   const activationBaseUrl = accountRole === 'ADMIN' ? canonicalAdminBase(e.app) : requestedActivationBaseUrl
   const activationUrl = activationBaseUrl ? `${activationBaseUrl}/activar-cuenta?token=${encodeURIComponent(rawToken)}` : ''
   const emailSent = trySend(e.app, user, invitation, activationUrl)
-  const responseActivationUrl = accountRole === 'ADMIN' ? '' : activationUrl
-  return e.json(200, { userId, invitationId, status: 'PENDING', expiresAt, activationUrl: responseActivationUrl, emailSent })
+  return e.json(200, { userId, invitationId, status: 'PENDING', expiresAt, activationUrl: '', emailSent })
 }, $apis.requireAuth('users'))
 
 routerAdd('POST', '/api/language-school/admin/accounts/invite/revoke', (e) => {
