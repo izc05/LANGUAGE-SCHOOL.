@@ -40,6 +40,17 @@ function findTeacher(app, teacherId) {
   return teacher
 }
 
+function diagnosticError(error) {
+  if (!error) return 'unknown error'
+  try {
+    if (typeof error.stack === 'string' && error.stack) return error.stack
+    if (typeof error.message === 'string' && error.message) return error.message
+    return String(error)
+  } catch {
+    return 'unprintable error'
+  }
+}
+
 routerAdd('POST', '/api/language-school/admin/academic/groups/{groupId}/update', (e) => {
   if (!e.auth || e.auth.get('role') !== 'ADMIN') {
     throw new ForbiddenError('Solo Administración puede actualizar grupos y aulas.')
@@ -56,92 +67,111 @@ routerAdd('POST', '/api/language-school/admin/academic/groups/{groupId}/update',
   let reassignedFutureScheduledClasses = 0
   let resultingTeacherId = ''
   let resultingCourseId = ''
+  let transactionStage = 'start'
 
-  e.app.runInTransaction((txApp) => {
-    let group
-    try { group = txApp.findRecordById('groups', groupId) } catch { throw new BadRequestError('El grupo no existe.') }
+  try {
+    e.app.runInTransaction((txApp) => {
+      transactionStage = 'find-group'
+      let group
+      try { group = txApp.findRecordById('groups', groupId) } catch { throw new BadRequestError('El grupo no existe.') }
 
-    const previousTeacherId = group.getString('teacher')
-    const previousCourseId = group.getString('course')
+      const previousTeacherId = group.getString('teacher')
+      const previousCourseId = group.getString('course')
 
-    const nextName = own(patch, 'name') ? readText(patch.name, 'El nombre del grupo', 160, true) : group.getString('name')
-    const nextCourseId = own(patch, 'course') ? readId(patch.course, 'Curso') : previousCourseId
-    const nextTeacherId = own(patch, 'teacher') ? readId(patch.teacher, 'Profesor') : previousTeacherId
-    const nextAcademicYear = own(patch, 'academic_year') ? readText(patch.academic_year, 'El curso académico', 20, true) : group.getString('academic_year')
-    const nextSchedule = own(patch, 'schedule_text') ? readText(patch.schedule_text, 'El horario', 250, false) : group.getString('schedule_text')
+      transactionStage = 'derive-patch'
+      const nextName = own(patch, 'name') ? readText(patch.name, 'El nombre del grupo', 160, true) : group.getString('name')
+      const nextCourseId = own(patch, 'course') ? readId(patch.course, 'Curso') : previousCourseId
+      const nextTeacherId = own(patch, 'teacher') ? readId(patch.teacher, 'Profesor') : previousTeacherId
+      const nextAcademicYear = own(patch, 'academic_year') ? readText(patch.academic_year, 'El curso académico', 20, true) : group.getString('academic_year')
+      const nextSchedule = own(patch, 'schedule_text') ? readText(patch.schedule_text, 'El horario', 250, false) : group.getString('schedule_text')
 
-    let nextCapacity = group.getInt('capacity')
-    if (own(patch, 'capacity')) {
-      const numeric = Number(patch.capacity)
-      if (!Number.isInteger(numeric) || numeric < 1 || numeric > 100) throw new BadRequestError('La capacidad del grupo no es válida.')
-      nextCapacity = numeric
-    }
-
-    const nextTargetLevel = own(patch, 'target_level') ? readText(patch.target_level, 'El nivel objetivo', 10, true).toUpperCase() : group.getString('target_level')
-    if (GROUP_LEVELS.indexOf(nextTargetLevel) === -1) throw new BadRequestError('El nivel objetivo no es válido.')
-
-    const nextMode = own(patch, 'default_delivery_mode') ? readText(patch.default_delivery_mode, 'La modalidad por defecto', 20, true).toUpperCase() : group.getString('default_delivery_mode')
-    if (GROUP_MODES.indexOf(nextMode) === -1) throw new BadRequestError('La modalidad por defecto no es válida.')
-
-    const nextStatus = own(patch, 'status') ? readText(patch.status, 'El estado del grupo', 20, true).toUpperCase() : group.getString('status')
-    if (GROUP_STATUSES.indexOf(nextStatus) === -1) throw new BadRequestError('El estado del grupo no es válido.')
-
-    const activeEnrollments = txApp.countRecords('enrollments', $dbx.hashExp({ group: groupId, status: 'ACTIVE' }))
-    if (nextCapacity < activeEnrollments) {
-      throw new BadRequestError(`La capacidad no puede ser inferior a las ${activeEnrollments} matrículas activas del grupo.`)
-    }
-
-    const courseChanged = nextCourseId !== previousCourseId
-    teacherChanged = nextTeacherId !== previousTeacherId
-
-    if (courseChanged) {
-      const enrollmentHistory = txApp.countRecords('enrollments', $dbx.hashExp({ group: groupId }))
-      const classHistory = txApp.countRecords('classes', $dbx.hashExp({ group: groupId }))
-      if (enrollmentHistory > 0 || classHistory > 0) {
-        throw new BadRequestError('No puedes cambiar el curso de un grupo que ya tiene matrículas o clases registradas. Crea un grupo nuevo para conservar el histórico.')
+      let nextCapacity = group.getInt('capacity')
+      if (own(patch, 'capacity')) {
+        const numeric = Number(patch.capacity)
+        if (!Number.isInteger(numeric) || numeric < 1 || numeric > 100) throw new BadRequestError('La capacidad del grupo no es válida.')
+        nextCapacity = numeric
       }
-    }
 
-    const course = findCourse(txApp, nextCourseId)
-    if ((courseChanged || nextStatus === 'ACTIVE') && course.getString('status') !== 'ACTIVE') {
-      throw new BadRequestError('El curso del grupo debe estar activo.')
-    }
+      const nextTargetLevel = own(patch, 'target_level') ? readText(patch.target_level, 'El nivel objetivo', 10, true).toUpperCase() : group.getString('target_level')
+      if (GROUP_LEVELS.indexOf(nextTargetLevel) === -1) throw new BadRequestError('El nivel objetivo no es válido.')
 
-    const teacher = findTeacher(txApp, nextTeacherId)
-    if ((teacherChanged || nextStatus === 'ACTIVE') && teacher.getString('status') !== 'ACTIVE') {
-      throw new BadRequestError('El profesor del grupo debe tener la cuenta activa.')
-    }
+      const nextMode = own(patch, 'default_delivery_mode') ? readText(patch.default_delivery_mode, 'La modalidad por defecto', 20, true).toUpperCase() : group.getString('default_delivery_mode')
+      if (GROUP_MODES.indexOf(nextMode) === -1) throw new BadRequestError('La modalidad por defecto no es válida.')
 
-    if (teacherChanged && typeof body.reassignFutureScheduledClasses !== 'boolean') {
-      throw new BadRequestError('Indica si las clases futuras programadas deben reasignarse al nuevo profesor.')
-    }
+      const nextStatus = own(patch, 'status') ? readText(patch.status, 'El estado del grupo', 20, true).toUpperCase() : group.getString('status')
+      if (GROUP_STATUSES.indexOf(nextStatus) === -1) throw new BadRequestError('El estado del grupo no es válido.')
 
-    if (own(patch, 'name')) group.set('name', nextName)
-    if (own(patch, 'course')) group.set('course', nextCourseId)
-    if (own(patch, 'teacher')) group.set('teacher', nextTeacherId)
-    if (own(patch, 'academic_year')) group.set('academic_year', nextAcademicYear)
-    if (own(patch, 'schedule_text')) group.set('schedule_text', nextSchedule)
-    if (own(patch, 'capacity')) group.set('capacity', nextCapacity)
-    if (own(patch, 'target_level')) group.set('target_level', nextTargetLevel)
-    if (own(patch, 'default_delivery_mode')) group.set('default_delivery_mode', nextMode)
-    if (own(patch, 'status')) group.set('status', nextStatus)
-    txApp.save(group)
+      transactionStage = 'validate-capacity'
+      const activeEnrollments = txApp.countRecords('enrollments', $dbx.hashExp({ group: groupId, status: 'ACTIVE' }))
+      if (nextCapacity < activeEnrollments) {
+        throw new BadRequestError(`La capacidad no puede ser inferior a las ${activeEnrollments} matrículas activas del grupo.`)
+      }
 
-    if (teacherChanged && body.reassignFutureScheduledClasses === true) {
-      const now = Date.now()
-      const scheduled = txApp.findAllRecords('classes', $dbx.hashExp({ group: groupId, status: 'SCHEDULED' }))
-      scheduled.forEach((classRecord) => {
-        const startsAt = new Date(classRecord.getString('starts_at')).getTime()
-        if (!Number.isFinite(startsAt) || startsAt < now || classRecord.getString('teacher') === nextTeacherId) return
-        classRecord.set('teacher', nextTeacherId)
-        txApp.save(classRecord)
-        reassignedFutureScheduledClasses += 1
-      })
-    }
+      const courseChanged = nextCourseId !== previousCourseId
+      teacherChanged = nextTeacherId !== previousTeacherId
 
-    resultingTeacherId = nextTeacherId
-    resultingCourseId = nextCourseId
-  })
+      transactionStage = 'validate-history'
+      if (courseChanged) {
+        const enrollmentHistory = txApp.countRecords('enrollments', $dbx.hashExp({ group: groupId }))
+        const classHistory = txApp.countRecords('classes', $dbx.hashExp({ group: groupId }))
+        if (enrollmentHistory > 0 || classHistory > 0) {
+          throw new BadRequestError('No puedes cambiar el curso de un grupo que ya tiene matrículas o clases registradas. Crea un grupo nuevo para conservar el histórico.')
+        }
+      }
+
+      transactionStage = 'validate-course'
+      const course = findCourse(txApp, nextCourseId)
+      if ((courseChanged || nextStatus === 'ACTIVE') && course.getString('status') !== 'ACTIVE') {
+        throw new BadRequestError('El curso del grupo debe estar activo.')
+      }
+
+      transactionStage = 'validate-teacher'
+      const teacher = findTeacher(txApp, nextTeacherId)
+      if ((teacherChanged || nextStatus === 'ACTIVE') && teacher.getString('status') !== 'ACTIVE') {
+        throw new BadRequestError('El profesor del grupo debe tener la cuenta activa.')
+      }
+
+      transactionStage = 'validate-decision'
+      if (teacherChanged && typeof body.reassignFutureScheduledClasses !== 'boolean') {
+        throw new BadRequestError('Indica si las clases futuras programadas deben reasignarse al nuevo profesor.')
+      }
+
+      transactionStage = 'apply-group-patch'
+      if (own(patch, 'name')) group.set('name', nextName)
+      if (own(patch, 'course')) group.set('course', nextCourseId)
+      if (own(patch, 'teacher')) group.set('teacher', nextTeacherId)
+      if (own(patch, 'academic_year')) group.set('academic_year', nextAcademicYear)
+      if (own(patch, 'schedule_text')) group.set('schedule_text', nextSchedule)
+      if (own(patch, 'capacity')) group.set('capacity', nextCapacity)
+      if (own(patch, 'target_level')) group.set('target_level', nextTargetLevel)
+      if (own(patch, 'default_delivery_mode')) group.set('default_delivery_mode', nextMode)
+      if (own(patch, 'status')) group.set('status', nextStatus)
+
+      transactionStage = 'save-group'
+      txApp.save(group)
+
+      if (teacherChanged && body.reassignFutureScheduledClasses === true) {
+        transactionStage = 'find-future-scheduled-classes'
+        const now = Date.now()
+        const scheduled = txApp.findAllRecords('classes', $dbx.hashExp({ group: groupId, status: 'SCHEDULED' }))
+        scheduled.forEach((classRecord) => {
+          const startsAt = new Date(classRecord.getString('starts_at')).getTime()
+          if (!Number.isFinite(startsAt) || startsAt < now || classRecord.getString('teacher') === nextTeacherId) return
+          classRecord.set('teacher', nextTeacherId)
+          transactionStage = 'save-reassigned-class'
+          txApp.save(classRecord)
+          reassignedFutureScheduledClasses += 1
+        })
+      }
+
+      transactionStage = 'complete'
+      resultingTeacherId = nextTeacherId
+      resultingCourseId = nextCourseId
+    })
+  } catch (error) {
+    console.log(`[15B.3D.1] group-management failure stage=${transactionStage} group=${groupId}: ${diagnosticError(error)}`)
+    throw error
+  }
 
   return e.json(200, {
     groupId,
