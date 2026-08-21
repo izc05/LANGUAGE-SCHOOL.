@@ -86,6 +86,12 @@ test('15B sync: Admin, Profesor y Alumno conservan una única verdad académica'
     expect(teacherProfileCreate.status).toBe(200)
     const teacherProfileId = teacherProfileCreate.body.id
     cleanup.push(async () => { await apiRequest(page, `/api/collections/teacher_profiles/records/${teacherProfileId}`, 'DELETE') })
+    cleanup.push(async () => {
+      await apiRequest(page, `/api/language-school/admin/academic/groups/${baseGroup.id}/update`, 'POST', {
+        patch: { teacher: originalTeacherId },
+        reassignFutureScheduledClasses: true,
+      })
+    })
 
     const visibleBefore = await apiRequest(page, recordsPath('teacher_profiles', `id = "${teacherProfileId}"`, 1), 'GET', undefined, false)
     expect(visibleBefore.status).toBe(200)
@@ -131,14 +137,20 @@ test('15B sync: Admin, Profesor y Alumno conservan una única verdad académica'
     const completedClassId = completedClassCreate.body.id
     cleanup.push(async () => { await apiRequest(page, `/api/collections/classes/records/${completedClassId}`, 'DELETE') })
 
-    const reassign = await apiRequest(page, `/api/collections/groups/records/${baseGroup.id}`, 'PATCH', { teacher: tempTeacherId })
+    const reassign = await apiRequest(page, `/api/language-school/admin/academic/groups/${baseGroup.id}/update`, 'POST', {
+      patch: { teacher: tempTeacherId },
+      reassignFutureScheduledClasses: true,
+    })
     expect(reassign.status).toBe(200)
     const futureAfter = await apiRequest(page, `/api/collections/classes/records/${futureClassId}`)
     const historyAfter = await apiRequest(page, `/api/collections/classes/records/${completedClassId}`)
     expect(futureAfter.body.teacher).toBe(tempTeacherId)
     expect(historyAfter.body.teacher).toBe(originalTeacherId)
 
-    const restoreGroupTeacher = await apiRequest(page, `/api/collections/groups/records/${baseGroup.id}`, 'PATCH', { teacher: originalTeacherId })
+    const restoreGroupTeacher = await apiRequest(page, `/api/language-school/admin/academic/groups/${baseGroup.id}/update`, 'POST', {
+      patch: { teacher: originalTeacherId },
+      reassignFutureScheduledClasses: true,
+    })
     expect(restoreGroupTeacher.status).toBe(200)
     const futureRestored = await apiRequest(page, `/api/collections/classes/records/${futureClassId}`)
     expect(futureRestored.body.teacher).toBe(originalTeacherId)

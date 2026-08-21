@@ -78,13 +78,13 @@ routerAdd('POST', '/api/language-school/admin/academic/groups/{groupId}/update',
     }
 
     const nextTargetLevel = own(patch, 'target_level') ? readText(patch.target_level, 'El nivel objetivo', 10, true).toUpperCase() : group.getString('target_level')
-    if (!GROUP_LEVELS.includes(nextTargetLevel)) throw new BadRequestError('El nivel objetivo no es válido.')
+    if (GROUP_LEVELS.indexOf(nextTargetLevel) === -1) throw new BadRequestError('El nivel objetivo no es válido.')
 
     const nextMode = own(patch, 'default_delivery_mode') ? readText(patch.default_delivery_mode, 'La modalidad por defecto', 20, true).toUpperCase() : group.getString('default_delivery_mode')
-    if (!GROUP_MODES.includes(nextMode)) throw new BadRequestError('La modalidad por defecto no es válida.')
+    if (GROUP_MODES.indexOf(nextMode) === -1) throw new BadRequestError('La modalidad por defecto no es válida.')
 
     const nextStatus = own(patch, 'status') ? readText(patch.status, 'El estado del grupo', 20, true).toUpperCase() : group.getString('status')
-    if (!GROUP_STATUSES.includes(nextStatus)) throw new BadRequestError('El estado del grupo no es válido.')
+    if (GROUP_STATUSES.indexOf(nextStatus) === -1) throw new BadRequestError('El estado del grupo no es válido.')
 
     const activeEnrollments = txApp.countRecords('enrollments', $dbx.hashExp({ group: groupId, status: 'ACTIVE' }))
     if (nextCapacity < activeEnrollments) {
