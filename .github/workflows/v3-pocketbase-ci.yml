@@ -20,6 +20,7 @@ jobs:
       PB_SUPERUSER_EMAIL: ci-superuser@example.com
       PB_SUPERUSER_PASSWORD: CiSuperuserPass123!
       PB_URL: http://127.0.0.1:8090
+      LANGUAGE_SCHOOL_E2E: '1'
 
     steps:
       - name: Checkout
@@ -79,6 +80,9 @@ jobs:
           echo 'PocketBase failed to start.' >&2
           cat "$RUNNER_TEMP/pocketbase-server.log" >&2
           exit 1
+
+      - name: Run ADMIN MFA security smoke test
+        run: bash "$GITHUB_WORKSPACE/v3/pocketbase/ci/admin-mfa-security-smoke.sh"
 
       - name: Run ADMIN academic flow smoke test
         run: bash "$GITHUB_WORKSPACE/v3/pocketbase/ci/admin-flow-smoke.sh"
