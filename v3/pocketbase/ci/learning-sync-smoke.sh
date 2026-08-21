@@ -2,6 +2,8 @@
 set -euo pipefail
 
 PB_URL="${PB_URL:-http://127.0.0.1:8090}"
+SUPERUSER_EMAIL="${PB_SUPERUSER_EMAIL:-ci-superuser@example.com}"
+SUPERUSER_PASSWORD="${PB_SUPERUSER_PASSWORD:-CiSuperuserPass123!}"
 ADMIN_EMAIL="ci-admin@example.com"
 ADMIN_PASSWORD="CiAdminPass123!"
 PASSWORD="CiLearningSyncPass123!"
@@ -27,11 +29,15 @@ post_json() {
   rm -f "$response_file"
 }
 
-authenticate() {
-  local email="$1" password="$2"
-  curl -fsS -X POST "$PB_URL/api/collections/users/auth-with-password" \
+authenticate_collection() {
+  local collection="$1" email="$2" password="$3"
+  curl -fsS -X POST "$PB_URL/api/collections/$collection/auth-with-password" \
     -H 'Content-Type: application/json' \
     --data "$(jq -nc --arg identity "$email" --arg password "$password" '{identity:$identity,password:$password}')"
+}
+
+authenticate() {
+  authenticate_collection 'users' "$1" "$2"
 }
 
 create_record() {
@@ -72,21 +78,24 @@ create_user() {
   local token="$1" email="$2" role="$3" surname="$4"
   create_record 'users' "$token" "$(jq -nc \
     --arg email "$email" --arg password "$PASSWORD" --arg role "$role" --arg surname "$surname" \
-    '{email:$email,password:$password,passwordConfirm:$password,name:"CI",surname:$surname,role:$role,status:"ACTIVE",phone:""}')"
+    '{email:$email,password:$password,passwordConfirm:$password,name:"CI",surname:$surname,role:$role,status:"ACTIVE",verified:true,phone:""}')"
 }
 
-echo '1/10 Authenticate ADMIN and create learning-sync actors'
+echo '1/10 Authenticate ADMIN and temporary CI superuser; bootstrap learning-sync actors'
 ADMIN_AUTH="$(authenticate "$ADMIN_EMAIL" "$ADMIN_PASSWORD")"
 ADMIN_TOKEN="$(jq -r '.token' <<<"$ADMIN_AUTH")"
 test -n "$ADMIN_TOKEN" && test "$ADMIN_TOKEN" != 'null'
+SUPER_AUTH="$(authenticate_collection '_superusers' "$SUPERUSER_EMAIL" "$SUPERUSER_PASSWORD")"
+SUPER_TOKEN="$(jq -r '.token' <<<"$SUPER_AUTH")"
+test -n "$SUPER_TOKEN" && test "$SUPER_TOKEN" != 'null'
 
 TEACHER_A_EMAIL='ci-learning-teacher-a@example.com'
 TEACHER_B_EMAIL='ci-learning-teacher-b@example.com'
 STUDENT_EMAIL='ci-learning-student@example.com'
 
-TEACHER_A="$(create_user "$ADMIN_TOKEN" "$TEACHER_A_EMAIL" 'TEACHER' 'LearningTeacherA')"
-TEACHER_B="$(create_user "$ADMIN_TOKEN" "$TEACHER_B_EMAIL" 'TEACHER' 'LearningTeacherB')"
-STUDENT="$(create_user "$ADMIN_TOKEN" "$STUDENT_EMAIL" 'STUDENT' 'LearningStudent')"
+TEACHER_A="$(create_user "$SUPER_TOKEN" "$TEACHER_A_EMAIL" 'TEACHER' 'LearningTeacherA')"
+TEACHER_B="$(create_user "$SUPER_TOKEN" "$TEACHER_B_EMAIL" 'TEACHER' 'LearningTeacherB')"
+STUDENT="$(create_user "$SUPER_TOKEN" "$STUDENT_EMAIL" 'STUDENT' 'LearningStudent')"
 TEACHER_A_ID="$(jq -r '.id' <<<"$TEACHER_A")"
 TEACHER_B_ID="$(jq -r '.id' <<<"$TEACHER_B")"
 STUDENT_ID="$(jq -r '.id' <<<"$STUDENT")"
