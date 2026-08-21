@@ -1,6 +1,8 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
 
 const PB_URL = process.env.PB_URL || 'http://127.0.0.1:8090'
+const SMTP_HTTP = process.env.LANGUAGE_SCHOOL_E2E_SMTP_HTTP || 'http://127.0.0.1:8093'
+const PUBLIC_ORIGIN = process.env.PUBLIC_ORIGIN || process.env.E2E_BASE_URL || 'http://127.0.0.1:4173'
 
 function requiredEnv(name: string): string {
   const value = process.env[name]
@@ -30,6 +32,20 @@ type Invitation = {
   role: InvitedRole
   status: 'PENDING'
   activationUrl: string
+  emailSent: boolean
+}
+
+type CapturedMail = {
+  subject: string
+  to: string
+  decoded: string
+}
+
+async function capturedMailFor(request: APIRequestContext, email: string): Promise<CapturedMail[]> {
+  const response = await request.get(`${SMTP_HTTP}/messages?recipient=${encodeURIComponent(email)}`)
+  expect(response.status()).toBe(200)
+  const payload = await response.json() as { messages?: CapturedMail[] }
+  return payload.messages || []
 }
 
 async function createInvitation(
@@ -51,6 +67,18 @@ async function createInvitation(
   })
   expect(response.status(), await response.text()).toBe(201)
   return response.json() as Promise<Invitation>
+}
+
+async function activationUrlFromMail(request: APIRequestContext, email: string): Promise<string> {
+  await expect.poll(async () => (await capturedMailFor(request, email)).length, { timeout: 8_000 }).toBe(1)
+  const [mail] = await capturedMailFor(request, email)
+  expect(mail.subject).toContain('Activa tu cuenta')
+  const hrefMatch = mail.decoded.match(/href="([^"]*\/activar-cuenta\?token=[^"]+)"/i)
+  expect(hrefMatch?.[1]).toBeTruthy()
+  const activationUrl = hrefMatch?.[1] || ''
+  expect(activationUrl.startsWith(`${PUBLIC_ORIGIN}/activar-cuenta?token=`)).toBe(true)
+  expect(activationUrl).not.toContain('/_/')
+  return activationUrl
 }
 
 async function assertActivationState(
@@ -101,10 +129,18 @@ async function activateAndLogin(
   const password = role === 'STUDENT' ? 'StudentActivation123!' : 'TeacherActivation123!'
   let userId = ''
 
+  await request.delete(`${SMTP_HTTP}/messages`)
+
   try {
     const invitation = await createInvitation(request, adminToken, role, email)
     userId = invitation.userId
-    const activation = new URL(invitation.activationUrl)
+
+    // El ADMIN puede conocer el estado de la invitación, pero nunca recibe el enlace/token secreto.
+    expect(invitation.activationUrl).toBe('')
+    expect(invitation.emailSent).toBe(true)
+
+    const activationUrl = await activationUrlFromMail(request, email)
+    const activation = new URL(activationUrl)
     const token = activation.searchParams.get('token') || ''
     expect(activation.pathname).toBe('/activar-cuenta')
     expect(token).toMatch(/^[A-Za-z0-9]{40,100}$/)
@@ -115,7 +151,7 @@ async function activateAndLogin(
     expect([400, 401]).toContain(before.status())
 
     await page.setViewportSize({ width: 390, height: 844 })
-    await page.goto(invitation.activationUrl)
+    await page.goto(activationUrl)
     await expect(page.getByRole('heading', { name: 'Activa tu cuenta.' })).toBeVisible()
     await expect(page.locator('body')).not.toContainText(token)
     const overflowBefore = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
@@ -147,16 +183,17 @@ async function activateAndLogin(
       })
       expect([200, 204]).toContain(deleteResponse.status())
     }
+    await request.delete(`${SMTP_HTTP}/messages`)
   }
 }
 
-test('15C: Alumno activa una invitación de un solo uso, elige su contraseña y entra', async ({ request, page }) => {
+test('15C: Alumno recibe activación solo por email, elige su contraseña y entra', async ({ request, page }) => {
   const admin = await authenticate(request, 'users', requiredEnv('E2E_ADMIN_EMAIL'), requiredEnv('E2E_ADMIN_PASSWORD'))
   const superuser = await authenticate(request, '_superusers', requiredEnv('PB_SUPERUSER_EMAIL'), requiredEnv('PB_SUPERUSER_PASSWORD'))
   await activateAndLogin(page, request, admin.token, superuser.token, 'STUDENT')
 })
 
-test('15C: Profesor activa una invitación de un solo uso, elige su contraseña y entra', async ({ request, page }) => {
+test('15C: Profesor recibe activación solo por email, elige su contraseña y entra', async ({ request, page }) => {
   const admin = await authenticate(request, 'users', requiredEnv('E2E_ADMIN_EMAIL'), requiredEnv('E2E_ADMIN_PASSWORD'))
   const superuser = await authenticate(request, '_superusers', requiredEnv('PB_SUPERUSER_EMAIL'), requiredEnv('PB_SUPERUSER_PASSWORD'))
   await activateAndLogin(page, request, admin.token, superuser.token, 'TEACHER')
