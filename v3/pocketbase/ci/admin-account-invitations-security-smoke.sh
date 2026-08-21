@@ -8,6 +8,8 @@ SUPERUSER_EMAIL="${PB_SUPERUSER_EMAIL:-ci-superuser@example.com}"
 SUPERUSER_PASSWORD="${PB_SUPERUSER_PASSWORD:-CiSuperuserPass123!}"
 INVITED_ADMIN_EMAIL="ci-invited-admin@example.com"
 INVITED_ADMIN_PASSWORD="CiInvitedAdminOwnPass123!"
+OLD_TOKEN='AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+NEW_TOKEN='BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB'
 
 raw_auth() {
   local collection="$1" email="$2" password="$3" output="$4"
@@ -15,6 +17,14 @@ raw_auth() {
     -X POST "$PB_URL/api/collections/$collection/auth-with-password" \
     -H 'Content-Type: application/json' \
     --data "$(jq -nc --arg identity "$email" --arg password "$password" '{identity:$identity,password:$password}')"
+}
+
+set_test_invitation_token() {
+  local invitation_id="$1" token="$2" hash
+  hash="$(printf '%s' "$token" | sha256sum | awk '{print $1}')"
+  curl -fsS -X PATCH "$PB_URL/api/collections/account_invitations/records/$invitation_id" \
+    -H "Authorization: $SUPER_TOKEN" -H 'Content-Type: application/json' \
+    --data "$(jq -nc --arg tokenHash "$hash" '{token_hash:$tokenHash}')" >/dev/null
 }
 
 ADMIN_BODY="$(mktemp)"
@@ -32,21 +42,22 @@ test "$(raw_auth '_superusers' "$SUPERUSER_EMAIL" "$SUPERUSER_PASSWORD" "$SUPER_
 SUPER_TOKEN="$(jq -r '.token' "$SUPER_BODY")"
 test -n "$SUPER_TOKEN" && test "$SUPER_TOKEN" != 'null'
 
-echo '2/13 Invite a new ADMIN without choosing their password'
+echo '2/13 Invite a new ADMIN without choosing their password or receiving the activation secret'
 INVITE="$(curl -fsS -X POST "$PB_URL/api/language-school/admin/accounts/invite" \
   -H "Authorization: $ADMIN_TOKEN" -H 'Content-Type: application/json' \
   --data "$(jq -nc --arg email "$INVITED_ADMIN_EMAIL" '{role:"ADMIN",email:$email,name:"CI",surname:"Invited Admin",phone:"",activationBaseUrl:"http://127.0.0.1:4173"}')")"
 ADMIN_ID="$(jq -r '.userId' <<<"$INVITE")"
-OLD_URL="$(jq -r '.activationUrl' <<<"$INVITE")"
-OLD_TOKEN="${OLD_URL##*token=}"
+OLD_INVITATION_ID="$(jq -r '.invitationId' <<<"$INVITE")"
 test "$(jq -r '.role' <<<"$INVITE")" = 'ADMIN'
-test -n "$ADMIN_ID" && test -n "$OLD_TOKEN"
+test "$(jq -r '.activationUrl' <<<"$INVITE")" = ''
+test -n "$ADMIN_ID" && test -n "$OLD_INVITATION_ID"
+set_test_invitation_token "$OLD_INVITATION_ID" "$OLD_TOKEN"
 
 ADMIN_RECORD="$(curl -fsS "$PB_URL/api/collections/users/records/$ADMIN_ID" -H "Authorization: $SUPER_TOKEN")"
 test "$(jq -r '.role' <<<"$ADMIN_RECORD")" = 'ADMIN'
 test "$(jq -r '.status' <<<"$ADMIN_RECORD")" = 'INVITED'
 test "$(jq -r '.verified' <<<"$ADMIN_RECORD")" = 'false'
-echo 'OK: ADMIN starts INVITED + unverified with a random server-side password'
+echo 'OK: ADMIN starts INVITED + unverified and the inviter receives no activation token'
 
 echo '3/13 ADMIN invitation creates no academic profile'
 STUDENT_PROFILE_COUNT="$(curl -fsS -G "$PB_URL/api/collections/student_profiles/records" -H "Authorization: $SUPER_TOKEN" --data-urlencode "filter=user = \"$ADMIN_ID\"" | jq -r '.totalItems')"
@@ -64,21 +75,22 @@ if [[ "$INVITED_STATUS" == '200' || "$INVITED_STATUS" == '401' ]]; then
 fi
 echo 'OK: INVITED ADMIN is non-authenticable'
 
-echo '5/13 Resend rotates the ADMIN activation token'
+echo '5/13 Resend rotates the ADMIN invitation while keeping its secret email-only'
 RESENT="$(curl -fsS -X POST "$PB_URL/api/language-school/admin/accounts/invite/resend" \
   -H "Authorization: $ADMIN_TOKEN" -H 'Content-Type: application/json' \
   --data "$(jq -nc --arg userId "$ADMIN_ID" '{userId:$userId,activationBaseUrl:"http://127.0.0.1:4173"}')")"
-NEW_URL="$(jq -r '.activationUrl' <<<"$RESENT")"
-NEW_TOKEN="${NEW_URL##*token=}"
-test -n "$NEW_TOKEN"
-test "$NEW_TOKEN" != "$OLD_TOKEN"
+NEW_INVITATION_ID="$(jq -r '.invitationId' <<<"$RESENT")"
+test "$(jq -r '.activationUrl' <<<"$RESENT")" = ''
+test -n "$NEW_INVITATION_ID"
+test "$NEW_INVITATION_ID" != "$OLD_INVITATION_ID"
+set_test_invitation_token "$NEW_INVITATION_ID" "$NEW_TOKEN"
 OLD_STATUS="$(curl -sS -o /tmp/admin-old-invite.json -w '%{http_code}' -X POST "$PB_URL/api/language-school/account/activate" \
   -H 'Content-Type: application/json' \
   --data "$(jq -nc --arg token "$OLD_TOKEN" --arg password "$INVITED_ADMIN_PASSWORD" '{token:$token,password:$password,passwordConfirm:$password}')")"
 test "$OLD_STATUS" = '400'
-echo 'OK: resend invalidates the previous ADMIN token'
+echo 'OK: resend invalidates the previous token and never exposes the replacement'
 
-echo '6/13 Invited ADMIN chooses their own password through the one-use link'
+echo '6/13 Invited ADMIN chooses their own password through the one-use secret'
 ACTIVATE_STATUS="$(curl -sS -o /tmp/admin-activate.json -w '%{http_code}' -X POST "$PB_URL/api/language-school/account/activate" \
   -H 'Content-Type: application/json' \
   --data "$(jq -nc --arg token "$NEW_TOKEN" --arg password "$INVITED_ADMIN_PASSWORD" '{token:$token,password:$password,passwordConfirm:$password}')")"
