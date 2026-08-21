@@ -1,6 +1,7 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
 
 const PB_URL = 'http://127.0.0.1:8090'
+const CEFR_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
 
 function requiredEnv(name: string): string {
   const value = process.env[name]
@@ -30,7 +31,7 @@ async function createTemporaryStudentWithGroup(request: APIRequestContext, admin
   expect(enrollmentsResponse.status(), await enrollmentsResponse.text()).toBe(200)
   const enrollments = await enrollmentsResponse.json() as { items: Array<{ group: string; status: string }> }
   const group = groups.items.find((candidate) => {
-    if (candidate.status !== 'ACTIVE' || candidate.target_level === 'MIXED') return false
+    if (candidate.status !== 'ACTIVE' || !CEFR_LEVELS.includes(candidate.target_level)) return false
     const occupied = enrollments.items.filter((item) => item.group === candidate.id && item.status === 'ACTIVE').length
     return occupied < candidate.capacity
   })
@@ -105,8 +106,24 @@ test('15B.3E.2: Admin gestiona nivel e histórico desde la ficha del alumno sin 
   const superuser = await authenticate(request, '_superusers', requiredEnv('PB_SUPERUSER_EMAIL'), requiredEnv('PB_SUPERUSER_PASSWORD'))
   const student = await createTemporaryStudentWithGroup(request, admin.token)
   const mismatchLevel = student.targetLevel === 'A1' ? 'B2' : 'A1'
+  const assessmentUrl = `${PB_URL}/api/language-school/placement/admin/students/${student.userId}/assessments`
+  const summaryUrl = `${PB_URL}/api/language-school/placement/admin/students/${student.userId}/summary`
 
   try {
+    const rejectedMismatch = await request.post(assessmentUrl, {
+      headers: { Authorization: admin.token },
+      data: {
+        validatedLevel: mismatchLevel,
+        reason: 'INITIAL',
+        notes: 'Existe justificación, pero falta la confirmación explícita E2E.',
+        acknowledgeLevelMismatch: false,
+      },
+    })
+    expect(rejectedMismatch.status(), await rejectedMismatch.text()).toBe(400)
+    const afterRejected = await request.get(summaryUrl, { headers: { Authorization: admin.token } })
+    expect(afterRejected.status(), await afterRejected.text()).toBe(200)
+    expect((await afterRejected.json() as { assessmentHistory: unknown[] }).assessmentHistory).toHaveLength(0)
+
     await page.setViewportSize({ width: 1440, height: 1000 })
     await login(page)
     await page.goto(`/admin/alumnos/${student.userId}`)
@@ -119,12 +136,17 @@ test('15B.3E.2: Admin gestiona nivel e histórico desde la ficha del alumno sin 
     await levelCard.getByRole('button', { name: 'Registrar valoración' }).click()
     const levelSelect = levelCard.getByLabel('Nivel validado por Administración')
     const reasonSelect = levelCard.getByLabel('Motivo de valoración por Administración')
+    const saveButton = levelCard.getByRole('button', { name: 'Guardar nueva valoración' })
     await expect(reasonSelect).toHaveValue('INITIAL')
     await levelSelect.selectOption(mismatchLevel)
     await expect(levelCard.getByRole('alert')).toContainText('Diferencia con el grupo')
     await expect(levelCard.getByRole('alert')).toContainText(student.targetLevel)
+    await expect(saveButton).toBeDisabled()
     await levelCard.getByLabel('Observaciones de nivel por Administración').fill('Valoración inicial E2E con diferencia de grupo justificada.')
-    await levelCard.getByRole('button', { name: 'Guardar nueva valoración' }).click()
+    await expect(saveButton).toBeDisabled()
+    await levelCard.getByLabel('Confirmar desajuste entre nivel y grupo').check()
+    await expect(saveButton).toBeEnabled()
+    await saveButton.click()
 
     await expect(levelCard.getByRole('status')).toContainText(`Nivel ${mismatchLevel} registrado`)
     await expect(levelCard.locator('.admin-student-level-history-row')).toHaveCount(1)
