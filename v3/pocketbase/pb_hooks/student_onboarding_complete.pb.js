@@ -221,7 +221,7 @@ routerAdd('POST', '/api/language-school/admin/student-onboarding/complete', (e) 
       role: 'STUDENT',
       status: 'PENDING',
       expiresAt,
-      activationUrl,
+      activationUrl: '',
       emailSent,
     },
   })
