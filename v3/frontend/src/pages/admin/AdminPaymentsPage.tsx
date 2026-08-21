@@ -17,9 +17,10 @@ import {
   type PaymentMethod,
   type StudentPaymentRecord,
 } from '../../services/pocketbase/adminPayments'
+import { demoSiteSettings, getSiteSettings, type SiteSettingsRecord } from '../../services/pocketbase/siteManagement'
 import type { GroupRecord } from '../../services/pocketbase/studentPortal'
 import type { AppUser } from '../../services/pocketbase/types'
-import { downloadPaymentsExcel } from '../../utils/paymentExcel'
+import { downloadPaymentReceiptPdf, downloadPaymentsExcel, type PaymentReceiptAcademy } from '../../utils/paymentExcel'
 import { adminNav } from './adminNav'
 
 type PaymentFilter = 'ALL' | 'PENDING' | 'OVERDUE' | 'PAID' | 'CANCELLED' | 'REFUNDED'
@@ -135,6 +136,7 @@ export default function AdminPaymentsPage() {
   const [students, setStudents] = useState<AppUser[]>(isDemoMode ? [demoStudent, demoStudent2] : [])
   const [enrollments, setEnrollments] = useState<AdminEnrollmentRecord[]>(isDemoMode ? [demoEnrollment, demoEnrollment2] : [])
   const [payments, setPayments] = useState<StudentPaymentRecord[]>(isDemoMode ? demoPayments() : [])
+  const [siteSettings, setSiteSettings] = useState<SiteSettingsRecord | null>(null)
   const [loading, setLoading] = useState(!isDemoMode)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -145,6 +147,7 @@ export default function AdminPaymentsPage() {
   const initialStudent = new URLSearchParams(window.location.search).get('alumno') || ''
   const [query, setQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<PaymentFilter>('ALL')
+  const [courseFilter, setCourseFilter] = useState('ALL')
   const [groupFilter, setGroupFilter] = useState('ALL')
   const [modeFilter, setModeFilter] = useState<'ALL' | BillingMode>('ALL')
   const [methodFilter, setMethodFilter] = useState<PaymentMethodFilter>('ALL')
@@ -193,6 +196,7 @@ export default function AdminPaymentsPage() {
       })
       .catch(() => { if (mounted) setError('No se ha podido cargar el control de pagos.') })
       .finally(() => { if (mounted) setLoading(false) })
+    void getSiteSettings().then((settings) => { if (mounted) setSiteSettings(settings) }).catch(() => { /* El justificante usa fallback seguro si falta identidad */ })
     return () => { mounted = false }
   }, [isDemoMode])
 
@@ -206,6 +210,15 @@ export default function AdminPaymentsPage() {
     enrollments.forEach((record) => { if (record.expand?.group) map.set(record.expand.group.id, record.expand.group) })
     return [...map.values()].sort((a, b) => a.name.localeCompare(b.name, 'es'))
   }, [enrollments])
+
+  const courses = useMemo(() => {
+    const map = new Map<string, string>()
+    groups.forEach((group) => {
+      if (!group.course) return
+      map.set(group.course, group.expand?.course?.title || group.name || 'Curso')
+    })
+    return [...map.entries()].map(([id, title]) => ({ id, title })).sort((a, b) => a.title.localeCompare(b.title, 'es'))
+  }, [groups])
 
   useEffect(() => {
     if (!groups.length) return
@@ -234,17 +247,19 @@ export default function AdminPaymentsPage() {
     return payments.filter((record) => {
       const enrollment = enrollments.find((item) => item.id === record.enrollment) || record.expand?.enrollment
       const group = enrollment?.expand?.group
+      const course = group?.expand?.course
       const student = students.find((item) => item.id === record.student) || record.expand?.student
-      const text = `${studentName(student)} ${student?.email || ''} ${group?.name || ''}`.toLowerCase()
+      const text = `${studentName(student)} ${student?.email || ''} ${course?.title || ''} ${group?.name || ''}`.toLowerCase()
       const matchesQuery = !normalized || text.includes(normalized)
+      const matchesCourse = courseFilter === 'ALL' || group?.course === courseFilter
       const matchesGroup = groupFilter === 'ALL' || enrollment?.group === groupFilter
       const matchesMode = modeFilter === 'ALL' || record.billing_mode === modeFilter
       const matchesMethod = methodFilter === 'ALL' || record.payment_method === methodFilter
       const matchesStudent = studentFilter === 'ALL' || record.student === studentFilter
       const matchesMonth = !monthFilter || (record.period_start.slice(0, 7) <= monthFilter && record.period_end.slice(0, 7) >= monthFilter)
-      return matchesQuery && matchesGroup && matchesMode && matchesMethod && matchesStudent && matchesMonth
+      return matchesQuery && matchesCourse && matchesGroup && matchesMode && matchesMethod && matchesStudent && matchesMonth
     })
-  }, [enrollments, groupFilter, methodFilter, modeFilter, monthFilter, payments, query, studentFilter, students])
+  }, [courseFilter, enrollments, groupFilter, methodFilter, modeFilter, monthFilter, payments, query, studentFilter, students])
 
   const contextStudentStanding = useMemo(() => {
     const map = new Map<string, 'DEBT' | 'CURRENT' | 'OTHER'>()
@@ -346,6 +361,7 @@ export default function AdminPaymentsPage() {
         setMessage(`${createdText}${skippedText}.`)
       }
       setMonthFilter(batchMonth)
+      setCourseFilter('ALL')
       setGroupFilter(batchGroupId)
       setModeFilter('MONTHLY')
       setMethodFilter('ALL')
@@ -390,7 +406,30 @@ export default function AdminPaymentsPage() {
 
   function exportCurrentExcel() {
     downloadPaymentsExcel({ records: visiblePayments, students, enrollments, periodLabel: monthFilter || 'todos-los-periodos' })
-    setMessage(`Excel preparado con ${visiblePayments.length} ${visiblePayments.length === 1 ? 'registro' : 'registros'} según los filtros actuales.`)
+    setMessage(`Excel preparado con resumen económico y ${visiblePayments.length} ${visiblePayments.length === 1 ? 'registro' : 'registros'} según los filtros actuales.`)
+  }
+
+  function receiptAcademy(): PaymentReceiptAcademy {
+    const legal = siteSettings?.legal_texts || {}
+    return {
+      academyName: siteSettings?.academy_name || demoSiteSettings.academyName || 'Language School',
+      legalOwnerName: legal.legal_owner_name || '',
+      legalTaxId: legal.legal_tax_id || '',
+      address: siteSettings?.address || demoSiteSettings.address || '',
+      email: siteSettings?.email || demoSiteSettings.email || '',
+      phone: siteSettings?.phone || demoSiteSettings.phone || '',
+    }
+  }
+
+  function downloadReceipt(record: StudentPaymentRecord) {
+    const enrollment = enrollments.find((item) => item.id === record.enrollment) || record.expand?.enrollment
+    const student = students.find((item) => item.id === record.student) || record.expand?.student
+    try {
+      const filename = downloadPaymentReceiptPdf({ record, student, enrollment, academy: receiptAcademy() })
+      setMessage(`Justificante PDF preparado: ${filename}`)
+    } catch (receiptError) {
+      setError(receiptError instanceof Error ? receiptError.message : 'No se ha podido generar el justificante PDF.')
+    }
   }
 
   return (
@@ -468,8 +507,9 @@ export default function AdminPaymentsPage() {
         </section>}
 
         <section className="admin-payments-toolbar" aria-label="Filtros de pagos">
-          <label>Buscar<input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Alumno, email o grupo" /></label>
+          <label>Buscar<input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Alumno, email, curso o grupo" /></label>
           <label>Alumno<select value={studentFilter} onChange={(event) => setStudentFilter(event.target.value)}><option value="ALL">Todos</option>{students.map((student) => <option value={student.id} key={student.id}>{studentName(student)}</option>)}</select></label>
+          <label>Curso<select value={courseFilter} onChange={(event) => setCourseFilter(event.target.value)}><option value="ALL">Todos</option>{courses.map((course) => <option value={course.id} key={course.id}>{course.title}</option>)}</select></label>
           <label>Grupo<select value={groupFilter} onChange={(event) => setGroupFilter(event.target.value)}><option value="ALL">Todos</option>{groups.map((group) => <option value={group.id} key={group.id}>{group.name}</option>)}</select></label>
           <label>Modalidad<select value={modeFilter} onChange={(event) => setModeFilter(event.target.value as typeof modeFilter)}><option value="ALL">Todas</option><option value="MONTHLY">Mensual</option><option value="INTENSIVE">Intensivo</option></select></label>
           <label>Método<select value={methodFilter} onChange={(event) => setMethodFilter(event.target.value as PaymentMethodFilter)}><option value="ALL">Todos</option>{paymentMethods.map((method) => <option value={method} key={method}>{methodLabel(method)}</option>)}</select></label>
@@ -498,7 +538,7 @@ export default function AdminPaymentsPage() {
                 <div className="payment-period"><strong>{formatDate(record.period_start)} → {formatDate(record.period_end)}</strong><small>Vence {formatDate(record.due_date)}{record.payment_method ? ` · ${methodLabel(record.payment_method)} ${formatDate(record.paid_at)}` : ''}</small></div>
                 <strong className="payment-amount">{currency.format(record.amount_cents / 100)}</strong>
                 <span className={`payment-state ${effective.toLowerCase()}`}>{effectiveLabel(effective)}</span>
-                <div className="payment-record-actions">{record.status === 'PENDING' && <><button type="button" onClick={() => { setPayingId(record.id); setPayDate(dateOnly()); setPayReference(record.reference || '') }}>Marcar pagado</button><button type="button" onClick={() => void cancelPayment(record)}>Cancelar</button></>}{record.status === 'PAID' && <button type="button" onClick={() => void refundPayment(record)}>Reembolsar</button>}</div>
+                <div className="payment-record-actions">{record.status === 'PENDING' && <><button type="button" onClick={() => { setPayingId(record.id); setPayDate(dateOnly()); setPayReference(record.reference || '') }}>Marcar pagado</button><button type="button" onClick={() => void cancelPayment(record)}>Cancelar</button></>}{record.status === 'PAID' && <><button type="button" onClick={() => downloadReceipt(record)}>Justificante PDF</button><button type="button" onClick={() => void refundPayment(record)}>Reembolsar</button></>}</div>
               </article>
             })}
             {!loading && visiblePayments.length === 0 && <PortalEmptyState compact title="No hay pagos con estos filtros" description="Cambia el mes o los filtros, o crea el primer cobro del alumno." />}
