@@ -13,6 +13,12 @@
 .placement-result-student span,
 .placement-result-student small,
 .placement-result-evidence small { color: #7a6a70; overflow-wrap: anywhere; }
+.placement-result-student-link,
+.placement-attempt-student-link { width: fit-content; max-width: 100%; color: #7f3157; font-weight: 850; text-decoration-color: rgba(127, 49, 87, .34); text-decoration-thickness: 1px; text-underline-offset: .18em; overflow-wrap: anywhere; }
+.placement-result-student-link:hover,
+.placement-attempt-student-link:hover { color: #a12f60; text-decoration-color: currentColor; }
+.placement-result-student-link:focus-visible,
+.placement-attempt-student-link:focus-visible { outline: 3px solid rgba(176, 74, 116, .24); outline-offset: 3px; border-radius: 4px; }
 .placement-result-evidence { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .placement-result-evidence > span { padding: .48rem .55rem; border-radius: 11px; background: #f8f3f5; color: #63545a; font-size: .78rem; }
 .placement-result-evidence small { grid-column: 1 / -1; }
