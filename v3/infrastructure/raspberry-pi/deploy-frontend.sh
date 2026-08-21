@@ -5,6 +5,8 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 V3_DIR="$(cd -- "$SCRIPT_DIR/../.." && pwd)"
 FRONTEND_SOURCE="${FRONTEND_SOURCE:-$V3_DIR/frontend}"
 FRONTEND_TARGET="${FRONTEND_TARGET:-/opt/language-school/frontend}"
+FRONTEND_STAGING="${FRONTEND_STAGING:-${FRONTEND_TARGET}.staging}"
+FRONTEND_PREVIOUS="${FRONTEND_PREVIOUS:-${FRONTEND_TARGET}.previous}"
 PRODUCTION_ENV="${PRODUCTION_ENV:-/etc/language-school/production.env}"
 
 if [[ -r "$PRODUCTION_ENV" ]]; then
@@ -37,6 +39,12 @@ case "$PUBLIC_HOST" in
     exit 1
     ;;
 esac
+
+PROXY_URL="${PROXY_URL:-}"
+if [[ ! "$PROXY_URL" =~ ^http://127\.0\.0\.1:[0-9]+$ ]]; then
+  echo 'PROXY_URL must use an explicit 127.0.0.1 loopback HTTP endpoint in production.' >&2
+  exit 1
+fi
 
 TURNSTILE_SITE_KEY="${TURNSTILE_SITE_KEY:-}"
 TURNSTILE_SECRET_KEY="${TURNSTILE_SECRET_KEY:-}"
@@ -80,7 +88,7 @@ if [[ "$HOSTNAME_ALLOWED" != true ]]; then
   exit 1
 fi
 
-for command in node npm rsync; do
+for command in node npm rsync curl sha256sum; do
   command -v "$command" >/dev/null || {
     echo "Missing required command: $command" >&2
     exit 1
@@ -135,12 +143,66 @@ if [[ ! -f dist/index.html ]]; then
   exit 1
 fi
 
-"${SUDO[@]}" install -d -m 0755 -o root -g root "$FRONTEND_TARGET"
-"${SUDO[@]}" rsync -a --delete dist/ "$FRONTEND_TARGET/"
-"${SUDO[@]}" chown -R root:root "$FRONTEND_TARGET"
-"${SUDO[@]}" find "$FRONTEND_TARGET" -type d -exec chmod 0755 {} +
-"${SUDO[@]}" find "$FRONTEND_TARGET" -type f -exec chmod 0644 {} +
+# Prepare the new build away from the live document root. Promotion below uses
+# directory renames on the same filesystem, avoiding a partially copied live UI.
+"${SUDO[@]}" rm -rf -- "$FRONTEND_STAGING"
+"${SUDO[@]}" install -d -m 0755 -o root -g root "$FRONTEND_STAGING"
+"${SUDO[@]}" rsync -a --delete dist/ "$FRONTEND_STAGING/"
+"${SUDO[@]}" chown -R root:root "$FRONTEND_STAGING"
+"${SUDO[@]}" find "$FRONTEND_STAGING" -type d -exec chmod 0755 {} +
+"${SUDO[@]}" find "$FRONTEND_STAGING" -type f -exec chmod 0644 {} +
+"${SUDO[@]}" test -f "$FRONTEND_STAGING/index.html"
+EXPECTED_INDEX_SHA="$(sha256sum "$FRONTEND_STAGING/index.html" | awk '{print $1}')"
 
-printf 'Frontend deployed to %s\n' "$FRONTEND_TARGET"
-printf 'PocketBase public origin compiled as %s\n' "$PUBLIC_ORIGIN"
-printf 'Turnstile public sitekey compiled without exposing its secret.\n'
+had_previous=0
+live_displaced=0
+promoted=0
+rollback_promotion() {
+  set +e
+  if [[ "$promoted" -eq 1 ]]; then
+    "${SUDO[@]}" rm -rf -- "$FRONTEND_TARGET"
+  fi
+  if [[ "$live_displaced" -eq 1 && "$had_previous" -eq 1 && -d "$FRONTEND_PREVIOUS" ]]; then
+    "${SUDO[@]}" mv -- "$FRONTEND_PREVIOUS" "$FRONTEND_TARGET"
+  fi
+  "${SUDO[@]}" rm -rf -- "$FRONTEND_STAGING"
+}
+trap rollback_promotion ERR
+
+"${SUDO[@]}" install -d -m 0755 -o root -g root "$(dirname "$FRONTEND_TARGET")"
+"${SUDO[@]}" rm -rf -- "$FRONTEND_PREVIOUS"
+if [[ -d "$FRONTEND_TARGET" ]]; then
+  "${SUDO[@]}" mv -- "$FRONTEND_TARGET" "$FRONTEND_PREVIOUS"
+  had_previous=1
+  live_displaced=1
+fi
+"${SUDO[@]}" mv -- "$FRONTEND_STAGING" "$FRONTEND_TARGET"
+promoted=1
+
+# Verify the actual Nginx document root after promotion. Any failure here
+# automatically restores the previous frontend before this script exits.
+for attempt in {1..15}; do
+  PROXY_BODY="$(mktemp)"
+  if curl -fsS --max-time 5 "$PROXY_URL/" -o "$PROXY_BODY"; then
+    ACTUAL_INDEX_SHA="$(sha256sum "$PROXY_BODY" | awk '{print $1}')"
+    rm -f "$PROXY_BODY"
+    if [[ "$ACTUAL_INDEX_SHA" == "$EXPECTED_INDEX_SHA" ]]; then
+      trap - ERR
+      printf 'Frontend deployed atomically to %s\n' "$FRONTEND_TARGET"
+      if [[ "$had_previous" -eq 1 ]]; then
+        printf 'Previous frontend preserved at %s\n' "$FRONTEND_PREVIOUS"
+      else
+        printf 'No previous frontend existed; this was the first promotion.\n'
+      fi
+      printf 'PocketBase public origin compiled as %s\n' "$PUBLIC_ORIGIN"
+      printf 'Turnstile public sitekey compiled without exposing its secret.\n'
+      exit 0
+    fi
+  else
+    rm -f "$PROXY_BODY"
+  fi
+  sleep 1
+done
+
+echo 'Promoted frontend did not become reachable through the local proxy; restoring the previous frontend.' >&2
+false
