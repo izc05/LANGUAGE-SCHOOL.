@@ -64,16 +64,16 @@ routerAdd('POST', '/api/language-school/admin/academic/groups/{groupId}/update',
     const previousTeacherId = group.getString('teacher')
     const previousCourseId = group.getString('course')
 
-    const nextName = own(patch, 'name') ? readText(patch.name, 'El nombre del grupo', 180, true) : group.getString('name')
+    const nextName = own(patch, 'name') ? readText(patch.name, 'El nombre del grupo', 160, true) : group.getString('name')
     const nextCourseId = own(patch, 'course') ? readId(patch.course, 'Curso') : previousCourseId
     const nextTeacherId = own(patch, 'teacher') ? readId(patch.teacher, 'Profesor') : previousTeacherId
-    const nextAcademicYear = own(patch, 'academic_year') ? readText(patch.academic_year, 'El curso académico', 80, true) : group.getString('academic_year')
-    const nextSchedule = own(patch, 'schedule_text') ? readText(patch.schedule_text, 'El horario', 500, false) : group.getString('schedule_text')
+    const nextAcademicYear = own(patch, 'academic_year') ? readText(patch.academic_year, 'El curso académico', 20, true) : group.getString('academic_year')
+    const nextSchedule = own(patch, 'schedule_text') ? readText(patch.schedule_text, 'El horario', 250, false) : group.getString('schedule_text')
 
     let nextCapacity = group.getInt('capacity')
     if (own(patch, 'capacity')) {
       const numeric = Number(patch.capacity)
-      if (!Number.isInteger(numeric) || numeric < 1 || numeric > 500) throw new BadRequestError('La capacidad del grupo no es válida.')
+      if (!Number.isInteger(numeric) || numeric < 1 || numeric > 100) throw new BadRequestError('La capacidad del grupo no es válida.')
       nextCapacity = numeric
     }
 
@@ -116,15 +116,15 @@ routerAdd('POST', '/api/language-school/admin/academic/groups/{groupId}/update',
       throw new BadRequestError('Indica si las clases futuras programadas deben reasignarse al nuevo profesor.')
     }
 
-    group.set('name', nextName)
-    group.set('course', nextCourseId)
-    group.set('teacher', nextTeacherId)
-    group.set('academic_year', nextAcademicYear)
-    group.set('schedule_text', nextSchedule)
-    group.set('capacity', nextCapacity)
-    group.set('target_level', nextTargetLevel)
-    group.set('default_delivery_mode', nextMode)
-    group.set('status', nextStatus)
+    if (own(patch, 'name')) group.set('name', nextName)
+    if (own(patch, 'course')) group.set('course', nextCourseId)
+    if (own(patch, 'teacher')) group.set('teacher', nextTeacherId)
+    if (own(patch, 'academic_year')) group.set('academic_year', nextAcademicYear)
+    if (own(patch, 'schedule_text')) group.set('schedule_text', nextSchedule)
+    if (own(patch, 'capacity')) group.set('capacity', nextCapacity)
+    if (own(patch, 'target_level')) group.set('target_level', nextTargetLevel)
+    if (own(patch, 'default_delivery_mode')) group.set('default_delivery_mode', nextMode)
+    if (own(patch, 'status')) group.set('status', nextStatus)
     txApp.save(group)
 
     if (teacherChanged && body.reassignFutureScheduledClasses === true) {
