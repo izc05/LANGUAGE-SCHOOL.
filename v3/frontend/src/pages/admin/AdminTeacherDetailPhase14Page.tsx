@@ -1,5 +1,6 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
+import AdminAccountInvitationCard from '../../components/AdminAccountInvitationCard'
 import DashboardShell from '../../components/DashboardShell'
 import PortalEmptyState from '../../components/PortalEmptyState'
 import { useAuth } from '../../features/auth/AuthProvider'
@@ -27,6 +28,13 @@ function fullName(user?: AppUser): string {
 function initials(user?: AppUser): string {
   if (!user) return 'PR'
   return `${user.name?.charAt(0) || ''}${user.surname?.charAt(0) || ''}`.toUpperCase() || 'PR'
+}
+
+function accountStatusLabel(user?: AppUser): string {
+  if (user?.status === 'ACTIVE') return 'Activo'
+  if (user?.status === 'INVITED') return 'Invitado'
+  if (user?.status === 'SUSPENDED') return 'Suspendido'
+  return 'Pausado'
 }
 
 function profileSpecialties(profile?: TeacherProfileRecord | null): string[] {
@@ -111,7 +119,7 @@ export default function AdminTeacherDetailPhase14Page() {
     }
     try {
       const updatedUser = await updateAdminUser(teacher, { name: name.trim(), surname: surname.trim(), phone: phone.trim() })
-      const updatedProfile = await saveAdminTeacherProfilePhase14(teacher.id, { bio, specialties, publicProfile, active: true, displayName, headline })
+      const updatedProfile = await saveAdminTeacherProfilePhase14(teacher.id, { bio, specialties, publicProfile, active: teacher.status === 'ACTIVE', displayName, headline })
       setTeacher(updatedUser); setProfile(updatedProfile); setEditing(false); setMessage('Ficha completa del profesor actualizada.')
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : 'No se ha podido guardar la ficha del profesor.')
@@ -120,6 +128,10 @@ export default function AdminTeacherDetailPhase14Page() {
 
   async function toggleStatus() {
     if (!teacher) return
+    if (teacher.status === 'INVITED') {
+      setError('La cuenta está pendiente de activación segura. El profesor debe completar la invitación para elegir su contraseña.')
+      return
+    }
     const next = teacher.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'
     if (!window.confirm(`${next === 'ACTIVE' ? '¿Activar' : '¿Desactivar'} la cuenta de ${fullName(teacher)}?`)) return
     if (isDemoMode) { setTeacher({ ...teacher, status: next }); return }
@@ -142,7 +154,7 @@ export default function AdminTeacherDetailPhase14Page() {
     <DashboardShell role="Administrador" name="Admin" nav={[...adminNav]}>
       <div className="dashboard-content cms-page phase14-profile-page">
         <div className="phase14-back-row"><Link to="/admin/profesores">← Volver a profesores</Link></div>
-        <header className="phase14-profile-hero phase14-pink-heading"><div className="phase14-profile-identity"><span className="phase14-profile-avatar">{initials(teacher || undefined)}</span><div><span className="eyebrow">FICHA DEL PROFESOR</span><h2>{profile?.display_name || fullName(teacher || undefined)}</h2><p>{profile?.headline || teacher?.email || 'Perfil docente'}{profile?.headline && teacher?.email ? ` · ${teacher.email}` : ''}</p></div></div><div className="phase14-profile-actions"><span className={`status ${teacher?.status === 'ACTIVE' ? 'success' : 'warning'}`}>{teacher?.status === 'ACTIVE' ? 'Activo' : 'Pausado'}</span><button type="button" onClick={openEdit}>Editar ficha</button><button className="button button-primary" type="button" onClick={() => void toggleStatus()}>{teacher?.status === 'ACTIVE' ? 'Desactivar' : 'Activar'}</button></div></header>
+        <header className="phase14-profile-hero phase14-pink-heading"><div className="phase14-profile-identity"><span className="phase14-profile-avatar">{initials(teacher || undefined)}</span><div><span className="eyebrow">FICHA DEL PROFESOR</span><h2>{profile?.display_name || fullName(teacher || undefined)}</h2><p>{profile?.headline || teacher?.email || 'Perfil docente'}{profile?.headline && teacher?.email ? ` · ${teacher.email}` : ''}</p></div></div><div className="phase14-profile-actions"><span className={`status ${teacher?.status === 'ACTIVE' ? 'success' : 'warning'}`}>{accountStatusLabel(teacher || undefined)}</span><button type="button" onClick={openEdit}>Editar ficha</button>{teacher?.status !== 'INVITED' && <button className="button button-primary" type="button" onClick={() => void toggleStatus()}>{teacher?.status === 'ACTIVE' ? 'Desactivar' : 'Activar'}</button>}</div></header>
 
         {loading && <div className="cms-notice" role="status">Cargando ficha…</div>}
         {message && <div className="cms-notice success-notice" role="status">{message}</div>}
@@ -152,6 +164,8 @@ export default function AdminTeacherDetailPhase14Page() {
           <article className="panel phase14-profile-card"><div className="panel-heading"><div><span className="eyebrow">DOCENCIA</span><h3>Carga académica</h3></div></div><div className="phase14-data-grid"><div><span>Alumnos</span><strong>{assignedStudentIds.size}</strong></div><div><span>Grupos activos</span><strong>{activeGroups.length}</strong></div><div><span>Clases totales</span><strong>{classes.length}</strong></div><div><span>Completadas</span><strong>{completedCount}</strong></div><div><span>Cursos</span><strong>{courseNames.length ? courseNames.join(' · ') : 'Sin asignar'}</strong></div><div><span>Modalidad</span><strong>{modes.length ? modes.map(modeLabel).join(' · ') : 'Sin definir'}</strong></div></div></article>
 
           <article className="panel phase14-profile-card"><div className="panel-heading"><div><span className="eyebrow">PERFIL</span><h3>Datos docentes</h3></div></div><div className="phase14-data-grid"><div><span>Email</span><strong>{teacher?.email || '—'}</strong></div><div><span>Teléfono</span><strong>{teacher?.phone || 'Sin teléfono'}</strong></div><div><span>Perfil público</span><strong>{profile?.public_profile ? 'Visible en la web' : 'Oculto'}</strong></div><div><span>Especialidades</span><strong>{profileSpecialties(profile).length ? profileSpecialties(profile).join(' · ') : 'Sin completar'}</strong></div></div><div className="phase14-bio"><span>Biografía</span><p>{profile?.bio || 'Sin biografía. Puedes completarla desde Editar ficha.'}</p></div></article>
+
+          {teacher && <AdminAccountInvitationCard userId={teacher.id} accountStatus={teacher.status} isDemoMode={isDemoMode} />}
 
           <article className="panel phase14-profile-card"><div className="panel-heading"><div><span className="eyebrow">GRUPOS</span><h3>Grupos asignados</h3></div></div><div className="phase14-group-list">{activeGroups.map((group) => <div key={group.id}><span><strong>{group.name}</strong><small>{group.expand?.course?.title || 'Curso'} · {group.schedule_text || 'Sin horario'}</small></span><b>{enrollments.filter((item) => item.group === group.id && item.status === 'ACTIVE').length}/{group.capacity}</b></div>)}{activeGroups.length === 0 && <small>Sin grupos activos asignados.</small>}</div></article>
 
