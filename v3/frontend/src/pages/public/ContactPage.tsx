@@ -95,7 +95,7 @@ export default function ContactPage() {
   const mapEmbedUrl = mapAddress ? `https://www.google.com/maps?q=${encodeURIComponent(mapAddress)}&output=embed` : ''
   const directionsUrl = mapAddress ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapAddress)}` : ''
   const canLoadMap = Boolean(mapAddress) && (!settings.cookieBannerEnabled || externalContentAllowed)
-  const privacyOwner = settings.legalOwnerName.trim() || settings.academyName.trim() || 'Language School'
+  const privacyOwner = settings.legalOwnerName.trim() || (isDemoMode ? settings.academyName.trim() || 'Language School' : 'Pendiente de configurar')
   const securityReady = isDemoMode || (Boolean(turnstileToken) && !turnstileUnavailable)
 
   return (
