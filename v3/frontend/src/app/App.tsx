@@ -16,6 +16,7 @@ const LegalPage = lazy(() => import('../pages/public/LegalPage'))
 const NotFoundPage = lazy(() => import('../pages/public/NotFoundPage'))
 const LoginPage = lazy(() => import('../pages/auth/LoginPage'))
 const AccountActivationPage = lazy(() => import('../pages/auth/AccountActivationPage'))
+const PasswordRecoveryPage = lazy(() => import('../pages/auth/PasswordRecoveryPage'))
 const AccountProfilePage = lazy(() => import('../pages/account/AccountProfilePage'))
 
 const StudentDashboard = lazy(() => import('../pages/student/StudentDashboard'))
@@ -87,6 +88,7 @@ export default function App() {
         <Route path="/aviso-legal" element={<LegalPage kind="legal" />} />
         <Route path="/acceso" element={<LoginPage />} />
         <Route path="/activar-cuenta" element={<AccountActivationPage />} />
+        <Route path="/recuperar-cuenta" element={<PasswordRecoveryPage />} />
 
         <Route path="/alumno" element={<RequireRole allow={['STUDENT']}><StudentDashboard /></RequireRole>} />
         <Route path="/alumno/nivel" element={<RequireRole allow={['STUDENT']}><StudentLevelPage /></RequireRole>} />
