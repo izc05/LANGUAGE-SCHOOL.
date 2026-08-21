@@ -5,14 +5,16 @@ import TurnstileWidget from '../../components/TurnstileWidget'
 import { isDemoMode, turnstileSiteKey } from '../../config/environment'
 import { hasCookieConsent, requestCookieSettings, subscribeCookieConsent } from '../../services/cookieConsent'
 import { demoSiteSettings } from '../../services/pocketbase/siteManagement'
-import { getPublicSettings, submitContactRequest, type PublicSettings } from '../../services/pocketbase/publicAcademy'
+import { connectedPublicSettingsFallback, getPublicSettings, submitContactRequest, type PublicSettings } from '../../services/pocketbase/publicAcademy'
 import { getPublishedHomeVisualUrl } from '../../services/pocketbase/siteContent'
 
-const DEFAULT_ACADEMY_ADDRESS = 'Calle Luis Carvajal, 23, Jódar, Jaén'
+const DEMO_ACADEMY_ADDRESS = 'Calle Luis Carvajal, 23, Jódar, Jaén'
 
 export default function ContactPage() {
   const [searchParams] = useSearchParams()
-  const [settings, setSettings] = useState<PublicSettings>({ ...demoSiteSettings, logoUrl: '' })
+  const [settings, setSettings] = useState<PublicSettings>(() => isDemoMode
+    ? { ...demoSiteSettings, logoUrl: '' }
+    : { ...connectedPublicSettingsFallback })
   const [heroPhoto, setHeroPhoto] = useState('')
   const [externalContentAllowed, setExternalContentAllowed] = useState(() => hasCookieConsent('preferences'))
   const [name, setName] = useState('')
@@ -89,10 +91,10 @@ export default function ContactPage() {
   }
 
   const configuredAddress = settings.address.trim()
-  const mapAddress = !configuredAddress || configuredAddress.toLowerCase() === 'jódar, jaén' ? DEFAULT_ACADEMY_ADDRESS : configuredAddress
-  const mapEmbedUrl = `https://www.google.com/maps?q=${encodeURIComponent(mapAddress)}&output=embed`
-  const directionsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapAddress)}`
-  const canLoadMap = !settings.cookieBannerEnabled || externalContentAllowed
+  const mapAddress = configuredAddress || (isDemoMode ? DEMO_ACADEMY_ADDRESS : '')
+  const mapEmbedUrl = mapAddress ? `https://www.google.com/maps?q=${encodeURIComponent(mapAddress)}&output=embed` : ''
+  const directionsUrl = mapAddress ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapAddress)}` : ''
+  const canLoadMap = Boolean(mapAddress) && (!settings.cookieBannerEnabled || externalContentAllowed)
   const privacyOwner = settings.legalOwnerName.trim() || settings.academyName.trim() || 'Language School'
   const securityReady = isDemoMode || (Boolean(turnstileToken) && !turnstileUnavailable)
 
@@ -108,13 +110,13 @@ export default function ContactPage() {
               <div className="contact-v2-direct" aria-label="Datos de contacto de la academia">
                 {settings.phone && <a href={`tel:${settings.phone}`}><small>TELÉFONO</small><strong>{settings.phone}</strong></a>}
                 {settings.email && <a href={`mailto:${settings.email}`}><small>EMAIL</small><strong>{settings.email}</strong></a>}
-                <a href={directionsUrl} target="_blank" rel="noreferrer"><small>ACADEMIA</small><strong>{mapAddress}</strong></a>
+                {mapAddress && <a href={directionsUrl} target="_blank" rel="noreferrer"><small>ACADEMIA</small><strong>{mapAddress}</strong></a>}
               </div>
               <a className="button button-primary contact-v2-hero-cta" href="#solicitud-contacto">Enviar una consulta</a>
             </div>
             <div className={`contact-v2-hero-visual${heroPhoto ? ' has-cms-photo' : ''}`} style={heroPhoto ? { backgroundImage: `linear-gradient(180deg, rgba(53,25,39,.03), rgba(53,25,39,.19)), url(${heroPhoto})` } : undefined}>
               {!heroPhoto && <img src={contactVisual} alt="Ilustración editorial de una conversación en Language School" />}
-              <div className="contact-v2-floating-note"><small>LANGUAGE SCHOOL · JÓDAR</small><strong>Una primera conversación sencilla.</strong></div>
+              <div className="contact-v2-floating-note"><small>LANGUAGE SCHOOL</small><strong>Una primera conversación sencilla.</strong></div>
             </div>
           </div>
         </section>
@@ -167,11 +169,12 @@ export default function ContactPage() {
             <aside className="contact-v2-info">
               <div className="contact-v2-info-heading"><span className="eyebrow">{settings.academyName || 'ACADEMIA'}</span><h2>También puedes encontrarnos aquí.</h2><p>Elige el canal que te resulte más cómodo.</p></div>
               <div className="contact-v2-info-list">
-                <div><span>01</span><strong>Ubicación</strong><p>{mapAddress}</p></div>
+                {mapAddress && <div><span>01</span><strong>Ubicación</strong><p>{mapAddress}</p></div>}
                 {settings.email && <div><span>02</span><strong>Email</strong><a href={`mailto:${settings.email}`}>{settings.email}</a></div>}
                 {settings.phone && <div><span>03</span><strong>Teléfono</strong><a href={`tel:${settings.phone}`}>{settings.phone}</a></div>}
                 {settings.whatsapp && <div><span>04</span><strong>WhatsApp</strong><p>{settings.whatsapp}</p></div>}
                 {settings.instagram && <div><span>05</span><strong>Instagram</strong><a href={settings.instagram} target="_blank" rel="noreferrer">Abrir Instagram ↗</a></div>}
+                {!mapAddress && !settings.email && !settings.phone && !settings.whatsapp && !settings.instagram && <p>Los datos directos de la academia se publicarán desde Administración.</p>}
               </div>
               <div className="contact-v2-info-footer"><span aria-hidden="true">↗</span><p>Escríbenos por el canal que prefieras y te responderemos lo antes posible.</p></div>
             </aside>
@@ -180,13 +183,21 @@ export default function ContactPage() {
 
         <section className="contact-v2-map-section" aria-labelledby="academy-location-title">
           <div className="container">
-            <div className="contact-v2-map-heading"><div><span className="eyebrow">DÓNDE ESTAMOS</span><h2 id="academy-location-title">Ven a conocernos.</h2></div><p>Language School está en el centro de Jódar. Puedes abrir la ubicación directamente para calcular tu ruta.</p></div>
-            {canLoadMap ? (
+            <div className="contact-v2-map-heading"><div><span className="eyebrow">DÓNDE ESTAMOS</span><h2 id="academy-location-title">Ven a conocernos.</h2></div><p>{mapAddress ? 'Abre la ubicación publicada por la academia para calcular tu ruta.' : 'La ubicación aparecerá aquí cuando esté configurada y publicada por la academia.'}</p></div>
+            {!mapAddress ? (
+              <div className="external-consent-placeholder">
+                <div>
+                  <span className="eyebrow">UBICACIÓN</span>
+                  <h3>Ubicación pendiente de publicar.</h3>
+                  <p>Administración todavía no ha configurado una dirección pública. No mostramos una ubicación de ejemplo en el entorno conectado.</p>
+                </div>
+              </div>
+            ) : canLoadMap ? (
               <div className="contact-v2-map-card">
                 <iframe title={`Mapa de Language School en ${mapAddress}`} src={mapEmbedUrl} loading="lazy" referrerPolicy="no-referrer-when-downgrade" allowFullScreen />
                 <div className="contact-v2-map-overlay">
                   <span className="contact-v2-map-pin" aria-hidden="true">⌖</span>
-                  <div><small>LANGUAGE SCHOOL · ROCÍO RUIZ</small><strong>{mapAddress}</strong><span>Jódar · Jaén</span></div>
+                  <div><small>LANGUAGE SCHOOL · ROCÍO RUIZ</small><strong>{mapAddress}</strong></div>
                   <a className="button button-primary" href={directionsUrl} target="_blank" rel="noreferrer">Cómo llegar ↗</a>
                 </div>
               </div>
