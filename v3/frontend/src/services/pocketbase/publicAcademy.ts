@@ -41,7 +41,7 @@ export const demoPublicPricing: PublicPricingRecord[] = [
   { id: 'plus', collectionId: 'demo', collectionName: collections.pricingPlans, created: '', updated: '', expand: {}, name: 'Plus', description: 'Ejemplo visual. Precio definitivo pendiente de confirmar.', price: 49, billing_text: 'al mes', features: ['Clases en grupo', 'Material', 'Seguimiento'], sort_order: 20, active: true, featured: true },
 ]
 
-const connectedSettingsFallback: PublicSettings = {
+export const connectedPublicSettingsFallback: PublicSettings = {
   academyName: 'Language School',
   phone: '',
   email: '',
@@ -109,10 +109,10 @@ export async function getPublicSettings(): Promise<PublicSettings> {
   if (isDemoMode) return { ...demoSiteSettings, logoUrl: '' }
   const result = await pb.collection(collections.siteSettings).getList<SiteSettingsRecord>(1, 1)
   const record = result.items[0]
-  if (!record) return { ...connectedSettingsFallback }
+  if (!record) return { ...connectedPublicSettingsFallback }
 
   return {
-    academyName: record.academy_name || connectedSettingsFallback.academyName,
+    academyName: record.academy_name || connectedPublicSettingsFallback.academyName,
     phone: record.phone || '',
     email: record.email || '',
     whatsapp: record.whatsapp || '',
@@ -123,7 +123,7 @@ export async function getPublicSettings(): Promise<PublicSettings> {
     facebook: record.social_links?.facebook || '',
     youtube: record.social_links?.youtube || '',
     cookieBannerEnabled: readBoolean(record.legal_texts?.cookie_banner_enabled, true),
-    cookieIntro: record.legal_texts?.cookie_intro || connectedSettingsFallback.cookieIntro,
+    cookieIntro: record.legal_texts?.cookie_intro || connectedPublicSettingsFallback.cookieIntro,
     legalOwnerName: record.legal_texts?.legal_owner_name || '',
     legalTaxId: record.legal_texts?.legal_tax_id || '',
     legalRegistryDetails: record.legal_texts?.legal_registry_details || '',
