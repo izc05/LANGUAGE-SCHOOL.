@@ -54,7 +54,7 @@ export default function LegalPage({ kind }: LegalPageProps) {
     return () => { mounted = false }
   }, [])
 
-  const owner = settings.legalOwnerName.trim() || settings.academyName.trim() || 'Language School'
+  const owner = settings.legalOwnerName.trim() || (isDemoMode ? settings.academyName.trim() || 'Language School' : 'Pendiente de configurar')
   const taxId = settings.legalTaxId.trim()
   const registry = settings.legalRegistryDetails.trim()
   const address = settings.address.trim()
