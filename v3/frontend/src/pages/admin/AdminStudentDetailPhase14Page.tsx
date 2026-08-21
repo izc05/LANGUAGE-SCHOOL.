@@ -1,4 +1,4 @@
-import { type FormEvent, useEffect, useMemo, useState } from 'react'
+import { type FormEvent, useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import AdminAccountInvitationCard from '../../components/AdminAccountInvitationCard'
 import DashboardShell from '../../components/DashboardShell'
@@ -19,6 +19,7 @@ import { getAdminStudentProfilePhase14, saveAdminStudentProfilePhase14, type Adm
 import { getPlacementAdminOverview, type PlacementAdminStudentLevel } from '../../services/pocketbase/placementAdmin'
 import type { AppUser } from '../../services/pocketbase/types'
 import type { ClassDeliveryMode, ClassRecord } from '../../services/pocketbase/studentPortal'
+import AdminStudentLevelCard from './AdminStudentLevelCard'
 import { adminNav } from './adminNav'
 
 const euro = new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' })
@@ -108,6 +109,10 @@ export default function AdminStudentDetailPhase14Page() {
   const [guardianPhone, setGuardianPhone] = useState('')
   const [notes, setNotes] = useState('')
   const [groupId, setGroupId] = useState('')
+
+  const handleLevelChange = useCallback((currentLevel: PlacementAdminStudentLevel['currentLevel'], currentLevelSource: PlacementAdminStudentLevel['currentLevelSource']) => {
+    setLevel((current) => current ? { ...current, currentLevel, currentLevelSource } : current)
+  }, [])
 
   useEffect(() => {
     if (isDemoMode) return
@@ -214,6 +219,8 @@ export default function AdminStudentDetailPhase14Page() {
           </div></article>
 
           {student && <AdminAccountInvitationCard userId={student.id} accountStatus={student.status} isDemoMode={isDemoMode} />}
+
+          {student && <AdminStudentLevelCard studentId={student.id} targetLevel={activeGroup?.target_level || ''} groupName={activeGroup?.name || ''} isDemoMode={isDemoMode} onCurrentLevelChange={handleLevelChange} />}
 
           <article className="panel phase14-profile-card phase14-payment-card"><div className="panel-heading"><div><span className="eyebrow">PAGOS</span><h3>Situación económica</h3></div><Link className="student-payment-link" to={`/admin/pagos?alumno=${encodeURIComponent(student?.id || '')}`}>Gestionar pagos</Link></div><div className="phase14-payment-summary"><div><span>Estado</span><strong>{paymentState}</strong></div><div><span>Cubierto hasta</span><strong>{coverage ? formatDate(coverage) : 'Sin cobertura'}</strong></div><div><span>Pendiente</span><strong>{euro.format(pendingCents / 100)}</strong></div></div><div className="phase14-payment-history">{recentPayments.map((record) => <div key={record.id}><span><strong>{record.billing_mode === 'INTENSIVE' ? 'Intensivo' : 'Mensual'}</strong><small>{formatDate(record.period_start)} → {formatDate(record.period_end)}</small></span><b>{euro.format(record.amount_cents / 100)}</b><i className={`payment-state ${effectivePaymentStatus(record).toLowerCase()}`}>{effectivePaymentStatus(record) === 'PAID' ? 'Pagado' : effectivePaymentStatus(record) === 'OVERDUE' ? 'Vencido' : effectivePaymentStatus(record) === 'PENDING' ? 'Pendiente' : effectivePaymentStatus(record)}</i></div>)}{recentPayments.length === 0 && <small>Sin pagos registrados todavía.</small>}</div></article>
 
