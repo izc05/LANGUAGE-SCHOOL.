@@ -29,6 +29,9 @@ routerAdd('POST', '/api/language-school/admin/accounts/invite', (e) => {
     if (!/^https?:\/\/[A-Za-z0-9.-]+(?::\d+)?(?:\/.*)?$/.test(base)) throw new BadRequestError('La URL base de activación no es válida.')
     return base
   }
+  function canonicalAdminBase(app) {
+    return readBase(app.settings().meta.appURL || '')
+  }
   function issue(app, userId, createdBy) {
     const pending = app.findAllRecords('account_invitations', $dbx.hashExp({ user: userId, status: 'PENDING' }))
     const now = new Date().toISOString()
@@ -113,7 +116,8 @@ routerAdd('POST', '/api/language-school/admin/accounts/invite', (e) => {
   requireAdmin()
   const data = body()
   const role = readRole(data.role)
-  const activationBaseUrl = readBase(data.activationBaseUrl)
+  const requestedActivationBaseUrl = readBase(data.activationBaseUrl)
+  const activationBaseUrl = role === 'ADMIN' ? canonicalAdminBase(e.app) : requestedActivationBaseUrl
   let userId = ''
   let invitationId = ''
   let rawToken = ''
@@ -158,6 +162,9 @@ routerAdd('POST', '/api/language-school/admin/accounts/invite/resend', (e) => {
     if (!/^https?:\/\/[A-Za-z0-9.-]+(?::\d+)?(?:\/.*)?$/.test(base)) throw new BadRequestError('La URL base de activación no es válida.')
     return base
   }
+  function canonicalAdminBase(app) {
+    return readBase(app.settings().meta.appURL || '')
+  }
   function issue(app, userId, createdBy) {
     const pending = app.findAllRecords('account_invitations', $dbx.hashExp({ user: userId, status: 'PENDING' }))
     const now = new Date().toISOString()
@@ -201,7 +208,7 @@ routerAdd('POST', '/api/language-school/admin/accounts/invite/resend', (e) => {
   requireAdmin()
   const data = body()
   const userId = readId(data.userId)
-  const activationBaseUrl = readBase(data.activationBaseUrl)
+  const requestedActivationBaseUrl = readBase(data.activationBaseUrl)
   let invitationId = ''
   let rawToken = ''
   let expiresAt = ''
@@ -221,6 +228,7 @@ routerAdd('POST', '/api/language-school/admin/accounts/invite/resend', (e) => {
 
   const user = e.app.findRecordById('users', userId)
   const invitation = e.app.findRecordById('account_invitations', invitationId)
+  const activationBaseUrl = accountRole === 'ADMIN' ? canonicalAdminBase(e.app) : requestedActivationBaseUrl
   const activationUrl = activationBaseUrl ? `${activationBaseUrl}/activar-cuenta?token=${encodeURIComponent(rawToken)}` : ''
   const emailSent = trySend(e.app, user, invitation, activationUrl)
   const responseActivationUrl = accountRole === 'ADMIN' ? '' : activationUrl
