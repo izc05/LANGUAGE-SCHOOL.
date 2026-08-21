@@ -32,9 +32,13 @@ Los puertos de esta lista corresponden a la plantilla actual (`PROXY_URL=127.0.0
 - [ ] `/var/lib/language-school/pb_data` pertenece a `languageschool` y no es legible por otros usuarios.
 - [ ] `/opt/language-school/pocketbase/pb_migrations` existe y contiene las migraciones de la revisión desplegada.
 - [ ] `/opt/language-school/pocketbase/pb_hooks` existe y contiene los hooks server-side de la misma revisión.
+- [ ] Remitente/SMTP de PocketBase configurado y un correo de prueba real recibido antes de activar el acceso MFA de Administración.
 - [ ] `migrate.sh` aplica todas las migraciones.
 - [ ] Primer superuser creado localmente.
 - [ ] Primer ADMIN de aplicación creado.
+- [ ] Login ADMIN con contraseña correcta devuelve desafío MFA y no una sesión completa.
+- [ ] El ADMIN recibe por correo el código de 6 cifras y puede completar el acceso dentro de su ventana de validez.
+- [ ] Código MFA incorrecto o caducado no permite entrar en Administración.
 - [ ] `systemctl is-active language-school-pocketbase` = active.
 - [ ] `curl http://127.0.0.1:8091/api/health` responde correctamente.
 
@@ -62,7 +66,7 @@ Los puertos de esta lista corresponden a la plantilla actual (`PROXY_URL=127.0.0
 - [ ] Origen configurado exclusivamente a `http://127.0.0.1:8083` (o al `PROXY_URL` loopback configurado).
 - [ ] Dominio/subdominio resuelve por HTTPS.
 - [ ] Web pública carga por HTTPS.
-- [ ] Login ADMIN funciona por HTTPS.
+- [ ] Login ADMIN por HTTPS exige contraseña + código MFA antes de abrir `/admin`.
 - [ ] `/api/health` funciona por HTTPS.
 - [ ] No hay puertos 8083/8091 abiertos en el router (ni los equivalentes configurados si se cambiaron).
 - [ ] PocketBase `/_/` no está publicado.
@@ -74,6 +78,8 @@ Los puertos de esta lista corresponden a la plantilla actual (`PROXY_URL=127.0.0
 - [ ] Separar cada pareja en grupos distintos.
 - [ ] Confirmar aislamiento Alumno A/B.
 - [ ] Confirmar aislamiento Profesor A/B.
+- [ ] Confirmar que STUDENT y TEACHER siguen accediendo con su flujo normal y que OTP no funciona como login alternativo para esos roles.
+- [ ] Confirmar que un ADMIN no obtiene token válido mediante contraseña solamente ni accediendo directamente a `/admin`.
 - [ ] Probar archivo privado + token protegido.
 - [ ] Pausar matrícula y confirmar revocación inmediata del profesor.
 - [ ] Probar rechazo de asistencia fuera del grupo.
@@ -117,7 +123,7 @@ Los puertos de esta lista corresponden a la plantilla actual (`PROXY_URL=127.0.0
 
 - [ ] 2–3 alumnos reales de prueba.
 - [ ] 1–2 profesores de prueba.
-- [ ] Flujo ADMIN completo.
+- [ ] Flujo ADMIN completo, incluido MFA por correo en un navegador/sesión nueva.
 - [ ] Flujo PROFESOR completo.
 - [ ] Flujo ALUMNO completo.
 - [ ] Test de nivel público y Campus.
