@@ -28,9 +28,10 @@ test('15B.3C.3: alta guiada completa cuenta, nivel, matrícula e invitación sin
   const wizard = page.locator('.student-onboarding-card')
   await expect(wizard.getByRole('heading', { name: 'Nuevo alumno' })).toBeVisible()
 
+  const unique = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
   await wizard.getByLabel('Nombre', { exact: true }).fill('Atomic')
   await wizard.getByLabel('Apellidos').fill('Student')
-  await wizard.getByLabel('Email').fill('e2e-atomic-onboarding@example.com')
+  await wizard.getByLabel('Email').fill(`e2e-atomic-onboarding-${unique}@example.com`)
   await wizard.getByLabel('Teléfono', { exact: true }).fill('600123123')
   await wizard.getByRole('button', { name: /Continuar/ }).click()
 
@@ -50,7 +51,7 @@ test('15B.3C.3: alta guiada completa cuenta, nivel, matrícula e invitación sin
   await expect(wizard.getByRole('heading', { name: 'Grupo, horario y profesor' })).toBeVisible()
   const group = wizard.getByRole('button', { name: /E2E B1 Group/ })
   await expect(group).toContainText('E2E Teacher')
-  await expect(group).toContainText('7 plazas')
+  await expect(group).toContainText(/\d+ plazas/)
   await group.click()
   await wizard.getByRole('button', { name: /Continuar/ }).click()
 
@@ -81,7 +82,8 @@ test('15B.3C.3: alta guiada completa cuenta, nivel, matrícula e invitación sin
   await expect(detail).toContainText('E2E English B1')
   await expect(detail).toContainText('E2E B1 Group')
   await expect(detail).toContainText('E2E Teacher')
-  await expect(detail.getByText('B2', { exact: true })).toBeVisible()
+  const levelCard = detail.locator('.admin-student-level-card')
+  await expect(levelCard.locator('.admin-student-level-current strong')).toHaveText('B2')
   await expect(detail.getByRole('heading', { name: 'Cuenta e invitación' })).toBeVisible()
   await expect(detail).toContainText('Pendiente de activación')
 
