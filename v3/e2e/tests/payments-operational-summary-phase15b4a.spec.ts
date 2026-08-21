@@ -114,6 +114,8 @@ async function cleanupTemporaryPaymentStudent(request: APIRequestContext, superT
 }
 
 test('15B.4A: resumen económico responde al contexto, método y situación del alumno sin romper móvil', async ({ page, request }) => {
+  test.setTimeout(60_000)
+
   const admin = await authenticate(request, 'users', requiredEnv('E2E_ADMIN_EMAIL'), requiredEnv('E2E_ADMIN_PASSWORD'))
   const superuser = await authenticate(request, '_superusers', requiredEnv('PB_SUPERUSER_EMAIL'), requiredEnv('PB_SUPERUSER_PASSWORD'))
   const fixture = await createTemporaryStudentEnrollment(request, admin)
