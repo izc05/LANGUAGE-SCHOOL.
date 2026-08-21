@@ -31,6 +31,7 @@ const adminRoutes = [
   { label: 'Blog', path: '/admin/blog' },
   { label: 'Multimedia', path: '/admin/multimedia' },
   { label: 'Tarifas', path: '/admin/tarifas' },
+  { label: 'Administradores', path: '/admin/administradores' },
   { label: 'Configuración', path: '/admin/configuracion' },
   { label: 'Sistema', path: '/admin/sistema' },
 ] as const
@@ -55,8 +56,8 @@ async function expectNoPageOverflow(page: Page) {
 }
 
 for (const viewport of viewports) {
-  test(`13+: las 21 rutas Admin cierran sin overflow y con navegación exacta en ${viewport.name}`, async ({ page }) => {
-    test.setTimeout(130_000)
+  test(`13+: las 22 rutas Admin cierran sin overflow y con navegación exacta en ${viewport.name}`, async ({ page }) => {
+    test.setTimeout(135_000)
     await page.setViewportSize({ width: viewport.width, height: viewport.height })
     await login(page)
 
@@ -67,7 +68,7 @@ for (const viewport of viewports) {
       await expect(page.locator('.route-loading')).toHaveCount(0)
 
       const nav = page.getByRole('navigation', { name: 'Menú de Administrador' })
-      await expect(nav.getByRole('link')).toHaveCount(21)
+      await expect(nav.getByRole('link')).toHaveCount(22)
 
       const activeLinks = nav.locator('a[aria-current="page"]')
       await expect(activeLinks).toHaveCount(1)
