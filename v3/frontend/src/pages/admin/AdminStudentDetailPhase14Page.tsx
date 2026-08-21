@@ -191,6 +191,13 @@ export default function AdminStudentDetailPhase14Page() {
     return <DashboardShell role="Administrador" name="Admin" nav={[...adminNav]}><div className="dashboard-content"><PortalEmptyState title="Alumno no encontrado" description="Vuelve al directorio y selecciona otro alumno." /><button className="button" type="button" onClick={() => navigate('/admin/alumnos')}>Volver a alumnos</button></div></DashboardShell>
   }
 
+  const groupContextPath = activeGroup ? `/admin/cursos?grupo=${encodeURIComponent(activeGroup.id)}` : ''
+  const classContextPath = activeGroup
+    ? nextClass
+      ? `/admin/clases?grupo=${encodeURIComponent(activeGroup.id)}&clase=${encodeURIComponent(nextClass.id)}`
+      : `/admin/clases?grupo=${encodeURIComponent(activeGroup.id)}`
+    : ''
+
   return (
     <DashboardShell role="Administrador" name="Admin" nav={[...adminNav]}>
       <div className="dashboard-content cms-page phase14-profile-page">
@@ -206,9 +213,9 @@ export default function AdminStudentDetailPhase14Page() {
 
         <section className="phase14-profile-grid">
           <article className="panel phase14-profile-card"><div className="panel-heading"><div><span className="eyebrow">ACADEMIA</span><h3>Matrícula y aprendizaje</h3></div></div><div className="phase14-data-grid">
-            <div><span>Curso</span><strong>{activeGroup?.expand?.course?.title || 'Sin curso'}</strong></div><div><span>Grupo / aula</span><strong>{activeGroup?.name || 'Sin grupo'}</strong></div>
-            <div><span>Nivel</span><strong>{level?.currentLevel || '—'}</strong><small>{levelSourceLabel(level?.currentLevelSource)}</small></div><div><span>Profesor</span><strong>{teacher ? fullName(teacher) : 'Sin profesor'}</strong></div>
-            <div><span>Modalidad</span><strong>{modes.length ? modes.map(modeLabel).join(' · ') : 'Sin definir'}</strong></div><div><span>Próxima clase</span><strong>{nextClassLabel(nextClass)}</strong></div>
+            <div><span>Curso</span><strong>{activeGroup?.expand?.course?.title && groupContextPath ? <Link to={groupContextPath}>{activeGroup.expand.course.title}</Link> : 'Sin curso'}</strong></div><div><span>Grupo / aula</span><strong>{activeGroup && groupContextPath ? <Link to={groupContextPath}>{activeGroup.name}</Link> : 'Sin grupo'}</strong></div>
+            <div><span>Nivel</span><strong>{level?.currentLevel || '—'}</strong><small>{levelSourceLabel(level?.currentLevelSource)}</small></div><div><span>Profesor</span><strong>{teacher ? <Link to={`/admin/profesores/${encodeURIComponent(teacher.id)}`}>{fullName(teacher)}</Link> : 'Sin profesor'}</strong></div>
+            <div><span>Modalidad</span><strong>{modes.length ? modes.map(modeLabel).join(' · ') : 'Sin definir'}</strong></div><div><span>Próxima clase</span><strong>{activeGroup && classContextPath ? <Link to={classContextPath}>{nextClass ? nextClassLabel(nextClass) : 'Ver clases del grupo'}</Link> : 'Sin programar'}</strong></div>
             <div><span>Horario</span><strong>{activeGroup?.schedule_text || 'Sin horario'}</strong></div><div><span>Curso académico</span><strong>{activeGroup?.academic_year || '—'}</strong></div>
           </div></article>
 

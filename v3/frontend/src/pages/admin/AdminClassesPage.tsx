@@ -1,4 +1,5 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router'
 import DashboardShell from '../../components/DashboardShell'
 import PortalEmptyState from '../../components/PortalEmptyState'
 import { useAuth } from '../../features/auth/AuthProvider'
@@ -82,6 +83,9 @@ function formatTime(value: string): string {
 
 export default function AdminClassesPage() {
   const { isDemoMode } = useAuth()
+  const [searchParams] = useSearchParams()
+  const requestedGroupId = searchParams.get('grupo') || ''
+  const requestedClassId = searchParams.get('clase') || ''
   const [classes, setClasses] = useState<ClassRecord[]>(isDemoMode ? [demoClass] : [])
   const [groups, setGroups] = useState<AdminGroupRecord[]>(isDemoMode ? [demoGroup] : [])
   const [teachers, setTeachers] = useState<AppUser[]>(isDemoMode ? [demoTeacher] : [])
@@ -120,17 +124,30 @@ export default function AdminClassesPage() {
         setGroups(groupRecords)
         setTeachers(teacherRecords)
         setEnrollments(enrollmentRecords)
-        const firstActiveGroup = groupRecords.find((group) => group.status === 'ACTIVE')
+
+        const requestedGroup = requestedGroupId ? groupRecords.find((group) => group.id === requestedGroupId) : undefined
+        const firstActiveGroup = requestedGroup || groupRecords.find((group) => group.status === 'ACTIVE')
         if (firstActiveGroup) setNewGroupId(firstActiveGroup.id)
-        const nextClass = [...classRecords]
+        setGroupFilter(requestedGroup ? requestedGroup.id : 'ALL')
+
+        const requestedClass = requestedClassId
+          ? classRecords.find((record) => record.id === requestedClassId && (!requestedGroup || record.group === requestedGroup.id))
+          : undefined
+        const candidateClasses = requestedGroup ? classRecords.filter((record) => record.group === requestedGroup.id) : classRecords
+        const nextClass = requestedClass || [...candidateClasses]
           .filter((record) => record.status === 'SCHEDULED' && new Date(record.starts_at).getTime() >= Date.now())
-          .sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime())[0] || classRecords[0]
-        if (nextClass) setSelectedClassId(nextClass.id)
+          .sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime())[0] || candidateClasses[0]
+        if (nextClass) {
+          setSelectedClassId(nextClass.id)
+          setWeekAnchor(startOfWeek(new Date(nextClass.starts_at)))
+        } else {
+          setSelectedClassId(null)
+        }
       })
       .catch(() => { if (mounted) setError('No se ha podido cargar el calendario académico. Inténtalo de nuevo en unos segundos.') })
       .finally(() => { if (mounted) setLoading(false) })
     return () => { mounted = false }
-  }, [isDemoMode])
+  }, [isDemoMode, requestedClassId, requestedGroupId])
 
   const selectedClass = classes.find((record) => record.id === selectedClassId) || null
 

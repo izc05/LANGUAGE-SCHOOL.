@@ -1,4 +1,5 @@
 import { type ChangeEvent, type FormEvent, useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router'
 import AdminCourseEditForm from '../../components/AdminCourseEditForm'
 import DashboardShell from '../../components/DashboardShell'
 import PortalEmptyState from '../../components/PortalEmptyState'
@@ -55,6 +56,8 @@ function deliveryModeLabel(mode: GroupDeliveryMode): string { return groupDelive
 
 export default function AdminCoursesPage() {
   const { isDemoMode } = useAuth()
+  const [searchParams] = useSearchParams()
+  const requestedGroupId = searchParams.get('grupo') || ''
   const [courses, setCourses] = useState<CourseRecord[]>(isDemoMode ? demoCourses : [])
   const [groups, setGroups] = useState<AdminGroupRecord[]>(isDemoMode ? demoGroups : [])
   const [teachers, setTeachers] = useState<AppUser[]>(isDemoMode ? [demoTeacher] : [])
@@ -104,12 +107,14 @@ export default function AdminCoursesPage() {
         if (courseRecords[0]) { setGroupCourseId(courseRecords[0].id); setGroupTargetLevel(targetLevelFromCourse(courseRecords[0].level)) }
         if (teacherRecords[0]) setGroupTeacherId(teacherRecords[0].id)
         if (studentRecords[0]) setEnrollmentStudentId(studentRecords[0].id)
-        if (groupRecords[0]) { setEnrollmentGroupId(groupRecords[0].id); setSelectedGroupId(groupRecords[0].id) }
+        const requestedGroup = requestedGroupId ? groupRecords.find((group) => group.id === requestedGroupId) : undefined
+        const initialGroup = requestedGroup || groupRecords[0]
+        if (initialGroup) { setEnrollmentGroupId(initialGroup.id); setSelectedGroupId(initialGroup.id) }
       })
       .catch(() => { if (mounted) setError('No se han podido cargar cursos, grupos y matrículas. Inténtalo de nuevo en unos segundos.') })
       .finally(() => { if (mounted) setLoading(false) })
     return () => { mounted = false }
-  }, [isDemoMode])
+  }, [isDemoMode, requestedGroupId])
 
   const activeEnrollments = useMemo(() => enrollments.filter((item) => item.status === 'ACTIVE'), [enrollments])
   const activeGroups = useMemo(() => groups.filter((item) => item.status === 'ACTIVE'), [groups])
