@@ -2,7 +2,7 @@
 set -euo pipefail
 
 PRODUCTION_ENV="${PRODUCTION_ENV:-/etc/language-school/production.env}"
-REPO_DIR="${REPO_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
+REPO_DIR="${REPO_DIR:-$(pwd)}"
 EXPECTED_SHA="${EXPECTED_SHA:-}"
 EXPECTED_BRANCH="${EXPECTED_BRANCH:-design/home-premium-v2}"
 EXPECTED_PUBLIC_ORIGIN="${EXPECTED_PUBLIC_ORIGIN:-https://language-school.isivoltpro.com}"
@@ -18,6 +18,7 @@ warnings=0
 ok() { printf 'OK   %s\n' "$1"; }
 warn() { printf 'WARN %s\n' "$1" >&2; warnings=$((warnings + 1)); }
 fail() { printf 'FAIL %s\n' "$1" >&2; failures=$((failures + 1)); }
+git_repo() { git -c safe.directory="$REPO_DIR" -C "$REPO_DIR" "$@"; }
 
 require_command() {
   if command -v "$1" >/dev/null 2>&1; then ok "command available: $1"; else fail "missing command: $1"; fi
@@ -101,12 +102,12 @@ elif [[ ! "$EXPECTED_SHA" =~ ^[0-9a-fA-F]{40}$ ]]; then
   fail 'EXPECTED_SHA must be a full 40-character Git SHA'
 fi
 
-if git -C "$REPO_DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-  current_sha="$(git -C "$REPO_DIR" rev-parse HEAD)"
-  current_branch="$(git -C "$REPO_DIR" branch --show-current)"
+if git_repo rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  current_sha="$(git_repo rev-parse HEAD)"
+  current_branch="$(git_repo branch --show-current)"
   if [[ "$current_sha" == "$EXPECTED_SHA" ]]; then ok "repository HEAD matches $EXPECTED_SHA"; else fail "repository HEAD $current_sha does not match expected $EXPECTED_SHA"; fi
   if [[ "$current_branch" == "$EXPECTED_BRANCH" ]]; then ok "repository branch is $EXPECTED_BRANCH"; else fail "repository branch is $current_branch, expected $EXPECTED_BRANCH"; fi
-  if [[ -z "$(git -C "$REPO_DIR" status --porcelain --untracked-files=normal)" ]]; then ok 'repository working tree is clean'; else fail 'repository working tree has uncommitted or untracked changes'; fi
+  if [[ -z "$(git_repo status --porcelain --untracked-files=normal)" ]]; then ok 'repository working tree is clean'; else fail 'repository working tree has uncommitted or untracked changes'; fi
 else
   fail "REPO_DIR is not a Git worktree: $REPO_DIR"
 fi
