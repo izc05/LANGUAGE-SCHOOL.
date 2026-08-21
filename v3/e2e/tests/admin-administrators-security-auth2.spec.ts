@@ -2,6 +2,7 @@ import { expect, test, type APIRequestContext, type Page } from '@playwright/tes
 
 const PB_URL = process.env.PB_URL || 'http://127.0.0.1:8090'
 const SMTP_HTTP = process.env.LANGUAGE_SCHOOL_E2E_SMTP_HTTP || 'http://127.0.0.1:8093'
+const PUBLIC_ORIGIN = process.env.PUBLIC_ORIGIN || 'http://127.0.0.1:4173'
 
 function requiredEnv(name: string): string {
   const value = process.env[name]
@@ -57,6 +58,13 @@ async function loginExistingAdmin(page: Page) {
   await expect(page).toHaveURL(/\/admin$/)
 }
 
+async function browserAdminToken(page: Page): Promise<string> {
+  return page.evaluate(() => {
+    const stored = JSON.parse(localStorage.getItem('pocketbase_auth') || '{}') as { token?: string }
+    return stored.token || ''
+  })
+}
+
 test('SECURITY-AUTH.2: Admin invita otro ADMIN, titular activa su cuenta y primer login exige MFA', async ({ page, request }) => {
   test.setTimeout(90_000)
   const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
@@ -96,6 +104,7 @@ test('SECURITY-AUTH.2: Admin invita otro ADMIN, titular activa su cuenta y prime
     const activationMatch = activationMail.decoded.match(/href="([^"]*\/activar-cuenta\?token=[^"]+)"/i)
     expect(activationMatch?.[1]).toBeTruthy()
     const activationUrl = activationMatch?.[1] || ''
+    expect(activationUrl.startsWith(`${PUBLIC_ORIGIN}/activar-cuenta?token=`)).toBe(true)
 
     userId = await findUserId(request, email)
     expect(userId).toBeTruthy()
@@ -134,6 +143,50 @@ test('SECURITY-AUTH.2: Admin invita otro ADMIN, titular activa su cuenta y prime
     const currentRow = page.getByTestId('admin-account-row').filter({ hasText: email })
     await expect(currentRow).toContainText('TU CUENTA')
     await expect(currentRow).toContainText('Activo')
+  } finally {
+    if (!userId) userId = await findUserId(request, email).catch(() => '')
+    await deleteUser(request, userId)
+    await request.delete(`${SMTP_HTTP}/messages`)
+  }
+})
+
+test('SECURITY-AUTH.2: un ADMIN no puede desviar el enlace de activación a otro dominio', async ({ page, request }) => {
+  test.setTimeout(45_000)
+  const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+  const email = `admin-origin-${suffix}@example.com`
+  let userId = ''
+
+  await request.delete(`${SMTP_HTTP}/messages`)
+
+  try {
+    await loginExistingAdmin(page)
+    const adminToken = await browserAdminToken(page)
+    expect(adminToken).toBeTruthy()
+
+    const response = await request.post(`${PB_URL}/api/language-school/admin/accounts/invite`, {
+      headers: { Authorization: adminToken },
+      data: {
+        role: 'ADMIN',
+        email,
+        name: 'Origin',
+        surname: 'Guard',
+        phone: '',
+        activationBaseUrl: 'https://attacker.invalid/steal',
+      },
+    })
+    expect(response.status(), await response.text()).toBe(201)
+    const payload = await response.json() as { userId?: string; activationUrl?: string; emailSent?: boolean }
+    userId = payload.userId || ''
+    expect(userId).toBeTruthy()
+    expect(payload.activationUrl).toBe('')
+    expect(payload.emailSent).toBe(true)
+
+    await expect.poll(async () => (await capturedMailFor(request, email)).length, { timeout: 8_000 }).toBe(1)
+    const [mail] = await capturedMailFor(request, email)
+    const activationMatch = mail.decoded.match(/href="([^"]*\/activar-cuenta\?token=[^"]+)"/i)
+    const activationUrl = activationMatch?.[1] || ''
+    expect(activationUrl.startsWith(`${PUBLIC_ORIGIN}/activar-cuenta?token=`)).toBe(true)
+    expect(activationUrl).not.toContain('attacker.invalid')
   } finally {
     if (!userId) userId = await findUserId(request, email).catch(() => '')
     await deleteUser(request, userId)
