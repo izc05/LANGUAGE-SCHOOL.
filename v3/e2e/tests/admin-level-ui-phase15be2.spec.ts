@@ -154,7 +154,7 @@ test('15B.3E.2: Admin gestiona nivel e histórico desde la ficha del alumno sin 
     await expect(levelCard.locator('.admin-student-level-history-row').first()).toContainText(mismatchLevel)
     await expect(levelCard).toContainText('Revisar encaje con el grupo')
 
-    const academyCard = page.getByRole('heading', { name: 'Matrícula y aprendizaje' }).locator('..').locator('..')
+    const academyCard = page.getByRole('heading', { name: 'Matrícula y aprendizaje' }).locator('xpath=ancestor::article[1]')
     await expect(academyCard).toContainText(mismatchLevel)
 
     await levelCard.getByRole('button', { name: 'Registrar valoración' }).click()
