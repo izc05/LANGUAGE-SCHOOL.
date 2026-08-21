@@ -210,7 +210,7 @@ test('13C-D + 14C + 15B.4B: Admin cobra, filtra por curso y exporta Excel + just
   const paymentCard = page.locator('.phase14-payment-card')
   await expect(paymentCard).toBeVisible()
   await expect(paymentCard.getByText('Al corriente')).toBeVisible()
-  await expect(paymentCard.getByText('55,00')).toBeVisible()
+  await expect(paymentCard.getByTestId('student-payment-history').getByText('55,00', { exact: false }).first()).toBeVisible()
 
   await page.setViewportSize({ width: 390, height: 844 })
   await expect(paymentCard).toBeVisible()
