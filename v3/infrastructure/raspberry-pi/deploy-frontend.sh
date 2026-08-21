@@ -40,12 +40,6 @@ case "$PUBLIC_HOST" in
     ;;
 esac
 
-PROXY_URL="${PROXY_URL:-}"
-if [[ ! "$PROXY_URL" =~ ^http://127\.0\.0\.1:[0-9]+$ ]]; then
-  echo 'PROXY_URL must use an explicit 127.0.0.1 loopback HTTP endpoint in production.' >&2
-  exit 1
-fi
-
 TURNSTILE_SITE_KEY="${TURNSTILE_SITE_KEY:-}"
 TURNSTILE_SECRET_KEY="${TURNSTILE_SECRET_KEY:-}"
 TURNSTILE_EXPECTED_ACTION="${TURNSTILE_EXPECTED_ACTION:-}"
@@ -85,6 +79,12 @@ for host in "${TURNSTILE_HOSTS[@]}"; do
 done
 if [[ "$HOSTNAME_ALLOWED" != true ]]; then
   echo 'TURNSTILE_ALLOWED_HOSTNAMES must include the hostname from PUBLIC_ORIGIN.' >&2
+  exit 1
+fi
+
+PROXY_URL="${PROXY_URL:-}"
+if [[ ! "$PROXY_URL" =~ ^http://127\.0\.0\.1:[0-9]+$ ]]; then
+  echo 'PROXY_URL must use an explicit 127.0.0.1 loopback HTTP endpoint in production.' >&2
   exit 1
 fi
 
