@@ -41,7 +41,7 @@ SUPER_AUTH="$(authenticate '_superusers' "$SUPERUSER_EMAIL" "$SUPERUSER_PASSWORD
 SUPER_TOKEN="$(jq -r '.token' <<<"$SUPER_AUTH")"
 
 echo 'E2E seed: creating application ADMIN'
-ADMIN="$(create_record 'users' "$SUPER_TOKEN" "$(jq -nc --arg email "$ADMIN_EMAIL" --arg password "$ADMIN_PASSWORD" '{email:$email,password:$password,passwordConfirm:$password,name:"E2E",surname:"Admin",role:"ADMIN",status:"ACTIVE",phone:""}')")"
+ADMIN="$(create_record 'users' "$SUPER_TOKEN" "$(jq -nc --arg email "$ADMIN_EMAIL" --arg password "$ADMIN_PASSWORD" '{email:$email,password:$password,passwordConfirm:$password,name:"E2E",surname:"Admin",role:"ADMIN",status:"ACTIVE",verified:true,phone:""}')")"
 ADMIN_ID="$(jq -r '.id' <<<"$ADMIN")"
 ADMIN_AUTH="$(authenticate 'users' "$ADMIN_EMAIL" "$ADMIN_PASSWORD")"
 ADMIN_TOKEN="$(jq -r '.token' <<<"$ADMIN_AUTH")"
@@ -51,16 +51,16 @@ SITE_SETTINGS="$(curl -fsS "$PB_URL/api/collections/site_settings/records?perPag
 SITE_SETTINGS_ID="$(jq -r '.items[0].id' <<<"$SITE_SETTINGS")"
 patch_json "$PB_URL/api/collections/site_settings/records/$SITE_SETTINGS_ID" "$ADMIN_TOKEN" '{"academy_name":"E2E Language Academy","phone":"","email":"","whatsapp":"618218187","address":"Test Academy Address","social_links":{"whatsapp_enabled":"true","whatsapp_message":"Hola desde E2E"},"legal_texts":{"cookie_banner_enabled":"true","cookie_intro":"E2E cookie preferences"}}' >/dev/null
 
-echo 'E2E seed: creating teacher and safe public teacher profile'
-TEACHER="$(create_record 'users' "$ADMIN_TOKEN" "$(jq -nc --arg email "$TEACHER_EMAIL" --arg password "$TEACHER_PASSWORD" '{email:$email,password:$password,passwordConfirm:$password,name:"E2E",surname:"Teacher",role:"TEACHER",status:"ACTIVE",phone:""}')")"
+echo 'E2E seed: creating trusted browser fixtures with superuser'
+TEACHER="$(create_record 'users' "$SUPER_TOKEN" "$(jq -nc --arg email "$TEACHER_EMAIL" --arg password "$TEACHER_PASSWORD" '{email:$email,password:$password,passwordConfirm:$password,name:"E2E",surname:"Teacher",role:"TEACHER",status:"ACTIVE",verified:true,phone:""}')")"
 TEACHER_ID="$(jq -r '.id' <<<"$TEACHER")"
 create_record 'teacher_profiles' "$ADMIN_TOKEN" "$(jq -nc --arg user "$TEACHER_ID" '{user:$user,bio:"Perfil público creado para la prueba real de navegador.",specialties:["B1","Speaking"],public_profile:true,active:true,display_name:"E2E Public Teacher",headline:"English Teacher · B1 & Speaking",sort_order:10}')" >/dev/null
 
-STUDENT="$(create_record 'users' "$ADMIN_TOKEN" "$(jq -nc --arg email "$STUDENT_EMAIL" --arg password "$STUDENT_PASSWORD" '{email:$email,password:$password,passwordConfirm:$password,name:"E2E",surname:"Student",role:"STUDENT",status:"ACTIVE",phone:""}')")"
+STUDENT="$(create_record 'users' "$SUPER_TOKEN" "$(jq -nc --arg email "$STUDENT_EMAIL" --arg password "$STUDENT_PASSWORD" '{email:$email,password:$password,passwordConfirm:$password,name:"E2E",surname:"Student",role:"STUDENT",status:"ACTIVE",verified:true,phone:""}')")"
 STUDENT_ID="$(jq -r '.id' <<<"$STUDENT")"
 create_record 'student_profiles' "$ADMIN_TOKEN" "$(jq -nc --arg user "$STUDENT_ID" '{user:$user,guardian_name:"",guardian_phone:"",notes_private:"",active:true}')" >/dev/null
 
-OUTSIDER="$(create_record 'users' "$ADMIN_TOKEN" "$(jq -nc --arg email "$OUTSIDER_EMAIL" --arg password "$OUTSIDER_PASSWORD" '{email:$email,password:$password,passwordConfirm:$password,name:"E2E",surname:"Outsider",role:"STUDENT",status:"ACTIVE",phone:""}')")"
+OUTSIDER="$(create_record 'users' "$SUPER_TOKEN" "$(jq -nc --arg email "$OUTSIDER_EMAIL" --arg password "$OUTSIDER_PASSWORD" '{email:$email,password:$password,passwordConfirm:$password,name:"E2E",surname:"Outsider",role:"STUDENT",status:"ACTIVE",verified:true,phone:""}')")"
 OUTSIDER_ID="$(jq -r '.id' <<<"$OUTSIDER")"
 create_record 'student_profiles' "$ADMIN_TOKEN" "$(jq -nc --arg user "$OUTSIDER_ID" '{user:$user,guardian_name:"",guardian_phone:"",notes_private:"",active:true}')" >/dev/null
 
