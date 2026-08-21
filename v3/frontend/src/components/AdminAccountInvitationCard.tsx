@@ -140,8 +140,8 @@ export default function AdminAccountInvitationCard({ userId, accountStatus, isDe
         <div><span>Último envío</span><strong>{formatDateTime(status?.sentAt)}</strong></div>
       </div>
 
-      {effectiveAccountStatus === 'INVITED' && <p className="phase14-private-notes">El alumno debe crear su propia contraseña desde un enlace de un solo uso. Administración no puede ver ni establecer esa contraseña.</p>}
-      {effectiveAccountStatus === 'ACTIVE' && <p className="phase14-private-notes">La cuenta ya fue activada por el alumno. No es necesario gestionar ninguna contraseña desde Administración.</p>}
+      {effectiveAccountStatus === 'INVITED' && <p className="phase14-private-notes">La persona invitada debe crear su propia contraseña desde un enlace de un solo uso. Administración no puede ver ni establecer esa contraseña.</p>}
+      {effectiveAccountStatus === 'ACTIVE' && <p className="phase14-private-notes">La cuenta ya fue activada por su titular. No es necesario gestionar ninguna contraseña desde Administración.</p>}
 
       {message && <div className="cms-notice success-notice" role="status">{message}</div>}
       {error && <div className="cms-notice auth-error" role="alert">{error}</div>}
