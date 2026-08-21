@@ -71,6 +71,7 @@ export default function AdminStudentLevelCard({
   const [reason, setReason] = useState<'INITIAL' | 'REVIEW' | 'PROGRESS' | 'OTHER'>('REVIEW')
   const [notes, setNotes] = useState('')
   const [useAutomatic, setUseAutomatic] = useState(false)
+  const [acknowledgeMismatch, setAcknowledgeMismatch] = useState(false)
 
   useEffect(() => {
     if (isDemoMode || !studentId) return
@@ -94,6 +95,7 @@ export default function AdminStudentLevelCard({
     setValidatedLevel(suggested)
     setReason(summary.assessmentHistory.length === 0 && !summary.latestAttempt ? 'INITIAL' : 'REVIEW')
     setUseAutomatic(Boolean(summary.latestAttempt && summary.assessmentHistory.length === 0))
+    setAcknowledgeMismatch(false)
   }, [summary])
 
   const reasonOptions = useMemo(() => {
@@ -111,6 +113,7 @@ export default function AdminStudentLevelCard({
     setReason(nextReason)
     setNotes('')
     setUseAutomatic(Boolean(latestAttempt && nextReason !== 'INITIAL'))
+    setAcknowledgeMismatch(false)
     setMessage(null)
     setError(null)
     setEditing(true)
@@ -119,6 +122,10 @@ export default function AdminStudentLevelCard({
   async function saveAssessment(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!summary) return
+    if (mismatch && (!acknowledgeMismatch || !notes.trim())) {
+      setError('Para registrar un nivel distinto al objetivo del grupo debes justificarlo y confirmar expresamente la diferencia.')
+      return
+    }
     setSaving(true)
     setError(null)
     setMessage(null)
@@ -153,11 +160,13 @@ export default function AdminStudentLevelCard({
           reason,
           notes: notes.trim(),
           sourceAttemptId: useAutomatic ? latestAttempt?.id || '' : '',
+          acknowledgeLevelMismatch: mismatch ? acknowledgeMismatch : false,
         })
         setSummary(result.summary)
         onCurrentLevelChange?.(result.summary.currentLevel, result.summary.currentLevelSource)
       }
       setEditing(false)
+      setAcknowledgeMismatch(false)
       setMessage(`Nivel ${validatedLevel} registrado sin modificar el histórico anterior.`)
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : 'No se ha podido registrar la valoración.')
@@ -199,13 +208,13 @@ export default function AdminStudentLevelCard({
 
       {editing && summary && <form className="admin-student-level-form phase14-form-grid" onSubmit={saveAssessment}>
         <div className="admin-student-level-form-title phase14-wide"><strong>Nueva valoración de academia</strong><span>Crea una entrada nueva. Nunca reemplaza una valoración anterior ni el resultado automático.</span></div>
-        <label>Nivel validado<select aria-label="Nivel validado por Administración" value={validatedLevel} onChange={(event) => setValidatedLevel(event.target.value as CefrLevel)}>{LEVELS.map((level) => <option key={level}>{level}</option>)}</select></label>
+        <label>Nivel validado<select aria-label="Nivel validado por Administración" value={validatedLevel} onChange={(event) => { setValidatedLevel(event.target.value as CefrLevel); setAcknowledgeMismatch(false) }}>{LEVELS.map((level) => <option key={level}>{level}</option>)}</select></label>
         <label>Speaking<select aria-label="Speaking por Administración" value={speakingLevel} onChange={(event) => setSpeakingLevel(event.target.value as CefrLevel | '')}><option value="">Sin valorar</option>{LEVELS.map((level) => <option key={level}>{level}</option>)}</select></label>
         <label>Motivo<select aria-label="Motivo de valoración por Administración" value={reason} onChange={(event) => setReason(event.target.value as typeof reason)}>{reasonOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
         <label className="admin-student-level-source">Evidencia automática<select aria-label="Vincular último test automático" value={useAutomatic ? 'LATEST' : ''} disabled={!latestAttempt || reason === 'INITIAL'} onChange={(event) => setUseAutomatic(event.target.value === 'LATEST')}><option value="">No vincular</option>{latestAttempt && <option value="LATEST">{latestAttempt.estimatedLevel} · {Math.round(latestAttempt.scorePercent)}%</option>}</select></label>
-        {mismatch && <div className="admin-student-level-form-warning phase14-wide" role="alert"><strong>Diferencia con el grupo</strong><span>Vas a registrar {validatedLevel}, mientras que {groupName ? `el grupo ${groupName}` : 'el grupo activo'} tiene nivel objetivo {targetLevel}. Conviene justificar la decisión en observaciones.</span></div>}
+        {mismatch && <div className="admin-student-level-form-warning phase14-wide" role="alert"><strong>Diferencia con el grupo</strong><span>Vas a registrar {validatedLevel}, mientras que {groupName ? `el grupo ${groupName}` : 'el grupo activo'} tiene nivel objetivo {targetLevel}. Justifica la decisión en observaciones y confírmala expresamente.</span><label className="admin-student-level-confirm"><input type="checkbox" aria-label="Confirmar desajuste entre nivel y grupo" checked={acknowledgeMismatch} onChange={(event) => setAcknowledgeMismatch(event.target.checked)} /><span>Confirmo que el nivel validado no coincide con el grupo actual y que la decisión queda justificada en observaciones.</span></label></div>}
         <label className="phase14-wide">Observaciones<textarea aria-label="Observaciones de nivel por Administración" rows={4} value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Criterio académico, evolución, motivo del ajuste o justificación del encaje con el grupo…" /></label>
-        <div className="phase14-form-actions"><button type="button" onClick={() => setEditing(false)}>Cancelar</button><button className="button button-primary" disabled={saving}>{saving ? 'Guardando…' : 'Guardar nueva valoración'}</button></div>
+        <div className="phase14-form-actions"><button type="button" onClick={() => setEditing(false)}>Cancelar</button><button className="button button-primary" disabled={saving || (mismatch && (!acknowledgeMismatch || !notes.trim()))}>{saving ? 'Guardando…' : 'Guardar nueva valoración'}</button></div>
       </form>}
     </article>
   )
