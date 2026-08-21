@@ -28,6 +28,8 @@ migrate((app) => {
   users.otp.enabled = false
   users.otp.duration = 180
   users.otp.length = 8
+  users.otp.emailTemplate.subject = 'OTP for {APP_NAME}'
+  users.otp.emailTemplate.body = '<p>Hello,</p>\n<p>Your one-time password is: <strong>{OTP}</strong></p>\n<p><i>If you didn\'t ask for the one-time password, you can ignore this email.</i></p>\n<p>\n  Thanks,<br/>\n  {APP_NAME} team\n</p>'
 
   app.save(users)
 })
