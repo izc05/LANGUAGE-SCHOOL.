@@ -16,10 +16,14 @@ onRecordUpdateRequest((e) => {
     throw new BadRequestError('Administración no puede establecer ni sustituir credenciales de alumnos o profesores.')
   }
 
-  if (role === 'ADMIN' && current.id !== auth.id) {
-    const touchesAdminSecurity = touchesCredentials || hasOwn('email') || hasOwn('status')
-    if (touchesAdminSecurity) {
-      throw new BadRequestError('Un administrador no puede alterar las credenciales, el email ni el estado de otro administrador desde la API general.')
+  if (role === 'ADMIN') {
+    if (current.id !== auth.id) {
+      throw new ForbiddenError('Un administrador no puede modificar otra cuenta de administrador desde la API general.')
+    }
+
+    const touchesOwnAdminSecurity = touchesCredentials || hasOwn('email') || hasOwn('status')
+    if (touchesOwnAdminSecurity) {
+      throw new BadRequestError('Las credenciales, el email y el estado de tu cuenta ADMIN deben gestionarse mediante los flujos de seguridad dedicados.')
     }
   }
 
