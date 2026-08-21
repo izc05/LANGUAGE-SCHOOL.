@@ -132,9 +132,10 @@ export default function AdminStudentLevelCard({
     try {
       if (isDemoMode) {
         const now = new Date().toISOString()
+        const automaticLevel: CefrLevel | '' = useAutomatic ? (latestAttempt?.estimatedLevel || '') : ''
         const assessment = {
           id: `demo-${Date.now()}`,
-          automaticLevel: useAutomatic ? latestAttempt?.estimatedLevel || '' : '',
+          automaticLevel,
           speakingLevel,
           validatedLevel,
           reason,
