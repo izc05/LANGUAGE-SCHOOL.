@@ -32,14 +32,16 @@ Production environment created at:
 Before any production deployment, edit it as root and:
 1. replace PUBLIC_ORIGIN with the final public HTTPS origin;
 2. verify PB_URL / PROXY_URL remain loopback-only;
-3. configure a real Cloudflare Turnstile widget for the final hostname;
-4. replace TURNSTILE_SITE_KEY and TURNSTILE_SECRET_KEY placeholders;
-5. keep TURNSTILE_EXPECTED_ACTION=contact and include the PUBLIC_ORIGIN hostname in TURNSTILE_ALLOWED_HOSTNAMES;
-6. set BACKUP_MOUNT to the real external backup mountpoint;
-7. if Zoom will be enabled, add the private server variables listed in:
+3. configure SMTP_ENABLED=true with the real mail host, sender and credentials required for ADMIN MFA, invitations and password recovery;
+4. send a real test email before relying on MFA or password recovery;
+5. configure a real Cloudflare Turnstile widget for the final hostname;
+6. replace TURNSTILE_SITE_KEY and TURNSTILE_SECRET_KEY placeholders;
+7. keep TURNSTILE_EXPECTED_ACTION=contact and include the PUBLIC_ORIGIN hostname in TURNSTILE_ALLOWED_HOSTNAMES;
+8. set BACKUP_MOUNT to the real external backup mountpoint;
+9. if Zoom will be enabled, add the private server variables listed in:
    v3/infrastructure/PRIVATE-VARIABLES.md
 
 Never place real secrets in Git, VITE_* variables or public CMS records.
-TURNSTILE_SITE_KEY is public; TURNSTILE_SECRET_KEY is server-only.
+TURNSTILE_SITE_KEY is public; TURNSTILE_SECRET_KEY and SMTP credentials are server-only.
 The file must remain root-owned with mode 0640.
 EOF
