@@ -177,7 +177,7 @@ jobs:
           npx playwright test visual-review/phase18a.spec.ts --config=playwright.visual.config.ts --grep-invert 'web pública'
 
       - name: Upload visual review evidence (Phase 18A)
-        if: always()
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: language-school-v2-visual-review-phase18a
