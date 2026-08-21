@@ -58,6 +58,7 @@ const AdminZoomIntegrationPage = lazy(() => import('../pages/admin/AdminZoomInte
 const AdminPlacementTestPage = lazy(() => import('../pages/admin/AdminPlacementTestPage'))
 const AdminPlacementResultsPage = lazy(() => import('../pages/admin/AdminPlacementResultsPage'))
 const AdminPricingPage = lazy(() => import('../pages/admin/AdminPricingPage'))
+const AdminAdministratorsPage = lazy(() => import('../pages/admin/AdminAdministratorsPage'))
 const AdminSettingsPage = lazy(() => import('../pages/admin/AdminSettingsPage'))
 const AdminSystemStatusPage = lazy(() => import('../pages/admin/AdminSystemStatusPage'))
 
@@ -131,6 +132,7 @@ export default function App() {
         <Route path="/admin/test-de-nivel" element={<RequireRole allow={['ADMIN']}><AdminPlacementTestPage /></RequireRole>} />
         <Route path="/admin/test-de-nivel/resultados" element={<RequireRole allow={['ADMIN']}><AdminPlacementResultsPage /></RequireRole>} />
         <Route path="/admin/tarifas" element={<RequireRole allow={['ADMIN']}><AdminPricingPage /></RequireRole>} />
+        <Route path="/admin/administradores" element={<RequireRole allow={['ADMIN']}><AdminAdministratorsPage /></RequireRole>} />
         <Route path="/admin/configuracion" element={<RequireRole allow={['ADMIN']}><AdminSettingsPage /></RequireRole>} />
         <Route path="/admin/sistema" element={<RequireRole allow={['ADMIN']}><AdminSystemStatusPage /></RequireRole>} />
 
