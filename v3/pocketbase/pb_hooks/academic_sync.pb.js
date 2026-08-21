@@ -96,25 +96,6 @@ onRecordUpdateRequest((e) => {
   e.next()
 }, 'groups')
 
-onRecordAfterUpdateSuccess((e) => {
-  const newTeacher = e.record.getString('teacher')
-  if (!newTeacher) return e.next()
-
-  const now = Date.now()
-  const scheduled = e.app.findAllRecords(
-    'classes',
-    $dbx.hashExp({ group: e.record.id, status: 'SCHEDULED' }),
-  )
-  scheduled.forEach((classRecord) => {
-    const startsAt = new Date(classRecord.getString('starts_at')).getTime()
-    if (!Number.isFinite(startsAt) || startsAt < now || classRecord.getString('teacher') === newTeacher) return
-    classRecord.set('teacher', newTeacher)
-    e.app.save(classRecord)
-  })
-
-  e.next()
-}, 'groups')
-
 onRecordCreateRequest((e) => {
   function readId(value, label) {
     const id = typeof value === 'string' ? value.trim() : ''
