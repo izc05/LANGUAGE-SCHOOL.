@@ -90,6 +90,9 @@ jobs:
       - name: Run secure account invitation smoke test
         run: bash "$GITHUB_WORKSPACE/v3/pocketbase/ci/account-invitations-phase15b-smoke.sh"
 
+      - name: Run secure ADMIN invitation smoke test
+        run: bash "$GITHUB_WORKSPACE/v3/pocketbase/ci/admin-account-invitations-security-smoke.sh"
+
       - name: Run student onboarding foundation smoke test
         run: bash "$GITHUB_WORKSPACE/v3/pocketbase/ci/student-onboarding-phase15b-smoke.sh"
 
