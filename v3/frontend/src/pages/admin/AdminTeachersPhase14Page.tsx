@@ -58,7 +58,6 @@ export default function AdminTeachersPhase14Page() {
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'INACTIVE'>('ALL')
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
-  const [activationUrl, setActivationUrl] = useState('')
   const [createdTeacherId, setCreatedTeacherId] = useState('')
   const [name, setName] = useState('')
   const [surname, setSurname] = useState('')
@@ -101,7 +100,7 @@ export default function AdminTeachersPhase14Page() {
 
   async function createTeacher(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    setError(null); setMessage(null); setActivationUrl(''); setCreatedTeacherId('')
+    setError(null); setMessage(null); setCreatedTeacherId('')
     if (isDemoMode) { setShowCreate(false); setMessage('Invitación preparada en la demostración.'); return }
     setSaving(true)
     try {
@@ -118,12 +117,11 @@ export default function AdminTeachersPhase14Page() {
       const [teacherUsers, profileRecords] = await Promise.all([listAdminUsers('TEACHER'), listAdminTeacherProfiles()])
       setTeachers(teacherUsers)
       setProfiles(profileRecords)
-      setActivationUrl(issued.activationUrl)
       setCreatedTeacherId(issued.userId)
       setName(''); setSurname(''); setEmail(''); setPhone(''); setSpecialtyText(''); setBio(''); setShowCreate(false)
       setMessage(issued.emailSent
-        ? 'Profesor invitado. El correo de activación se ha enviado y la contraseña la elegirá el propio profesor.'
-        : 'Profesor invitado. El correo no se ha podido enviar; entrega el enlace de activación manualmente.')
+        ? 'Profesor invitado. El enlace privado de activación se ha enviado únicamente a su correo y la contraseña la elegirá el propio profesor.'
+        : 'Profesor invitado, pero el correo no se ha podido enviar. Por seguridad el enlace privado no se muestra: revisa SMTP y reenvía la invitación desde su ficha.')
     } catch (creationError) {
       setError(creationError instanceof Error ? creationError.message : 'No se ha podido preparar la invitación del profesor.')
     } finally { setSaving(false) }
@@ -138,9 +136,9 @@ export default function AdminTeachersPhase14Page() {
         {message && <div className="cms-notice success-notice" role="status">{message}</div>}
         {error && <div className="cms-notice auth-error" role="alert">{error}</div>}
 
-        {activationUrl && <section className="panel phase14-create-card" aria-label="Invitación del profesor preparada"><div className="panel-heading"><div><span className="eyebrow">ACCESO SEGURO</span><h3>Invitación preparada</h3><p>Este enlace es personal y de un solo uso. Administración no conoce la contraseña del profesor.</p></div>{createdTeacherId && <Link to={`/admin/profesores/${createdTeacherId}`}>Abrir ficha →</Link>}</div><label className="field-stack"><span>Enlace de activación del profesor</span><input aria-label="Enlace de activación del profesor" readOnly value={activationUrl} onFocus={(event) => event.currentTarget.select()} /></label></section>}
+        {createdTeacherId && <section className="panel phase14-create-card" aria-label="Invitación del profesor preparada"><div className="panel-heading"><div><span className="eyebrow">ACCESO SEGURO</span><h3>Invitación preparada</h3><p>El enlace de activación es secreto y se entrega únicamente al correo del profesor. Administración puede gestionar el estado de la invitación, pero nunca ver el token ni la contraseña.</p></div><Link to={`/admin/profesores/${createdTeacherId}`}>Abrir ficha →</Link></div></section>}
 
-        {showCreate && <section className="panel phase14-create-card"><div className="panel-heading"><div><span className="eyebrow">ALTA SEGURA</span><h3>Nuevo profesor</h3><p>La cuenta se crea como invitada. El profesor elegirá su propia contraseña desde un enlace de un solo uso.</p></div><span className="status info">Sin contraseña inicial</span></div><form className="phase14-form-grid" onSubmit={createTeacher}>
+        {showCreate && <section className="panel phase14-create-card"><div className="panel-heading"><div><span className="eyebrow">ALTA SEGURA</span><h3>Nuevo profesor</h3><p>La cuenta se crea como invitada. El profesor elegirá su propia contraseña desde un enlace privado de un solo uso enviado a su correo.</p></div><span className="status info">Sin contraseña inicial</span></div><form className="phase14-form-grid" onSubmit={createTeacher}>
           <label>Nombre<input value={name} onChange={(event) => setName(event.target.value)} required /></label><label>Apellidos<input value={surname} onChange={(event) => setSurname(event.target.value)} required /></label>
           <label>Email<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required /></label><label>Teléfono<input type="tel" value={phone} onChange={(event) => setPhone(event.target.value)} /></label>
           <label>Especialidades<input value={specialtyText} onChange={(event) => setSpecialtyText(event.target.value)} placeholder="B1, conversación, Kids" /></label><label className="phase14-wide">Bio docente<textarea rows={4} value={bio} onChange={(event) => setBio(event.target.value)} placeholder="Trayectoria, enfoque, experiencia…" /></label><div className="phase14-form-actions"><button type="button" onClick={() => setShowCreate(false)}>Cancelar</button><button className="button button-primary" disabled={saving}>{saving ? 'Preparando invitación…' : 'Crear profesor e invitación'}</button></div>
