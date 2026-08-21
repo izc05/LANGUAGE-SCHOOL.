@@ -42,30 +42,12 @@ function formatDateTime(value?: string | null): string {
   }).format(date)
 }
 
-async function copyText(value: string): Promise<void> {
-  if (navigator.clipboard && window.isSecureContext) {
-    await navigator.clipboard.writeText(value)
-    return
-  }
-  const textarea = document.createElement('textarea')
-  textarea.value = value
-  textarea.setAttribute('readonly', '')
-  textarea.style.position = 'fixed'
-  textarea.style.opacity = '0'
-  document.body.appendChild(textarea)
-  textarea.select()
-  const copied = document.execCommand('copy')
-  textarea.remove()
-  if (!copied) throw new Error('No se ha podido copiar el enlace.')
-}
-
 export default function AdminAccountInvitationCard({ userId, accountStatus, isDemoMode }: Props) {
   const [status, setStatus] = useState<AdminAccountInvitationStatusResponse | null>(
     isDemoMode
       ? { userId, accountStatus, invitationStatus: accountStatus === 'INVITED' ? 'PENDING' : 'NONE' }
       : null,
   )
-  const [activationUrl, setActivationUrl] = useState('')
   const [loading, setLoading] = useState(!isDemoMode)
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
@@ -93,14 +75,13 @@ export default function AdminAccountInvitationCard({ userId, accountStatus, isDe
 
   async function reissue() {
     if (!canManageInvitation) return
-    setBusy(true); setError(null); setMessage(null); setActivationUrl('')
+    setBusy(true); setError(null); setMessage(null)
     try {
       const issued = await reissueAdminAccountInvitation(userId)
-      setActivationUrl(issued.activationUrl)
       await refreshStatus()
       setMessage(issued.emailSent
-        ? 'Invitación regenerada y enviada. El enlace anterior ya no es válido.'
-        : 'Invitación regenerada. El correo no se ha podido enviar; puedes entregar el enlace manualmente.')
+        ? 'Invitación regenerada y enviada únicamente al correo de la persona invitada. El enlace anterior ya no es válido.'
+        : 'Invitación regenerada, pero el correo no se ha podido enviar. Por seguridad el enlace privado no se muestra: revisa SMTP y vuelve a reenviarla.')
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : 'No se ha podido regenerar la invitación.')
     } finally { setBusy(false) }
@@ -111,23 +92,11 @@ export default function AdminAccountInvitationCard({ userId, accountStatus, isDe
     setBusy(true); setError(null); setMessage(null)
     try {
       await revokeAdminAccountInvitation(userId)
-      setActivationUrl('')
       await refreshStatus()
       setMessage('Invitación revocada. Puedes generar una nueva cuando la necesites.')
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : 'No se ha podido revocar la invitación.')
     } finally { setBusy(false) }
-  }
-
-  async function copyActivationLink() {
-    if (!activationUrl) return
-    try {
-      await copyText(activationUrl)
-      setError(null)
-      setMessage('Enlace de activación copiado.')
-    } catch (copyError) {
-      setError(copyError instanceof Error ? copyError.message : 'No se ha podido copiar el enlace.')
-    }
   }
 
   return (
@@ -140,13 +109,11 @@ export default function AdminAccountInvitationCard({ userId, accountStatus, isDe
         <div><span>Último envío</span><strong>{formatDateTime(status?.sentAt)}</strong></div>
       </div>
 
-      {effectiveAccountStatus === 'INVITED' && <p className="phase14-private-notes">La persona invitada debe crear su propia contraseña desde un enlace de un solo uso. Administración no puede ver ni establecer esa contraseña.</p>}
+      {effectiveAccountStatus === 'INVITED' && <p className="phase14-private-notes">La persona invitada debe crear su propia contraseña desde un enlace privado de un solo uso enviado a su correo. Administración puede regenerar o revocar la invitación, pero no puede ver el token ni establecer la contraseña.</p>}
       {effectiveAccountStatus === 'ACTIVE' && <p className="phase14-private-notes">La cuenta ya fue activada por su titular. No es necesario gestionar ninguna contraseña desde Administración.</p>}
 
       {message && <div className="cms-notice success-notice" role="status">{message}</div>}
       {error && <div className="cms-notice auth-error" role="alert">{error}</div>}
-
-      {activationUrl && <div className="phase14-bio"><span>Enlace manual de activación</span><p><a href={activationUrl} target="_blank" rel="noreferrer">{activationUrl}</a></p><div className="phase14-profile-actions"><button type="button" onClick={() => void copyActivationLink()}>Copiar enlace</button></div></div>}
 
       {canManageInvitation && <div className="phase14-profile-actions">
         <button className="button button-primary" type="button" disabled={busy} onClick={() => void reissue()}>{busy ? 'Procesando…' : status?.invitationStatus === 'PENDING' ? 'Regenerar / reenviar invitación' : 'Generar nueva invitación'}</button>
