@@ -77,8 +77,18 @@ test('SECURITY-AUTH.2: Admin invita otro ADMIN, titular activa su cuenta y prime
     await page.getByLabel('Apellidos').fill('Administradora')
     await page.getByLabel('Email').fill(email)
     await page.getByLabel(/Teléfono/).fill('600123456')
+
+    const inviteResponsePromise = page.waitForResponse((response) =>
+      response.url().endsWith('/api/language-school/admin/accounts/invite') && response.request().method() === 'POST',
+    )
     await page.getByRole('button', { name: 'Enviar invitación segura' }).click()
-    await expect(page.getByRole('status')).toContainText('Administrador invitado')
+    const inviteResponse = await inviteResponsePromise
+    expect(inviteResponse.status()).toBe(201)
+    const invitePayload = await inviteResponse.json() as { activationUrl?: string; emailSent?: boolean }
+    expect(invitePayload.activationUrl).toBe('')
+    expect(invitePayload.emailSent).toBe(true)
+    await expect(page.locator('.success-notice')).toContainText('Administrador invitado')
+    await expect(page.locator('a[href*="/activar-cuenta?token="]')).toHaveCount(0)
 
     await expect.poll(async () => (await capturedMailFor(request, email)).length, { timeout: 8_000 }).toBe(1)
     const [activationMail] = await capturedMailFor(request, email)
