@@ -35,7 +35,10 @@ test('15B.3C.3: alta guiada completa cuenta, nivel, matrícula e invitación sin
   await wizard.getByRole('button', { name: /Continuar/ }).click()
 
   await expect(wizard.getByRole('heading', { name: '¿Cómo empezamos su evaluación?' })).toBeVisible()
-  await wizard.getByRole('radio', { name: /Nivel inicial de academia/ }).check()
+  const initialLevelChoice = wizard.getByRole('radio', { name: /Nivel inicial de academia/ })
+  await initialLevelChoice.focus()
+  await page.keyboard.press('Space')
+  await expect(initialLevelChoice).toBeChecked()
   await wizard.getByLabel('Nivel inicial').selectOption('B2')
   await wizard.getByLabel('Observación').fill('Entrevista inicial E2E · asignación pedagógica consciente')
   await wizard.getByRole('button', { name: /Continuar/ }).click()
@@ -60,7 +63,9 @@ test('15B.3C.3: alta guiada completa cuenta, nivel, matrícula e invitación sin
   const mismatch = wizard.getByRole('checkbox', { name: /Confirmar asignación con diferencia de nivel/ })
   await expect(mismatch).toBeVisible()
   await expect(confirm).toBeDisabled()
-  await mismatch.check()
+  await mismatch.focus()
+  await page.keyboard.press('Space')
+  await expect(mismatch).toBeChecked()
   await expect(confirm).toBeEnabled()
   await confirm.click()
 
