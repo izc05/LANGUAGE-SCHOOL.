@@ -1,5 +1,6 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
+import AdminAccountInvitationCard from '../../components/AdminAccountInvitationCard'
 import DashboardShell from '../../components/DashboardShell'
 import PortalEmptyState from '../../components/PortalEmptyState'
 import { useAuth } from '../../features/auth/AuthProvider'
@@ -211,6 +212,8 @@ export default function AdminStudentDetailPhase14Page() {
             <div><span>Fecha de nacimiento</span><strong>{formatDate(profile?.birth_date)}</strong></div><div><span>Tutor/a</span><strong>{profile?.guardian_name || 'No indicado'}</strong></div>
             <div><span>Teléfono tutor/a</span><strong>{profile?.guardian_phone || 'No indicado'}</strong></div><div><span>Cuenta</span><strong>{accountStateLabel(student || undefined)}</strong></div>
           </div></article>
+
+          {student && <AdminAccountInvitationCard userId={student.id} accountStatus={student.status} isDemoMode={isDemoMode} />}
 
           <article className="panel phase14-profile-card phase14-payment-card"><div className="panel-heading"><div><span className="eyebrow">PAGOS</span><h3>Situación económica</h3></div><Link className="student-payment-link" to={`/admin/pagos?alumno=${encodeURIComponent(student?.id || '')}`}>Gestionar pagos</Link></div><div className="phase14-payment-summary"><div><span>Estado</span><strong>{paymentState}</strong></div><div><span>Cubierto hasta</span><strong>{coverage ? formatDate(coverage) : 'Sin cobertura'}</strong></div><div><span>Pendiente</span><strong>{euro.format(pendingCents / 100)}</strong></div></div><div className="phase14-payment-history">{recentPayments.map((record) => <div key={record.id}><span><strong>{record.billing_mode === 'INTENSIVE' ? 'Intensivo' : 'Mensual'}</strong><small>{formatDate(record.period_start)} → {formatDate(record.period_end)}</small></span><b>{euro.format(record.amount_cents / 100)}</b><i className={`payment-state ${effectivePaymentStatus(record).toLowerCase()}`}>{effectivePaymentStatus(record) === 'PAID' ? 'Pagado' : effectivePaymentStatus(record) === 'OVERDUE' ? 'Vencido' : effectivePaymentStatus(record) === 'PENDING' ? 'Pendiente' : effectivePaymentStatus(record)}</i></div>)}{recentPayments.length === 0 && <small>Sin pagos registrados todavía.</small>}</div></article>
 

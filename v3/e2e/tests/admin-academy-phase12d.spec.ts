@@ -56,9 +56,11 @@ test('14C: Alumnos y Profesores conservan gestión académica con directorios re
   await expect(studentRows.first()).toHaveAttribute('href', /\/admin\/alumnos\/[^/]+$/)
 
   await studentPage.getByRole('button', { name: '+ Nuevo alumno' }).click()
-  const studentCreate = studentPage.locator('.phase14-create-card')
+  const studentCreate = studentPage.locator('.student-onboarding-card')
   await expect(studentCreate.getByRole('heading', { name: 'Nuevo alumno' })).toBeVisible()
-  await expect(studentCreate.locator('input')).toHaveCount(8)
+  await expect(studentCreate.getByLabel('Fecha de nacimiento')).toBeVisible()
+  await expect(studentCreate.getByText('Sin contraseña inicial')).toBeVisible()
+  await expect(studentCreate.getByLabel('Contraseña inicial')).toHaveCount(0)
   await studentPage.getByRole('button', { name: 'Cerrar alta' }).click()
   await expect(studentCreate).toHaveCount(0)
 

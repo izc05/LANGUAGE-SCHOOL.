@@ -55,6 +55,7 @@ test('14C: Admin usa directorios filtrables y fichas completas de Alumno y Profe
   await expect(studentDetail.getByRole('heading', { name: /E2E Student/ })).toBeVisible()
   await expect(studentDetail.getByRole('heading', { name: 'Matrícula y aprendizaje' })).toBeVisible()
   await expect(studentDetail.getByRole('heading', { name: 'Datos personales' })).toBeVisible()
+  await expect(studentDetail.getByRole('heading', { name: 'Cuenta e invitación' })).toBeVisible()
   await expect(studentDetail.getByRole('heading', { name: 'Situación económica' })).toBeVisible()
   await expect(studentDetail.getByRole('heading', { name: 'Notas privadas' })).toBeVisible()
   await studentDetail.getByRole('button', { name: 'Editar ficha' }).click()
