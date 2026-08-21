@@ -152,6 +152,7 @@ test('8C.5: profesor solo valida alumnos propios y conserva el test automático'
   await page.goto('/profesor/niveles')
   await expect(page.getByRole('heading', { name: 'Niveles de mis alumnos' })).toBeVisible()
   await expect(page.getByText('E2E Student', { exact: true }).first()).toBeVisible()
+  await page.getByRole('button', { name: /E2E Student/ }).click()
   await expect(page.locator('.teacher-levels-current').getByText('C1', { exact: true })).toBeVisible()
   await expect(page.locator('.teacher-level-attempt')).toContainText('C2 · 100%')
   await expect(page.locator('.teacher-level-history-list')).toContainText('Speaking C1')
