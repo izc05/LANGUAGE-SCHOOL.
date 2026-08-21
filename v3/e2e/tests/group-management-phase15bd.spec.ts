@@ -123,12 +123,28 @@ test('15B.3D.1: cambio de profesor de Grupo/Aula requiere decisión explícita y
     const completed = await createClass('Completed history', past(5), past(4.9), 'COMPLETED')
     const cancelled = await createClass('Cancelled history', future(5), future(5.1), 'CANCELLED')
 
-    // A direct PATCH no longer has the hidden side effect of rewriting future classes.
+    // Teacher changes must not bypass the explicit decision through the generic collection PATCH.
     const directTeacherPatch = await api(page, `/api/collections/groups/records/${groupId}`, 'PATCH', { teacher: teacherB.body.id })
-    expect(directTeacherPatch.status).toBe(200)
-    const scheduledAfterDirectPatch = await api(page, `/api/collections/classes/records/${scheduledA.id}`)
-    expect(scheduledAfterDirectPatch.status).toBe(200)
-    expect(scheduledAfterDirectPatch.body.teacher).toBe(teacherA.body.id)
+    expect(directTeacherPatch.status).toBe(400)
+    const groupAfterBlockedPatch = await api(page, `/api/collections/groups/records/${groupId}`)
+    expect(groupAfterBlockedPatch.body.teacher).toBe(teacherA.body.id)
+
+    // The canonical endpoint refuses a teacher change until Admin makes an explicit decision.
+    const missingDecision = await api(page, `/api/language-school/admin/academic/groups/${groupId}/update`, 'POST', {
+      patch: { teacher: teacherB.body.id },
+    })
+    expect(missingDecision.status).toBe(400)
+
+    // Admin may consciously keep the teacher already stored in scheduled classes.
+    const keepFutureOverrides = await api(page, `/api/language-school/admin/academic/groups/${groupId}/update`, 'POST', {
+      patch: { teacher: teacherB.body.id },
+      reassignFutureScheduledClasses: false,
+    })
+    expect(keepFutureOverrides.status, JSON.stringify(keepFutureOverrides.body)).toBe(200)
+    expect(keepFutureOverrides.body).toMatchObject({ teacherChanged: true, reassignedFutureScheduledClasses: 0 })
+
+    const scheduledAKept = await api(page, `/api/collections/classes/records/${scheduledA.id}`)
+    expect(scheduledAKept.body.teacher).toBe(teacherA.body.id)
 
     // A class created after the group change inherits the current group teacher server-side.
     const scheduledB = await api(page, '/api/collections/classes/records', 'POST', {
@@ -147,35 +163,20 @@ test('15B.3D.1: cambio de profesor de Grupo/Aula requiere decisión explícita y
     expect(scheduledB.body.teacher).toBe(teacherB.body.id)
     cleanup.push(async () => { await api(page, `/api/collections/classes/records/${scheduledB.body.id}`, 'DELETE') })
 
-    // Teacher changes through the canonical endpoint require an explicit decision.
-    const missingDecision = await api(page, `/api/language-school/admin/academic/groups/${groupId}/update`, 'POST', {
-      patch: { teacher: teacherA.body.id },
-    })
-    expect(missingDecision.status).toBe(400)
-
-    const keepFutureOverrides = await api(page, `/api/language-school/admin/academic/groups/${groupId}/update`, 'POST', {
-      patch: { teacher: teacherA.body.id },
-      reassignFutureScheduledClasses: false,
-    })
-    expect(keepFutureOverrides.status).toBe(200)
-    expect(keepFutureOverrides.body).toMatchObject({ teacherChanged: true, reassignedFutureScheduledClasses: 0 })
-
-    const scheduledBKept = await api(page, `/api/collections/classes/records/${scheduledB.body.id}`)
-    expect(scheduledBKept.body.teacher).toBe(teacherB.body.id)
-
-    const modeBefore = scheduledBKept.body.delivery_mode
+    const modeBefore = scheduledB.body.delivery_mode
     const modeOnly = await api(page, `/api/language-school/admin/academic/groups/${groupId}/update`, 'POST', {
       patch: { default_delivery_mode: 'HYBRID' },
     })
-    expect(modeOnly.status).toBe(200)
+    expect(modeOnly.status, JSON.stringify(modeOnly.body)).toBe(200)
     const scheduledBAfterMode = await api(page, `/api/collections/classes/records/${scheduledB.body.id}`)
     expect(scheduledBAfterMode.body.delivery_mode).toBe(modeBefore)
 
+    // Choosing reassignment only rewrites future SCHEDULED classes whose teacher differs.
     const reassignFuture = await api(page, `/api/language-school/admin/academic/groups/${groupId}/update`, 'POST', {
-      patch: { teacher: teacherB.body.id },
+      patch: { teacher: teacherA.body.id },
       reassignFutureScheduledClasses: true,
     })
-    expect(reassignFuture.status).toBe(200)
+    expect(reassignFuture.status, JSON.stringify(reassignFuture.body)).toBe(200)
     expect(reassignFuture.body.teacherChanged).toBe(true)
     expect(reassignFuture.body.reassignedFutureScheduledClasses).toBe(1)
 
@@ -186,8 +187,8 @@ test('15B.3D.1: cambio de profesor de Grupo/Aula requiere decisión explícita y
       api(page, `/api/collections/classes/records/${completed.id}`),
       api(page, `/api/collections/classes/records/${cancelled.id}`),
     ])
-    expect(futureAAfter.body.teacher).toBe(teacherB.body.id)
-    expect(futureBAfter.body.teacher).toBe(teacherB.body.id)
+    expect(futureAAfter.body.teacher).toBe(teacherA.body.id)
+    expect(futureBAfter.body.teacher).toBe(teacherA.body.id)
     expect(pastAfter.body.teacher).toBe(teacherA.body.id)
     expect(completedAfter.body.teacher).toBe(teacherA.body.id)
     expect(cancelledAfter.body.teacher).toBe(teacherA.body.id)
@@ -197,15 +198,15 @@ test('15B.3D.1: cambio de profesor de Grupo/Aula requiere decisión explícita y
     })
     expect(courseChangeWithHistory.status).toBe(400)
 
-    const deactivateTeacherA = await api(page, `/api/collections/users/records/${teacherA.body.id}`, 'PATCH', { status: 'INACTIVE' })
-    expect(deactivateTeacherA.status).toBe(200)
+    const deactivateTeacherB = await api(page, `/api/collections/users/records/${teacherB.body.id}`, 'PATCH', { status: 'INACTIVE' })
+    expect(deactivateTeacherB.status).toBe(200)
     const inactiveTeacherChange = await api(page, `/api/language-school/admin/academic/groups/${groupId}/update`, 'POST', {
-      patch: { teacher: teacherA.body.id },
+      patch: { teacher: teacherB.body.id },
       reassignFutureScheduledClasses: true,
     })
     expect(inactiveTeacherChange.status).toBe(400)
-    const restoreTeacherA = await api(page, `/api/collections/users/records/${teacherA.body.id}`, 'PATCH', { status: 'ACTIVE' })
-    expect(restoreTeacherA.status).toBe(200)
+    const restoreTeacherB = await api(page, `/api/collections/users/records/${teacherB.body.id}`, 'PATCH', { status: 'ACTIVE' })
+    expect(restoreTeacherB.status).toBe(200)
 
     // Course can still be corrected safely while a group is genuinely empty.
     const emptyGroup = await api(page, '/api/collections/groups/records', 'POST', {
@@ -225,7 +226,7 @@ test('15B.3D.1: cambio de profesor de Grupo/Aula requiere decisión explícita y
     const emptyCourseChange = await api(page, `/api/language-school/admin/academic/groups/${emptyGroup.body.id}/update`, 'POST', {
       patch: { course: courseB.body.id },
     })
-    expect(emptyCourseChange.status).toBe(200)
+    expect(emptyCourseChange.status, JSON.stringify(emptyCourseChange.body)).toBe(200)
     expect(emptyCourseChange.body.courseId).toBe(courseB.body.id)
   } finally {
     for (const remove of cleanup.reverse()) {
