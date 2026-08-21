@@ -144,7 +144,7 @@ routerAdd('POST', '/api/language-school/admin/student-onboarding/complete', (e) 
   const levelMode = readLevelMode(data.levelMode)
   const initialLevel = readInitialLevel(levelMode, data.initialLevel)
   const acknowledgeLevelMismatch = data.acknowledgeLevelMismatch === true
-  const activationBaseUrl = readBase(data.activationBaseUrl)
+  const activationBaseUrl = readBase(e.app.settings().meta.appURL || '')
 
   let userId = ''
   let profileId = ''
@@ -180,9 +180,6 @@ routerAdd('POST', '/api/language-school/admin/student-onboarding/complete', (e) 
     rawToken = issued.token
     expiresAt = issued.invitation.getString('expires_at')
 
-    // Capacity is deliberately revalidated after all onboarding records have been
-    // staged in the same transaction. If it fails, PocketBase rolls back the
-    // account, profile, optional level, invitation and enrollment together.
     const occupied = txApp.countRecords(
       'enrollments',
       $dbx.hashExp({ group: targetGroupId, status: 'ACTIVE' }),
