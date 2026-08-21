@@ -4,7 +4,6 @@ import DashboardShell from '../../components/DashboardShell'
 import PortalEmptyState from '../../components/PortalEmptyState'
 import { useAuth } from '../../features/auth/AuthProvider'
 import {
-  createAdminTeacher,
   listAdminClasses,
   listAdminEnrollments,
   listAdminGroups,
@@ -13,6 +12,7 @@ import {
   type AdminEnrollmentRecord,
   type AdminGroupRecord,
 } from '../../services/pocketbase/adminAcademic'
+import { issueAdminAccountInvitation } from '../../services/pocketbase/accountInvitations'
 import type { AppUser } from '../../services/pocketbase/types'
 import type { ClassRecord } from '../../services/pocketbase/studentPortal'
 import type { TeacherProfileRecord } from '../../services/pocketbase/teacherPortal'
@@ -37,6 +37,13 @@ function specialties(profile?: TeacherProfileRecord): string[] {
   return String(profile.specialties).split(',').map((item) => item.trim()).filter(Boolean)
 }
 
+function teacherStatusLabel(status: AppUser['status']): string {
+  if (status === 'ACTIVE') return 'Activo'
+  if (status === 'INVITED') return 'Invitado'
+  if (status === 'SUSPENDED') return 'Suspendido'
+  return 'Pausado'
+}
+
 export default function AdminTeachersPhase14Page() {
   const { isDemoMode } = useAuth()
   const [teachers, setTeachers] = useState<AppUser[]>(isDemoMode ? demoTeachers : [])
@@ -51,11 +58,12 @@ export default function AdminTeachersPhase14Page() {
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'INACTIVE'>('ALL')
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
+  const [activationUrl, setActivationUrl] = useState('')
+  const [createdTeacherId, setCreatedTeacherId] = useState('')
   const [name, setName] = useState('')
   const [surname, setSurname] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
-  const [password, setPassword] = useState('')
   const [specialtyText, setSpecialtyText] = useState('')
   const [bio, setBio] = useState('')
 
@@ -93,17 +101,31 @@ export default function AdminTeachersPhase14Page() {
 
   async function createTeacher(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    setError(null); setMessage(null)
-    if (isDemoMode) { setShowCreate(false); setMessage('Alta preparada en la demostración.'); return }
+    setError(null); setMessage(null); setActivationUrl(''); setCreatedTeacherId('')
+    if (isDemoMode) { setShowCreate(false); setMessage('Invitación preparada en la demostración.'); return }
     setSaving(true)
     try {
-      const created = await createAdminTeacher({ email, password, name, surname, phone, bio, specialties: specialtyText.split(',').map((item) => item.trim()).filter(Boolean), publicProfile: true })
-      setTeachers((current) => [...current, created.user].sort((a, b) => fullName(a).localeCompare(fullName(b), 'es')))
-      setProfiles((current) => [...current, created.profile])
-      setName(''); setSurname(''); setEmail(''); setPhone(''); setPassword(''); setSpecialtyText(''); setBio(''); setShowCreate(false)
-      setMessage('Profesor creado. Abre su ficha para completar el perfil y revisar sus grupos.')
+      const issued = await issueAdminAccountInvitation({
+        role: 'TEACHER',
+        email,
+        name,
+        surname,
+        phone,
+        bio,
+        specialties: specialtyText.split(',').map((item) => item.trim()).filter(Boolean),
+        publicProfile: true,
+      })
+      const [teacherUsers, profileRecords] = await Promise.all([listAdminUsers('TEACHER'), listAdminTeacherProfiles()])
+      setTeachers(teacherUsers)
+      setProfiles(profileRecords)
+      setActivationUrl(issued.activationUrl)
+      setCreatedTeacherId(issued.userId)
+      setName(''); setSurname(''); setEmail(''); setPhone(''); setSpecialtyText(''); setBio(''); setShowCreate(false)
+      setMessage(issued.emailSent
+        ? 'Profesor invitado. El correo de activación se ha enviado y la contraseña la elegirá el propio profesor.'
+        : 'Profesor invitado. El correo no se ha podido enviar; entrega el enlace de activación manualmente.')
     } catch (creationError) {
-      setError(creationError instanceof Error ? creationError.message : 'No se ha podido crear el profesor.')
+      setError(creationError instanceof Error ? creationError.message : 'No se ha podido preparar la invitación del profesor.')
     } finally { setSaving(false) }
   }
 
@@ -116,20 +138,21 @@ export default function AdminTeachersPhase14Page() {
         {message && <div className="cms-notice success-notice" role="status">{message}</div>}
         {error && <div className="cms-notice auth-error" role="alert">{error}</div>}
 
-        {showCreate && <section className="panel phase14-create-card"><div className="panel-heading"><div><span className="eyebrow">ALTA</span><h3>Nuevo profesor</h3></div></div><form className="phase14-form-grid" onSubmit={createTeacher}>
+        {activationUrl && <section className="panel phase14-create-card" aria-label="Invitación del profesor preparada"><div className="panel-heading"><div><span className="eyebrow">ACCESO SEGURO</span><h3>Invitación preparada</h3><p>Este enlace es personal y de un solo uso. Administración no conoce la contraseña del profesor.</p></div>{createdTeacherId && <Link to={`/admin/profesores/${createdTeacherId}`}>Abrir ficha →</Link>}</div><label className="field-stack"><span>Enlace de activación del profesor</span><input aria-label="Enlace de activación del profesor" readOnly value={activationUrl} onFocus={(event) => event.currentTarget.select()} /></label></section>}
+
+        {showCreate && <section className="panel phase14-create-card"><div className="panel-heading"><div><span className="eyebrow">ALTA SEGURA</span><h3>Nuevo profesor</h3><p>La cuenta se crea como invitada. El profesor elegirá su propia contraseña desde un enlace de un solo uso.</p></div><span className="status info">Sin contraseña inicial</span></div><form className="phase14-form-grid" onSubmit={createTeacher}>
           <label>Nombre<input value={name} onChange={(event) => setName(event.target.value)} required /></label><label>Apellidos<input value={surname} onChange={(event) => setSurname(event.target.value)} required /></label>
           <label>Email<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required /></label><label>Teléfono<input type="tel" value={phone} onChange={(event) => setPhone(event.target.value)} /></label>
-          <label>Especialidades<input value={specialtyText} onChange={(event) => setSpecialtyText(event.target.value)} placeholder="B1, conversación, Kids" /></label><label>Contraseña inicial<input type="password" minLength={8} value={password} onChange={(event) => setPassword(event.target.value)} required /></label>
-          <label className="phase14-wide">Bio docente<textarea rows={4} value={bio} onChange={(event) => setBio(event.target.value)} placeholder="Trayectoria, enfoque, experiencia…" /></label><div className="phase14-form-actions"><button type="button" onClick={() => setShowCreate(false)}>Cancelar</button><button className="button button-primary" disabled={saving}>{saving ? 'Creando…' : 'Crear profesor'}</button></div>
+          <label>Especialidades<input value={specialtyText} onChange={(event) => setSpecialtyText(event.target.value)} placeholder="B1, conversación, Kids" /></label><label className="phase14-wide">Bio docente<textarea rows={4} value={bio} onChange={(event) => setBio(event.target.value)} placeholder="Trayectoria, enfoque, experiencia…" /></label><div className="phase14-form-actions"><button type="button" onClick={() => setShowCreate(false)}>Cancelar</button><button className="button button-primary" disabled={saving}>{saving ? 'Preparando invitación…' : 'Crear profesor e invitación'}</button></div>
         </form></section>}
 
         <section className="metric-grid phase14-metrics"><article><span>Profesores</span><strong>{views.length}</strong><small>Total registrado</small></article><article><span>Activos</span><strong>{views.filter((view) => view.teacher.status === 'ACTIVE').length}</strong><small>Cuentas habilitadas</small></article><article><span>Alumnos</span><strong>{new Set(enrollments.filter((item) => item.status === 'ACTIVE').map((item) => item.student)).size}</strong><small>Asignados a grupos</small></article><article><span>Grupos activos</span><strong>{groups.filter((item) => item.status === 'ACTIVE').length}</strong><small>En funcionamiento</small></article></section>
 
-        <section className="panel phase14-teacher-toolbar"><label>Buscar<input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Profesor, email, grupo, curso o especialidad" /></label><label>Estado<select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)}><option value="ALL">Todos</option><option value="ACTIVE">Activos</option><option value="INACTIVE">Pausados / inactivos</option></select></label></section>
+        <section className="panel phase14-teacher-toolbar"><label>Buscar<input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Profesor, email, grupo, curso o especialidad" /></label><label>Estado<select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)}><option value="ALL">Todos</option><option value="ACTIVE">Activos</option><option value="INACTIVE">Invitados / pausados</option></select></label></section>
 
         <section className="phase14-teacher-grid">
           {visible.map((view) => <Link className="panel phase14-teacher-card" to={`/admin/profesores/${view.teacher.id}`} key={view.teacher.id}>
-            <div className="phase14-teacher-card-head"><span className="teacher-avatar">{initials(view.teacher)}</span><div><span className="eyebrow">PROFESOR</span><h3>{fullName(view.teacher)}</h3><p>{view.teacher.email}</p></div><span className={`status ${view.teacher.status === 'ACTIVE' ? 'success' : 'warning'}`}>{view.teacher.status === 'ACTIVE' ? 'Activo' : 'Pausado'}</span></div>
+            <div className="phase14-teacher-card-head"><span className="teacher-avatar">{initials(view.teacher)}</span><div><span className="eyebrow">PROFESOR</span><h3>{fullName(view.teacher)}</h3><p>{view.teacher.email}</p></div><span className={`status ${view.teacher.status === 'ACTIVE' ? 'success' : 'warning'}`}>{teacherStatusLabel(view.teacher.status)}</span></div>
             <div className="phase14-teacher-kpis"><div><span>Alumnos</span><strong>{view.studentCount}</strong></div><div><span>Clases</span><strong>{view.classCount}</strong></div><div><span>Grupos</span><strong>{view.teacherGroups.length}</strong></div></div>
             <div className="phase14-teacher-meta"><div><span>Cursos</span><strong>{view.courseNames.length ? view.courseNames.join(' · ') : 'Sin asignar'}</strong></div><div><span>Grupos</span><strong>{view.teacherGroups.length ? view.teacherGroups.map((group) => group.name).join(' · ') : 'Sin asignar'}</strong></div><div><span>Especialidades</span><strong>{specialties(view.profile).length ? specialties(view.profile).join(' · ') : 'Sin completar'}</strong></div></div>
             <span className="phase14-open-profile">Abrir ficha completa →</span>
