@@ -91,6 +91,20 @@ function assessmentDto(app, record) {
   }
 }
 
+function activeGroup(app, studentId) {
+  const enrollment = app.findAllRecords('enrollments').find((record) =>
+    record.getString('student') === studentId && record.getString('status') === 'ACTIVE'
+  )
+  if (!enrollment) return null
+  let group
+  try { group = app.findRecordById('groups', enrollment.getString('group')) } catch { return null }
+  return {
+    id: group.id,
+    name: group.getString('name'),
+    targetLevel: group.getString('target_level').toUpperCase(),
+  }
+}
+
 function studentState(app, student) {
   const attempts = newest(
     app.findAllRecords('placement_attempts').filter((record) =>
@@ -175,6 +189,15 @@ function createAssessment(e) {
   }
   if (existing.length === 0 && !sourceAttempt && reason !== 'INITIAL') {
     throw new BadRequestError('La primera valoración manual sin test debe registrarse como INITIAL.')
+  }
+
+  const group = activeGroup(e.app, student.id)
+  const mismatch = Boolean(group && group.targetLevel && group.targetLevel !== 'MIXED' && group.targetLevel !== validatedLevel)
+  if (mismatch && body.acknowledgeLevelMismatch !== true) {
+    throw new BadRequestError(`El nivel ${validatedLevel} no coincide con el objetivo ${group.targetLevel} del grupo ${group.name}. Confirma explícitamente el desajuste.`)
+  }
+  if (mismatch && !notes) {
+    throw new BadRequestError('Justifica en observaciones por qué el nivel validado no coincide con el grupo actual.')
   }
 
   const record = new Record(e.app.findCollectionByNameOrId('student_level_assessments'))
