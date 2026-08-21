@@ -3,7 +3,7 @@ import { pb } from './client'
 import type { UserStatus } from './types'
 
 export type AdminAccountInvitationStatus = 'NONE' | 'PENDING' | 'EXPIRED' | 'USED' | 'REVOKED'
-export type InvitableAccountRole = 'STUDENT' | 'TEACHER'
+export type InvitableAccountRole = 'ADMIN' | 'STUDENT' | 'TEACHER'
 
 export type AdminAccountInvitationStatusResponse = {
   userId: string
