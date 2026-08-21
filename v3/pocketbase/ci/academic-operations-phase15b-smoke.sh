@@ -68,9 +68,9 @@ SUPER_TOKEN="$(jq -r '.token' <<<"$SUPER_AUTH")"
 test -n "$SUPER_TOKEN" && test "$SUPER_TOKEN" != 'null'
 
 echo '2/10 Resolve an ACTIVE course and TEACHER'
-COURSE_LIST="$(json_request 'GET' "$PB_URL/api/collections/courses/records?perPage=1&filter=$(printf '%s' 'status = \"ACTIVE\"' | jq -sRr @uri)" "$ADMIN_TOKEN" '')"
+COURSE_LIST="$(json_request 'GET' "$PB_URL/api/collections/courses/records?perPage=1&filter=$(printf '%s' 'status = "ACTIVE"' | jq -sRr @uri)" "$ADMIN_TOKEN" '')"
 COURSE_ID="$(jq -r '.items[0].id' <<<"$COURSE_LIST")"
-TEACHER_LIST="$(json_request 'GET' "$PB_URL/api/collections/users/records?perPage=1&filter=$(printf '%s' 'role = \"TEACHER\" && status = \"ACTIVE\"' | jq -sRr @uri)" "$ADMIN_TOKEN" '')"
+TEACHER_LIST="$(json_request 'GET' "$PB_URL/api/collections/users/records?perPage=1&filter=$(printf '%s' 'role = "TEACHER" && status = "ACTIVE"' | jq -sRr @uri)" "$ADMIN_TOKEN" '')"
 TEACHER_ID="$(jq -r '.items[0].id' <<<"$TEACHER_LIST")"
 test -n "$COURSE_ID" && test "$COURSE_ID" != 'null'
 test -n "$TEACHER_ID" && test "$TEACHER_ID" != 'null'
