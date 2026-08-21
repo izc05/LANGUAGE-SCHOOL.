@@ -2,6 +2,8 @@
 set -euo pipefail
 
 PB_URL="${PB_URL:-http://127.0.0.1:8090}"
+SUPERUSER_EMAIL="${PB_SUPERUSER_EMAIL:-ci-superuser@example.com}"
+SUPERUSER_PASSWORD="${PB_SUPERUSER_PASSWORD:-CiSuperuserPass123!}"
 ADMIN_EMAIL="ci-admin@example.com"
 ADMIN_PASSWORD="CiAdminPass123!"
 PASSWORD="CiIsolationPass123!"
@@ -16,11 +18,15 @@ json_post() {
     --data "$body"
 }
 
-authenticate() {
-  local email="$1" password="$2"
-  curl -fsS -X POST "$PB_URL/api/collections/users/auth-with-password" \
+authenticate_collection() {
+  local collection="$1" email="$2" password="$3"
+  curl -fsS -X POST "$PB_URL/api/collections/$collection/auth-with-password" \
     -H 'Content-Type: application/json' \
     --data "$(jq -nc --arg identity "$email" --arg password "$password" '{identity:$identity,password:$password}')"
+}
+
+authenticate() {
+  authenticate_collection 'users' "$1" "$2"
 }
 
 create_record() {
@@ -61,24 +67,27 @@ create_user() {
   local token="$1" email="$2" role="$3" surname="$4"
   create_record 'users' "$token" "$(jq -nc \
     --arg email "$email" --arg password "$PASSWORD" --arg role "$role" --arg surname "$surname" \
-    '{email:$email,password:$password,passwordConfirm:$password,name:"CI",surname:$surname,role:$role,status:"ACTIVE",phone:""}')"
+    '{email:$email,password:$password,passwordConfirm:$password,name:"CI",surname:$surname,role:$role,status:"ACTIVE",verified:true,phone:""}')"
 }
 
-echo '1/12 Authenticate application ADMIN created by the ADMIN flow smoke test'
+echo '1/12 Authenticate application ADMIN and temporary CI superuser'
 ADMIN_AUTH="$(authenticate "$ADMIN_EMAIL" "$ADMIN_PASSWORD")"
 ADMIN_TOKEN="$(jq -r '.token' <<<"$ADMIN_AUTH")"
 test -n "$ADMIN_TOKEN" && test "$ADMIN_TOKEN" != 'null'
+SUPER_AUTH="$(authenticate_collection '_superusers' "$SUPERUSER_EMAIL" "$SUPERUSER_PASSWORD")"
+SUPER_TOKEN="$(jq -r '.token' <<<"$SUPER_AUTH")"
+test -n "$SUPER_TOKEN" && test "$SUPER_TOKEN" != 'null'
 
-echo '2/12 Create isolated Teacher A/B and Student A/B'
+echo '2/12 Bootstrap isolated Teacher A/B and Student A/B as technical fixtures'
 TEACHER_A_EMAIL='ci-teacher-a@example.com'
 TEACHER_B_EMAIL='ci-teacher-b@example.com'
 STUDENT_A_EMAIL='ci-student-a@example.com'
 STUDENT_B_EMAIL='ci-student-b@example.com'
 
-TEACHER_A="$(create_user "$ADMIN_TOKEN" "$TEACHER_A_EMAIL" 'TEACHER' 'TeacherA')"
-TEACHER_B="$(create_user "$ADMIN_TOKEN" "$TEACHER_B_EMAIL" 'TEACHER' 'TeacherB')"
-STUDENT_A="$(create_user "$ADMIN_TOKEN" "$STUDENT_A_EMAIL" 'STUDENT' 'StudentA')"
-STUDENT_B="$(create_user "$ADMIN_TOKEN" "$STUDENT_B_EMAIL" 'STUDENT' 'StudentB')"
+TEACHER_A="$(create_user "$SUPER_TOKEN" "$TEACHER_A_EMAIL" 'TEACHER' 'TeacherA')"
+TEACHER_B="$(create_user "$SUPER_TOKEN" "$TEACHER_B_EMAIL" 'TEACHER' 'TeacherB')"
+STUDENT_A="$(create_user "$SUPER_TOKEN" "$STUDENT_A_EMAIL" 'STUDENT' 'StudentA')"
+STUDENT_B="$(create_user "$SUPER_TOKEN" "$STUDENT_B_EMAIL" 'STUDENT' 'StudentB')"
 
 TEACHER_A_ID="$(jq -r '.id' <<<"$TEACHER_A")"
 TEACHER_B_ID="$(jq -r '.id' <<<"$TEACHER_B")"
