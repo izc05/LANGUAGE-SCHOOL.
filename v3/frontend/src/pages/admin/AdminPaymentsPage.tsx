@@ -22,9 +22,12 @@ import type { AppUser } from '../../services/pocketbase/types'
 import { downloadPaymentsExcel } from '../../utils/paymentExcel'
 import { adminNav } from './adminNav'
 
-type PaymentFilter = 'ALL' | 'PENDING' | 'OVERDUE' | 'PAID'
+type PaymentFilter = 'ALL' | 'PENDING' | 'OVERDUE' | 'PAID' | 'CANCELLED' | 'REFUNDED'
+type PaymentMethodFilter = 'ALL' | PaymentMethod
+type StudentStandingFilter = 'ALL' | 'DEBT' | 'CURRENT'
 
 const currency = new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' })
+const paymentMethods: PaymentMethod[] = ['CASH', 'BIZUM', 'TRANSFER', 'CARD', 'OTHER']
 
 function dateOnly(date = new Date()): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
@@ -84,6 +87,15 @@ function effectiveLabel(status: EffectivePaymentStatus): string {
   return 'Pendiente'
 }
 
+function filterLabel(status: PaymentFilter): string {
+  if (status === 'PENDING') return 'Pendientes'
+  if (status === 'OVERDUE') return 'Vencidos'
+  if (status === 'PAID') return 'Pagados'
+  if (status === 'CANCELLED') return 'Cancelados'
+  if (status === 'REFUNDED') return 'Reembolsados'
+  return 'Todos'
+}
+
 const demoStudent: AppUser = { id: 'pay-demo-student', collectionId: '', collectionName: 'users', created: '', updated: '', expand: {}, email: 'emma@example.com', name: 'Emma', surname: 'Martín', role: 'STUDENT', status: 'ACTIVE', phone: '' }
 const demoStudent2: AppUser = { id: 'pay-demo-student-2', collectionId: '', collectionName: 'users', created: '', updated: '', expand: {}, email: 'daniel@example.com', name: 'Daniel', surname: 'López', role: 'STUDENT', status: 'ACTIVE', phone: '' }
 const demoGroup: GroupRecord = { id: 'pay-demo-group', collectionId: '', collectionName: 'groups', created: '', updated: '', expand: {}, name: 'Adultos B1', course: 'demo-course', teacher: 'demo-teacher', academic_year: '2026/27', schedule_text: 'M/J 18:00', capacity: 8, target_level: 'B1', default_delivery_mode: 'IN_PERSON', status: 'ACTIVE' }
@@ -135,6 +147,8 @@ export default function AdminPaymentsPage() {
   const [statusFilter, setStatusFilter] = useState<PaymentFilter>('ALL')
   const [groupFilter, setGroupFilter] = useState('ALL')
   const [modeFilter, setModeFilter] = useState<'ALL' | BillingMode>('ALL')
+  const [methodFilter, setMethodFilter] = useState<PaymentMethodFilter>('ALL')
+  const [standingFilter, setStandingFilter] = useState<StudentStandingFilter>('ALL')
   const [monthFilter, setMonthFilter] = useState(monthKey())
   const [studentFilter, setStudentFilter] = useState(initialStudent || 'ALL')
 
@@ -215,32 +229,63 @@ export default function AdminPaymentsPage() {
   const batchExistingCount = batchEnrollments.filter((record) => existingBatchEnrollmentIds.has(record.id)).length
   const batchMissingCount = Math.max(0, batchEnrollments.length - batchExistingCount)
 
-  const visiblePayments = useMemo(() => {
+  const contextPayments = useMemo(() => {
     const normalized = query.trim().toLowerCase()
     return payments.filter((record) => {
-      const effective = effectivePaymentStatus(record)
       const enrollment = enrollments.find((item) => item.id === record.enrollment) || record.expand?.enrollment
       const group = enrollment?.expand?.group
       const student = students.find((item) => item.id === record.student) || record.expand?.student
       const text = `${studentName(student)} ${student?.email || ''} ${group?.name || ''}`.toLowerCase()
       const matchesQuery = !normalized || text.includes(normalized)
-      const matchesStatus = statusFilter === 'ALL' || effective === statusFilter
       const matchesGroup = groupFilter === 'ALL' || enrollment?.group === groupFilter
       const matchesMode = modeFilter === 'ALL' || record.billing_mode === modeFilter
+      const matchesMethod = methodFilter === 'ALL' || record.payment_method === methodFilter
       const matchesStudent = studentFilter === 'ALL' || record.student === studentFilter
       const matchesMonth = !monthFilter || (record.period_start.slice(0, 7) <= monthFilter && record.period_end.slice(0, 7) >= monthFilter)
-      return matchesQuery && matchesStatus && matchesGroup && matchesMode && matchesStudent && matchesMonth
+      return matchesQuery && matchesGroup && matchesMode && matchesMethod && matchesStudent && matchesMonth
     })
-  }, [enrollments, groupFilter, modeFilter, monthFilter, payments, query, statusFilter, studentFilter, students])
+  }, [enrollments, groupFilter, methodFilter, modeFilter, monthFilter, payments, query, studentFilter, students])
 
-  const paidThisMonth = payments.filter((record) => record.status === 'PAID' && record.paid_at.slice(0, 7) === monthKey()).reduce((sum, record) => sum + record.amount_cents, 0)
-  const pendingTotal = payments.filter((record) => record.status === 'PENDING').reduce((sum, record) => sum + record.amount_cents, 0)
-  const overdueTotal = payments.filter((record) => effectivePaymentStatus(record) === 'OVERDUE').reduce((sum, record) => sum + record.amount_cents, 0)
-  const activeStudentIds = new Set(enrollments.filter((record) => record.status === 'ACTIVE').map((record) => record.student))
-  const studentsCurrent = [...activeStudentIds].filter((id) => {
-    const studentPayments = payments.filter((record) => record.student === id)
-    return paymentCoverageUntil(studentPayments) >= dateOnly() && !studentPayments.some((record) => effectivePaymentStatus(record) === 'OVERDUE')
-  }).length
+  const contextStudentStanding = useMemo(() => {
+    const map = new Map<string, 'DEBT' | 'CURRENT' | 'OTHER'>()
+    const ids = new Set(contextPayments.filter((record) => record.status !== 'CANCELLED').map((record) => record.student))
+    const coverageTarget = monthFilter ? monthBounds(monthFilter).end : dateOnly()
+    ids.forEach((id) => {
+      const records = contextPayments.filter((record) => record.student === id && record.status !== 'CANCELLED')
+      const hasDebt = records.some((record) => {
+        const effective = effectivePaymentStatus(record)
+        return effective === 'PENDING' || effective === 'OVERDUE'
+      })
+      const covered = paymentCoverageUntil(records) >= coverageTarget
+      map.set(id, hasDebt ? 'DEBT' : covered ? 'CURRENT' : 'OTHER')
+    })
+    return map
+  }, [contextPayments, monthFilter])
+
+  const visiblePayments = useMemo(() => contextPayments.filter((record) => {
+    const effective = effectivePaymentStatus(record)
+    const matchesStatus = statusFilter === 'ALL' || effective === statusFilter
+    const standing = contextStudentStanding.get(record.student)
+    const matchesStanding = standingFilter === 'ALL' || standing === standingFilter
+    return matchesStatus && matchesStanding
+  }), [contextPayments, contextStudentStanding, standingFilter, statusFilter])
+
+  const summary = useMemo(() => {
+    const obligationRecords = contextPayments.filter((record) => record.status !== 'CANCELLED')
+    const obligations = obligationRecords.reduce((sum, record) => sum + record.amount_cents, 0)
+    const paid = contextPayments.filter((record) => record.status === 'PAID').reduce((sum, record) => sum + record.amount_cents, 0)
+    const pending = contextPayments.filter((record) => effectivePaymentStatus(record) === 'PENDING').reduce((sum, record) => sum + record.amount_cents, 0)
+    const overdue = contextPayments.filter((record) => effectivePaymentStatus(record) === 'OVERDUE').reduce((sum, record) => sum + record.amount_cents, 0)
+    const refunded = contextPayments.filter((record) => record.status === 'REFUNDED').reduce((sum, record) => sum + record.amount_cents, 0)
+    const debtStudents = [...contextStudentStanding.values()].filter((standing) => standing === 'DEBT').length
+    const currentStudents = [...contextStudentStanding.values()].filter((standing) => standing === 'CURRENT').length
+    return { obligations, paid, pending, overdue, refunded, debtStudents, currentStudents }
+  }, [contextPayments, contextStudentStanding])
+
+  const methodBreakdown = useMemo(() => paymentMethods.map((method) => {
+    const records = contextPayments.filter((record) => record.status === 'PAID' && record.payment_method === method)
+    return { method, count: records.length, amount: records.reduce((sum, record) => sum + record.amount_cents, 0) }
+  }), [contextPayments])
 
   const selectedStudentEnrollments = enrollments.filter((record) => record.student === studentId && record.status === 'ACTIVE')
 
@@ -303,6 +348,8 @@ export default function AdminPaymentsPage() {
       setMonthFilter(batchMonth)
       setGroupFilter(batchGroupId)
       setModeFilter('MONTHLY')
+      setMethodFilter('ALL')
+      setStandingFilter('ALL')
       setStudentFilter('ALL')
       setStatusFilter('ALL')
     } catch (batchError) {
@@ -362,11 +409,23 @@ export default function AdminPaymentsPage() {
         {message && <div className="cms-notice success-notice" role="status">{message}</div>}
         {error && <div className="cms-notice auth-error" role="alert">{error}</div>}
 
-        <section className="metric-grid payment-metrics">
-          <article><span>Cobrado este mes</span><strong>{currency.format(paidThisMonth / 100)}</strong><small>Pagos registrados</small></article>
-          <article><span>Pendiente</span><strong>{currency.format(pendingTotal / 100)}</strong><small>Incluye vencidos</small></article>
-          <article><span>Vencido</span><strong>{currency.format(overdueTotal / 100)}</strong><small>Fuera de plazo</small></article>
-          <article><span>Al corriente</span><strong>{studentsCurrent}</strong><small>Alumnos activos cubiertos hoy</small></article>
+        <section className="metric-grid payment-metrics" aria-label="Resumen económico del periodo">
+          <article><span>Obligaciones</span><strong data-testid="payment-summary-obligations">{currency.format(summary.obligations / 100)}</strong><small>Excluye cancelados</small></article>
+          <article><span>Cobrado</span><strong data-testid="payment-summary-paid">{currency.format(summary.paid / 100)}</strong><small>Pagos efectivos</small></article>
+          <article><span>Pendiente</span><strong data-testid="payment-summary-pending">{currency.format(summary.pending / 100)}</strong><small>Dentro de plazo</small></article>
+          <article><span>Vencido</span><strong data-testid="payment-summary-overdue">{currency.format(summary.overdue / 100)}</strong><small>Fuera de plazo</small></article>
+          <article><span>Reembolsado</span><strong data-testid="payment-summary-refunded">{currency.format(summary.refunded / 100)}</strong><small>Devuelto al alumno</small></article>
+          <article><span>Con deuda</span><strong data-testid="payment-summary-debt-students">{summary.debtStudents}</strong><small>Alumnos con obligación abierta</small></article>
+          <article><span>Al corriente</span><strong data-testid="payment-summary-current-students">{summary.currentStudents}</strong><small>Con periodo cubierto</small></article>
+        </section>
+
+        <section className="payment-method-summary" aria-label="Cobros por método">
+          <div className="payment-method-summary-heading"><div><span className="eyebrow">COBROS DEL CONTEXTO</span><h3>Por método de pago</h3></div><button type="button" onClick={() => setMethodFilter('ALL')} className={methodFilter === 'ALL' ? 'active' : ''}>Ver todos</button></div>
+          <div className="payment-method-grid">
+            {methodBreakdown.map((item) => <button type="button" key={item.method} className={methodFilter === item.method ? 'active' : ''} onClick={() => setMethodFilter((current) => current === item.method ? 'ALL' : item.method)} data-testid={`payment-method-${item.method.toLowerCase()}`}>
+              <span>{methodLabel(item.method)}</span><strong>{currency.format(item.amount / 100)}</strong><small>{item.count} {item.count === 1 ? 'cobro' : 'cobros'}</small>
+            </button>)}
+          </div>
         </section>
 
         {showBatch && <section className="panel admin-payment-batch" aria-label="Generación de mensualidades en lote">
@@ -413,8 +472,18 @@ export default function AdminPaymentsPage() {
           <label>Alumno<select value={studentFilter} onChange={(event) => setStudentFilter(event.target.value)}><option value="ALL">Todos</option>{students.map((student) => <option value={student.id} key={student.id}>{studentName(student)}</option>)}</select></label>
           <label>Grupo<select value={groupFilter} onChange={(event) => setGroupFilter(event.target.value)}><option value="ALL">Todos</option>{groups.map((group) => <option value={group.id} key={group.id}>{group.name}</option>)}</select></label>
           <label>Modalidad<select value={modeFilter} onChange={(event) => setModeFilter(event.target.value as typeof modeFilter)}><option value="ALL">Todas</option><option value="MONTHLY">Mensual</option><option value="INTENSIVE">Intensivo</option></select></label>
+          <label>Método<select value={methodFilter} onChange={(event) => setMethodFilter(event.target.value as PaymentMethodFilter)}><option value="ALL">Todos</option>{paymentMethods.map((method) => <option value={method} key={method}>{methodLabel(method)}</option>)}</select></label>
           <label>Mes<input type="month" value={monthFilter} onChange={(event) => setMonthFilter(event.target.value)} /></label>
-          <div className="filter-pills payment-wide">{(['ALL', 'PENDING', 'OVERDUE', 'PAID'] as const).map((option) => <button type="button" key={option} className={statusFilter === option ? 'active' : ''} onClick={() => setStatusFilter(option)}>{option === 'ALL' ? 'Todos' : option === 'PENDING' ? 'Pendientes' : option === 'OVERDUE' ? 'Vencidos' : 'Pagados'}</button>)}</div>
+          <div className="payment-filter-groups payment-wide">
+            <div className="filter-pills" aria-label="Situación del alumno">
+              <button type="button" className={standingFilter === 'ALL' ? 'active' : ''} onClick={() => setStandingFilter('ALL')}>Todos los alumnos</button>
+              <button type="button" className={standingFilter === 'DEBT' ? 'active' : ''} onClick={() => setStandingFilter('DEBT')}>Con deuda</button>
+              <button type="button" className={standingFilter === 'CURRENT' ? 'active' : ''} onClick={() => setStandingFilter('CURRENT')}>Al corriente</button>
+            </div>
+            <div className="filter-pills" aria-label="Estado del cobro">
+              {(['ALL', 'PENDING', 'OVERDUE', 'PAID', 'CANCELLED', 'REFUNDED'] as const).map((option) => <button type="button" key={option} className={statusFilter === option ? 'active' : ''} onClick={() => setStatusFilter(option)}>{filterLabel(option)}</button>)}
+            </div>
+          </div>
         </section>
 
         <section className="payment-ledger">
@@ -426,7 +495,7 @@ export default function AdminPaymentsPage() {
               const effective = effectivePaymentStatus(record)
               return <article className="payment-record" key={record.id}>
                 <div className="payment-student"><strong>{studentName(student)}</strong><small>{enrollment?.expand?.group?.name || 'Matrícula'} · {modeLabel(record.billing_mode)}</small></div>
-                <div className="payment-period"><strong>{formatDate(record.period_start)} → {formatDate(record.period_end)}</strong><small>Vence {formatDate(record.due_date)}{record.status === 'PAID' ? ` · ${methodLabel(record.payment_method)} ${formatDate(record.paid_at)}` : ''}</small></div>
+                <div className="payment-period"><strong>{formatDate(record.period_start)} → {formatDate(record.period_end)}</strong><small>Vence {formatDate(record.due_date)}{record.payment_method ? ` · ${methodLabel(record.payment_method)} ${formatDate(record.paid_at)}` : ''}</small></div>
                 <strong className="payment-amount">{currency.format(record.amount_cents / 100)}</strong>
                 <span className={`payment-state ${effective.toLowerCase()}`}>{effectiveLabel(effective)}</span>
                 <div className="payment-record-actions">{record.status === 'PENDING' && <><button type="button" onClick={() => { setPayingId(record.id); setPayDate(dateOnly()); setPayReference(record.reference || '') }}>Marcar pagado</button><button type="button" onClick={() => void cancelPayment(record)}>Cancelar</button></>}{record.status === 'PAID' && <button type="button" onClick={() => void refundPayment(record)}>Reembolsar</button>}</div>
