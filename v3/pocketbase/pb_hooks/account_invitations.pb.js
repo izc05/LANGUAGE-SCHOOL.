@@ -20,7 +20,7 @@ routerAdd('POST', '/api/language-school/admin/accounts/invite', (e) => {
   }
   function readRole(value) {
     const role = text(value).toUpperCase()
-    if (role !== 'STUDENT' && role !== 'TEACHER') throw new BadRequestError('El rol de la invitación no es válido.')
+    if (role !== 'STUDENT' && role !== 'TEACHER' && role !== 'ADMIN') throw new BadRequestError('El rol de la invitación no es válido.')
     return role
   }
   function readBase(value) {
@@ -78,7 +78,7 @@ routerAdd('POST', '/api/language-school/admin/accounts/invite', (e) => {
       profile.set('notes_private', text(data.notesPrivate))
       profile.set('active', false)
       app.save(profile)
-    } else {
+    } else if (role === 'TEACHER') {
       const profile = new Record(app.findCollectionByNameOrId('teacher_profiles'))
       profile.set('user', user.id)
       profile.set('bio', text(data.bio))
@@ -207,7 +207,8 @@ routerAdd('POST', '/api/language-school/admin/accounts/invite/resend', (e) => {
 
   e.app.runInTransaction((txApp) => {
     const user = txApp.findRecordById('users', userId)
-    if (user.getString('role') !== 'STUDENT' && user.getString('role') !== 'TEACHER') throw new BadRequestError('Solo se pueden invitar alumnos y profesores.')
+    const role = user.getString('role')
+    if (role !== 'STUDENT' && role !== 'TEACHER' && role !== 'ADMIN') throw new BadRequestError('La cuenta no admite invitaciones.')
     if (user.getString('status') !== 'INVITED') throw new BadRequestError('La cuenta ya no está pendiente de activación.')
     const issued = issue(txApp, userId, e.auth.id)
     invitationId = issued.invitation.id
