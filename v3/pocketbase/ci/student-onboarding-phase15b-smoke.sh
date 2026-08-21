@@ -111,7 +111,7 @@ NO_ACK_STATUS="$(complete_status "$ADMIN_TOKEN" "$NO_ACK_EMAIL" 'NoAck' "$GROUP_
 assert_equal "$NO_ACK_STATUS" '400' 'B2 -> B1 requires explicit pedagogical acknowledgement'
 assert_equal "$(user_count_by_email "$ADMIN_TOKEN" "$NO_ACK_EMAIL")" '0' 'rejected mismatch creates no user'
 
-echo '4/10 Atomic success creates account, profile, INITIAL level, enrollment and invitation contract'
+echo '4/10 Atomic success creates account, profile, INITIAL level, enrollment and private invitation contract'
 SUCCESS_EMAIL='ci-15b3c-atomic-success@example.com'
 SUCCESS="$(complete_onboarding "$ADMIN_TOKEN" "$SUCCESS_EMAIL" 'AtomicSuccess' "$GROUP_ONE_ID" "$COURSE_ID" 'INITIAL' 'B2' true)"
 SUCCESS_USER_ID="$(jq -r '.userId' <<<"$SUCCESS")"
@@ -130,7 +130,7 @@ assert_equal "$(jq -r '.courseId' <<<"$SUCCESS")" "$COURSE_ID" 'course is derive
 assert_equal "$(jq -r '.teacherId' <<<"$SUCCESS")" "$TEACHER_ID" 'teacher is derived from group'
 assert_equal "$(jq -r '.invitation.status' <<<"$SUCCESS")" 'PENDING' 'invitation is pending after atomic commit'
 assert_equal "$(jq -r '.invitation.role' <<<"$SUCCESS")" 'STUDENT' 'invitation belongs to student lifecycle'
-assert_nonempty "$(jq -r '.invitation.activationUrl' <<<"$SUCCESS")" 'activation fallback URL is returned'
+assert_equal "$(jq -r '.invitation.activationUrl' <<<"$SUCCESS")" '' 'Admin response never exposes the private activation URL'
 
 USER_RECORD="$(json_request 'GET' "$PB_URL/api/collections/users/records/$SUCCESS_USER_ID" "$ADMIN_TOKEN" '')"
 assert_equal "$(jq -r '.status' <<<"$USER_RECORD")" 'INVITED' 'persisted user is INVITED'
