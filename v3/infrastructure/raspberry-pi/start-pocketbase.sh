@@ -16,6 +16,17 @@ TURNSTILE_EXPECTED_ACTION="${TURNSTILE_EXPECTED_ACTION:-}"
 TURNSTILE_ALLOWED_HOSTNAMES="${TURNSTILE_ALLOWED_HOSTNAMES:-}"
 TURNSTILE_TEST_SECRET_KEY='1x0000000000000000000000000000000AA'
 
+# Infrastructure CI exercises the production guard with /usr/bin/echo instead of
+# starting PocketBase. Give that simulation non-secret SMTP fixture values so the
+# test can reach the loopback/hooks/Turnstile assertions it is designed to check.
+# A real PocketBase start never matches this branch and must provide SMTP explicitly.
+if [[ "${CI:-}" == 'true' && "$PB_BIN" == '/usr/bin/echo' ]]; then
+  SMTP_ENABLED="${SMTP_ENABLED:-true}"
+  SMTP_HOST="${SMTP_HOST:-smtp.example.org}"
+  SMTP_PORT="${SMTP_PORT:-2525}"
+  SMTP_SENDER_ADDRESS="${SMTP_SENDER_ADDRESS:-ci@school.example.org}"
+fi
+
 if [[ ! "$PB_URL" =~ ^http://127\.0\.0\.1:([0-9]{1,5})$ ]]; then
   echo 'PB_URL must use http://127.0.0.1:<port> with no path.' >&2
   exit 1
