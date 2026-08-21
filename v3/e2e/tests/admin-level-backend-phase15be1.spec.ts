@@ -8,207 +8,224 @@ function requiredEnv(name: string): string {
   return value
 }
 
-async function authenticate(request: APIRequestContext, email: string, password: string) {
-  const response = await request.post(`${PB_URL}/api/collections/users/auth-with-password`, {
+async function authenticateCollection(request: APIRequestContext, collection: string, email: string, password: string) {
+  const response = await request.post(`${PB_URL}/api/collections/${collection}/auth-with-password`, {
     data: { identity: email, password },
   })
-  expect(response.status()).toBe(200)
+  expect(response.status(), await response.text()).toBe(200)
   return response.json() as Promise<{ token: string; record: { id: string } }>
 }
 
-async function createUnevaluatedStudent(request: APIRequestContext, adminToken: string) {
-  const groupsResponse = await request.get(`${PB_URL}/api/collections/groups/records?perPage=100&expand=course,teacher`, {
-    headers: { Authorization: adminToken },
-  })
-  expect(groupsResponse.status()).toBe(200)
-  const groups = await groupsResponse.json() as {
-    items: Array<{ id: string; course: string; status: string; capacity: number }>
-  }
-  const enrollmentsResponse = await request.get(`${PB_URL}/api/collections/enrollments/records?perPage=500`, {
-    headers: { Authorization: adminToken },
-  })
-  expect(enrollmentsResponse.status()).toBe(200)
-  const enrollments = await enrollmentsResponse.json() as { items: Array<{ group: string; status: string }> }
-  const group = groups.items.find((candidate) => {
-    if (candidate.status !== 'ACTIVE') return false
-    const occupied = enrollments.items.filter((item) => item.group === candidate.id && item.status === 'ACTIVE').length
-    return occupied < candidate.capacity
-  })
-  expect(group).toBeTruthy()
-
+async function createTemporaryStudent(request: APIRequestContext, adminToken: string) {
   const unique = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-  const response = await request.post(`${PB_URL}/api/language-school/admin/student-onboarding/complete`, {
+  const email = `e2e-level-${unique}@example.com`
+  const password = 'E2eTempLevelPass123!'
+  const response = await request.post(`${PB_URL}/api/collections/users/records`, {
     headers: { Authorization: adminToken },
     data: {
-      email: `e2e-level-${unique}@example.com`,
+      email,
+      password,
+      passwordConfirm: password,
       name: 'Level',
       surname: 'History',
+      role: 'STUDENT',
+      status: 'ACTIVE',
       phone: '',
-      birthDate: '',
-      guardianName: '',
-      guardianPhone: '',
-      notesPrivate: 'Alumno temporal 15B.3E.1',
-      levelMode: 'UNEVALUATED',
-      initialLevel: '',
-      levelNotes: '',
-      expectedCourseId: group?.course,
-      targetGroupId: group?.id,
-      acknowledgeLevelMismatch: false,
-      activationBaseUrl: '',
     },
   })
-  expect(response.status()).toBe(201)
-  return response.json() as Promise<{ userId: string }>
+  expect([200, 201]).toContain(response.status())
+  const record = await response.json() as { id: string }
+  const auth = await authenticateCollection(request, 'users', email, password)
+  expect(auth.record.id).toBe(record.id)
+  return { id: record.id, token: auth.token }
 }
 
-async function createCompletedAutomaticAttempt(request: APIRequestContext, adminToken: string, studentId: string) {
-  const testsResponse = await request.get(`${PB_URL}/api/collections/placement_tests/records?perPage=100`, {
-    headers: { Authorization: adminToken },
+async function completeCampusAttempt(request: APIRequestContext, studentToken: string) {
+  const start = await request.post(`${PB_URL}/api/language-school/placement/start`, {
+    headers: { Authorization: studentToken },
+    data: { mode: 'CAMPUS' },
   })
-  expect(testsResponse.status()).toBe(200)
-  const tests = await testsResponse.json() as { items: Array<{ id: string; status: string; algorithm_version: string }> }
-  const placementTest = tests.items.find((item) => item.status === 'PUBLISHED') || tests.items[0]
-  expect(placementTest).toBeTruthy()
+  expect([200, 201]).toContain(start.status())
+  const session = await start.json() as { attemptId: string; totalQuestions: number }
+  expect(session.totalQuestions).toBe(30)
 
-  const now = new Date().toISOString()
-  const response = await request.post(`${PB_URL}/api/collections/placement_attempts/records`, {
-    headers: { Authorization: adminToken },
-    data: {
-      test: placementTest?.id,
-      mode: 'CAMPUS',
-      student: studentId,
-      public_token_hash: '',
-      status: 'COMPLETED',
-      algorithm_version: placementTest?.algorithm_version || 'e2e-15b3e',
-      selection_snapshot: {},
-      started_at: now,
-      completed_at: now,
-      raw_score: 84,
-      max_score: 100,
-      score_percent: 84,
-      estimated_level: 'C1',
-      skill_scores: {},
-    },
+  let safety = 0
+  while (safety < 30) {
+    safety += 1
+    const next = await request.get(`${PB_URL}/api/language-school/placement/attempts/${session.attemptId}/question`, {
+      headers: { Authorization: studentToken },
+    })
+    expect(next.status()).toBe(200)
+    const payload = await next.json() as { complete?: boolean; question?: { id: string } }
+    if (payload.complete) break
+    expect(payload.question?.id).toBeTruthy()
+    const answer = await request.post(`${PB_URL}/api/language-school/placement/attempts/${session.attemptId}/answer`, {
+      headers: { Authorization: studentToken },
+      data: { questionId: payload.question?.id, optionId: 'a' },
+    })
+    expect(answer.status()).toBe(200)
+  }
+
+  const finish = await request.post(`${PB_URL}/api/language-school/placement/attempts/${session.attemptId}/finish`, {
+    headers: { Authorization: studentToken },
+    data: {},
   })
-  expect(response.status()).toBe(200)
-  return response.json() as Promise<{ id: string; estimated_level: string }>
+  expect(finish.status(), await finish.text()).toBe(200)
+  const result = await finish.json() as { attemptId: string; estimatedLevel: string; scorePercent: number }
+  expect(result).toMatchObject({ attemptId: session.attemptId, estimatedLevel: 'C2', scorePercent: 100 })
+  return result
+}
+
+async function listRecords(request: APIRequestContext, superToken: string, collection: string) {
+  const response = await request.get(`${PB_URL}/api/collections/${collection}/records?perPage=500`, {
+    headers: { Authorization: superToken },
+  })
+  expect(response.status(), await response.text()).toBe(200)
+  return (await response.json() as { items: Array<Record<string, unknown> & { id: string }> }).items
+}
+
+async function deleteRecord(request: APIRequestContext, superToken: string, collection: string, id: string) {
+  const response = await request.delete(`${PB_URL}/api/collections/${collection}/records/${id}`, {
+    headers: { Authorization: superToken },
+  })
+  expect([200, 204]).toContain(response.status())
+}
+
+async function cleanupTemporaryStudent(request: APIRequestContext, superToken: string, studentId: string) {
+  const assessments = (await listRecords(request, superToken, 'student_level_assessments'))
+    .filter((item) => item.student === studentId)
+  for (const assessment of assessments) await deleteRecord(request, superToken, 'student_level_assessments', assessment.id)
+
+  const attempts = (await listRecords(request, superToken, 'placement_attempts'))
+    .filter((item) => item.student === studentId)
+  const attemptIds = new Set(attempts.map((item) => item.id))
+  const answers = (await listRecords(request, superToken, 'placement_answers'))
+    .filter((item) => typeof item.attempt === 'string' && attemptIds.has(item.attempt))
+  for (const answer of answers) await deleteRecord(request, superToken, 'placement_answers', answer.id)
+  for (const attempt of attempts) await deleteRecord(request, superToken, 'placement_attempts', attempt.id)
+
+  await deleteRecord(request, superToken, 'users', studentId)
 }
 
 test('15B.3E.1: Admin añade nivel acumulativo y no puede reescribir histórico ni test automático', async ({ request }) => {
-  const admin = await authenticate(request, requiredEnv('E2E_ADMIN_EMAIL'), requiredEnv('E2E_ADMIN_PASSWORD'))
-  const student = await createUnevaluatedStudent(request, admin.token)
-  const summaryUrl = `${PB_URL}/api/language-school/placement/admin/students/${student.userId}/summary`
-  const assessmentUrl = `${PB_URL}/api/language-school/placement/admin/students/${student.userId}/assessments`
+  const admin = await authenticateCollection(request, 'users', requiredEnv('E2E_ADMIN_EMAIL'), requiredEnv('E2E_ADMIN_PASSWORD'))
+  const superuser = await authenticateCollection(request, '_superusers', requiredEnv('PB_SUPERUSER_EMAIL'), requiredEnv('PB_SUPERUSER_PASSWORD'))
+  const student = await createTemporaryStudent(request, admin.token)
+  const summaryUrl = `${PB_URL}/api/language-school/placement/admin/students/${student.id}/summary`
+  const assessmentUrl = `${PB_URL}/api/language-school/placement/admin/students/${student.id}/assessments`
 
-  const anonymous = await request.get(summaryUrl)
-  expect(anonymous.status()).toBe(401)
+  try {
+    const anonymous = await request.get(summaryUrl)
+    expect(anonymous.status()).toBe(401)
 
-  const before = await request.get(summaryUrl, { headers: { Authorization: admin.token } })
-  expect(before.status()).toBe(200)
-  expect(before.headers()['cache-control']).toContain('no-store')
-  expect(await before.json()).toMatchObject({ currentLevel: '', currentLevelSource: 'NONE', assessmentHistory: [] })
+    const before = await request.get(summaryUrl, { headers: { Authorization: admin.token } })
+    expect(before.status()).toBe(200)
+    expect(before.headers()['cache-control']).toContain('no-store')
+    expect(await before.json()).toMatchObject({ currentLevel: '', currentLevelSource: 'NONE', assessmentHistory: [] })
 
-  const invalidFirstReview = await request.post(assessmentUrl, {
-    headers: { Authorization: admin.token },
-    data: { validatedLevel: 'B1', reason: 'REVIEW', notes: 'No debe aceptarse como primera valoración manual.' },
-  })
-  expect(invalidFirstReview.status()).toBe(400)
+    const invalidFirstReview = await request.post(assessmentUrl, {
+      headers: { Authorization: admin.token },
+      data: { validatedLevel: 'B1', reason: 'REVIEW', notes: 'No debe aceptarse como primera valoración manual.' },
+    })
+    expect(invalidFirstReview.status()).toBe(400)
 
-  const initialResponse = await request.post(assessmentUrl, {
-    headers: { Authorization: admin.token },
-    data: {
+    const initialResponse = await request.post(assessmentUrl, {
+      headers: { Authorization: admin.token },
+      data: {
+        validatedLevel: 'B1',
+        speakingLevel: 'B1',
+        reason: 'INITIAL',
+        notes: 'Entrevista inicial de academia.',
+        assessedBy: 'forged-user',
+        automaticLevel: 'C2',
+      },
+    })
+    expect(initialResponse.status(), await initialResponse.text()).toBe(201)
+    const initial = await initialResponse.json() as {
+      assessment: { id: string; validatedLevel: string; automaticLevel: string; sourceAttemptId: string; assessedBy: string; reason: string }
+    }
+    expect(initial.assessment).toMatchObject({
       validatedLevel: 'B1',
-      speakingLevel: 'B1',
+      automaticLevel: '',
+      sourceAttemptId: '',
+      assessedBy: admin.record.id,
       reason: 'INITIAL',
-      notes: 'Entrevista inicial de academia.',
-      assessedBy: 'forged-user',
+    })
+
+    const duplicateInitial = await request.post(assessmentUrl, {
+      headers: { Authorization: admin.token },
+      data: { validatedLevel: 'B2', reason: 'INITIAL' },
+    })
+    expect(duplicateInitial.status()).toBe(400)
+
+    const directAssessmentPatch = await request.patch(`${PB_URL}/api/collections/student_level_assessments/records/${initial.assessment.id}`, {
+      headers: { Authorization: admin.token },
+      data: { validated_level: 'A1' },
+    })
+    expect([403, 404]).toContain(directAssessmentPatch.status())
+
+    const directAssessmentDelete = await request.delete(`${PB_URL}/api/collections/student_level_assessments/records/${initial.assessment.id}`, {
+      headers: { Authorization: admin.token },
+    })
+    expect([403, 404]).toContain(directAssessmentDelete.status())
+
+    const automatic = await completeCampusAttempt(request, student.token)
+
+    const reviewResponse = await request.post(assessmentUrl, {
+      headers: { Authorization: admin.token },
+      data: {
+        sourceAttemptId: automatic.attemptId,
+        validatedLevel: 'B2',
+        speakingLevel: 'B2',
+        reason: 'REVIEW',
+        notes: 'Revisión de academia posterior al test; se mantiene la evidencia automática.',
+        automaticLevel: 'A1',
+        assessedBy: 'forged-user',
+      },
+    })
+    expect(reviewResponse.status(), await reviewResponse.text()).toBe(201)
+    const review = await reviewResponse.json() as {
+      assessment: { automaticLevel: string; validatedLevel: string; sourceAttemptId: string; assessedBy: string; reason: string }
+      summary: { currentLevel: string; currentLevelSource: string; latestAttempt: { id: string; estimatedLevel: string }; assessmentHistory: Array<{ id: string; reason: string }> }
+    }
+    expect(review.assessment).toMatchObject({
       automaticLevel: 'C2',
-    },
-  })
-  expect(initialResponse.status()).toBe(201)
-  const initial = await initialResponse.json() as {
-    assessment: { id: string; validatedLevel: string; automaticLevel: string; sourceAttemptId: string; assessedBy: string; reason: string }
-  }
-  expect(initial.assessment).toMatchObject({
-    validatedLevel: 'B1',
-    automaticLevel: '',
-    sourceAttemptId: '',
-    assessedBy: admin.record.id,
-    reason: 'INITIAL',
-  })
-
-  const duplicateInitial = await request.post(assessmentUrl, {
-    headers: { Authorization: admin.token },
-    data: { validatedLevel: 'B2', reason: 'INITIAL' },
-  })
-  expect(duplicateInitial.status()).toBe(400)
-
-  const directAssessmentPatch = await request.patch(`${PB_URL}/api/collections/student_level_assessments/records/${initial.assessment.id}`, {
-    headers: { Authorization: admin.token },
-    data: { validated_level: 'A1' },
-  })
-  expect([403, 404]).toContain(directAssessmentPatch.status())
-
-  const directAssessmentDelete = await request.delete(`${PB_URL}/api/collections/student_level_assessments/records/${initial.assessment.id}`, {
-    headers: { Authorization: admin.token },
-  })
-  expect([403, 404]).toContain(directAssessmentDelete.status())
-
-  const automatic = await createCompletedAutomaticAttempt(request, admin.token, student.userId)
-  expect(automatic.estimated_level).toBe('C1')
-
-  const reviewResponse = await request.post(assessmentUrl, {
-    headers: { Authorization: admin.token },
-    data: {
-      sourceAttemptId: automatic.id,
       validatedLevel: 'B2',
-      speakingLevel: 'B2',
+      sourceAttemptId: automatic.attemptId,
+      assessedBy: admin.record.id,
       reason: 'REVIEW',
-      notes: 'Revisión de academia posterior al test; se mantiene la evidencia automática.',
-      automaticLevel: 'A1',
-      assessedBy: 'forged-user',
-    },
-  })
-  expect(reviewResponse.status()).toBe(201)
-  const review = await reviewResponse.json() as {
-    assessment: { automaticLevel: string; validatedLevel: string; sourceAttemptId: string; assessedBy: string; reason: string }
-    summary: { currentLevel: string; currentLevelSource: string; latestAttempt: { id: string; estimatedLevel: string }; assessmentHistory: Array<{ id: string; reason: string }> }
+    })
+    expect(review.summary.currentLevel).toBe('B2')
+    expect(review.summary.currentLevelSource).toBe('VALIDATED')
+    expect(review.summary.latestAttempt).toMatchObject({ id: automatic.attemptId, estimatedLevel: 'C2' })
+    expect(review.summary.assessmentHistory).toHaveLength(2)
+    expect(review.summary.assessmentHistory.map((item) => item.reason)).toEqual(['REVIEW', 'INITIAL'])
+
+    const directAttemptPatch = await request.patch(`${PB_URL}/api/collections/placement_attempts/records/${automatic.attemptId}`, {
+      headers: { Authorization: admin.token },
+      data: { estimated_level: 'A1', score_percent: 1 },
+    })
+    expect([403, 404]).toContain(directAttemptPatch.status())
+
+    const directAttemptDelete = await request.delete(`${PB_URL}/api/collections/placement_attempts/records/${automatic.attemptId}`, {
+      headers: { Authorization: admin.token },
+    })
+    expect([403, 404]).toContain(directAttemptDelete.status())
+
+    const after = await request.get(summaryUrl, { headers: { Authorization: admin.token } })
+    expect(after.status()).toBe(200)
+    const finalSummary = await after.json() as {
+      currentLevel: string
+      currentLevelSource: string
+      latestAttempt: { estimatedLevel: string; scorePercent: number }
+      assessmentHistory: Array<{ reason: string; validatedLevel: string }>
+    }
+    expect(finalSummary.currentLevel).toBe('B2')
+    expect(finalSummary.currentLevelSource).toBe('VALIDATED')
+    expect(finalSummary.latestAttempt).toMatchObject({ estimatedLevel: 'C2', scorePercent: 100 })
+    expect(finalSummary.assessmentHistory).toHaveLength(2)
+    expect(finalSummary.assessmentHistory[1]).toMatchObject({ reason: 'INITIAL', validatedLevel: 'B1' })
+  } finally {
+    await cleanupTemporaryStudent(request, superuser.token, student.id)
   }
-  expect(review.assessment).toMatchObject({
-    automaticLevel: 'C1',
-    validatedLevel: 'B2',
-    sourceAttemptId: automatic.id,
-    assessedBy: admin.record.id,
-    reason: 'REVIEW',
-  })
-  expect(review.summary.currentLevel).toBe('B2')
-  expect(review.summary.currentLevelSource).toBe('VALIDATED')
-  expect(review.summary.latestAttempt).toMatchObject({ id: automatic.id, estimatedLevel: 'C1' })
-  expect(review.summary.assessmentHistory).toHaveLength(2)
-  expect(review.summary.assessmentHistory.map((item) => item.reason)).toEqual(['REVIEW', 'INITIAL'])
-
-  const directAttemptPatch = await request.patch(`${PB_URL}/api/collections/placement_attempts/records/${automatic.id}`, {
-    headers: { Authorization: admin.token },
-    data: { estimated_level: 'A1', score_percent: 1 },
-  })
-  expect([403, 404]).toContain(directAttemptPatch.status())
-
-  const directAttemptDelete = await request.delete(`${PB_URL}/api/collections/placement_attempts/records/${automatic.id}`, {
-    headers: { Authorization: admin.token },
-  })
-  expect([403, 404]).toContain(directAttemptDelete.status())
-
-  const after = await request.get(summaryUrl, { headers: { Authorization: admin.token } })
-  expect(after.status()).toBe(200)
-  const finalSummary = await after.json() as {
-    currentLevel: string
-    currentLevelSource: string
-    latestAttempt: { estimatedLevel: string; scorePercent: number }
-    assessmentHistory: Array<{ reason: string; validatedLevel: string }>
-  }
-  expect(finalSummary.currentLevel).toBe('B2')
-  expect(finalSummary.currentLevelSource).toBe('VALIDATED')
-  expect(finalSummary.latestAttempt).toMatchObject({ estimatedLevel: 'C1', scorePercent: 84 })
-  expect(finalSummary.assessmentHistory).toHaveLength(2)
-  expect(finalSummary.assessmentHistory[1]).toMatchObject({ reason: 'INITIAL', validatedLevel: 'B1' })
 })
