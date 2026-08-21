@@ -73,7 +73,11 @@ test('15B.3C.3: alta guiada completa cuenta, nivel, matrícula e invitación sin
   await expect(wizard.getByRole('heading', { name: 'Alumno matriculado e invitación preparada' })).toBeVisible()
   await expect(wizard).toContainText('Asignación pedagógica confirmada')
   await expect(wizard).toContainText('Pendiente de activación')
-  await expect(wizard.getByLabel('Enlace de activación')).toHaveValue(/\/activar-cuenta\?token=/)
+  await expect(wizard).toContainText('Enlace de activación protegido')
+  await expect(wizard).toContainText('Invitación privada enviada por email')
+  await expect(wizard.getByLabel('Enlace de activación')).toHaveCount(0)
+  await expect(wizard.getByRole('button', { name: 'Copiar enlace' })).toHaveCount(0)
+  await expect(wizard).not.toContainText('/activar-cuenta?token=')
 
   await wizard.getByRole('link', { name: /Ver ficha del alumno/ }).click()
   await expect(page).toHaveURL(/\/admin\/alumnos\/[^/]+$/)
