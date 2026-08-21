@@ -7,6 +7,10 @@ PB_DATA="${PB_DATA:-/var/lib/language-school/pb_data}"
 PB_MIGRATIONS="${PB_MIGRATIONS:-/opt/language-school/pocketbase/pb_migrations}"
 PB_HOOKS="${PB_HOOKS:-/opt/language-school/pocketbase/pb_hooks}"
 PUBLIC_ORIGIN="${PUBLIC_ORIGIN:-}"
+SMTP_ENABLED="${SMTP_ENABLED:-}"
+SMTP_HOST="${SMTP_HOST:-}"
+SMTP_PORT="${SMTP_PORT:-587}"
+SMTP_SENDER_ADDRESS="${SMTP_SENDER_ADDRESS:-}"
 TURNSTILE_SECRET_KEY="${TURNSTILE_SECRET_KEY:-}"
 TURNSTILE_EXPECTED_ACTION="${TURNSTILE_EXPECTED_ACTION:-}"
 TURNSTILE_ALLOWED_HOSTNAMES="${TURNSTILE_ALLOWED_HOSTNAMES:-}"
@@ -30,6 +34,27 @@ fi
 PUBLIC_HOST="${PUBLIC_ORIGIN#https://}"
 PUBLIC_HOST="${PUBLIC_HOST%%:*}"
 PUBLIC_HOST="${PUBLIC_HOST,,}"
+
+if [[ "${SMTP_ENABLED,,}" != 'true' ]]; then
+  echo 'SMTP_ENABLED=true is required in production because ADMIN login uses emailed MFA codes.' >&2
+  exit 1
+fi
+if [[ -z "$SMTP_HOST" || "$SMTP_HOST" == REPLACE_* ]]; then
+  echo 'A real SMTP_HOST is required before PocketBase can start in production.' >&2
+  exit 1
+fi
+if [[ ! "$SMTP_PORT" =~ ^[0-9]+$ ]] || (( SMTP_PORT < 1 || SMTP_PORT > 65535 )); then
+  echo 'SMTP_PORT must be a valid TCP port.' >&2
+  exit 1
+fi
+if [[ -z "$SMTP_SENDER_ADDRESS" || "$SMTP_SENDER_ADDRESS" == REPLACE_* || "$SMTP_SENDER_ADDRESS" != *@*.* ]]; then
+  echo 'A real SMTP_SENDER_ADDRESS is required before PocketBase can start in production.' >&2
+  exit 1
+fi
+if [[ "${SMTP_USERNAME:-}" == REPLACE_* || "${SMTP_PASSWORD:-}" == REPLACE_* ]]; then
+  echo 'Replace SMTP credential placeholders before PocketBase can start in production.' >&2
+  exit 1
+fi
 
 if [[ -z "$TURNSTILE_SECRET_KEY" || "$TURNSTILE_SECRET_KEY" == REPLACE_* || "$TURNSTILE_SECRET_KEY" == "$TURNSTILE_TEST_SECRET_KEY" ]]; then
   echo 'A real TURNSTILE_SECRET_KEY is required before PocketBase can start in production.' >&2
