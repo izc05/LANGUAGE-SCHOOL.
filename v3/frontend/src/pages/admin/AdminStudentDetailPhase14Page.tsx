@@ -17,8 +17,10 @@ import {
 import { effectivePaymentStatus, listAdminPayments, paymentCoverageUntil, pendingAmountCents, type StudentPaymentRecord } from '../../services/pocketbase/adminPayments'
 import { getAdminStudentProfilePhase14, saveAdminStudentProfilePhase14, type AdminStudentProfilePhase14 } from '../../services/pocketbase/adminProfilesPhase14'
 import { getPlacementAdminOverview, type PlacementAdminStudentLevel } from '../../services/pocketbase/placementAdmin'
+import { demoSiteSettings, getSiteSettings, type SiteSettingsRecord } from '../../services/pocketbase/siteManagement'
 import type { AppUser } from '../../services/pocketbase/types'
 import type { ClassDeliveryMode, ClassRecord } from '../../services/pocketbase/studentPortal'
+import { downloadPaymentReceiptPdf, downloadPaymentsExcel, type PaymentReceiptAcademy } from '../../utils/paymentExcel'
 import AdminStudentLevelCard from './AdminStudentLevelCard'
 import { adminNav } from './adminNav'
 
@@ -81,6 +83,15 @@ function nextClassLabel(record?: ClassRecord): string {
   return new Intl.DateTimeFormat('es-ES', { weekday: 'long', day: '2-digit', month: 'long', hour: '2-digit', minute: '2-digit' }).format(date)
 }
 
+function paymentStatusLabel(record: StudentPaymentRecord): string {
+  const status = effectivePaymentStatus(record)
+  if (status === 'PAID') return 'Pagado'
+  if (status === 'OVERDUE') return 'Vencido'
+  if (status === 'PENDING') return 'Pendiente'
+  if (status === 'CANCELLED') return 'Cancelado'
+  return 'Reembolsado'
+}
+
 const demoUser: AppUser = { id: 'demo-1', collectionId: '', collectionName: 'users', created: '', updated: '', expand: {}, email: 'emma@example.com', name: 'Emma', surname: 'Martín', role: 'STUDENT', status: 'ACTIVE', phone: '600 123 456' }
 
 export default function AdminStudentDetailPhase14Page() {
@@ -93,11 +104,13 @@ export default function AdminStudentDetailPhase14Page() {
   const [enrollments, setEnrollments] = useState<AdminEnrollmentRecord[]>([])
   const [classes, setClasses] = useState<ClassRecord[]>([])
   const [payments, setPayments] = useState<StudentPaymentRecord[]>([])
+  const [siteSettings, setSiteSettings] = useState<SiteSettingsRecord | null>(null)
   const [profile, setProfile] = useState<AdminStudentProfilePhase14 | null>(isDemoMode ? ({ id: 'demo-profile', collectionId: '', collectionName: 'student_profiles', created: '', updated: '', expand: {}, user: 'demo-1', birth_date: '2002-05-14', guardian_name: '', guardian_phone: '', notes_private: 'Prefiere grupos reducidos y práctica oral.', active: true } as AdminStudentProfilePhase14) : null)
   const [level, setLevel] = useState<PlacementAdminStudentLevel | null>(isDemoMode ? ({ studentId: 'demo-1', studentName: 'Emma Martín', email: 'emma@example.com', status: 'ACTIVE', currentLevel: 'B1', currentLevelSource: 'VALIDATED', latestAttempt: null, latestAssessment: null, attemptCount: 2, assessmentCount: 1 }) : null)
   const [loading, setLoading] = useState(!isDemoMode)
   const [saving, setSaving] = useState(false)
   const [editing, setEditing] = useState(false)
+  const [showAllPayments, setShowAllPayments] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
 
@@ -130,6 +143,15 @@ export default function AdminStudentDetailPhase14Page() {
     return () => { mounted = false }
   }, [isDemoMode, studentId])
 
+  useEffect(() => {
+    if (isDemoMode) return
+    let mounted = true
+    void getSiteSettings()
+      .then((settings) => { if (mounted) setSiteSettings(settings) })
+      .catch(() => { /* El justificante mantiene su bloqueo seguro si falta identidad real. */ })
+    return () => { mounted = false }
+  }, [isDemoMode])
+
   const activeEnrollment = enrollments.find((item) => item.status === 'ACTIVE')
   const activeGroup = activeEnrollment ? groups.find((item) => item.id === activeEnrollment.group) || activeEnrollment.expand?.group as AdminGroupRecord | undefined : undefined
   const teacher = teachers.find((item) => item.id === activeGroup?.teacher) || activeGroup?.expand?.teacher
@@ -141,7 +163,46 @@ export default function AdminStudentDetailPhase14Page() {
   const hasOverdue = payments.some((record) => effectivePaymentStatus(record) === 'OVERDUE')
   const hasPending = payments.some((record) => record.status === 'PENDING')
   const paymentState = hasOverdue ? 'Vencido' : hasPending ? 'Pendiente' : coverage >= todayKey() ? 'Al corriente' : payments.length ? 'Pendiente' : 'Sin cobros'
-  const recentPayments = [...payments].sort((a, b) => (b.paid_at || b.due_date).localeCompare(a.paid_at || a.due_date)).slice(0, 6)
+  const sortedPayments = useMemo(() => [...payments].sort((a, b) => (b.paid_at || b.due_date).localeCompare(a.paid_at || a.due_date)), [payments])
+  const displayedPayments = showAllPayments ? sortedPayments : sortedPayments.slice(0, 6)
+  const paidCents = payments.filter((record) => record.status === 'PAID').reduce((sum, record) => sum + record.amount_cents, 0)
+  const overdueCents = payments.filter((record) => effectivePaymentStatus(record) === 'OVERDUE').reduce((sum, record) => sum + record.amount_cents, 0)
+  const refundedCents = payments.filter((record) => record.status === 'REFUNDED').reduce((sum, record) => sum + record.amount_cents, 0)
+
+  function receiptAcademy(): PaymentReceiptAcademy {
+    const legal = siteSettings?.legal_texts || {}
+    return {
+      academyName: siteSettings?.academy_name || demoSiteSettings.academyName || 'Language School',
+      legalOwnerName: legal.legal_owner_name || '',
+      legalTaxId: legal.legal_tax_id || '',
+      address: siteSettings?.address || (isDemoMode ? demoSiteSettings.address : ''),
+      email: siteSettings?.email || (isDemoMode ? demoSiteSettings.email : ''),
+      phone: siteSettings?.phone || (isDemoMode ? demoSiteSettings.phone : ''),
+    }
+  }
+
+  function exportPaymentHistory() {
+    if (!student || sortedPayments.length === 0) return
+    downloadPaymentsExcel({
+      records: sortedPayments,
+      students: [student],
+      enrollments,
+      periodLabel: `historial-${fullName(student)}`,
+    })
+    setMessage(`Historial económico completo preparado con ${sortedPayments.length} ${sortedPayments.length === 1 ? 'movimiento' : 'movimientos'}.`)
+  }
+
+  function downloadReceipt(record: StudentPaymentRecord) {
+    if (!student) return
+    const enrollment = enrollments.find((item) => item.id === record.enrollment) || record.expand?.enrollment
+    setError(null); setMessage(null)
+    try {
+      const filename = downloadPaymentReceiptPdf({ record, student, enrollment, academy: receiptAcademy() })
+      setMessage(`Justificante PDF preparado: ${filename}`)
+    } catch (receiptError) {
+      setError(receiptError instanceof Error ? receiptError.message : 'No se ha podido generar el justificante PDF.')
+    }
+  }
 
   function openEdit() {
     if (!student) return
@@ -229,7 +290,45 @@ export default function AdminStudentDetailPhase14Page() {
 
           {student && <AdminStudentLevelCard studentId={student.id} targetLevel={activeGroup?.target_level || ''} groupName={activeGroup?.name || ''} isDemoMode={isDemoMode} onCurrentLevelChange={handleLevelChange} />}
 
-          <article className="panel phase14-profile-card phase14-payment-card"><div className="panel-heading"><div><span className="eyebrow">PAGOS</span><h3>Situación económica</h3></div><Link className="student-payment-link" to={`/admin/pagos?alumno=${encodeURIComponent(student?.id || '')}`}>Gestionar pagos</Link></div><div className="phase14-payment-summary"><div><span>Estado</span><strong>{paymentState}</strong></div><div><span>Cubierto hasta</span><strong>{coverage ? formatDate(coverage) : 'Sin cobertura'}</strong></div><div><span>Pendiente</span><strong>{euro.format(pendingCents / 100)}</strong></div></div><div className="phase14-payment-history">{recentPayments.map((record) => <div key={record.id}><span><strong>{record.billing_mode === 'INTENSIVE' ? 'Intensivo' : 'Mensual'}</strong><small>{formatDate(record.period_start)} → {formatDate(record.period_end)}</small></span><b>{euro.format(record.amount_cents / 100)}</b><i className={`payment-state ${effectivePaymentStatus(record).toLowerCase()}`}>{effectivePaymentStatus(record) === 'PAID' ? 'Pagado' : effectivePaymentStatus(record) === 'OVERDUE' ? 'Vencido' : effectivePaymentStatus(record) === 'PENDING' ? 'Pendiente' : effectivePaymentStatus(record)}</i></div>)}{recentPayments.length === 0 && <small>Sin pagos registrados todavía.</small>}</div></article>
+          <article className="panel phase14-profile-card phase14-payment-card">
+            <div className="panel-heading">
+              <div><span className="eyebrow">PAGOS</span><h3>Situación económica</h3></div>
+              <div className="payment-heading-actions">
+                <button className="button phase14-export-button" type="button" onClick={exportPaymentHistory} disabled={sortedPayments.length === 0}>Descargar historial</button>
+                <Link className="student-payment-link" to={`/admin/pagos?alumno=${encodeURIComponent(student?.id || '')}`}>Gestionar pagos</Link>
+              </div>
+            </div>
+            <div className="phase14-payment-summary" aria-label="Resumen económico del alumno">
+              <div><span>Estado</span><strong>{paymentState}</strong></div>
+              <div><span>Cubierto hasta</span><strong>{coverage ? formatDate(coverage) : 'Sin cobertura'}</strong></div>
+              <div><span>Pendiente</span><strong>{euro.format(pendingCents / 100)}</strong></div>
+              <div><span>Cobrado</span><strong data-testid="student-payment-paid">{euro.format(paidCents / 100)}</strong></div>
+              <div><span>Vencido</span><strong data-testid="student-payment-overdue">{euro.format(overdueCents / 100)}</strong></div>
+              <div><span>Reembolsado</span><strong data-testid="student-payment-refunded">{euro.format(refundedCents / 100)}</strong></div>
+            </div>
+            <div id="student-payment-history-list" className="phase14-payment-history" data-testid="student-payment-history">
+              {displayedPayments.map((record) => {
+                const enrollment = enrollments.find((item) => item.id === record.enrollment) || record.expand?.enrollment
+                const group = enrollment?.expand?.group
+                const effective = effectivePaymentStatus(record)
+                return <div key={record.id}>
+                  <span>
+                    <strong>{record.billing_mode === 'INTENSIVE' ? 'Intensivo' : 'Mensual'}{group?.name ? ` · ${group.name}` : ''}</strong>
+                    <small>{group?.expand?.course?.title ? `${group.expand.course.title} · ` : ''}{formatDate(record.period_start)} → {formatDate(record.period_end)}</small>
+                  </span>
+                  <b>{euro.format(record.amount_cents / 100)}</b>
+                  <span className="payment-record-actions">
+                    <i className={`payment-state ${effective.toLowerCase()}`}>{paymentStatusLabel(record)}</i>
+                    {record.status === 'PAID' && <button type="button" onClick={() => downloadReceipt(record)} aria-label={`Justificante de ${formatDate(record.paid_at)} por ${euro.format(record.amount_cents / 100)}`}>Justificante</button>}
+                  </span>
+                </div>
+              })}
+              {displayedPayments.length === 0 && <small>Sin pagos registrados todavía.</small>}
+            </div>
+            {sortedPayments.length > 6 && <button className="button phase14-export-button" type="button" onClick={() => setShowAllPayments((current) => !current)} aria-expanded={showAllPayments} aria-controls="student-payment-history-list">
+              {showAllPayments ? 'Mostrar los 6 más recientes' : `Ver historial completo (${sortedPayments.length})`}
+            </button>}
+          </article>
 
           <article className="panel phase14-profile-card"><div className="panel-heading"><div><span className="eyebrow">SEGUIMIENTO</span><h3>Notas privadas</h3></div></div><p className="phase14-private-notes">{profile?.notes_private || 'Sin observaciones privadas. Puedes añadirlas desde Editar ficha.'}</p></article>
         </section>
