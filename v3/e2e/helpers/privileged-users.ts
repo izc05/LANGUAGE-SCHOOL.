@@ -45,13 +45,18 @@ export async function createPrivilegedUser<T extends Record<string, unknown> = R
   input: UserFixtureInput,
 ): Promise<PrivilegedFixtureResult<T>> {
   const token = await superuserToken(request)
+  const status = input.status || 'ACTIVE'
   const response = await request.post(`${PB_URL}/api/collections/users/records`, {
     headers: { Authorization: token },
     data: {
       ...input,
       passwordConfirm: input.passwordConfirm || input.password,
-      status: input.status || 'ACTIVE',
+      status,
       phone: input.phone || '',
+      // Trusted E2E fixtures that are meant to authenticate immediately must
+      // satisfy the same authRule as pre-existing ACTIVE accounts. Invitation
+      // fixtures stay unverified unless a test explicitly opts in.
+      verified: input.verified ?? status === 'ACTIVE',
     },
   })
   let body: T
