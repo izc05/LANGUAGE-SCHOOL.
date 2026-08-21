@@ -20,18 +20,24 @@ Los puertos de esta lista corresponden a la plantilla actual (`PROXY_URL=127.0.0
 - [ ] El archivo sigue siendo `root:root` y modo `0640`.
 - [ ] `PUBLIC_ORIGIN` usa HTTPS y apunta al dominio/subdominio definitivo, no a un placeholder.
 - [ ] `PB_URL` y `PROXY_URL` continúan en `127.0.0.1`.
+- [ ] `SMTP_ENABLED=true` y host, puerto, remitente, TLS/autenticación y credenciales SMTP corresponden al proveedor real; no quedan placeholders.
 - [ ] Ninguna contraseña/token está en el repositorio ni en `VITE_*`.
 - [ ] Variables privadas Zoom, si se usan, existen solo en el host según `PRIVATE-VARIABLES.md`.
 - [ ] `BACKUP_MOUNT` coincide con un mountpoint real.
 
 ## C. PocketBase
 
+- [ ] **Antes de actualizar el piloto existente**, realizar una copia física de su `pb_data`, generar SHA-256, validar el checksum y conservar al menos una copia fuera del SSD principal.
+- [ ] Inventariar la base del piloto antes de promoverla: cuentas STUDENT/TEACHER, matrículas, grupos, clases, pagos, contactos y archivos existentes están identificados como reales o de prueba.
+- [ ] Si la base piloto contiene fixtures/datos ficticios, NO promoverla como producción: apartar la copia anterior para rollback y preparar una base limpia antes de cargar datos reales.
+- [ ] Antes de introducir datos reales verificar explícitamente: **0 STUDENT, 0 TEACHER, 0 matrículas, 0 grupos, 0 clases y 0 `student_payments`**. El contenido estructural/CMS y el banco DRAFT del test de nivel sí pueden existir.
 - [ ] `install-pocketbase.sh` finaliza sin errores.
 - [ ] SHA-256 de la arquitectura del host verificado.
 - [ ] Usuario `languageschool` creado.
 - [ ] `/var/lib/language-school/pb_data` pertenece a `languageschool` y no es legible por otros usuarios.
 - [ ] `/opt/language-school/pocketbase/pb_migrations` existe y contiene las migraciones de la revisión desplegada.
 - [ ] `/opt/language-school/pocketbase/pb_hooks` existe y contiene los hooks server-side de la misma revisión.
+- [ ] Tras arrancar PocketBase, `settings.meta.appURL` corresponde exactamente a `PUBLIC_ORIGIN`, de modo que invitaciones y recuperación nunca apunten a localhost ni a `/_/`.
 - [ ] Remitente/SMTP de PocketBase configurado y un correo de prueba real recibido antes de activar el acceso MFA de Administración.
 - [ ] `migrate.sh` aplica todas las migraciones.
 - [ ] Primer superuser creado localmente.
@@ -39,6 +45,9 @@ Los puertos de esta lista corresponden a la plantilla actual (`PROXY_URL=127.0.0
 - [ ] Login ADMIN con contraseña correcta devuelve desafío MFA y no una sesión completa.
 - [ ] El ADMIN recibe por correo el código de 6 cifras y puede completar el acceso dentro de su ventana de validez.
 - [ ] Código MFA incorrecto o caducado no permite entrar en Administración.
+- [ ] Crear temporalmente una invitación STUDENT y una TEACHER, recibir/abrir el enlace real, elegir contraseña propia y confirmar que el token queda usado y no se puede reutilizar.
+- [ ] Solicitar recuperación de contraseña de una cuenta temporal, confirmar que el email usa el dominio final, establecer una contraseña nueva y comprobar que la anterior y el token consumido ya no sirven.
+- [ ] La solicitud de recuperación con un email no registrado mantiene respuesta pública neutral y no revela si la cuenta existe.
 - [ ] `systemctl is-active language-school-pocketbase` = active.
 - [ ] `curl http://127.0.0.1:8091/api/health` responde correctamente.
 
@@ -73,13 +82,14 @@ Los puertos de esta lista corresponden a la plantilla actual (`PROXY_URL=127.0.0
 
 ## F. Seguridad funcional
 
-- [ ] Crear Alumno A y Alumno B.
-- [ ] Crear Profesor A y Profesor B.
+- [ ] Crear Alumno A y Alumno B mediante el flujo canónico de invitación, nunca fijando su contraseña desde Administración.
+- [ ] Crear Profesor A y Profesor B mediante el flujo canónico de invitación, nunca fijando su contraseña desde Administración.
 - [ ] Separar cada pareja en grupos distintos.
 - [ ] Confirmar aislamiento Alumno A/B.
 - [ ] Confirmar aislamiento Profesor A/B.
 - [ ] Confirmar que STUDENT y TEACHER siguen accediendo con su flujo normal y que OTP no funciona como login alternativo para esos roles.
 - [ ] Confirmar que un ADMIN no obtiene token válido mediante contraseña solamente ni accediendo directamente a `/admin`.
+- [ ] Confirmar que una sesión ADMIN no puede crear directamente un usuario con contraseña ni modificar la contraseña/`verified` de STUDENT o TEACHER.
 - [ ] Probar archivo privado + token protegido.
 - [ ] Pausar matrícula y confirmar revocación inmediata del profesor.
 - [ ] Probar rechazo de asistencia fuera del grupo.
