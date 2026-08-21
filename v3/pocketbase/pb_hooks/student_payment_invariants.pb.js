@@ -1,10 +1,12 @@
 /// <reference path="../pb_data/types.d.ts" />
 
-function paymentDateOnly(value) {
-  return String(value || '').trim().slice(0, 10)
+function requireActivePaymentAdmin(e) {
+  if (!e.auth || e.auth.getString('role') !== 'ADMIN' || e.auth.getString('status') !== 'ACTIVE') {
+    throw new ForbiddenError('Solo Administración activa puede registrar cobros.')
+  }
 }
 
-function requirePaymentEnrollmentMatch(e) {
+function validatePaymentEnrollmentAndDates(e) {
   const studentId = e.record.getString('student')
   const enrollmentId = e.record.getString('enrollment')
 
@@ -17,20 +19,42 @@ function requirePaymentEnrollmentMatch(e) {
     throw new BadRequestError('La matrícula seleccionada no pertenece al alumno del cobro.')
   }
 
-  const start = paymentDateOnly(e.record.getString('period_start'))
-  const end = paymentDateOnly(e.record.getString('period_end'))
-  if (!start || !end || end < start) {
+  const start = e.record.getDateTime('period_start')
+  const end = e.record.getDateTime('period_end')
+  if (start.isZero() || end.isZero() || end.before(start)) {
     throw new BadRequestError('El periodo del cobro no es válido.')
   }
+}
 
-  if (!e.auth || e.auth.getString('role') !== 'ADMIN' || e.auth.getString('status') !== 'ACTIVE') {
-    throw new ForbiddenError('Solo Administración activa puede registrar cobros.')
+function requirePaymentEvidence(record) {
+  if (record.getDateTime('paid_at').isZero() || !record.getString('payment_method')) {
+    throw new BadRequestError('Un pago realizado necesita fecha y método de pago.')
+  }
+}
+
+function requireImmutablePaymentBase(current, next) {
+  const stringFields = ['student', 'enrollment', 'billing_mode', 'recorded_by']
+  for (const field of stringFields) {
+    if (current.getString(field) !== next.getString(field)) {
+      throw new BadRequestError('Los datos base del cobro no pueden reescribirse; registra una corrección mediante su estado.')
+    }
   }
 
-  e.next()
+  if (current.getInt('amount_cents') !== next.getInt('amount_cents')) {
+    throw new BadRequestError('Los datos base del cobro no pueden reescribirse; registra una corrección mediante su estado.')
+  }
+
+  const dateFields = ['period_start', 'period_end', 'due_date']
+  for (const field of dateFields) {
+    if (current.getDateTime(field).compare(next.getDateTime(field)) !== 0) {
+      throw new BadRequestError('Los datos base del cobro no pueden reescribirse; registra una corrección mediante su estado.')
+    }
+  }
 }
 
 onRecordCreateRequest((e) => {
+  requireActivePaymentAdmin(e)
+
   if (e.record.getString('recorded_by') !== e.auth.id) {
     throw new BadRequestError('El responsable del cobro debe ser la sesión de Administración actual.')
   }
@@ -39,25 +63,21 @@ onRecordCreateRequest((e) => {
   if (status !== 'PENDING' && status !== 'PAID') {
     throw new BadRequestError('Un cobro nuevo debe crearse como pendiente o pagado.')
   }
-  if (status === 'PAID' && (!e.record.getString('paid_at') || !e.record.getString('payment_method'))) {
-    throw new BadRequestError('Un pago realizado necesita fecha y método de pago.')
-  }
+  if (status === 'PAID') requirePaymentEvidence(e.record)
 
-  requirePaymentEnrollmentMatch(e)
+  validatePaymentEnrollmentAndDates(e)
+  e.next()
 }, 'student_payments')
 
 onRecordUpdateRequest((e) => {
+  requireActivePaymentAdmin(e)
+
   let current
   try { current = e.app.findRecordById('student_payments', e.record.id) } catch {
     throw new BadRequestError('El cobro no existe.')
   }
 
-  const immutableFields = ['student', 'enrollment', 'billing_mode', 'amount_cents', 'period_start', 'period_end', 'due_date', 'recorded_by']
-  for (const field of immutableFields) {
-    if (String(current.get(field) ?? '') !== String(e.record.get(field) ?? '')) {
-      throw new BadRequestError('Los datos base del cobro no pueden reescribirse; registra una corrección mediante su estado.')
-    }
-  }
+  requireImmutablePaymentBase(current, e.record)
 
   const before = current.getString('status')
   const after = e.record.getString('status')
@@ -68,9 +88,8 @@ onRecordUpdateRequest((e) => {
     throw new BadRequestError(`Transición de pago no permitida: ${before} → ${after}.`)
   }
 
-  if ((after === 'PAID' || after === 'REFUNDED') && (!e.record.getString('paid_at') || !e.record.getString('payment_method'))) {
-    throw new BadRequestError('Un pago realizado necesita fecha y método de pago.')
-  }
+  if (after === 'PAID' || after === 'REFUNDED') requirePaymentEvidence(e.record)
 
-  requirePaymentEnrollmentMatch(e)
+  validatePaymentEnrollmentAndDates(e)
+  e.next()
 }, 'student_payments')
