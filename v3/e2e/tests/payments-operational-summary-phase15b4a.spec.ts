@@ -111,7 +111,7 @@ async function cleanupTemporaryPaymentStudent(
 }
 
 test('15B.4A: resumen económico responde al contexto, método y situación del alumno sin romper móvil', async ({ page, request }) => {
-  test.setTimeout(60_000)
+  test.setTimeout(45_000)
 
   const admin = await authenticate(request, 'users', requiredEnv('E2E_ADMIN_EMAIL'), requiredEnv('E2E_ADMIN_PASSWORD'))
   const superuser = await authenticate(request, '_superusers', requiredEnv('PB_SUPERUSER_EMAIL'), requiredEnv('PB_SUPERUSER_PASSWORD'))
@@ -180,8 +180,8 @@ test('15B.4A: resumen económico responde al contexto, método y situación del 
 
     const toolbar = page.locator('.admin-payments-toolbar')
     await expect(toolbar).toBeVisible()
-    await toolbar.getByLabel('Alumno', { exact: true }).selectOption(fixture.studentId)
-    await toolbar.getByLabel('Modalidad').selectOption('INTENSIVE')
+    await toolbar.getByRole('combobox', { name: 'Alumno', exact: true }).selectOption(fixture.studentId)
+    await toolbar.getByRole('combobox', { name: 'Modalidad', exact: true }).selectOption('INTENSIVE')
     await toolbar.getByLabel('Mes').fill(dates.month)
 
     await expect(page.getByTestId('payment-summary-obligations')).toContainText('129,00')
@@ -200,13 +200,13 @@ test('15B.4A: resumen económico responde al contexto, método y situación del 
     await expect(page.getByTestId('payment-summary-obligations')).toContainText('129,00')
 
     await page.getByRole('button', { name: 'Todos', exact: true }).click()
-    await toolbar.getByLabel('Método').selectOption('BIZUM')
+    await toolbar.getByRole('combobox', { name: 'Método', exact: true }).selectOption('BIZUM')
     await expect(page.getByTestId('payment-summary-obligations')).toContainText('61,00')
     await expect(page.getByTestId('payment-summary-paid')).toContainText('61,00')
     await expect(page.getByTestId('payment-summary-debt-students')).toHaveText('0')
     await expect(page.getByTestId('payment-summary-current-students')).toHaveText('1')
 
-    await toolbar.getByLabel('Método').selectOption('ALL')
+    await toolbar.getByRole('combobox', { name: 'Método', exact: true }).selectOption('ALL')
     await page.getByRole('button', { name: 'Reembolsados' }).click()
     await expect(page.locator('.payment-record')).toHaveCount(1)
     await expect(page.locator('.payment-record').first()).toContainText('25,00')
