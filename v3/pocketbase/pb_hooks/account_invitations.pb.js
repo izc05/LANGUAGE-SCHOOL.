@@ -132,7 +132,8 @@ routerAdd('POST', '/api/language-school/admin/accounts/invite', (e) => {
   const invitation = e.app.findRecordById('account_invitations', invitationId)
   const activationUrl = activationBaseUrl ? `${activationBaseUrl}/activar-cuenta?token=${encodeURIComponent(rawToken)}` : ''
   const emailSent = trySend(e.app, user, invitation, activationUrl)
-  return e.json(201, { userId, invitationId, role, status: 'PENDING', expiresAt, activationUrl, emailSent })
+  const responseActivationUrl = role === 'ADMIN' ? '' : activationUrl
+  return e.json(201, { userId, invitationId, role, status: 'PENDING', expiresAt, activationUrl: responseActivationUrl, emailSent })
 }, $apis.requireAuth('users'))
 
 routerAdd('POST', '/api/language-school/admin/accounts/invite/resend', (e) => {
@@ -204,6 +205,7 @@ routerAdd('POST', '/api/language-school/admin/accounts/invite/resend', (e) => {
   let invitationId = ''
   let rawToken = ''
   let expiresAt = ''
+  let accountRole = ''
 
   e.app.runInTransaction((txApp) => {
     const user = txApp.findRecordById('users', userId)
@@ -214,13 +216,15 @@ routerAdd('POST', '/api/language-school/admin/accounts/invite/resend', (e) => {
     invitationId = issued.invitation.id
     rawToken = issued.token
     expiresAt = issued.invitation.getString('expires_at')
+    accountRole = role
   })
 
   const user = e.app.findRecordById('users', userId)
   const invitation = e.app.findRecordById('account_invitations', invitationId)
   const activationUrl = activationBaseUrl ? `${activationBaseUrl}/activar-cuenta?token=${encodeURIComponent(rawToken)}` : ''
   const emailSent = trySend(e.app, user, invitation, activationUrl)
-  return e.json(200, { userId, invitationId, status: 'PENDING', expiresAt, activationUrl, emailSent })
+  const responseActivationUrl = accountRole === 'ADMIN' ? '' : activationUrl
+  return e.json(200, { userId, invitationId, status: 'PENDING', expiresAt, activationUrl: responseActivationUrl, emailSent })
 }, $apis.requireAuth('users'))
 
 routerAdd('POST', '/api/language-school/admin/accounts/invite/revoke', (e) => {
