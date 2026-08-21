@@ -29,6 +29,11 @@ export type AdminAccountInvitationRevokeResponse = {
   status: 'REVOKED'
 }
 
+export type AccountActivationResponse = {
+  success: true
+  userId: string
+}
+
 function requireAdmin() {
   const user = getCurrentUser()
   if (!user || user.role !== 'ADMIN') throw new Error('Se requiere una sesión de administrador activa.')
@@ -40,6 +45,22 @@ function resolveActivationBaseUrl(explicit?: string): string {
   if (value) return value
   if (typeof window === 'undefined') return ''
   return window.location.origin
+}
+
+export async function activateAccountInvitation(input: {
+  token: string
+  password: string
+  passwordConfirm: string
+}): Promise<AccountActivationResponse> {
+  return pb.send<AccountActivationResponse>('/api/language-school/account/activate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      token: input.token.trim(),
+      password: input.password,
+      passwordConfirm: input.passwordConfirm,
+    }),
+  })
 }
 
 export async function getAdminAccountInvitationStatus(userId: string): Promise<AdminAccountInvitationStatusResponse> {
