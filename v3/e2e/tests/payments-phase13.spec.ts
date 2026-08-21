@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises'
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
 
 const PB_URL = process.env.PB_URL || 'http://127.0.0.1:8090'
@@ -107,9 +108,10 @@ test('13B: la colección económica queda bloqueada para Profesor y Alumno', asy
   expect(after).toBe(before)
 })
 
-test('13C-D + 14C: Admin cobra, exporta el periodo a Excel y la ficha completa refleja el histórico', async ({ page, request }) => {
+test('13C-D + 14C + 15B.4B: Admin cobra, filtra por curso y exporta Excel + justificante PDF', async ({ page, request }) => {
   const dates = localDateParts()
   const studentAccount = await authenticate(request, requiredEnv('E2E_STUDENT_EMAIL'), requiredEnv('E2E_STUDENT_PASSWORD'))
+  const adminAccount = await authenticate(request, requiredEnv('E2E_ADMIN_EMAIL'), requiredEnv('E2E_ADMIN_PASSWORD'))
   await loginAdmin(page)
   await page.setViewportSize({ width: 1440, height: 1000 })
   await page.goto('/admin/pagos')
@@ -132,6 +134,14 @@ test('13C-D + 14C: Admin cobra, exporta el periodo a Excel y la ficha completa r
   expect(enrollmentValue).toBeTruthy()
   await enrollmentSelect.selectOption(enrollmentValue!)
 
+  const enrollmentResponse = await request.get(`${PB_URL}/api/collections/enrollments/records/${enrollmentValue}?expand=group.course`, {
+    headers: { Authorization: adminAccount.token },
+  })
+  expect(enrollmentResponse.status(), await enrollmentResponse.text()).toBe(200)
+  const expandedEnrollment = await enrollmentResponse.json() as { expand?: { group?: { course?: string } } }
+  const courseId = expandedEnrollment.expand?.group?.course || ''
+  expect(courseId).toBeTruthy()
+
   const record = page.locator('.payment-record').filter({ hasText: selectedStudentName }).filter({ hasText: '55,00' }).first()
   if (await record.count() === 0) {
     await create.getByLabel('Modalidad').selectOption('MONTHLY')
@@ -147,6 +157,7 @@ test('13C-D + 14C: Admin cobra, exporta el periodo a Excel y la ficha completa r
   const markPaid = record.getByRole('button', { name: 'Marcar pagado' })
   if (await markPaid.count()) {
     await expect(record.getByText(/Pendiente|Vencido/)).toBeVisible()
+    await expect(record.getByRole('button', { name: 'Justificante PDF' })).toHaveCount(0)
     await markPaid.click()
     const payPanel = page.locator('.payment-pay-panel')
     await payPanel.getByLabel('Fecha de pago').fill(dates.today)
@@ -155,12 +166,38 @@ test('13C-D + 14C: Admin cobra, exporta el periodo a Excel y la ficha completa r
     await expect(page.getByText('Pago registrado correctamente.')).toBeVisible()
   }
   await expect(record.getByText('Pagado')).toBeVisible()
+  await expect(record.getByRole('button', { name: 'Justificante PDF' })).toBeVisible()
+
+  const toolbar = page.locator('.admin-payments-toolbar')
+  const courseFilter = toolbar.getByRole('combobox', { name: 'Curso', exact: true })
+  await expect(courseFilter.locator(`option[value="${courseId}"]`)).toHaveCount(1)
+  await courseFilter.selectOption(courseId)
+  await expect(record).toBeVisible()
+  await courseFilter.selectOption('ALL')
 
   const downloadPromise = page.waitForEvent('download')
   await page.getByRole('button', { name: 'Descargar Excel' }).click()
   const download = await downloadPromise
   expect(download.suggestedFilename()).toMatch(/^pagos-language-school-.*\.xls$/)
-  await expect(page.getByText(/Excel preparado con \d+ registro/)).toBeVisible()
+  const excelPath = await download.path()
+  expect(excelPath).toBeTruthy()
+  const excelBody = await readFile(excelPath!, 'utf8')
+  expect(excelBody).toContain('<Worksheet ss:Name="Resumen">')
+  expect(excelBody).toContain('Cobros por método')
+  expect(excelBody).toContain('<Worksheet ss:Name="Pagos">')
+  await expect(page.getByText(/Excel preparado con resumen económico y \d+ registro/)).toBeVisible()
+
+  const receiptPromise = page.waitForEvent('download')
+  await record.getByRole('button', { name: 'Justificante PDF' }).click()
+  const receipt = await receiptPromise
+  expect(receipt.suggestedFilename()).toMatch(/^justificante-pago-.*\.pdf$/)
+  const receiptPath = await receipt.path()
+  expect(receiptPath).toBeTruthy()
+  const pdfBody = (await readFile(receiptPath!)).toString('latin1')
+  expect(pdfBody.startsWith('%PDF-1.4')).toBe(true)
+  expect(pdfBody).toContain('JUSTIFICANTE DE PAGO - NO FACTURA')
+  expect(pdfBody).toContain('ID interno del pago:')
+  await expect(page.getByText(/Justificante PDF preparado:/)).toBeVisible()
 
   await page.goto('/admin/alumnos')
   const search = page.locator('.admin-student-directory-phase14').getByLabel('Buscar')
