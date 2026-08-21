@@ -107,22 +107,22 @@ ADMIN_RECORD="$(create_record 'users' "$SUPER_TOKEN" "$(jq -nc \
 ADMIN_ID="$(jq -r '.id' <<<"$ADMIN_RECORD")"
 assert_equal "$(jq -r '.role' <<<"$ADMIN_RECORD")" 'ADMIN' 'bootstrap user has ADMIN role'
 
-echo '3/21 Authenticate as application ADMIN (all following writes use ADMIN rules)'
+echo '3/21 Authenticate as application ADMIN (business writes use ADMIN rules)'
 ADMIN_AUTH="$(authenticate 'users' "$ADMIN_EMAIL" "$ADMIN_PASSWORD")"
 ADMIN_TOKEN="$(jq -r '.token' <<<"$ADMIN_AUTH")"
 assert_equal "$(jq -r '.record.id' <<<"$ADMIN_AUTH")" "$ADMIN_ID" 'ADMIN login resolves bootstrap record'
 
-echo '4/21 Create teacher + teacher profile through ADMIN rules'
-TEACHER_RECORD="$(create_record 'users' "$ADMIN_TOKEN" "$(jq -nc \
+echo '4/21 Bootstrap technical teacher actor; create profile through ADMIN rules'
+TEACHER_RECORD="$(create_record 'users' "$SUPER_TOKEN" "$(jq -nc \
   --arg email "$TEACHER_EMAIL" --arg password "$TEACHER_PASSWORD" \
-  '{email:$email,password:$password,passwordConfirm:$password,name:"CI",surname:"Teacher",role:"TEACHER",status:"ACTIVE",phone:""}')")"
+  '{email:$email,password:$password,passwordConfirm:$password,name:"CI",surname:"Teacher",role:"TEACHER",status:"ACTIVE",verified:true,phone:""}')")"
 TEACHER_ID="$(jq -r '.id' <<<"$TEACHER_RECORD")"
 create_record 'teacher_profiles' "$ADMIN_TOKEN" "$(jq -nc --arg user "$TEACHER_ID" '{user:$user,bio:"CI teacher",specialties:["B1"],public_profile:false,active:true}')" >/dev/null
 
-echo '5/21 Create student + student profile through ADMIN rules'
-STUDENT_RECORD="$(create_record 'users' "$ADMIN_TOKEN" "$(jq -nc \
+echo '5/21 Bootstrap technical student actor; create profile through ADMIN rules'
+STUDENT_RECORD="$(create_record 'users' "$SUPER_TOKEN" "$(jq -nc \
   --arg email "$STUDENT_EMAIL" --arg password "$STUDENT_PASSWORD" \
-  '{email:$email,password:$password,passwordConfirm:$password,name:"CI",surname:"Student",role:"STUDENT",status:"ACTIVE",phone:""}')")"
+  '{email:$email,password:$password,passwordConfirm:$password,name:"CI",surname:"Student",role:"STUDENT",status:"ACTIVE",verified:true,phone:""}')")"
 STUDENT_ID="$(jq -r '.id' <<<"$STUDENT_RECORD")"
 create_record 'student_profiles' "$ADMIN_TOKEN" "$(jq -nc --arg user "$STUDENT_ID" '{user:$user,guardian_name:"",guardian_phone:"",notes_private:"",active:true}')" >/dev/null
 
@@ -159,8 +159,8 @@ echo '11/21 PATCH class through class update hooks'
 CLASS_PATCH="$(update_record 'classes' "$CLASS_ID" "$ADMIN_TOKEN" '{"description":"Smoke test updated"}')"
 assert_equal "$(jq -r '.description' <<<"$CLASS_PATCH")" 'Smoke test updated' 'class PATCH survives scoped validation hook'
 
-echo '12/21 Create second active enrollment for group capacity checks'
-SECOND_STUDENT_RECORD="$(create_record 'users' "$ADMIN_TOKEN" '{"email":"ci-student-two@example.com","password":"CiStudentTwoPass123!","passwordConfirm":"CiStudentTwoPass123!","name":"CI","surname":"Student Two","role":"STUDENT","status":"ACTIVE","phone":""}')"
+echo '12/21 Bootstrap second technical student for group capacity checks'
+SECOND_STUDENT_RECORD="$(create_record 'users' "$SUPER_TOKEN" '{"email":"ci-student-two@example.com","password":"CiStudentTwoPass123!","passwordConfirm":"CiStudentTwoPass123!","name":"CI","surname":"Student Two","role":"STUDENT","status":"ACTIVE","verified":true,"phone":""}')"
 SECOND_STUDENT_ID="$(jq -r '.id' <<<"$SECOND_STUDENT_RECORD")"
 SECOND_ENROLLMENT="$(create_record 'enrollments' "$ADMIN_TOKEN" "$(jq -nc --arg student "$SECOND_STUDENT_ID" --arg group "$GROUP_ID" '{student:$student,group:$group,status:"ACTIVE",joined_at:"2026-08-12 10:05:00.000Z"}')")"
 assert_equal "$(jq -r '.status' <<<"$SECOND_ENROLLMENT")" 'ACTIVE' 'second enrollment is active'
