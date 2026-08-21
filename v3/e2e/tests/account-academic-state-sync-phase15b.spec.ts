@@ -71,7 +71,10 @@ test('15B sync: una cuenta no puede romper relaciones académicas activas', asyn
     expect((await api(page, `/api/collections/users/records/${teacherId}`, 'PATCH', { role: 'STUDENT' })).status).toBe(404)
     expect((await api(page, `/api/collections/users/records/${teacherId}`, 'PATCH', { status: 'INACTIVE' })).status).toBe(400)
 
-    expect((await api(page, `/api/collections/groups/records/${teacherGroupId}`, 'PATCH', { teacher: originalTeacherId })).status).toBe(200)
+    expect((await api(page, `/api/language-school/admin/academic/groups/${teacherGroupId}/update`, 'POST', {
+      patch: { teacher: originalTeacherId },
+      reassignFutureScheduledClasses: false,
+    })).status).toBe(200)
     expect((await api(page, `/api/collections/users/records/${teacherId}`, 'PATCH', { status: 'INACTIVE' })).status).toBe(200)
     const inactiveTeacherProfile = await api(page, `/api/collections/teacher_profiles/records/${teacherProfile.body.id}`)
     expect(inactiveTeacherProfile.body.active).toBe(false)
