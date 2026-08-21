@@ -17,7 +17,6 @@ type WizardStep = 0 | 1 | 2 | 3 | 4
 type WizardCompletion = {
   userId: string
   emailSent: boolean
-  activationUrl: string
   expiresAt: string
   group: StudentOnboardingGroupOption
   levelMismatch: boolean
@@ -112,7 +111,6 @@ export default function AdminStudentOnboardingWizard({ isDemoMode, onCancel }: P
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [partialUserId, setPartialUserId] = useState<string | null>(null)
   const [completion, setCompletion] = useState<WizardCompletion | null>(null)
-  const [copyStatus, setCopyStatus] = useState('')
 
   const [name, setName] = useState('')
   const [surname, setSurname] = useState('')
@@ -210,7 +208,6 @@ export default function AdminStudentOnboardingWizard({ isDemoMode, onCancel }: P
         setCompletion({
           userId: 'demo-new-student',
           emailSent: false,
-          activationUrl: `${window.location.origin}/activar-cuenta?token=demo-seguro`,
           expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
           group: selectedGroup,
           levelMismatch: mismatch,
@@ -237,7 +234,6 @@ export default function AdminStudentOnboardingWizard({ isDemoMode, onCancel }: P
       setCompletion({
         userId: result.userId,
         emailSent: result.invitation.emailSent,
-        activationUrl: result.invitation.activationUrl,
         expiresAt: result.invitation.expiresAt,
         group: result.group,
         levelMismatch: result.levelMismatch,
@@ -254,16 +250,6 @@ export default function AdminStudentOnboardingWizard({ isDemoMode, onCancel }: P
     }
   }
 
-  async function copyActivationUrl() {
-    if (!completion?.activationUrl) return
-    try {
-      await navigator.clipboard.writeText(completion.activationUrl)
-      setCopyStatus('Enlace copiado')
-    } catch {
-      setCopyStatus('Selecciona y copia el enlace manualmente')
-    }
-  }
-
   if (completion) {
     return (
       <section className="student-onboarding-card student-onboarding-success" aria-labelledby="student-onboarding-result-title">
@@ -271,14 +257,14 @@ export default function AdminStudentOnboardingWizard({ isDemoMode, onCancel }: P
         <div className="student-onboarding-success-copy">
           <span className="eyebrow">ALTA PREPARADA</span>
           <h3 id="student-onboarding-result-title">Alumno matriculado e invitación preparada</h3>
-          <p>La cuenta queda pendiente de activación. La contraseña la elegirá el propio alumno o su familia desde el enlace seguro.</p>
+          <p>La cuenta queda pendiente de activación. La contraseña la elegirá el propio alumno o su familia desde el enlace privado enviado a su correo.</p>
         </div>
 
         <div className="student-onboarding-result-grid">
           <article><small>ALUMNO</small><strong>{name} {surname}</strong><span>{email}</span></article>
           <article><small>CURSO / GRUPO</small><strong>{completion.group.courseTitle}</strong><span>{completion.group.name}</span></article>
           <article><small>PROFESOR</small><strong>{completion.group.teacherName}</strong><span>Heredado del grupo</span></article>
-          <article><small>ESTADO</small><strong>Pendiente de activación</strong><span>{completion.emailSent ? 'Invitación enviada por email' : 'Enlace disponible para copiar'}</span></article>
+          <article><small>ESTADO</small><strong>Pendiente de activación</strong><span>{completion.emailSent ? 'Invitación privada enviada por email' : 'Correo pendiente de reenviar desde la ficha'}</span></article>
         </div>
 
         {completion.levelMismatch && (
@@ -288,16 +274,12 @@ export default function AdminStudentOnboardingWizard({ isDemoMode, onCancel }: P
           </div>
         )}
 
-        {completion.activationUrl && (
-          <div className="student-onboarding-invite-link">
-            <div><span className="eyebrow">ENLACE DE ACTIVACIÓN</span><p>{completion.emailSent ? 'También puedes copiarlo si necesitas enviarlo manualmente.' : 'No se ha enviado correo desde este entorno. Copia el enlace temporal de forma segura.'}</p></div>
-            <div className="student-onboarding-link-row">
-              <input value={completion.activationUrl} readOnly aria-label="Enlace de activación" />
-              <button className="button button-primary" type="button" onClick={copyActivationUrl}>Copiar enlace</button>
-            </div>
-            {copyStatus && <small role="status">{copyStatus}</small>}
-          </div>
-        )}
+        <div className="student-onboarding-warning compact" role="note">
+          <strong>Enlace de activación protegido</strong>
+          <span>{completion.emailSent
+            ? 'El enlace secreto se ha entregado únicamente al email del alumno. Administración no puede verlo ni copiarlo.'
+            : 'La invitación existe, pero el correo no se ha podido enviar. Por seguridad el enlace secreto no se muestra; revisa SMTP y reenvía la invitación desde la ficha del alumno.'}</span>
+        </div>
 
         <div className="student-onboarding-footer result-actions">
           <button type="button" onClick={onCancel}>Cerrar</button>
@@ -352,7 +334,7 @@ export default function AdminStudentOnboardingWizard({ isDemoMode, onCancel }: P
                 <label>Teléfono tutor/a<input type="tel" value={guardianPhone} onChange={(event) => setGuardianPhone(event.target.value)} /></label>
                 <label className="wide">Notas privadas<textarea rows={3} value={notesPrivate} onChange={(event) => setNotesPrivate(event.target.value)} placeholder="Información interna útil para Administración" /></label>
               </div>
-              <div className="student-onboarding-password-note"><strong>Sin contraseña inicial</strong><span>El alumno recibirá una invitación y elegirá su propia contraseña al activar la cuenta.</span></div>
+              <div className="student-onboarding-password-note"><strong>Sin contraseña inicial</strong><span>El alumno recibirá una invitación privada por correo y elegirá su propia contraseña al activar la cuenta.</span></div>
             </div>
           )}
 
@@ -430,7 +412,7 @@ export default function AdminStudentOnboardingWizard({ isDemoMode, onCancel }: P
                 </label>
               )}
 
-              <div className="student-onboarding-final-note"><strong>Qué ocurrirá al confirmar</strong><span>1. Se crea la cuenta INVITED. 2. Se registra el nivel inicial si procede. 3. Se matricula en el grupo. 4. Se emite la invitación para que el alumno elija su contraseña.</span></div>
+              <div className="student-onboarding-final-note"><strong>Qué ocurrirá al confirmar</strong><span>1. Se crea la cuenta INVITED. 2. Se registra el nivel inicial si procede. 3. Se matricula en el grupo. 4. Se envía al alumno una invitación privada para que elija su contraseña.</span></div>
             </div>
           )}
         </div>
