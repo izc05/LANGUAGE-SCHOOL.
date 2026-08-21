@@ -1,3 +1,4 @@
+import { isDemoMode } from '../config/environment'
 import { effectivePaymentStatus, type StudentPaymentRecord } from '../services/pocketbase/adminPayments'
 import type { AdminEnrollmentRecord } from '../services/pocketbase/adminAcademic'
 import type { AppUser } from '../services/pocketbase/types'
@@ -227,9 +228,22 @@ export function downloadPaymentReceiptPdf(input: {
   academy: PaymentReceiptAcademy
 }): string {
   if (input.record.status !== 'PAID') throw new Error('Solo se puede emitir justificante de un pago realizado.')
+
+  const configuredAcademyName = input.academy.academyName.trim()
+  const hasConnectedIdentity = Boolean(
+    input.academy.legalOwnerName?.trim()
+    || input.academy.legalTaxId?.trim()
+    || input.academy.email?.trim()
+    || input.academy.phone?.trim()
+    || (configuredAcademyName && configuredAcademyName !== 'Language School')
+  )
+  if (!isDemoMode && !hasConnectedIdentity) {
+    throw new Error('Completa la identidad real de la academia en Administración antes de emitir justificantes de pago.')
+  }
+
   const group = input.enrollment?.expand?.group
   const course = group?.expand?.course
-  const academyName = input.academy.academyName.trim() || 'Language School'
+  const academyName = configuredAcademyName || 'Language School'
   const student = nameOf(input.student)
   const amount = new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(input.record.amount_cents / 100)
   const mode = input.record.billing_mode === 'INTENSIVE' ? 'Intensivo' : 'Mensual'
