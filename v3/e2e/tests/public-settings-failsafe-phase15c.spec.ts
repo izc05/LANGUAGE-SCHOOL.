@@ -45,7 +45,7 @@ test('15C: connected no publica datos demo si falta site_settings', async ({ pag
   await expect(page).toHaveURL(/\/contacto$/)
   await expect(page.getByRole('main')).toBeVisible()
   await expectNoDemoIdentity(page)
-  await expect(page.getByText('Pendiente de configurar', { exact: true })).toBeVisible()
+  await expect(page.getByText(/Responsable:\s*Pendiente de configurar/)).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Ubicación pendiente de publicar.' })).toBeVisible()
   await expect(page.locator('iframe[title^="Mapa de Language School"]')).toHaveCount(0)
 })
@@ -59,11 +59,11 @@ test('15C: connected mantiene identidad neutra mientras site_settings falla', as
 
   // Antes de que termine la petición fallida, el shell conectado ya debe ser neutro.
   await expectNoDemoIdentity(page)
-  await expect(page.getByText('Pendiente de configurar', { exact: true })).toBeVisible()
+  await expect(page.getByText(/Responsable:\s*Pendiente de configurar/)).toBeVisible()
   await page.waitForTimeout(900)
   // Tras el fallo tampoco puede reaparecer ninguna identidad de demostración.
   await expectNoDemoIdentity(page)
-  await expect(page.getByText('Pendiente de configurar', { exact: true })).toBeVisible()
+  await expect(page.getByText(/Responsable:\s*Pendiente de configurar/)).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Ubicación pendiente de publicar.' })).toBeVisible()
 })
 
