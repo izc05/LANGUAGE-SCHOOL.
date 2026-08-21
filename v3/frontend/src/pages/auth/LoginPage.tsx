@@ -247,6 +247,12 @@ export default function LoginPage() {
                 </button>
               </form>
 
+              {!isDemoMode && (
+                <div className="demo-links">
+                  <Link to="/recuperar-cuenta">¿Has olvidado tu contraseña?</Link>
+                </div>
+              )}
+
               {isDemoMode && (
                 <>
                   <div className="demo-divider"><span>Vistas de desarrollo</span></div>
