@@ -134,7 +134,7 @@ test('15B.4A: resumen económico responde al contexto, método y situación del 
   await expect(page.locator('.payment-record').first()).toContainText('43,00')
   await expect(page.getByTestId('payment-summary-obligations')).toContainText('129,00')
 
-  await page.getByRole('button', { name: 'Todos' }).click()
+  await page.getByRole('button', { name: 'Todos', exact: true }).click()
   await page.getByLabel('Método').selectOption('BIZUM')
   await expect(page.getByTestId('payment-summary-obligations')).toContainText('61,00')
   await expect(page.getByTestId('payment-summary-paid')).toContainText('61,00')
@@ -147,7 +147,7 @@ test('15B.4A: resumen económico responde al contexto, método y situación del 
   await expect(page.locator('.payment-record').first()).toContainText('25,00')
   await expect(page.locator('.payment-record').first()).toContainText('Reembolsado')
 
-  await page.getByRole('button', { name: 'Todos' }).click()
+  await page.getByRole('button', { name: 'Todos', exact: true }).click()
   await page.getByRole('button', { name: 'Con deuda' }).click()
   await expect(page.locator('.payment-record')).toHaveCount(3)
 
