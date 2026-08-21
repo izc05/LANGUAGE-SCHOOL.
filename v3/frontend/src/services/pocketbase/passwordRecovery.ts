@@ -5,7 +5,17 @@ import { pb } from './client'
 export async function requestPasswordRecovery(email: string): Promise<void> {
   const normalizedEmail = email.trim().toLowerCase()
   if (!normalizedEmail) throw new Error('Introduce tu email.')
-  await pb.collection(collections.users).requestPasswordReset(normalizedEmail)
+
+  try {
+    await pb.collection(collections.users).requestPasswordReset(normalizedEmail)
+  } catch (error) {
+    // Do not turn mail/record-specific HTTP failures into an account-existence
+    // oracle in the public UI. A total transport failure is different because
+    // the request never reached the academy server at all.
+    if (error instanceof ClientResponseError && error.status === 0) throw error
+    if (error instanceof ClientResponseError) return
+    throw error
+  }
 }
 
 export async function confirmPasswordRecovery(input: {
