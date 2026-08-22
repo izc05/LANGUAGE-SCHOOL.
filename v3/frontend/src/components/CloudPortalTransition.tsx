@@ -1,6 +1,8 @@
 import { useEffect } from 'react'
 import {
   CLOUD_PORTAL_DURATION_MS,
+  CLOUD_PORTAL_REDUCED_DURATION_MS,
+  CLOUD_PORTAL_REDUCED_WHITEOUT_MS,
   CLOUD_PORTAL_WHITEOUT_MS,
 } from '../features/transitions/CloudPortalProvider'
 import '../styles/cloud-portal-transition.css'
@@ -8,21 +10,33 @@ import '../styles/cloud-portal-transition.css'
 type CloudPortalTransitionProps = {
   onWhiteout: () => void
   onComplete: () => void
+  reducedMotion: boolean
 }
 
-export default function CloudPortalTransition({ onWhiteout, onComplete }: CloudPortalTransitionProps) {
+export default function CloudPortalTransition({ onWhiteout, onComplete, reducedMotion }: CloudPortalTransitionProps) {
   useEffect(() => {
-    const whiteoutTimer = window.setTimeout(onWhiteout, CLOUD_PORTAL_WHITEOUT_MS)
-    const completeTimer = window.setTimeout(onComplete, CLOUD_PORTAL_DURATION_MS)
+    const whiteoutTimer = window.setTimeout(
+      onWhiteout,
+      reducedMotion ? CLOUD_PORTAL_REDUCED_WHITEOUT_MS : CLOUD_PORTAL_WHITEOUT_MS,
+    )
+    const completeTimer = window.setTimeout(
+      onComplete,
+      reducedMotion ? CLOUD_PORTAL_REDUCED_DURATION_MS : CLOUD_PORTAL_DURATION_MS,
+    )
 
     return () => {
       window.clearTimeout(whiteoutTimer)
       window.clearTimeout(completeTimer)
     }
-  }, [onComplete, onWhiteout])
+  }, [onComplete, onWhiteout, reducedMotion])
 
   return (
-    <div className="cloud-portal-transition" data-cloud-portal="active" aria-hidden="true">
+    <div
+      className={`cloud-portal-transition${reducedMotion ? ' cloud-portal-transition-reduced' : ''}`}
+      data-cloud-portal="active"
+      data-cloud-portal-motion={reducedMotion ? 'reduced' : 'full'}
+      aria-hidden="true"
+    >
       <div className="cloud-portal-sky" />
       <div className="cloud-portal-cloud cloud-portal-cloud-left" />
       <div className="cloud-portal-cloud cloud-portal-cloud-right" />

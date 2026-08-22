@@ -38,6 +38,9 @@ jobs:
       - name: Validate pilot and production deployment modes
         run: bash v3/infrastructure/tests/deployment-mode-test.sh
 
+      - name: Validate loopback-only PILOT mail capture
+        run: bash v3/infrastructure/tests/pilot-mail-test.sh
+
       - name: Validate PocketBase loopback, hooks and Turnstile start wrapper
         run: |
           mkdir -p "$RUNNER_TEMP/pb_hooks"

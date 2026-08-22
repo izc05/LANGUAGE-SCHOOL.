@@ -23,6 +23,8 @@ El archivo debe permanecer:
 - `TURNSTILE_EXPECTED_ACTION` — debe ser `contact` en producción.
 - `TURNSTILE_ALLOWED_HOSTNAMES` — lista separada por comas de hostnames válidos; debe incluir el hostname de `PUBLIC_ORIGIN`.
 
+`PILOT_MAIL_CAPTURE` no es un secreto, pero solo puede ser `true` con `DEPLOYMENT_MODE=pilot`, SMTP en `127.0.0.1`, TLS desactivado y campos de autenticación vacíos. La captura local se documenta en `PILOT-MAIL-CAPTURE.md` y está prohibida en `production`.
+
 Las claves oficiales de prueba de Cloudflare solo se permiten en E2E o cuando `DEPLOYMENT_MODE=pilot`. `deploy-frontend.sh` y `start-pocketbase.sh` siguen rechazándolas en `production`; el modo ausente se interpreta como `production`.
 
 ## Zoom · Server-to-Server OAuth

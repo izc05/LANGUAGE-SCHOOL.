@@ -166,6 +166,49 @@
   86.9%, 100% { opacity: 1; }
 }
 
+.cloud-portal-transition-reduced .cloud-portal-sky {
+  animation: cloud-portal-reduced-sky 720ms ease-out both;
+}
+
+.cloud-portal-transition-reduced .cloud-portal-cloud {
+  filter: blur(24px);
+  transform: none;
+  animation: cloud-portal-reduced-cloud 720ms ease-out both;
+}
+
+.cloud-portal-transition-reduced .cloud-portal-ribbon {
+  display: none;
+}
+
+.cloud-portal-transition-reduced .cloud-portal-glow {
+  transform: translate(-50%, -50%) scale(3);
+  animation: cloud-portal-reduced-glow 720ms ease-out both;
+}
+
+.cloud-portal-transition-reduced .cloud-portal-whiteout {
+  animation: cloud-portal-reduced-whiteout 720ms ease-out both;
+}
+
+@keyframes cloud-portal-reduced-sky {
+  0% { opacity: 0; }
+  48%, 100% { opacity: 1; }
+}
+
+@keyframes cloud-portal-reduced-cloud {
+  0% { opacity: 0; transform: none; }
+  48%, 100% { opacity: .72; transform: none; }
+}
+
+@keyframes cloud-portal-reduced-glow {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(3); }
+  58%, 100% { opacity: .72; transform: translate(-50%, -50%) scale(3); }
+}
+
+@keyframes cloud-portal-reduced-whiteout {
+  0%, 45% { opacity: 0; }
+  72%, 100% { opacity: 1; }
+}
+
 @media (max-width: 620px) {
   .cloud-portal-cloud { width: 130vw; height: 68vh; }
   .cloud-portal-cloud-left { left: -72vw; }

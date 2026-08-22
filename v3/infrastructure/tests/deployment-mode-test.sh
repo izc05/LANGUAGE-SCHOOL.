@@ -75,9 +75,12 @@ write_env() {
       "PROXY_URL=$proxy_url" \
       "BACKUP_MOUNT=$BACKUP_MOUNT_PATH" \
       "SMTP_ENABLED=$smtp_enabled" \
+      'PILOT_MAIL_CAPTURE=false' \
       'SMTP_HOST=smtp.test-provider.invalid' \
       'SMTP_USERNAME=test-user' \
       'SMTP_PASSWORD=test-password' \
+      'SMTP_AUTH_METHOD=PLAIN' \
+      'SMTP_TLS=true' \
       'SMTP_SENDER_ADDRESS=test@pilot.example.org' \
       "TURNSTILE_SITE_KEY=$site_key" \
       "TURNSTILE_SECRET_KEY=$secret_key" \
@@ -136,6 +139,30 @@ write_env "$PRODUCTION_ENV_FILE" unset true "$TEST_SITE" "$TEST_SECRET" pilot.ex
 expect_failure 'an absent mode defaults to fail-closed production' "$TMP_DIR/default-production.log" \
   'Turnstile production site key is the official test key' run_preflight "$PRODUCTION_ENV_FILE"
 
+write_env "$PRODUCTION_ENV_FILE" production true real-site real-secret pilot.example.org \
+  http://127.0.0.1:8091 http://127.0.0.1:8083
+sed -i \
+  -e 's/^PILOT_MAIL_CAPTURE=.*/PILOT_MAIL_CAPTURE=true/' \
+  -e 's/^SMTP_HOST=.*/SMTP_HOST=127.0.0.1/' \
+  -e 's/^SMTP_AUTH_METHOD=.*/SMTP_AUTH_METHOD=/' \
+  -e 's/^SMTP_TLS=.*/SMTP_TLS=false/' \
+  "$PRODUCTION_ENV_FILE"
+expect_failure 'production rejects loopback PILOT mail capture' "$TMP_DIR/prod-pilot-mail.log" \
+  'PILOT_MAIL_CAPTURE is forbidden in production' run_preflight "$PRODUCTION_ENV_FILE"
+
+write_env "$PRODUCTION_ENV_FILE" pilot true "$TEST_SITE" "$TEST_SECRET" '' \
+  http://127.0.0.1:8091 http://127.0.0.1:8083
+sed -i \
+  -e 's/^PILOT_MAIL_CAPTURE=.*/PILOT_MAIL_CAPTURE=true/' \
+  -e 's/^SMTP_HOST=.*/SMTP_HOST=127.0.0.1/' \
+  -e 's/^SMTP_AUTH_METHOD=.*/SMTP_AUTH_METHOD=/' \
+  -e 's/^SMTP_TLS=.*/SMTP_TLS=false/' \
+  -e 's/^SMTP_USERNAME=.*/SMTP_USERNAME=/' \
+  -e 's/^SMTP_PASSWORD=.*/SMTP_PASSWORD=/' \
+  "$PRODUCTION_ENV_FILE"
+expect_success 'pilot accepts explicit loopback mail capture' "$TMP_DIR/pilot-mail-preflight.log" \
+  run_preflight "$PRODUCTION_ENV_FILE"
+
 MOCK_BIN="$TMP_DIR/mock-bin"
 PB_RUNTIME="$TMP_DIR/runtime"
 FRONTEND_TARGET="$TMP_DIR/frontend"
@@ -190,6 +217,15 @@ expect_failure 'production start wrapper remains fail-closed' "$TMP_DIR/start-pr
     TURNSTILE_EXPECTED_ACTION=contact PB_BIN=/usr/bin/echo PB_HOOKS="$PB_HOOKS" \
     bash "$START_PB"
 
+expect_failure 'production start wrapper rejects PILOT mail capture' "$TMP_DIR/start-production-mail.log" \
+  'PILOT_MAIL_CAPTURE is forbidden in production' \
+  env DEPLOYMENT_MODE=production PILOT_MAIL_CAPTURE=true SMTP_ENABLED=true \
+    SMTP_HOST=127.0.0.1 SMTP_PORT=2526 SMTP_TLS=false SMTP_SENDER_ADDRESS=pilot@example.invalid \
+    PB_URL=http://127.0.0.1:8091 PUBLIC_ORIGIN=https://pilot.example.org \
+    TURNSTILE_SITE_KEY=real-site TURNSTILE_SECRET_KEY=real-secret \
+    TURNSTILE_EXPECTED_ACTION=contact TURNSTILE_ALLOWED_HOSTNAMES=pilot.example.org \
+    PB_BIN=/usr/bin/echo PB_HOOKS="$PB_HOOKS" bash "$START_PB"
+
 expect_success 'pilot start wrapper accepts the explicit test profile' "$TMP_DIR/start-pilot.log" \
   env DEPLOYMENT_MODE=pilot SMTP_ENABLED=false \
     PB_URL=http://127.0.0.1:8091 PUBLIC_ORIGIN=https://pilot.example.org \
@@ -197,6 +233,23 @@ expect_success 'pilot start wrapper accepts the explicit test profile' "$TMP_DIR
     TURNSTILE_EXPECTED_ACTION=contact PB_BIN=/usr/bin/echo PB_HOOKS="$PB_HOOKS" \
     bash "$START_PB"
 grep -Fq -- '--http=127.0.0.1:8091' "$TMP_DIR/start-pilot.log" || fail_test 'pilot start did not retain loopback binding'
+
+expect_failure 'pilot rejects enabled capture when SMTP is disabled' "$TMP_DIR/start-pilot-mail-disabled.log" \
+  'PILOT_MAIL_CAPTURE=true requires SMTP_ENABLED=true' \
+  env DEPLOYMENT_MODE=pilot PILOT_MAIL_CAPTURE=true SMTP_ENABLED=false \
+    PB_URL=http://127.0.0.1:8091 PUBLIC_ORIGIN=https://pilot.example.org \
+    TURNSTILE_SITE_KEY="$TEST_SITE" TURNSTILE_SECRET_KEY="$TEST_SECRET" \
+    TURNSTILE_EXPECTED_ACTION=contact PB_BIN=/usr/bin/echo PB_HOOKS="$PB_HOOKS" \
+    bash "$START_PB"
+
+expect_success 'pilot start wrapper accepts loopback mail capture' "$TMP_DIR/start-pilot-mail.log" \
+  env DEPLOYMENT_MODE=pilot PILOT_MAIL_CAPTURE=true SMTP_ENABLED=true \
+    SMTP_HOST=127.0.0.1 SMTP_PORT=2526 SMTP_TLS=false SMTP_SENDER_ADDRESS=pilot@example.invalid \
+    SMTP_USERNAME= SMTP_PASSWORD= SMTP_AUTH_METHOD= \
+    PB_URL=http://127.0.0.1:8091 PUBLIC_ORIGIN=https://pilot.example.org \
+    TURNSTILE_SITE_KEY="$TEST_SITE" TURNSTILE_SECRET_KEY="$TEST_SECRET" \
+    TURNSTILE_EXPECTED_ACTION=contact PB_BIN=/usr/bin/echo PB_HOOKS="$PB_HOOKS" \
+    bash "$START_PB"
 
 expect_failure 'production frontend deploy rejects official test keys' "$TMP_DIR/deploy-production.log" \
   'Official Turnstile test keys are forbidden in production deployment' \

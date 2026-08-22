@@ -5,7 +5,7 @@ Este runbook sirve exclusivamente para actualizar una instalación `pilot` exist
 `DEPLOYMENT_MODE` solo admite dos valores:
 
 - `production`: conserva SMTP real obligatorio, Turnstile real con hostname exacto y todas las puertas fail-closed;
-- `pilot`: admite SMTP deshabilitado y la pareja oficial de claves Turnstile de prueba, pero mantiene loopback, health, backups y bloqueo de `/_/` como condiciones obligatorias.
+- `pilot`: admite SMTP deshabilitado o la captura local descrita en `PILOT-MAIL-CAPTURE.md`, además de la pareja oficial de claves Turnstile de prueba, pero mantiene loopback, health, backups y bloqueo de `/_/` como condiciones obligatorias.
 
 Si la variable falta, todos los scripts se comportan como `production`. Un valor distinto de `pilot` o `production` bloquea la operación.
 
@@ -66,7 +66,8 @@ El preflight no modifica el host. Debe imprimir `Deployment mode: PILOT` o `Depl
 - `PUBLIC_ORIGIN` HTTPS correcto;
 - PocketBase y Nginx únicamente en loopback;
 - en `production`, SMTP real habilitado para MFA y Turnstile real con hostname permitido;
-- en `pilot`, `SMTP_ENABLED=false` como aviso explícito y la pareja oficial completa de claves Turnstile de prueba como configuración permitida;
+- en `pilot`, `SMTP_ENABLED=false` como aviso explícito o el contrato `PILOT_MAIL_CAPTURE=true` con SMTP restringido a `127.0.0.1`;
+- en `pilot`, la pareja oficial completa de claves Turnstile de prueba como configuración permitida;
 - `TURNSTILE_EXPECTED_ACTION=contact` en ambos modos;
 - disco de backup como mountpoint real;
 - PocketBase y Nginx activos;
@@ -78,7 +79,7 @@ El preflight no modifica el host. Debe imprimir `Deployment mode: PILOT` o `Depl
 
 Una instalación piloto antigua que tenga binario + migraciones y esté sana, pero todavía no tenga `PB_RUNTIME_DIR/pb_hooks`, debe producir **WARN**, no `FAIL`. Ese aviso significa exclusivamente que el runtime está desfasado respecto al candidato. No copiar hooks a mano ni ejecutar el instalador todavía: primero hay que completar el backup físico de la fase 3. Tras el backup, la fase 4 debe reparar el runtime completo con `install-pocketbase.sh`, que instala juntos binario, migraciones y hooks desde el mismo candidato autorizado.
 
-En `pilot` también son avisos admitidos la ausencia de Zoom, el health timer pendiente y la imposibilidad de probar MFA, invitaciones o recuperación por email cuando SMTP está deshabilitado. Ninguno de esos avisos relaja las puertas de datos, red o backup.
+En `pilot` también son avisos admitidos la ausencia de Zoom, el health timer pendiente y la imposibilidad de probar MFA, invitaciones o recuperación por email cuando SMTP está deshabilitado. Cuando la captura PILOT está activada, su servicio y listener loopback vuelven a ser bloqueantes. Ninguno de esos avisos relaja las puertas de datos, red o backup.
 
 Si aparece cualquier `FAIL`, **parar aquí**. No ejecutar backup, migraciones ni deploy.
 
@@ -201,7 +202,7 @@ Validar en navegador real solo las capacidades disponibles en el perfil:
 
 - Web pública y responsive;
 - Contacto + Turnstile, indicando expresamente si se usa la pareja oficial de prueba;
-- ADMIN existente: contraseña → MFA email → `/admin`, solo cuando SMTP esté configurado;
+- ADMIN existente: contraseña → MFA email → `/admin`, usando correo real o `sudo language-school-pilot-mail latest <email>` en el PILOT;
 - segundo ADMIN temporal: invitación → email → contraseña propia → MFA → `/admin`, solo cuando SMTP esté configurado;
 - Profesor;
 - Alumno;

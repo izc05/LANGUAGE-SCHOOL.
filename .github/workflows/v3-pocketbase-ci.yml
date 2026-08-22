@@ -58,6 +58,35 @@ jobs:
             "$PB_SUPERUSER_EMAIL" "$PB_SUPERUSER_PASSWORD" \
             --dir="$RUNNER_TEMP/language-school-pb-data"
 
+      - name: Reject PILOT mail capture in production bootstrap
+        run: |
+          set +e
+          timeout 5s env \
+            LANGUAGE_SCHOOL_E2E=0 \
+            DEPLOYMENT_MODE=production \
+            PILOT_MAIL_CAPTURE=true \
+            PUBLIC_ORIGIN=https://school.example.org \
+            SMTP_ENABLED=true \
+            SMTP_HOST=127.0.0.1 \
+            SMTP_PORT=2526 \
+            SMTP_TLS=false \
+            SMTP_SENDER_ADDRESS=pilot@example.invalid \
+            "$RUNNER_TEMP/pocketbase/pocketbase" serve \
+              --http=127.0.0.1:8099 \
+              --dir="$RUNNER_TEMP/language-school-pb-data" \
+              --migrationsDir="$GITHUB_WORKSPACE/v3/pocketbase/pb_migrations" \
+              --hooksDir="$GITHUB_WORKSPACE/v3/pocketbase/pb_hooks" \
+              >"$RUNNER_TEMP/production-pilot-mail.log" 2>&1
+          EXIT_CODE=$?
+          set -e
+          if [ "$EXIT_CODE" -eq 0 ] || [ "$EXIT_CODE" -eq 124 ]; then
+            cat "$RUNNER_TEMP/production-pilot-mail.log" >&2
+            echo 'Production PocketBase bootstrap accepted PILOT mail capture.' >&2
+            exit 1
+          fi
+          grep -Fq 'Production rejects PILOT or loopback/local SMTP capture.' \
+            "$RUNNER_TEMP/production-pilot-mail.log"
+
       - name: Start temporary PocketBase server with production hooks
         run: |
           nohup "$RUNNER_TEMP/pocketbase/pocketbase" serve \

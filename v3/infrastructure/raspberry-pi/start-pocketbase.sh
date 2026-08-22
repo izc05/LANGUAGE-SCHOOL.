@@ -12,6 +12,9 @@ SMTP_ENABLED="${SMTP_ENABLED:-}"
 SMTP_HOST="${SMTP_HOST:-}"
 SMTP_PORT="${SMTP_PORT:-587}"
 SMTP_SENDER_ADDRESS="${SMTP_SENDER_ADDRESS:-}"
+SMTP_TLS="${SMTP_TLS:-true}"
+SMTP_AUTH_METHOD="${SMTP_AUTH_METHOD:-}"
+PILOT_MAIL_CAPTURE="${PILOT_MAIL_CAPTURE:-false}"
 TURNSTILE_SITE_KEY="${TURNSTILE_SITE_KEY:-}"
 TURNSTILE_SECRET_KEY="${TURNSTILE_SECRET_KEY:-}"
 TURNSTILE_EXPECTED_ACTION="${TURNSTILE_EXPECTED_ACTION:-}"
@@ -58,7 +61,25 @@ PUBLIC_HOST="${PUBLIC_ORIGIN#https://}"
 PUBLIC_HOST="${PUBLIC_HOST%%:*}"
 PUBLIC_HOST="${PUBLIC_HOST,,}"
 
+smtp_host_is_local=false
+case "${SMTP_HOST,,}" in
+  localhost|127.*|0.0.0.0|::1|'[::1]'|*.local) smtp_host_is_local=true ;;
+esac
+
+if [[ "$DEPLOYMENT_MODE" == 'production' && "$PILOT_MAIL_CAPTURE" == 'true' ]]; then
+  echo 'PILOT_MAIL_CAPTURE is forbidden in production.' >&2
+  exit 1
+fi
+if [[ "$DEPLOYMENT_MODE" == 'production' && "$smtp_host_is_local" == true ]]; then
+  echo 'A loopback/local SMTP host is forbidden in production.' >&2
+  exit 1
+fi
+
 if [[ "$DEPLOYMENT_MODE" == 'pilot' && "${SMTP_ENABLED,,}" == 'false' ]]; then
+  if [[ "$PILOT_MAIL_CAPTURE" == 'true' ]]; then
+    echo 'PILOT_MAIL_CAPTURE=true requires SMTP_ENABLED=true.' >&2
+    exit 1
+  fi
   echo 'WARN SMTP is disabled in PILOT; email MFA, invitations and password recovery are unavailable.' >&2
 elif [[ "${SMTP_ENABLED,,}" == 'true' ]]; then
   if [[ -z "$SMTP_HOST" || "$SMTP_HOST" == REPLACE_* ]]; then
@@ -75,6 +96,19 @@ elif [[ "${SMTP_ENABLED,,}" == 'true' ]]; then
   fi
   if [[ "${SMTP_USERNAME:-}" == REPLACE_* || "${SMTP_PASSWORD:-}" == REPLACE_* ]]; then
     echo 'Replace SMTP credential placeholders before PocketBase can start.' >&2
+    exit 1
+  fi
+  if [[ "$DEPLOYMENT_MODE" == 'pilot' && "$smtp_host_is_local" == true ]]; then
+    if [[ "$PILOT_MAIL_CAPTURE" != 'true' || "$SMTP_HOST" != '127.0.0.1' || "${SMTP_TLS,,}" != 'false' ]]; then
+      echo 'Local PILOT SMTP requires PILOT_MAIL_CAPTURE=true, SMTP_HOST=127.0.0.1 and SMTP_TLS=false.' >&2
+      exit 1
+    fi
+    if [[ -n "${SMTP_USERNAME:-}" || -n "${SMTP_PASSWORD:-}" || -n "$SMTP_AUTH_METHOD" ]]; then
+      echo 'Local PILOT SMTP requires empty authentication fields.' >&2
+      exit 1
+    fi
+  elif [[ "$PILOT_MAIL_CAPTURE" == 'true' ]]; then
+    echo 'PILOT_MAIL_CAPTURE=true requires the loopback-only PILOT SMTP configuration.' >&2
     exit 1
   fi
 else

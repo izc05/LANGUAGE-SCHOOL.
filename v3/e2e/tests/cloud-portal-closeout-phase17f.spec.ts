@@ -69,7 +69,7 @@ test('17F: portal cubre 1440, 1180, 820 y 390 sin overflow ni carga anticipada',
   }
 })
 
-test('17F: reduced motion lleva al alumno hasta el aula sin descargar el portal visual', async ({ page }) => {
+test('9.8G: reduced motion lleva al alumno hasta el aula mediante un portal suave', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/acceso')
@@ -78,20 +78,22 @@ test('17F: reduced motion lleva al alumno hasta el aula sin descargar el portal 
   await page.getByLabel('Contraseña').fill(requiredEnv('E2E_STUDENT_PASSWORD'))
   await page.getByRole('button', { name: 'Entrar' }).click()
 
+  await expect(page.locator('[data-cloud-portal="active"]')).toHaveAttribute('data-cloud-portal-motion', 'reduced')
   await expect(page).toHaveURL(/\/alumno$/, { timeout: 5000 })
-  await expect(page.locator('.cloud-portal-transition')).toHaveCount(0)
+  await expect(page.locator('.cloud-portal-transition')).toHaveCount(0, { timeout: 2000 })
   let resources = await page.evaluate(() => performance.getEntriesByType('resource').map((entry) => entry.name))
-  expect(cloudChunkLoaded(resources)).toBe(false)
+  expect(cloudChunkLoaded(resources)).toBe(true)
 
   const classroomEntry = page.locator('.campus-online-entry')
   await expect(classroomEntry).toBeVisible()
   await classroomEntry.click()
 
+  await expect(page.locator('[data-cloud-portal="active"]')).toHaveAttribute('data-cloud-portal-motion', 'reduced')
   await expect(page).toHaveURL(/\/alumno\/aula\/[^/]+$/, { timeout: 5000 })
-  await expect(page.locator('.cloud-portal-transition')).toHaveCount(0)
+  await expect(page.locator('.cloud-portal-transition')).toHaveCount(0, { timeout: 2000 })
   await expect(page.getByRole('heading', { level: 1, name: 'E2E Speaking class' })).toBeVisible()
   await expectNoHorizontalOverflow(page)
 
   resources = await page.evaluate(() => performance.getEntriesByType('resource').map((entry) => entry.name))
-  expect(cloudChunkLoaded(resources)).toBe(false)
+  expect(cloudChunkLoaded(resources)).toBe(true)
 })

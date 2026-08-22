@@ -13,12 +13,15 @@ import { isDemoMode } from '../../config/environment'
 
 export const CLOUD_PORTAL_WHITEOUT_MS = 2650
 export const CLOUD_PORTAL_DURATION_MS = 3050
+export const CLOUD_PORTAL_REDUCED_WHITEOUT_MS = 420
+export const CLOUD_PORTAL_REDUCED_DURATION_MS = 720
 
 type CloudPortalAction = () => void | Promise<void>
 
 type CloudPortalTransitionProps = {
   onWhiteout: () => void
   onComplete: () => void
+  reducedMotion: boolean
 }
 
 type CloudPortalContextValue = {
@@ -47,11 +50,38 @@ function isStudentClassroomPath(pathname: string): boolean {
   return /^\/alumno\/aula\/[^/]+\/?$/.test(pathname)
 }
 
+function EmergencyCloudPortalTransition({ onWhiteout, onComplete }: CloudPortalTransitionProps) {
+  useEffect(() => {
+    const whiteoutTimer = window.setTimeout(onWhiteout, 180)
+    const completeTimer = window.setTimeout(onComplete, 360)
+    return () => {
+      window.clearTimeout(whiteoutTimer)
+      window.clearTimeout(completeTimer)
+    }
+  }, [onComplete, onWhiteout])
+
+  return (
+    <div
+      data-cloud-portal="active"
+      data-cloud-portal-motion="fallback"
+      aria-hidden="true"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 10000,
+        background: 'radial-gradient(circle, rgba(255,255,255,.96), rgba(244,237,243,.9))',
+        pointerEvents: 'all',
+      }}
+    />
+  )
+}
+
 export function CloudPortalProvider({ children }: PropsWithChildren) {
   const navigate = useNavigate()
   const [TransitionComponent, setTransitionComponent] = useState<ComponentType<CloudPortalTransitionProps> | null>(null)
   const [active, setActive] = useState(false)
   const [preparing, setPreparing] = useState(false)
+  const [reducedMotion, setReducedMotion] = useState(false)
   const [sequence, setSequence] = useState(0)
   const inFlightRef = useRef(false)
   const actionRef = useRef<CloudPortalAction | null>(null)
@@ -65,14 +95,6 @@ export function CloudPortalProvider({ children }: PropsWithChildren) {
     setPreparing(false)
   }, [])
 
-  const runActionImmediately = useCallback(async (action: CloudPortalAction) => {
-    try {
-      await action()
-    } finally {
-      reset()
-    }
-  }, [reset])
-
   const startCloudPortal = useCallback(async (action: CloudPortalAction): Promise<boolean> => {
     if (inFlightRef.current) return false
 
@@ -80,11 +102,8 @@ export function CloudPortalProvider({ children }: PropsWithChildren) {
     actionRef.current = action
     actionFiredRef.current = false
     setPreparing(true)
-
-    if (prefersReducedMotion()) {
-      await runActionImmediately(action)
-      return true
-    }
+    const reduced = prefersReducedMotion()
+    setReducedMotion(reduced)
 
     try {
       const module = await import('../../components/CloudPortalTransition')
@@ -94,10 +113,14 @@ export function CloudPortalProvider({ children }: PropsWithChildren) {
       setPreparing(false)
       return true
     } catch {
-      await runActionImmediately(action)
+      setTransitionComponent(() => EmergencyCloudPortalTransition)
+      setReducedMotion(true)
+      setSequence((value) => value + 1)
+      setActive(true)
+      setPreparing(false)
       return true
     }
-  }, [runActionImmediately])
+  }, [])
 
   useEffect(() => {
     const handleInternalClassroomLink = (event: MouseEvent) => {
@@ -163,6 +186,7 @@ export function CloudPortalProvider({ children }: PropsWithChildren) {
           key={sequence}
           onWhiteout={handleWhiteout}
           onComplete={handleComplete}
+          reducedMotion={reducedMotion}
         />
       )}
     </CloudPortalContext.Provider>

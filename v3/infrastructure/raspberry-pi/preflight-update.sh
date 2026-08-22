@@ -150,6 +150,13 @@ PB_URL="${PB_URL:-}"
 PROXY_URL="${PROXY_URL:-}"
 BACKUP_MOUNT="${BACKUP_MOUNT:-}"
 SMTP_ENABLED="${SMTP_ENABLED:-}"
+SMTP_HOST="${SMTP_HOST:-}"
+SMTP_PORT="${SMTP_PORT:-587}"
+SMTP_USERNAME="${SMTP_USERNAME:-}"
+SMTP_PASSWORD="${SMTP_PASSWORD:-}"
+SMTP_AUTH_METHOD="${SMTP_AUTH_METHOD:-}"
+SMTP_TLS="${SMTP_TLS:-true}"
+PILOT_MAIL_CAPTURE="${PILOT_MAIL_CAPTURE:-false}"
 TURNSTILE_SITE_KEY="${TURNSTILE_SITE_KEY:-}"
 TURNSTILE_SECRET_KEY="${TURNSTILE_SECRET_KEY:-}"
 TURNSTILE_EXPECTED_ACTION="${TURNSTILE_EXPECTED_ACTION:-}"
@@ -190,7 +197,12 @@ fi
 
 if [[ "$PILOT_MODE" == '1' ]]; then
   case "${SMTP_ENABLED,,}" in
-    false) warn 'SMTP is disabled in PILOT; ADMIN email MFA, invitations and password recovery cannot be tested yet' ;;
+    false)
+      if [[ "$PILOT_MAIL_CAPTURE" == 'true' ]]; then
+        fail 'PILOT_MAIL_CAPTURE=true requires SMTP_ENABLED=true'
+      fi
+      warn 'SMTP is disabled in PILOT; ADMIN email MFA, invitations and password recovery cannot be tested yet'
+      ;;
     true)
       ok 'SMTP is enabled in PILOT'
       secret_present SMTP_HOST
@@ -199,6 +211,23 @@ if [[ "$PILOT_MODE" == '1' ]]; then
         fail 'SMTP credential placeholders are forbidden when SMTP is enabled'
       else
         ok 'SMTP credentials do not use placeholders (authless test SMTP is allowed in PILOT)'
+      fi
+      smtp_host_is_local=false
+      case "${SMTP_HOST,,}" in
+        localhost|127.*|0.0.0.0|::1|'[::1]'|*.local) smtp_host_is_local=true ;;
+      esac
+      if [[ "$smtp_host_is_local" == true ]]; then
+        if [[ "$PILOT_MAIL_CAPTURE" == 'true' && "$SMTP_HOST" == '127.0.0.1' && "${SMTP_TLS,,}" == 'false' && -z "$SMTP_USERNAME" && -z "$SMTP_PASSWORD" && -z "$SMTP_AUTH_METHOD" ]]; then
+          ok 'PILOT mail capture configuration is loopback-only and authless'
+          if [[ "$HOST_CHECKS" == '1' ]]; then
+            if systemctl is-active --quiet language-school-pilot-mail.service; then ok 'PILOT mail capture service is active'; else fail 'PILOT mail capture service is not active'; fi
+            check_listener_loopback 'PILOT SMTP capture' "http://127.0.0.1:$SMTP_PORT"
+          fi
+        else
+          fail 'Local PILOT SMTP requires PILOT_MAIL_CAPTURE=true, SMTP_HOST=127.0.0.1, SMTP_TLS=false and empty authentication fields'
+        fi
+      elif [[ "$PILOT_MAIL_CAPTURE" == 'true' ]]; then
+        fail 'PILOT_MAIL_CAPTURE=true requires the loopback-only PILOT SMTP configuration'
       fi
       ;;
     *) fail 'SMTP_ENABLED must be true or false' ;;
@@ -222,6 +251,12 @@ if [[ "$PILOT_MODE" == '1' ]]; then
     warn 'Zoom credentials are not configured in PILOT; Zoom flows cannot be tested yet'
   fi
 else
+  smtp_host_is_local=false
+  case "${SMTP_HOST,,}" in
+    localhost|127.*|0.0.0.0|::1|'[::1]'|*.local) smtp_host_is_local=true ;;
+  esac
+  if [[ "$PILOT_MAIL_CAPTURE" == 'true' ]]; then fail 'PILOT_MAIL_CAPTURE is forbidden in production'; else ok 'PILOT mail capture is disabled in production'; fi
+  if [[ "$smtp_host_is_local" == true ]]; then fail 'A loopback/local SMTP host is forbidden in production'; else ok 'Production SMTP host is not loopback/local'; fi
   if [[ "$SMTP_ENABLED" == 'true' ]]; then ok 'SMTP is enabled'; else fail 'SMTP_ENABLED must be true because ADMIN MFA depends on email'; fi
   secret_present SMTP_HOST
   secret_present SMTP_USERNAME
