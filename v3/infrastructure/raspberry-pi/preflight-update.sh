@@ -189,7 +189,13 @@ if [[ "$HOST_CHECKS" == '1' ]]; then
   if systemctl is-active --quiet "$SERVICE"; then ok 'PocketBase service is active'; else fail 'PocketBase service is not active'; fi
   if systemctl is-active --quiet nginx; then ok 'Nginx service is active'; else fail 'Nginx service is not active'; fi
 
-  if [[ -x "$PB_RUNTIME_DIR/pocketbase" && -d "$PB_RUNTIME_DIR/pb_migrations" && -d "$PB_RUNTIME_DIR/pb_hooks" ]]; then ok 'installed PocketBase runtime contains binary + migrations + hooks'; else fail 'installed PocketBase runtime is incomplete'; fi
+  if [[ ! -x "$PB_RUNTIME_DIR/pocketbase" || ! -d "$PB_RUNTIME_DIR/pb_migrations" ]]; then
+    fail 'installed PocketBase runtime is missing the binary or migrations'
+  elif [[ ! -d "$PB_RUNTIME_DIR/pb_hooks" ]]; then
+    warn 'installed PocketBase runtime predates pb_hooks; after a verified physical backup, repair it only with install-pocketbase.sh from the approved candidate'
+  else
+    ok 'installed PocketBase runtime contains binary + migrations + hooks'
+  fi
   if [[ -f "$FRONTEND_TARGET/index.html" ]]; then ok 'installed frontend exists'; else fail 'installed frontend index.html is missing'; fi
 
   check_listener_loopback 'PocketBase' "$PB_URL"
