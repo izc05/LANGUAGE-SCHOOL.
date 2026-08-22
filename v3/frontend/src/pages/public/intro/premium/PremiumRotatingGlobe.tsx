@@ -18,8 +18,8 @@ type LandTopology = {
 const LAND = '#ed86b2'
 const LAND_EDGE = '#d85f95'
 const WORLD_ATLAS_110M = 'https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/land-110m.json'
-const TEXTURE_WIDTH = 2560
-const TEXTURE_HEIGHT = 1280
+const TEXTURE_WIDTH = 1280
+const TEXTURE_HEIGHT = 640
 
 // Respaldo inmediato y sin red. Se sustituye por cartografía Natural Earth
 // cuando termina de cargar el atlas; así la portada nunca queda vacía.
@@ -61,7 +61,7 @@ function makeCanvasTexture(rings: LonLat[][]) {
   texture.colorSpace = THREE.SRGBColorSpace
   texture.wrapS = THREE.RepeatWrapping
   texture.wrapT = THREE.ClampToEdgeWrapping
-  texture.anisotropy = 8
+  texture.anisotropy = 4
   texture.needsUpdate = true
   return texture
 }
@@ -177,21 +177,23 @@ function RotatingLand({ reducedMotion }: { reducedMotion: boolean }) {
   useEffect(() => {
     const controller = new AbortController()
     let detailedTexture: THREE.CanvasTexture | null = null
-
-    loadDetailedTexture(controller.signal)
-      .then((loaded) => {
-        if (!loaded || controller.signal.aborted) {
-          loaded?.dispose()
-          return
-        }
-        detailedTexture = loaded
-        setTexture(loaded)
-      })
-      .catch(() => {
-        // El fallback local es intencionado: una caída de CDN no rompe la entrada.
-      })
+    const loadTimer = window.setTimeout(() => {
+      loadDetailedTexture(controller.signal)
+        .then((loaded) => {
+          if (!loaded || controller.signal.aborted) {
+            loaded?.dispose()
+            return
+          }
+          detailedTexture = loaded
+          setTexture(loaded)
+        })
+        .catch(() => {
+          // El fallback local es intencionado: una caída de CDN no rompe la entrada.
+        })
+    }, 850)
 
     return () => {
+      window.clearTimeout(loadTimer)
       controller.abort()
       detailedTexture?.dispose()
     }
@@ -211,7 +213,7 @@ function RotatingLand({ reducedMotion }: { reducedMotion: boolean }) {
   return (
     <group ref={groupRef} rotation={[0.08, -0.7, -0.055]}>
       <mesh>
-        <sphereGeometry args={[1.48, 128, 128]} />
+        <sphereGeometry args={[1.48, 72, 72]} />
         <meshPhysicalMaterial
           map={texture}
           transparent
@@ -243,7 +245,7 @@ export default function PremiumRotatingGlobe() {
   return (
     <div className="intro-orbit-globe-canvas" aria-hidden="true">
       <Canvas
-        dpr={[1, 1.55]}
+        dpr={[1, 1.25]}
         camera={{ position: [0, 0, 4.4], fov: 40, near: 0.1, far: 20 }}
         gl={{ antialias: true, alpha: true, stencil: false, powerPreference: 'high-performance' }}
         onCreated={({ gl }) => gl.setClearColor('#ffffff', 0)}

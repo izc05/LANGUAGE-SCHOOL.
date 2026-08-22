@@ -15,6 +15,7 @@ export const CLOUD_PORTAL_WHITEOUT_MS = 2650
 export const CLOUD_PORTAL_DURATION_MS = 3050
 export const CLOUD_PORTAL_REDUCED_WHITEOUT_MS = 420
 export const CLOUD_PORTAL_REDUCED_DURATION_MS = 720
+const CLOUD_PORTAL_IMAGE_URL = '/visuals/intro-pink-clouds.webp'
 
 type CloudPortalAction = () => void | Promise<void>
 
@@ -86,6 +87,17 @@ export function CloudPortalProvider({ children }: PropsWithChildren) {
   const inFlightRef = useRef(false)
   const actionRef = useRef<CloudPortalAction | null>(null)
   const actionFiredRef = useRef(false)
+
+  useEffect(() => {
+    const preloadTimer = window.setTimeout(() => {
+      void import('../../components/CloudPortalTransition')
+      const image = new Image()
+      image.decoding = 'async'
+      image.src = CLOUD_PORTAL_IMAGE_URL
+    }, 400)
+
+    return () => window.clearTimeout(preloadTimer)
+  }, [])
 
   const reset = useCallback(() => {
     actionRef.current = null

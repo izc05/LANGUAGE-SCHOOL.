@@ -1,4 +1,3 @@
-import { Environment, Lightformer } from '@react-three/drei'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
@@ -32,7 +31,7 @@ function PremiumOrbitAirplaneModel({ reducedMotion }: { reducedMotion: boolean }
         radius = 0.13 - 0.012 * middle
       } else {
         const tail = (t - 0.7) / 0.3
-        radius = 0.118 * Math.pow(1 - tail, 0.72) + 0.008
+        radius = 0.118 * Math.pow(Math.max(0, 1 - tail), 0.72) + 0.008
       }
 
       profile.push(new THREE.Vector2(radius, -1.02 + t * 2.04))
@@ -211,7 +210,7 @@ export default function PremiumOrbitAirplane() {
   return (
     <div className="intro-orbit-plane-canvas" data-testid="intro-orbit-plane" aria-hidden="true">
       <Canvas
-        dpr={[1, 1.65]}
+        dpr={[1, 1.25]}
         camera={{ position: [0, 0, 8.8], fov: 38, near: 0.1, far: 30 }}
         gl={{ antialias: true, alpha: true, stencil: false, powerPreference: 'high-performance' }}
         onCreated={({ gl }) => gl.setClearColor('#ffffff', 0)}
@@ -222,12 +221,6 @@ export default function PremiumOrbitAirplane() {
 
         <PremiumOrbitAirplaneModel reducedMotion={reducedMotion} />
 
-        <Environment resolution={128}>
-          <group rotation={[-Math.PI / 2, 0, 0]}>
-            <Lightformer form="rect" intensity={2.6} color="#fff7fa" position={[0, 5, -8]} scale={[5, 2, 1]} />
-            <Lightformer form="rect" intensity={1.1} color="#f8bfd5" position={[-5, 1, -2]} scale={[3, 1.2, 1]} />
-          </group>
-        </Environment>
       </Canvas>
     </div>
   )

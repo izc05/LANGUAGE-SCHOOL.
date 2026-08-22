@@ -1,17 +1,31 @@
-import PremiumOrbitAirplane from './PremiumOrbitAirplane'
-import PremiumRotatingGlobe from './PremiumRotatingGlobe'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import './intro-rotating-globe.css'
+
+const PremiumOrbitAirplane = lazy(() => import('./PremiumOrbitAirplane'))
+const PremiumRotatingGlobe = lazy(() => import('./PremiumRotatingGlobe'))
 
 type IntroOrbitArtworkProps = {
   withPlane?: boolean
 }
 
 export default function IntroOrbitArtwork({ withPlane = true }: IntroOrbitArtworkProps) {
+  const [showEnhancedArtwork, setShowEnhancedArtwork] = useState(false)
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setShowEnhancedArtwork(true), 140)
+    return () => window.clearTimeout(timer)
+  }, [])
+
   return (
     <div className="intro-orbit-stage">
-      {withPlane && <PremiumOrbitAirplane />}
       <div className="intro-orbit-sphere" aria-hidden="true" />
-      <PremiumRotatingGlobe />
+
+      {showEnhancedArtwork && (
+        <Suspense fallback={null}>
+          {withPlane && <PremiumOrbitAirplane />}
+          <PremiumRotatingGlobe />
+        </Suspense>
+      )}
 
       <section className="premium-brand-lockup intro-orbit-brand" aria-label="Language School Rocío Ruiz">
         <span className="premium-brand-language">LANGUAGE</span>

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { isDemoMode } from '../../config/environment'
 import { useCloudPortal } from '../../features/transitions/CloudPortalProvider'
 import IntroSceneErrorBoundary from './intro/premium/IntroSceneErrorBoundary'
@@ -6,7 +6,7 @@ import './intro/premium/intro-gate-light.css'
 
 const HomePage = lazy(() => import('./HomePage'))
 const IntroPage = lazy(() => import('./intro/IntroPage'))
-const INTRO_SESSION_KEY = 'language-school:intro-completed'
+let introCompletedForDocument = false
 
 function forceIntroReview(): boolean {
   if (!isDemoMode) return false
@@ -19,11 +19,7 @@ function forceIntroReview(): boolean {
 
 function introAlreadyCompleted(): boolean {
   if (forceIntroReview()) return false
-  try {
-    return window.sessionStorage.getItem(INTRO_SESSION_KEY) === 'true'
-  } catch {
-    return false
-  }
+  return introCompletedForDocument
 }
 
 function LightweightOrbitLockup() {
@@ -82,12 +78,19 @@ export default function IntroGatePage() {
   const [completed, setCompleted] = useState(introAlreadyCompleted)
   const { isTransitioning, startCloudPortal } = useCloudPortal()
 
-  function completeEntry() {
-    try {
-      window.sessionStorage.setItem(INTRO_SESSION_KEY, 'true')
-    } catch {
-      // La portada sigue accesible aunque el navegador bloquee sessionStorage.
+  useEffect(() => {
+    const replayAfterExternalReturn = (event: PageTransitionEvent) => {
+      if (!event.persisted) return
+      introCompletedForDocument = false
+      setCompleted(false)
     }
+
+    window.addEventListener('pageshow', replayAfterExternalReturn)
+    return () => window.removeEventListener('pageshow', replayAfterExternalReturn)
+  }, [])
+
+  function completeEntry() {
+    introCompletedForDocument = true
     window.scrollTo({ top: 0, left: 0 })
     setCompleted(true)
   }
