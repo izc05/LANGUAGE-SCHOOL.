@@ -4,7 +4,9 @@ import SiteShell from '../../components/SiteShell'
 import { isDemoMode } from '../../config/environment'
 import {
   getBlogCoverUrl,
+  getBlogMediaItems,
   getPublishedBlogPostBySlug,
+  type BlogMediaItem,
   type BlogPostRecord,
 } from '../../services/pocketbase/blog'
 
@@ -16,12 +18,13 @@ type ArticleDetail = {
   category: string
   publishedAt: string
   coverUrl: string
+  media: BlogMediaItem[]
   seoTitle: string
   seoDescription: string
 }
 
 function demoArticle(slug: string, title: string, category: string, excerpt: string, content: string): ArticleDetail {
-  return { title, slug, excerpt, content, category, publishedAt: '', coverUrl: '', seoTitle: '', seoDescription: '' }
+  return { title, slug, excerpt, content, category, publishedAt: '', coverUrl: '', media: [], seoTitle: '', seoDescription: '' }
 }
 
 const demoArticles: Record<string, ArticleDetail> = {
@@ -78,6 +81,7 @@ function toDetail(record: BlogPostRecord): ArticleDetail {
     category: record.expand?.category?.name || 'English',
     publishedAt: record.published_at,
     coverUrl: getBlogCoverUrl(record, '1400x900'),
+    media: getBlogMediaItems(record, '1200x900'),
     seoTitle: record.seo_title || '',
     seoDescription: record.seo_description || '',
   }
@@ -192,6 +196,17 @@ export default function BlogPostPage() {
               <div className="container blog-detail-layout">
                 <div className="blog-detail-body">
                   {blocks.map((block, index) => <p key={`${index}-${block.slice(0, 24)}`}>{block}</p>)}
+                  {article.media.length > 0 && (
+                    <section className="blog-detail-media" aria-label={`Galería multimedia de ${article.title}`}>
+                      {article.media.map((item, index) => (
+                        <figure className={item.type === 'VIDEO' ? 'is-video' : 'is-image'} key={item.name}>
+                          {item.type === 'VIDEO'
+                            ? <video src={item.url} controls playsInline preload="metadata">Tu navegador no puede reproducir este vídeo.</video>
+                            : <img src={item.url} alt={`Imagen ${index + 1} de ${article.title}`} loading="lazy" />}
+                        </figure>
+                      ))}
+                    </section>
+                  )}
                 </div>
                 <aside className="blog-detail-aside">
                   <span className="eyebrow">SIGUE AVANZANDO</span>
