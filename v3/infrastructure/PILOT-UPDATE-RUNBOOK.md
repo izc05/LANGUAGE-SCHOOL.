@@ -1,6 +1,13 @@
-# Language School V3 · 9.8 actualización controlada del piloto
+# Language School V3 · 9.8 actualización controlada PILOT/TEST
 
-Este runbook sirve exclusivamente para actualizar una instalación piloto existente de Language School V3. No fusiona PRs, no sustituye `main` y no contiene secretos.
+Este runbook sirve exclusivamente para actualizar una instalación `pilot` existente de Language School V3. No fusiona PRs, no sustituye `main` y no contiene secretos.
+
+`DEPLOYMENT_MODE` solo admite dos valores:
+
+- `production`: conserva SMTP real obligatorio, Turnstile real con hostname exacto y todas las puertas fail-closed;
+- `pilot`: admite SMTP deshabilitado y la pareja oficial de claves Turnstile de prueba, pero mantiene loopback, health, backups y bloqueo de `/_/` como condiciones obligatorias.
+
+Si la variable falta, todos los scripts se comportan como `production`. Un valor distinto de `pilot` o `production` bloquea la operación.
 
 La regla principal es sencilla: **no ejecutar ninguna operación destructiva hasta que el preflight de solo lectura no tenga fallos y exista un backup físico verificado**. Una instalación piloto antigua puede recibir avisos de deriva reparable; esos avisos no autorizan a modificar el host antes del backup.
 
@@ -51,15 +58,16 @@ sudo \
   bash v3/infrastructure/raspberry-pi/preflight-update.sh
 ```
 
-El preflight no modifica el host. Debe comprobar como mínimo:
+El preflight no modifica el host. Debe imprimir `Deployment mode: PILOT` o `Deployment mode: PRODUCTION` y comprobar como mínimo:
 
 - SHA autorizado, rama y working tree limpio;
 - frontend + migraciones + hooks presentes en el candidato;
 - `/etc/language-school/production.env` legible;
 - `PUBLIC_ORIGIN` HTTPS correcto;
 - PocketBase y Nginx únicamente en loopback;
-- SMTP real habilitado para MFA;
-- Turnstile real y hostname permitido;
+- en `production`, SMTP real habilitado para MFA y Turnstile real con hostname permitido;
+- en `pilot`, `SMTP_ENABLED=false` como aviso explícito y la pareja oficial completa de claves Turnstile de prueba como configuración permitida;
+- `TURNSTILE_EXPECTED_ACTION=contact` en ambos modos;
 - disco de backup como mountpoint real;
 - PocketBase y Nginx activos;
 - runtime instalado con binario y migraciones;
@@ -69,6 +77,8 @@ El preflight no modifica el host. Debe comprobar como mínimo:
 - superficie HTTPS pública accesible cuando `CHECK_PUBLIC=1`.
 
 Una instalación piloto antigua que tenga binario + migraciones y esté sana, pero todavía no tenga `PB_RUNTIME_DIR/pb_hooks`, debe producir **WARN**, no `FAIL`. Ese aviso significa exclusivamente que el runtime está desfasado respecto al candidato. No copiar hooks a mano ni ejecutar el instalador todavía: primero hay que completar el backup físico de la fase 3. Tras el backup, la fase 4 debe reparar el runtime completo con `install-pocketbase.sh`, que instala juntos binario, migraciones y hooks desde el mismo candidato autorizado.
+
+En `pilot` también son avisos admitidos la ausencia de Zoom, el health timer pendiente y la imposibilidad de probar MFA, invitaciones o recuperación por email cuando SMTP está deshabilitado. Ninguno de esos avisos relaja las puertas de datos, red o backup.
 
 Si aparece cualquier `FAIL`, **parar aquí**. No ejecutar backup, migraciones ni deploy.
 
@@ -139,7 +149,7 @@ bash v3/infrastructure/raspberry-pi/deploy-frontend.sh
 El deploy:
 
 1. compila completamente antes de tocar el directorio vivo;
-2. exige `PUBLIC_ORIGIN`, Turnstile real y `PROXY_URL` loopback;
+2. exige `PUBLIC_ORIGIN`, `PROXY_URL` loopback y Turnstile acorde al modo: real en `production`, real o pareja oficial de prueba en `pilot`;
 3. prepara el build en `frontend.staging`;
 4. conserva el frontend vivo anterior como `frontend.previous`;
 5. promociona mediante rename dentro del mismo filesystem;
@@ -187,19 +197,19 @@ No abrir 8083/8091 en el router para realizar estas pruebas.
 
 No dar el piloto por actualizado solo porque `/api/health` responda.
 
-Validar en navegador real:
+Validar en navegador real solo las capacidades disponibles en el perfil:
 
 - Web pública y responsive;
-- Contacto + Turnstile;
-- ADMIN existente: contraseña → MFA email → `/admin`;
-- segundo ADMIN temporal: invitación → email → contraseña propia → MFA → `/admin`;
+- Contacto + Turnstile, indicando expresamente si se usa la pareja oficial de prueba;
+- ADMIN existente: contraseña → MFA email → `/admin`, solo cuando SMTP esté configurado;
+- segundo ADMIN temporal: invitación → email → contraseña propia → MFA → `/admin`, solo cuando SMTP esté configurado;
 - Profesor;
 - Alumno;
 - Test de nivel público y Campus;
 - clase/agenda;
 - archivos/material/tareas;
 - Zoom cuando existan credenciales reales;
-- recuperación de contraseña por email real.
+- recuperación de contraseña, solo cuando SMTP esté configurado.
 
 La invitación del segundo ADMIN nunca debe mostrar el enlace secreto en el panel del administrador que invita.
 
@@ -240,9 +250,9 @@ No marcar 9.8 como cerrada hasta verificar en el host real:
 
 - candidato exacto autorizado;
 - backup físico + checksum;
-- entorno real sin placeholders;
-- SMTP/MFA real;
-- Turnstile real;
+- `DEPLOYMENT_MODE=pilot` confirmado y datos exclusivamente de prueba;
+- dependencias no disponibles (SMTP/MFA, Zoom o Listening) declaradas expresamente;
+- Turnstile real o pareja oficial de prueba acorde al modo;
 - migraciones correctas;
 - frontend atómico correcto;
 - health local y público;

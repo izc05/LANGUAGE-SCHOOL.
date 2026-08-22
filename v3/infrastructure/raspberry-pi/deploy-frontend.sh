@@ -19,6 +19,16 @@ elif command -v sudo >/dev/null && sudo test -r "$PRODUCTION_ENV"; then
 fi
 
 PUBLIC_ORIGIN="${PUBLIC_ORIGIN:-}"
+DEPLOYMENT_MODE="${DEPLOYMENT_MODE:-production}"
+case "$DEPLOYMENT_MODE" in
+  pilot|production) ;;
+  *)
+    echo 'DEPLOYMENT_MODE must be exactly pilot or production.' >&2
+    exit 1
+    ;;
+esac
+printf 'Deployment mode: %s\n' "${DEPLOYMENT_MODE^^}"
+
 if [[ -z "$PUBLIC_ORIGIN" ]]; then
   echo 'PUBLIC_ORIGIN is required and must be the final public HTTPS origin.' >&2
   exit 1
@@ -47,44 +57,64 @@ TURNSTILE_ALLOWED_HOSTNAMES="${TURNSTILE_ALLOWED_HOSTNAMES:-}"
 TURNSTILE_TEST_SITE_KEY='1x00000000000000000000AA'
 TURNSTILE_TEST_SECRET_KEY='1x0000000000000000000000000000000AA'
 
-if [[ -z "$TURNSTILE_SITE_KEY" || "$TURNSTILE_SITE_KEY" == REPLACE_* || "$TURNSTILE_SITE_KEY" == "$TURNSTILE_TEST_SITE_KEY" ]]; then
-  echo 'A real TURNSTILE_SITE_KEY is required for production deployment.' >&2
+if [[ -z "$TURNSTILE_SITE_KEY" || "$TURNSTILE_SITE_KEY" == REPLACE_* ]]; then
+  echo 'TURNSTILE_SITE_KEY is required for deployment.' >&2
   exit 1
 fi
-if [[ -z "$TURNSTILE_SECRET_KEY" || "$TURNSTILE_SECRET_KEY" == REPLACE_* || "$TURNSTILE_SECRET_KEY" == "$TURNSTILE_TEST_SECRET_KEY" ]]; then
-  echo 'A real TURNSTILE_SECRET_KEY is required for production deployment.' >&2
+if [[ -z "$TURNSTILE_SECRET_KEY" || "$TURNSTILE_SECRET_KEY" == REPLACE_* ]]; then
+  echo 'TURNSTILE_SECRET_KEY is required for deployment.' >&2
   exit 1
 fi
 if [[ "$TURNSTILE_EXPECTED_ACTION" != 'contact' ]]; then
-  echo 'TURNSTILE_EXPECTED_ACTION must be exactly contact in production.' >&2
+  echo 'TURNSTILE_EXPECTED_ACTION must be exactly contact.' >&2
   exit 1
 fi
-if [[ -z "$TURNSTILE_ALLOWED_HOSTNAMES" ]]; then
-  echo 'TURNSTILE_ALLOWED_HOSTNAMES must contain the public hostname.' >&2
+
+TURNSTILE_TEST_PAIR=false
+if [[ "$TURNSTILE_SITE_KEY" == "$TURNSTILE_TEST_SITE_KEY" && "$TURNSTILE_SECRET_KEY" == "$TURNSTILE_TEST_SECRET_KEY" ]]; then
+  TURNSTILE_TEST_PAIR=true
+elif [[ "$TURNSTILE_SITE_KEY" == "$TURNSTILE_TEST_SITE_KEY" || "$TURNSTILE_SECRET_KEY" == "$TURNSTILE_TEST_SECRET_KEY" ]]; then
+  echo 'The official Turnstile test site key and secret must be configured together.' >&2
+  exit 1
+fi
+
+if [[ "$DEPLOYMENT_MODE" == 'production' && "$TURNSTILE_TEST_PAIR" == true ]]; then
+  echo 'Official Turnstile test keys are forbidden in production deployment.' >&2
+  exit 1
+fi
+
+if [[ "$TURNSTILE_TEST_PAIR" != true && -z "$TURNSTILE_ALLOWED_HOSTNAMES" ]]; then
+  echo 'TURNSTILE_ALLOWED_HOSTNAMES must contain the public hostname when real Turnstile keys are used.' >&2
   exit 1
 fi
 
 HOSTNAME_ALLOWED=false
 IFS=',' read -ra TURNSTILE_HOSTS <<< "$TURNSTILE_ALLOWED_HOSTNAMES"
-for host in "${TURNSTILE_HOSTS[@]}"; do
-  host="${host//[[:space:]]/}"
-  host="${host,,}"
-  case "$host" in
-    localhost|127.*|0.0.0.0|*.local|*.test|*.invalid)
-      echo "TURNSTILE_ALLOWED_HOSTNAMES contains a local/test hostname: $host" >&2
-      exit 1
-      ;;
-  esac
-  if [[ "$host" == "$PUBLIC_HOST" ]]; then HOSTNAME_ALLOWED=true; fi
-done
-if [[ "$HOSTNAME_ALLOWED" != true ]]; then
-  echo 'TURNSTILE_ALLOWED_HOSTNAMES must include the hostname from PUBLIC_ORIGIN.' >&2
-  exit 1
+if [[ "$TURNSTILE_TEST_PAIR" != true ]]; then
+  for host in "${TURNSTILE_HOSTS[@]}"; do
+    host="${host//[[:space:]]/}"
+    host="${host,,}"
+    case "$host" in
+      localhost|127.*|0.0.0.0|*.local|*.test|*.invalid)
+        echo "TURNSTILE_ALLOWED_HOSTNAMES contains a local/test hostname: $host" >&2
+        exit 1
+        ;;
+    esac
+    if [[ "$host" == "$PUBLIC_HOST" ]]; then HOSTNAME_ALLOWED=true; fi
+  done
+  if [[ "$HOSTNAME_ALLOWED" != true ]]; then
+    echo 'TURNSTILE_ALLOWED_HOSTNAMES must include the hostname from PUBLIC_ORIGIN.' >&2
+    exit 1
+  fi
+fi
+
+if [[ "$TURNSTILE_TEST_PAIR" == true ]]; then
+  echo 'PILOT uses the official Turnstile test key pair; hostname validation is non-definitive.'
 fi
 
 PROXY_URL="${PROXY_URL:-}"
 if [[ ! "$PROXY_URL" =~ ^http://127\.0\.0\.1:[0-9]+$ ]]; then
-  echo 'PROXY_URL must use an explicit 127.0.0.1 loopback HTTP endpoint in production.' >&2
+  echo 'PROXY_URL must use an explicit 127.0.0.1 loopback HTTP endpoint.' >&2
   exit 1
 fi
 

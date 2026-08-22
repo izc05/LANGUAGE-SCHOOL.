@@ -23,7 +23,7 @@ El archivo debe permanecer:
 - `TURNSTILE_EXPECTED_ACTION` — debe ser `contact` en producción.
 - `TURNSTILE_ALLOWED_HOSTNAMES` — lista separada por comas de hostnames válidos; debe incluir el hostname de `PUBLIC_ORIGIN`.
 
-Las claves oficiales de prueba de Cloudflare solo se usan en E2E. `deploy-frontend.sh` y `start-pocketbase.sh` rechazan la secret/sitekey de prueba y los hostnames locales en producción.
+Las claves oficiales de prueba de Cloudflare solo se permiten en E2E o cuando `DEPLOYMENT_MODE=pilot`. `deploy-frontend.sh` y `start-pocketbase.sh` siguen rechazándolas en `production`; el modo ausente se interpreta como `production`.
 
 ## Zoom · Server-to-Server OAuth
 

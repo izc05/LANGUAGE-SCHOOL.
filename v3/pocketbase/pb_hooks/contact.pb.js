@@ -1,6 +1,8 @@
 routerAdd('POST', '/api/language-school/contact', (e) => {
   const readText = (value) => typeof value === 'string' ? value.trim() : ''
   const testMode = readText($os.getenv('LANGUAGE_SCHOOL_E2E')) === '1'
+  const deploymentMode = readText($os.getenv('DEPLOYMENT_MODE')) || 'production'
+  const pilotMode = deploymentMode === 'pilot'
   const officialAlwaysPassTestSecret = '1x0000000000000000000000000000000AA'
 
   const safeLog = (level, message, extra) => {
@@ -41,8 +43,12 @@ routerAdd('POST', '/api/language-school/contact', (e) => {
     safeLog('error', '[contact] Turnstile secret missing', { stage: 'configuration' })
     return e.json(503, { message: 'La protección del formulario no está disponible temporalmente.' })
   }
-  if (secret === officialAlwaysPassTestSecret && !testMode) {
-    safeLog('error', '[contact] Turnstile test secret rejected outside E2E', { stage: 'configuration' })
+  if (deploymentMode !== 'pilot' && deploymentMode !== 'production') {
+    safeLog('error', '[contact] Invalid deployment mode', { stage: 'configuration' })
+    return e.json(503, { message: 'La protección del formulario no está disponible temporalmente.' })
+  }
+  if (secret === officialAlwaysPassTestSecret && !testMode && !pilotMode) {
+    safeLog('error', '[contact] Turnstile test secret rejected outside PILOT/E2E', { stage: 'configuration' })
     return e.json(503, { message: 'La protección del formulario no está disponible temporalmente.' })
   }
   if (!expectedAction) {
@@ -53,24 +59,25 @@ routerAdd('POST', '/api/language-school/contact', (e) => {
     safeLog('error', '[contact] Turnstile production action must be contact', { stage: 'configuration' })
     return e.json(503, { message: 'La protección del formulario no está disponible temporalmente.' })
   }
-  if (allowedHostnames.length === 0) {
+  const pilotOfficialTest = pilotMode && secret === officialAlwaysPassTestSecret
+  if (allowedHostnames.length === 0 && !pilotOfficialTest) {
     safeLog('error', '[contact] Turnstile hostname allowlist missing', { stage: 'configuration' })
     return e.json(503, { message: 'La protección del formulario no está disponible temporalmente.' })
   }
-  if (!testMode && allowedHostnames.some((host) => host === 'localhost' || host === '127.0.0.1' || host.endsWith('.local') || host.endsWith('.test'))) {
+  if (!testMode && !pilotOfficialTest && allowedHostnames.some((host) => host === 'localhost' || host === '127.0.0.1' || host.endsWith('.local') || host.endsWith('.test'))) {
     safeLog('error', '[contact] Local Turnstile hostname rejected outside E2E', { stage: 'configuration' })
     return e.json(503, { message: 'La protección del formulario no está disponible temporalmente.' })
   }
 
   let verification
   // CI already validates the production Siteverify contract independently. In the
-  // browser suite we keep the official Cloudflare always-pass secret deterministic
-  // and fully local. This branch is impossible in production because the same test
-  // secret is rejected above unless LANGUAGE_SCHOOL_E2E=1.
-  if (testMode && secret === officialAlwaysPassTestSecret) {
+  // browser suite and explicit PILOT profile keep the official Cloudflare
+  // always-pass secret deterministic and fully local. Production rejects that
+  // secret above, while PILOT remains isolated to test-only data.
+  if ((testMode || pilotMode) && secret === officialAlwaysPassTestSecret) {
     verification = {
       success: true,
-      action: 'test',
+      action: pilotMode ? 'contact' : 'test',
       hostname: allowedHostnames.indexOf('localhost') !== -1 ? 'localhost' : allowedHostnames[0],
     }
   } else {
@@ -108,7 +115,7 @@ routerAdd('POST', '/api/language-school/contact', (e) => {
     safeLog('warn', '[contact] Turnstile action mismatch', { stage: 'validation' })
     return e.json(400, { message: 'No se ha podido validar la verificación de seguridad.' })
   }
-  if (!verifiedHostname || allowedHostnames.indexOf(verifiedHostname) === -1) {
+  if (!pilotOfficialTest && (!verifiedHostname || allowedHostnames.indexOf(verifiedHostname) === -1)) {
     safeLog('warn', '[contact] Turnstile hostname mismatch', { stage: 'validation' })
     return e.json(400, { message: 'No se ha podido validar la verificación de seguridad.' })
   }

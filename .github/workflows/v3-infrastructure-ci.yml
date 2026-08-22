@@ -35,11 +35,15 @@ jobs:
             bash -n "$script"
           done
 
+      - name: Validate pilot and production deployment modes
+        run: bash v3/infrastructure/tests/deployment-mode-test.sh
+
       - name: Validate PocketBase loopback, hooks and Turnstile start wrapper
         run: |
           mkdir -p "$RUNNER_TEMP/pb_hooks"
           OUTPUT=$(PB_URL=http://127.0.0.1:8091 \
             PUBLIC_ORIGIN=https://school.example.org \
+            TURNSTILE_SITE_KEY=ci-turnstile-site \
             TURNSTILE_SECRET_KEY=ci-turnstile-secret \
             TURNSTILE_EXPECTED_ACTION=contact \
             TURNSTILE_ALLOWED_HOSTNAMES=school.example.org \
@@ -53,6 +57,7 @@ jobs:
 
           if PB_URL=http://0.0.0.0:8091 \
             PUBLIC_ORIGIN=https://school.example.org \
+            TURNSTILE_SITE_KEY=ci-turnstile-site \
             TURNSTILE_SECRET_KEY=ci-turnstile-secret \
             TURNSTILE_EXPECTED_ACTION=contact \
             TURNSTILE_ALLOWED_HOSTNAMES=school.example.org \
@@ -65,6 +70,7 @@ jobs:
 
           if PB_URL=http://127.0.0.1:8091 \
             PUBLIC_ORIGIN=https://school.example.org \
+            TURNSTILE_SITE_KEY=ci-turnstile-site \
             TURNSTILE_SECRET_KEY=ci-turnstile-secret \
             TURNSTILE_EXPECTED_ACTION=contact \
             TURNSTILE_ALLOWED_HOSTNAMES=school.example.org \
@@ -77,6 +83,7 @@ jobs:
 
           if PB_URL=http://127.0.0.1:8091 \
             PUBLIC_ORIGIN=https://school.example.org \
+            TURNSTILE_SITE_KEY=1x00000000000000000000AA \
             TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA \
             TURNSTILE_EXPECTED_ACTION=contact \
             TURNSTILE_ALLOWED_HOSTNAMES=school.example.org \
@@ -89,6 +96,7 @@ jobs:
 
           if PB_URL=http://127.0.0.1:8091 \
             PUBLIC_ORIGIN=https://school.example.org \
+            TURNSTILE_SITE_KEY=ci-turnstile-site \
             TURNSTILE_SECRET_KEY=ci-turnstile-secret \
             TURNSTILE_EXPECTED_ACTION=contact \
             TURNSTILE_ALLOWED_HOSTNAMES=other.example.org \

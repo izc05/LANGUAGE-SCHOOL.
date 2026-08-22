@@ -30,15 +30,16 @@ Production environment created at:
   $TARGET
 
 Before any production deployment, edit it as root and:
-1. replace PUBLIC_ORIGIN with the final public HTTPS origin;
-2. verify PB_URL / PROXY_URL remain loopback-only;
-3. configure SMTP_ENABLED=true with the real mail host, sender and credentials required for ADMIN MFA, invitations and password recovery;
-4. send a real test email before relying on MFA or password recovery;
-5. configure a real Cloudflare Turnstile widget for the final hostname;
-6. replace TURNSTILE_SITE_KEY and TURNSTILE_SECRET_KEY placeholders;
-7. keep TURNSTILE_EXPECTED_ACTION=contact and include the PUBLIC_ORIGIN hostname in TURNSTILE_ALLOWED_HOSTNAMES;
-8. set BACKUP_MOUNT to the real external backup mountpoint;
-9. if Zoom will be enabled, add the private server variables listed in:
+1. keep DEPLOYMENT_MODE=production (use pilot only on an explicitly test-only host);
+2. replace PUBLIC_ORIGIN with the final public HTTPS origin;
+3. verify PB_URL / PROXY_URL remain loopback-only;
+4. configure SMTP_ENABLED=true with the real mail host, sender and credentials required for ADMIN MFA, invitations and password recovery;
+5. send a real test email before relying on MFA or password recovery;
+6. configure a real Cloudflare Turnstile widget for the final hostname;
+7. replace TURNSTILE_SITE_KEY and TURNSTILE_SECRET_KEY placeholders;
+8. keep TURNSTILE_EXPECTED_ACTION=contact and include the PUBLIC_ORIGIN hostname in TURNSTILE_ALLOWED_HOSTNAMES;
+9. set BACKUP_MOUNT to the real external backup mountpoint;
+10. if Zoom will be enabled, add the private server variables listed in:
    v3/infrastructure/PRIVATE-VARIABLES.md
 
 Never place real secrets in Git, VITE_* variables or public CMS records.
