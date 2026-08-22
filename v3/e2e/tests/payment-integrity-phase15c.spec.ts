@@ -74,7 +74,13 @@ test('15C: pagos conservan alumno + matrícula y transiciones económicas cohere
       headers: { Authorization: admin.token },
       data: { student: admin.id },
     })
-    expect(rewriteIdentity.status(), await rewriteIdentity.text()).toBe(400)
+    expect(rewriteIdentity.status(), await rewriteIdentity.text()).toBe(404)
+
+    const pendingCorrection = await request.patch(`${PB_URL}/api/collections/student_payments/records/${record.id}`, {
+      headers: { Authorization: admin.token },
+      data: { amount_cents: 4322, status: 'PENDING' },
+    })
+    expect(pendingCorrection.status(), await pendingCorrection.text()).toBe(200)
 
     const invalidRefund = await request.patch(`${PB_URL}/api/collections/student_payments/records/${record.id}`, {
       headers: { Authorization: admin.token },
@@ -93,6 +99,12 @@ test('15C: pagos conservan alumno + matrícula y transiciones económicas cohere
       data: { status: 'PAID', paid_at: '2098-12-15', payment_method: 'BIZUM' },
     })
     expect(paid.status(), await paid.text()).toBe(200)
+
+    const rewriteSettledAmount = await request.patch(`${PB_URL}/api/collections/student_payments/records/${record.id}`, {
+      headers: { Authorization: admin.token },
+      data: { amount_cents: 9999 },
+    })
+    expect(rewriteSettledAmount.status(), await rewriteSettledAmount.text()).toBe(400)
 
     const reopen = await request.patch(`${PB_URL}/api/collections/student_payments/records/${record.id}`, {
       headers: { Authorization: admin.token },
