@@ -6,6 +6,7 @@ import './intro/premium/intro-gate-light.css'
 
 const HomePage = lazy(() => import('./HomePage'))
 const IntroPage = lazy(() => import('./intro/IntroPage'))
+const INTRO_SESSION_KEY = 'language-school:intro-completed'
 let introCompletedForDocument = false
 
 function forceIntroReview(): boolean {
@@ -19,7 +20,21 @@ function forceIntroReview(): boolean {
 
 function introAlreadyCompleted(): boolean {
   if (forceIntroReview()) return false
-  return introCompletedForDocument
+  if (introCompletedForDocument) return true
+
+  const navigation = window.performance
+    .getEntriesByType('navigation')
+    .at(0) as PerformanceNavigationTiming | undefined
+  if (navigation?.type === 'back_forward') return false
+
+  try {
+    if (document.referrer && new URL(document.referrer).origin !== window.location.origin) {
+      return false
+    }
+    return window.sessionStorage.getItem(INTRO_SESSION_KEY) === 'true'
+  } catch {
+    return false
+  }
 }
 
 function LightweightOrbitLockup() {
@@ -82,6 +97,11 @@ export default function IntroGatePage() {
     const replayAfterExternalReturn = (event: PageTransitionEvent) => {
       if (!event.persisted) return
       introCompletedForDocument = false
+      try {
+        window.sessionStorage.removeItem(INTRO_SESSION_KEY)
+      } catch {
+        // La portada puede repetirse aunque el navegador bloquee sessionStorage.
+      }
       setCompleted(false)
     }
 
@@ -91,6 +111,11 @@ export default function IntroGatePage() {
 
   function completeEntry() {
     introCompletedForDocument = true
+    try {
+      window.sessionStorage.setItem(INTRO_SESSION_KEY, 'true')
+    } catch {
+      // La portada sigue funcionando aunque el navegador bloquee sessionStorage.
+    }
     window.scrollTo({ top: 0, left: 0 })
     setCompleted(true)
   }

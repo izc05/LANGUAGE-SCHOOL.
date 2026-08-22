@@ -90,7 +90,6 @@ export function CloudPortalProvider({ children }: PropsWithChildren) {
 
   useEffect(() => {
     const preloadTimer = window.setTimeout(() => {
-      void import('../../components/CloudPortalTransition')
       const image = new Image()
       image.decoding = 'async'
       image.src = CLOUD_PORTAL_IMAGE_URL
