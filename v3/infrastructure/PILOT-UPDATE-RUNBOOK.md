@@ -2,7 +2,7 @@
 
 Este runbook sirve exclusivamente para actualizar una instalación piloto existente de Language School V3. No fusiona PRs, no sustituye `main` y no contiene secretos.
 
-La regla principal es sencilla: **no ejecutar ninguna operación destructiva hasta que el preflight de solo lectura quede verde y exista un backup físico verificado**.
+La regla principal es sencilla: **no ejecutar ninguna operación destructiva hasta que el preflight de solo lectura no tenga fallos y exista un backup físico verificado**. Una instalación piloto antigua puede recibir avisos de deriva reparable; esos avisos no autorizan a modificar el host antes del backup.
 
 ## 0. Candidato autorizado
 
@@ -62,11 +62,13 @@ El preflight no modifica el host. Debe comprobar como mínimo:
 - Turnstile real y hostname permitido;
 - disco de backup como mountpoint real;
 - PocketBase y Nginx activos;
-- runtime instalado con binario, migraciones y hooks;
+- runtime instalado con binario y migraciones;
 - frontend instalado;
 - health directo y por proxy;
 - `/_/` bloqueado;
 - superficie HTTPS pública accesible cuando `CHECK_PUBLIC=1`.
+
+Una instalación piloto antigua que tenga binario + migraciones y esté sana, pero todavía no tenga `PB_RUNTIME_DIR/pb_hooks`, debe producir **WARN**, no `FAIL`. Ese aviso significa exclusivamente que el runtime está desfasado respecto al candidato. No copiar hooks a mano ni ejecutar el instalador todavía: primero hay que completar el backup físico de la fase 3. Tras el backup, la fase 4 debe reparar el runtime completo con `install-pocketbase.sh`, que instala juntos binario, migraciones y hooks desde el mismo candidato autorizado.
 
 Si aparece cualquier `FAIL`, **parar aquí**. No ejecutar backup, migraciones ni deploy.
 
@@ -107,6 +109,16 @@ Esto mantiene unidos en la misma revisión:
 - `pb_hooks`.
 
 No copiar migraciones u hooks individualmente a mano.
+
+Si el preflight previo avisó de que el runtime antiguo no tenía `pb_hooks`, confirmar después del instalador y antes de migrar:
+
+```bash
+sudo test -x /opt/language-school/pocketbase/pocketbase
+sudo test -d /opt/language-school/pocketbase/pb_migrations
+sudo test -d /opt/language-school/pocketbase/pb_hooks
+```
+
+Las tres comprobaciones deben terminar con código 0. Si alguna falla, parar antes de migrar.
 
 ## 5. Aplicar migraciones
 
