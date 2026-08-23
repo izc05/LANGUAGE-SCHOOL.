@@ -40,8 +40,11 @@ test('8A.2: Administración configura la modalidad y el alumno recibe el acceso 
 
   await page.getByRole('radio', { name: /^Híbrida/ }).check()
   await page.getByLabel('Lugar / aula').fill('Aula E2E')
+  await page.getByLabel('Proveedor de videoclase').selectOption('GOOGLE_MEET')
+  await page.getByLabel('Enlace de Google Meet').fill('https://meet.google.com/abc-defg-hij')
   await page.getByRole('button', { name: 'Guardar modalidad' }).click()
   await expect(page.getByText('Modalidad de la clase actualizada.')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Google Meet preparado' })).toBeVisible()
   await logout(page)
 
   await login(page, credentials.student.email, credentials.student.password, /\/alumno$/)
@@ -56,7 +59,12 @@ test('8A.2: Administración configura la modalidad y el alumno recibe el acceso 
   const upcoming = page.locator('.student-class-list-delivery').first()
   await expect(upcoming.getByText('Híbrida')).toBeVisible()
   await expect(upcoming.getByText(/Aula E2E/)).toBeVisible()
-  await expect(upcoming.getByRole('link', { name: /Entrar al aula online/ })).toHaveAttribute('href', /\/alumno\/aula\//)
+  const onlineClassLink = upcoming.getByRole('link', { name: /Entrar al aula online/ })
+  await expect(onlineClassLink).toHaveAttribute('href', /\/alumno\/aula\//)
+  await onlineClassLink.click()
+  await expect(page.getByText('Google Meet', { exact: true })).toBeVisible()
+  await expect(page.getByRole('link', { name: /Abrir Google Meet/ })).toHaveAttribute('href', 'https://meet.google.com/abc-defg-hij')
+  await page.getByRole('link', { name: /Volver a Mis clases/ }).click()
   await logout(page)
 
   await login(page, credentials.teacher.email, credentials.teacher.password, /\/profesor$/)
