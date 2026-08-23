@@ -12,6 +12,7 @@ import {
   type BlogPostRecord,
   type BlogStatus,
 } from '../../services/pocketbase/blog'
+import { normalizeInstagramPublicPostUrl } from '../../utils/instagram'
 import { adminNav } from './adminNav'
 
 type PostItem = {
@@ -195,6 +196,22 @@ export default function AdminBlogManager() {
 
     setError(null)
     setMediaFiles((current) => [...current, ...selectedFiles])
+  }
+
+  function insertInstagramPost() {
+    setMessage(null)
+    const rawUrl = window.prompt('Pega la URL pública de la publicación o Reel de Instagram:')
+    if (!rawUrl) return
+
+    const instagramUrl = normalizeInstagramPublicPostUrl(rawUrl)
+    if (!instagramUrl) {
+      setError('La URL no parece una publicación o Reel público de Instagram.')
+      return
+    }
+
+    setError(null)
+    setContent((current) => `${current.trimEnd()}${current.trim() ? '\n\n' : ''}${instagramUrl}`)
+    setMessage('Publicación de Instagram añadida al artículo. Guarda o publica para verla integrada en el blog.')
   }
 
   function removePendingMedia(index: number) {
@@ -407,8 +424,12 @@ export default function AdminBlogManager() {
 
             <label className="field-stack">
               <span>Contenido</span>
-              <div className="editor-toolbar" aria-hidden="true"><b>B</b><i>I</i><span>H2</span><span>Lista</span><span>Enlace</span></div>
-              <textarea className="article-editor" rows={10} value={content} onChange={(event) => setContent(event.target.value)} placeholder="Escribe aquí el artículo..." />
+              <div className="editor-toolbar" aria-label="Herramientas del editor">
+                <b aria-hidden="true">B</b><i aria-hidden="true">I</i><span aria-hidden="true">H2</span><span aria-hidden="true">Lista</span><span aria-hidden="true">Enlace</span>
+                <button className="instagram-insert-button" type="button" onClick={insertInstagramPost}>◎ Instagram</button>
+              </div>
+              <textarea className="article-editor" rows={10} value={content} onChange={(event) => setContent(event.target.value)} placeholder="Escribe aquí el artículo o añade una publicación pública de Instagram con el botón superior..." />
+              <small>Instagram se inserta como un bloque dentro del artículo y siempre enlaza a la publicación original.</small>
             </label>
 
             <div className="cms-form-actions">

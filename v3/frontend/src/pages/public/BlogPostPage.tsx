@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router'
+import InstagramBlogEmbed from '../../components/InstagramBlogEmbed'
 import SiteShell from '../../components/SiteShell'
 import { isDemoMode } from '../../config/environment'
 import {
@@ -9,6 +10,7 @@ import {
   type BlogMediaItem,
   type BlogPostRecord,
 } from '../../services/pocketbase/blog'
+import { normalizeInstagramPublicPostUrl } from '../../utils/instagram'
 
 type ArticleDetail = {
   title: string
@@ -195,7 +197,13 @@ export default function BlogPostPage() {
 
               <div className="container blog-detail-layout">
                 <div className="blog-detail-body">
-                  {blocks.map((block, index) => <p key={`${index}-${block.slice(0, 24)}`}>{block}</p>)}
+                  {blocks.map((block, index) => {
+                    const instagramUrl = normalizeInstagramPublicPostUrl(block)
+                    if (instagramUrl) {
+                      return <InstagramBlogEmbed key={`${index}-${instagramUrl}`} url={instagramUrl} title={article.title} />
+                    }
+                    return <p key={`${index}-${block.slice(0, 24)}`}>{block}</p>
+                  })}
                   {article.media.length > 0 && (
                     <section className="blog-detail-media" aria-label={`Galería multimedia de ${article.title}`}>
                       {article.media.map((item, index) => (
