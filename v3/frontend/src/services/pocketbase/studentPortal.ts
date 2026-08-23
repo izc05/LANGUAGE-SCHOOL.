@@ -47,6 +47,7 @@ export type EnrollmentRecord = RecordModel & {
 }
 
 export type ClassDeliveryMode = GroupDeliveryMode
+export type ClassVideoProvider = 'ZOOM' | 'GOOGLE_MEET' | 'MANUAL'
 
 export type ClassRecord = RecordModel & {
   group: string
@@ -57,6 +58,7 @@ export type ClassRecord = RecordModel & {
   description: string
   status: 'SCHEDULED' | 'COMPLETED' | 'CANCELLED'
   delivery_mode?: ClassDeliveryMode | ''
+  video_provider?: ClassVideoProvider | ''
   location_text?: string
   online_join_url?: string
   expand?: { group?: GroupRecord }
