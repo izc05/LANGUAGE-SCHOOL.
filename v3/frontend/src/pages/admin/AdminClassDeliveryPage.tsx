@@ -5,16 +5,18 @@ import PortalEmptyState from '../../components/PortalEmptyState'
 import { useAuth } from '../../features/auth/AuthProvider'
 import {
   effectiveDeliveryMode,
+  effectiveVideoProvider,
   listAdminClassesForDelivery,
   updateAdminClassDelivery,
 } from '../../services/pocketbase/adminClassDelivery'
+import { isGoogleMeetUrl, videoProviderLabel } from '../../services/pocketbase/classVideo'
 import {
   createAdminZoomMeeting,
   getAdminZoomMeetingForClass,
   type ZoomMeetingRecord,
 } from '../../services/pocketbase/adminZoomMeetings'
 import { getZoomIntegrationStatus, type ZoomIntegrationStatus } from '../../services/pocketbase/zoomIntegration'
-import type { ClassDeliveryMode, ClassRecord, CourseRecord, GroupRecord } from '../../services/pocketbase/studentPortal'
+import type { ClassDeliveryMode, ClassRecord, ClassVideoProvider, CourseRecord, GroupRecord } from '../../services/pocketbase/studentPortal'
 import { adminNav } from './adminNav'
 
 type DeliveryClass = ClassRecord & {
@@ -40,8 +42,8 @@ function modeLabel(mode: ClassDeliveryMode): string {
 const demoClass: DeliveryClass = {
   id: 'demo-delivery', collectionId: '', collectionName: 'classes', created: '', updated: '',
   group: 'demo-group', teacher: 'demo-teacher', starts_at: '2026-08-20T18:00:00+02:00', ends_at: '2026-08-20T19:00:00+02:00',
-  topic: 'Speaking · Travel & experiences', description: '', status: 'SCHEDULED', delivery_mode: 'HYBRID',
-  location_text: 'Aula 2', online_join_url: 'https://example.com/language-school-class',
+  topic: 'Speaking · Travel & experiences', description: '', status: 'SCHEDULED', delivery_mode: 'HYBRID', video_provider: 'GOOGLE_MEET',
+  location_text: 'Aula 2', online_join_url: 'https://meet.google.com/abc-defg-hij',
   expand: { group: { id: 'demo-group', collectionId: '', collectionName: 'groups', created: '', updated: '', name: 'Adultos B1', course: 'demo-course', teacher: 'demo-teacher', academic_year: '2026/27', schedule_text: '', capacity: 8, target_level: 'B1', default_delivery_mode: 'HYBRID', status: 'ACTIVE', expand: { course: { id: 'demo-course', collectionId: '', collectionName: 'courses', created: '', updated: '', title: 'Adult English B1', slug: 'adult-english-b1', level: 'B1', description: '', status: 'ACTIVE', public_visible: true } } } },
 }
 
@@ -55,6 +57,7 @@ export default function AdminClassDeliveryPage() {
   const [classes, setClasses] = useState<DeliveryClass[]>(isDemoMode ? [demoClass] : [])
   const [selectedId, setSelectedId] = useState<string | null>(isDemoMode ? demoClass.id : null)
   const [mode, setMode] = useState<ClassDeliveryMode>('IN_PERSON')
+  const [videoProvider, setVideoProvider] = useState<ClassVideoProvider>('ZOOM')
   const [locationText, setLocationText] = useState('')
   const [onlineJoinUrl, setOnlineJoinUrl] = useState('')
   const [zoomStatus, setZoomStatus] = useState<ZoomIntegrationStatus | null>(isDemoMode ? demoZoomStatus : null)
@@ -88,14 +91,19 @@ export default function AdminClassDeliveryPage() {
 
   useEffect(() => {
     if (!selectedClass) return
+    const selectedProvider = effectiveVideoProvider(selectedClass)
     setMode(effectiveDeliveryMode(selectedClass))
+    setVideoProvider(selectedProvider)
     setLocationText(selectedClass.location_text || '')
     setOnlineJoinUrl(selectedClass.online_join_url || '')
     setZoomMeeting(null)
     setError(null)
     setMessage(null)
 
-    if (isDemoMode) return
+    if (isDemoMode || selectedProvider !== 'ZOOM') {
+      setZoomLoading(false)
+      return
+    }
     let mounted = true
     setZoomLoading(true)
     getAdminZoomMeetingForClass(selectedClass.id)
@@ -118,6 +126,14 @@ export default function AdminClassDeliveryPage() {
     hybrid: classes.filter((record) => effectiveDeliveryMode(record) === 'HYBRID').length,
   }), [classes])
 
+  function changeVideoProvider(nextProvider: ClassVideoProvider) {
+    setVideoProvider(nextProvider)
+    if (nextProvider === 'GOOGLE_MEET' && onlineJoinUrl && !isGoogleMeetUrl(onlineJoinUrl)) setOnlineJoinUrl('')
+    if (nextProvider !== 'GOOGLE_MEET' && isGoogleMeetUrl(onlineJoinUrl)) setOnlineJoinUrl('')
+    setError(null)
+    setMessage(null)
+  }
+
   async function saveDelivery(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!selectedClass) return
@@ -128,6 +144,7 @@ export default function AdminClassDeliveryPage() {
       setClasses((current) => current.map((record) => record.id === selectedClass.id ? {
         ...record,
         delivery_mode: mode,
+        video_provider: mode === 'IN_PERSON' ? '' : videoProvider,
         location_text: mode === 'ONLINE' ? '' : locationText.trim(),
         online_join_url: mode === 'IN_PERSON' ? '' : onlineJoinUrl.trim(),
       } : record))
@@ -137,7 +154,7 @@ export default function AdminClassDeliveryPage() {
 
     setSaving(true)
     try {
-      const updated = await updateAdminClassDelivery(selectedClass, { deliveryMode: mode, locationText, onlineJoinUrl })
+      const updated = await updateAdminClassDelivery(selectedClass, { deliveryMode: mode, videoProvider, locationText, onlineJoinUrl })
       setClasses((current) => current.map((record) => record.id === updated.id ? updated as DeliveryClass : record))
       setMessage('Modalidad de la clase actualizada.')
     } catch (saveError) {
@@ -148,7 +165,7 @@ export default function AdminClassDeliveryPage() {
   }
 
   async function createZoomMeeting() {
-    if (!selectedClass || mode === 'IN_PERSON') return
+    if (!selectedClass || mode === 'IN_PERSON' || videoProvider !== 'ZOOM') return
     setError(null)
     setMessage(null)
     if (isDemoMode) {
@@ -161,7 +178,7 @@ export default function AdminClassDeliveryPage() {
       const refreshed = await getAdminZoomMeetingForClass(selectedClass.id)
       setZoomMeeting(refreshed)
       setOnlineJoinUrl(result.joinUrl)
-      setClasses((current) => current.map((record) => record.id === selectedClass.id ? { ...record, online_join_url: result.joinUrl } : record))
+      setClasses((current) => current.map((record) => record.id === selectedClass.id ? { ...record, video_provider: 'ZOOM', online_join_url: result.joinUrl } : record))
       setMessage(result.existing ? 'Esta clase ya tenía una reunión Zoom preparada.' : 'Reunión Zoom creada y asociada a la clase.')
     } catch (creationError) {
       const detail = creationError instanceof Error ? creationError.message : ''
@@ -171,6 +188,9 @@ export default function AdminClassDeliveryPage() {
     }
   }
 
+  const onlineLabel = videoProvider === 'GOOGLE_MEET' ? 'Enlace de Google Meet' : videoProvider === 'ZOOM' ? 'Acceso Zoom' : 'Acceso online'
+  const onlinePlaceholder = videoProvider === 'GOOGLE_MEET' ? 'https://meet.google.com/abc-defg-hij' : 'https://…'
+
   return (
     <DashboardShell role="Administrador" name="Admin" nav={[...adminNav]}>
       <div className="dashboard-content cms-page class-delivery-admin-page">
@@ -178,7 +198,7 @@ export default function AdminClassDeliveryPage() {
           <div>
             <span className="eyebrow">CAMPUS · AULA</span>
             <h2>Modalidad de las clases</h2>
-            <p>Decide si cada sesión es presencial, online o híbrida y prepara su videoclase Zoom desde Language School.</p>
+            <p>Decide si cada sesión es presencial, online o híbrida y elige Zoom, Google Meet u otro acceso para la videoclase.</p>
           </div>
         </header>
 
@@ -230,15 +250,39 @@ export default function AdminClassDeliveryPage() {
                   </fieldset>
 
                   {mode !== 'ONLINE' && <div><label htmlFor="class-location">Lugar / aula</label><input id="class-location" value={locationText} onChange={(event) => setLocationText(event.target.value)} placeholder="Ej. Aula 2 · Language School" /></div>}
-                  {mode !== 'IN_PERSON' && <div><label htmlFor="class-online-url">Acceso online</label><input id="class-online-url" type="url" value={onlineJoinUrl} onChange={(event) => setOnlineJoinUrl(event.target.value)} placeholder="https://…" /><small className="muted">Puede seguir usándose un enlace manual. Si creas Zoom desde la plataforma, este campo se actualizará automáticamente.</small></div>}
+
+                  {mode !== 'IN_PERSON' && (
+                    <>
+                      <div>
+                        <label htmlFor="class-video-provider">Proveedor de videoclase</label>
+                        <select id="class-video-provider" value={videoProvider} onChange={(event) => changeVideoProvider(event.target.value as ClassVideoProvider)}>
+                          <option value="ZOOM">Zoom · integrado en Language School</option>
+                          <option value="GOOGLE_MEET">Google Meet · enlace externo</option>
+                          <option value="MANUAL">Otro enlace de videoclase</option>
+                        </select>
+                        <small className="muted">Puedes cambiar de proveedor por clase sin modificar el resto del Campus.</small>
+                      </div>
+                      <div>
+                        <label htmlFor="class-online-url">{onlineLabel}</label>
+                        <input id="class-online-url" type="url" value={onlineJoinUrl} onChange={(event) => setOnlineJoinUrl(event.target.value)} placeholder={onlinePlaceholder} />
+                        <small className="muted">
+                          {videoProvider === 'GOOGLE_MEET'
+                            ? 'Pega el enlace de la reunión creado en Google Meet o Google Calendar.'
+                            : videoProvider === 'ZOOM'
+                              ? 'Si creas Zoom desde la plataforma, este campo se actualizará automáticamente.'
+                              : 'Usa una URL https de la plataforma de videoclase que necesites.'}
+                        </small>
+                      </div>
+                    </>
+                  )}
 
                   <div className="class-delivery-preview">
                     <span className={`class-mode class-mode-${mode.toLowerCase()}`}>{modeLabel(mode)}</span>
                     {mode !== 'ONLINE' && <span>📍 {locationText.trim() || 'Lugar pendiente'}</span>}
-                    {mode !== 'IN_PERSON' && <span>◉ {onlineJoinUrl.trim() ? 'Acceso online preparado' : 'Acceso online pendiente'}</span>}
+                    {mode !== 'IN_PERSON' && <span>◉ {videoProviderLabel(videoProvider)} · {onlineJoinUrl.trim() ? 'acceso preparado' : 'acceso pendiente'}</span>}
                   </div>
 
-                  {mode !== 'IN_PERSON' && (
+                  {mode !== 'IN_PERSON' && videoProvider === 'ZOOM' && (
                     <section className={`class-zoom-meeting-card ${zoomMeeting?.status === 'READY' ? 'is-ready' : ''}`} aria-label="Reunión Zoom de la clase">
                       <div>
                         <span className="eyebrow">ZOOM · REUNIÓN</span>
@@ -260,6 +304,21 @@ export default function AdminClassDeliveryPage() {
                           <span>Configuración pendiente</span>
                           <Link to="/admin/zoom">Revisar Zoom →</Link>
                         </div>
+                      )}
+                    </section>
+                  )}
+
+                  {mode !== 'IN_PERSON' && videoProvider === 'GOOGLE_MEET' && (
+                    <section className={`class-zoom-meeting-card ${isGoogleMeetUrl(onlineJoinUrl) ? 'is-ready' : ''}`} aria-label="Google Meet de la clase">
+                      <div>
+                        <span className="eyebrow">GOOGLE MEET · REUNIÓN</span>
+                        <h4>{isGoogleMeetUrl(onlineJoinUrl) ? 'Google Meet preparado' : 'Añade el enlace de Google Meet'}</h4>
+                        <p>El alumno abrirá esta reunión desde su aula de Language School en una pestaña nueva.</p>
+                      </div>
+                      {isGoogleMeetUrl(onlineJoinUrl) ? (
+                        <a className="button secondary" href={onlineJoinUrl} target="_blank" rel="noreferrer">Probar Google Meet ↗</a>
+                      ) : (
+                        <span className="zoom-meeting-ready-pill">Pendiente</span>
                       )}
                     </section>
                   )}
