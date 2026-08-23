@@ -4,6 +4,7 @@ import { useAuth } from '../../features/auth/AuthProvider'
 import { getMyClass, type ClassDeliveryMode, type ClassRecord } from '../../services/pocketbase/studentPortal'
 import { getStudentZoomSdkAuthorization } from '../../services/pocketbase/studentZoomMeeting'
 import { configureZoomMeetingSdk, loadZoomMeetingSdk, type ZoomClientViewApi } from '../../services/zoomMeetingSdkCdn'
+import { getOnlineClassProvider } from '../../utils/onlineClassProvider'
 
 type JoinState = 'idle' | 'authorizing' | 'loading-sdk' | 'joining' | 'joined' | 'error'
 
@@ -114,8 +115,11 @@ export default function StudentOnlineClassPage() {
   const mode = demoSession?.mode || classRecord?.delivery_mode || 'IN_PERSON'
   const locationText = demoSession?.locationText || classRecord?.location_text || ''
   const startsAt = demoSession?.startsAt || classRecord?.starts_at || ''
+  const onlineJoinUrl = classRecord?.online_join_url || ''
+  const onlineProvider = getOnlineClassProvider(onlineJoinUrl)
   const showSession = Boolean(demoSession || classRecord)
   const canUseOnlineClass = Boolean(classRecord && classRecord.status === 'SCHEDULED' && (mode === 'ONLINE' || mode === 'HYBRID'))
+  const canUseZoomClass = canUseOnlineClass && onlineProvider === 'ZOOM'
   const busy = joinState === 'authorizing' || joinState === 'loading-sdk' || joinState === 'joining'
 
   const joinLabel = useMemo(() => {
@@ -127,7 +131,7 @@ export default function StudentOnlineClassPage() {
   }, [joinState])
 
   const handleJoin = async () => {
-    if (isDemoMode || !classId || !canUseOnlineClass || busy) return
+    if (isDemoMode || !classId || !canUseZoomClass || busy) return
     setJoinError(null)
     try {
       setJoinState('authorizing')
@@ -182,13 +186,24 @@ export default function StudentOnlineClassPage() {
                   <div className="student-online-class-explainer">
                     <span className="eyebrow">VISTA DEMO</span>
                     <strong>La transición te ha llevado al aula correcta</strong>
-                    <p>En la web conectada, este mismo punto prepara tu autorización personal y abre Zoom dentro de Language School.</p>
+                    <p>En la web conectada, este mismo punto abrirá la videoclase configurada por la academia.</p>
                   </div>
                   <button className="button primary student-online-join10" type="button" disabled>
-                    Zoom real · modo conectado
+                    Videoclase real · modo conectado
                   </button>
                 </div>
-              ) : canUseOnlineClass ? (
+              ) : canUseOnlineClass && onlineProvider === 'GOOGLE_MEET' && onlineJoinUrl ? (
+                <div className="student-online-class-actions student-online-class-actions10">
+                  <div className="student-online-class-explainer">
+                    <span className="eyebrow">GOOGLE MEET</span>
+                    <strong>Tu videoclase está preparada</strong>
+                    <p>Al pulsar el botón Google Meet se abrirá en una pestaña nueva. Si la reunión requiere admisión, espera a que el profesor te dé acceso.</p>
+                  </div>
+                  <a className="button primary student-online-join10" href={onlineJoinUrl} target="_blank" rel="noreferrer">
+                    Entrar en Google Meet ↗
+                  </a>
+                </div>
+              ) : canUseZoomClass ? (
                 <div className="student-online-class-actions student-online-class-actions10">
                   <div className="student-online-class-explainer">
                     <span className="eyebrow">CUANDO QUIERAS ENTRAR</span>
@@ -198,8 +213,8 @@ export default function StudentOnlineClassPage() {
                   <button className="button primary student-online-join10" type="button" onClick={handleJoin} disabled={busy || joinState === 'joined'}>
                     {joinLabel}
                   </button>
-                  {classRecord?.online_join_url && (
-                    <a className="button secondary student-online-fallback10" href={classRecord.online_join_url} target="_blank" rel="noreferrer">
+                  {onlineJoinUrl && (
+                    <a className="button secondary student-online-fallback10" href={onlineJoinUrl} target="_blank" rel="noreferrer">
                       Abrir con Zoom ↗
                     </a>
                   )}
@@ -212,7 +227,7 @@ export default function StudentOnlineClassPage() {
                 <div className="cms-notice auth-error student-online-class-error" role="alert">
                   <strong>No hemos podido abrir el aula dentro de Language School.</strong>
                   <span>{joinError}</span>
-                  {classRecord?.online_join_url && <span>Puedes usar el botón «Abrir con Zoom» como alternativa.</span>}
+                  {onlineJoinUrl && <span>Puedes usar el botón «Abrir con Zoom» como alternativa.</span>}
                 </div>
               )}
             </div>
@@ -223,9 +238,14 @@ export default function StudentOnlineClassPage() {
               <div><small>GRUPO</small><strong>{groupName}</strong></div>
               <div><small>MODALIDAD</small><strong>{mode === 'HYBRID' ? 'Híbrida' : mode === 'ONLINE' ? 'Online' : 'Presencial'}</strong></div>
               {mode === 'HYBRID' && locationText && <div><small>AULA FÍSICA</small><strong>{locationText}</strong></div>}
+              {!demoSession && canUseOnlineClass && <div><small>VIDEOLLAMADA</small><strong>{onlineProvider === 'GOOGLE_MEET' ? 'Google Meet' : 'Zoom'}</strong></div>}
               <div className="student-online-class-privacy student-online-class-privacy10">
-                <strong>{demoSession ? 'Vista de demostración' : 'Acceso protegido'}</strong>
-                <p>{demoSession ? 'La conexión real a Zoom permanece desactivada en esta preview local.' : 'Tu autorización es temporal y personal. Las credenciales privadas de Zoom permanecen en el servidor.'}</p>
+                <strong>{demoSession ? 'Vista de demostración' : onlineProvider === 'GOOGLE_MEET' ? 'Acceso mediante Google Meet' : 'Acceso protegido'}</strong>
+                <p>{demoSession
+                  ? 'La conexión real permanece desactivada en esta preview local.'
+                  : onlineProvider === 'GOOGLE_MEET'
+                    ? 'El enlace se abre directamente en Google Meet. Language School no necesita almacenar tu contraseña ni credenciales privadas de Google.'
+                    : 'Tu autorización es temporal y personal. Las credenciales privadas de Zoom permanecen en el servidor.'}</p>
               </div>
             </aside>
           </section>
