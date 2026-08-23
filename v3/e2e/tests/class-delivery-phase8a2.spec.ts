@@ -62,7 +62,7 @@ test('8A.2: Administración configura modalidad, Google Meet y el alumno recibe 
   await expect(dashboardClassroomLink).toHaveAttribute('href', /\/alumno\/aula\//)
   await dashboardClassroomLink.click()
   await expect(page).toHaveURL(/\/alumno\/aula\//)
-  await expect(page.getByText('GOOGLE MEET')).toBeVisible()
+  await expect(page.getByText('GOOGLE MEET', { exact: true })).toBeVisible()
   await expect(page.getByRole('link', { name: /Entrar en Google Meet/ })).toHaveAttribute('href', googleMeetJoinUrl)
   await expect(page.getByText('Language School no necesita almacenar tu contraseña ni credenciales privadas de Google.')).toBeVisible()
 
