@@ -240,7 +240,7 @@ export default function TeacherClassesPage() {
                 <option value="HYBRID">Híbrida</option>
               </select>
               {deliveryMode !== 'ONLINE' && <><label>Lugar / aula</label><input value={locationText} onChange={(e) => setLocationText(e.target.value)} placeholder="Ej. Aula 2" disabled={noGroups} /></>}
-              {deliveryMode !== 'IN_PERSON' && <><label>Enlace online alternativo</label><input type="url" value={onlineJoinUrl} onChange={(e) => setOnlineJoinUrl(e.target.value)} placeholder="https://… (opcional)" disabled={noGroups} /><small className="muted">El acceso Zoom se prepara de forma segura desde Administración. Añade aquí un enlace https alternativo solo cuando sea necesario.</small></>}
+              {deliveryMode !== 'IN_PERSON' && <><label>Enlace de videoclase</label><input type="url" value={onlineJoinUrl} onChange={(e) => setOnlineJoinUrl(e.target.value)} placeholder="https://meet.google.com/... (opcional)" disabled={noGroups} /><small className="muted">Si la sesión usa Google Meet, pega aquí su enlace. Si lo dejas vacío, Administración puede preparar Zoom de forma segura desde Language School.</small></>}
               <label>Tema</label>
               <input value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="Ej. Travel & experiences" required disabled={noGroups} />
               <label>Descripción</label>
@@ -282,7 +282,7 @@ export default function TeacherClassesPage() {
                 <div className="class-delivery-summary">
                   <span className={`class-mode class-mode-${modeOf(selectedClass).toLowerCase()}`}>{modeLabel(modeOf(selectedClass))}</span>
                   {selectedClass.location_text && <span>📍 {selectedClass.location_text}</span>}
-                  {modeOf(selectedClass) !== 'IN_PERSON' && selectedClass.online_join_url && <a href={selectedClass.online_join_url} target="_blank" rel="noreferrer">Abrir acceso online ↗</a>}
+                  {modeOf(selectedClass) !== 'IN_PERSON' && selectedClass.online_join_url && <a href={selectedClass.online_join_url} target="_blank" rel="noreferrer">Abrir videoclase ↗</a>}
                   {modeOf(selectedClass) !== 'IN_PERSON' && !selectedClass.online_join_url && <span>Acceso online pendiente</span>}
                 </div>
               </div>
