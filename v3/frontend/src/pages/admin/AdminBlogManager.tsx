@@ -422,15 +422,15 @@ export default function AdminBlogManager() {
               <textarea rows={3} value={summary} onChange={(event) => setSummary(event.target.value)} placeholder="Texto breve que aparecerá en la tarjeta del blog..." />
             </label>
 
-            <label className="field-stack">
-              <span>Contenido</span>
+            <div className="field-stack">
+              <label htmlFor="blog-article-content">Contenido</label>
               <div className="editor-toolbar" aria-label="Herramientas del editor">
                 <b aria-hidden="true">B</b><i aria-hidden="true">I</i><span aria-hidden="true">H2</span><span aria-hidden="true">Lista</span><span aria-hidden="true">Enlace</span>
-                <button className="instagram-insert-button" type="button" onClick={insertInstagramPost}>◎ Instagram</button>
+                <button className="instagram-insert-button" type="button" aria-label="Añadir publicación de Instagram" onClick={insertInstagramPost}>◎ Instagram</button>
               </div>
-              <textarea className="article-editor" rows={10} value={content} onChange={(event) => setContent(event.target.value)} placeholder="Escribe aquí el artículo o añade una publicación pública de Instagram con el botón superior..." />
+              <textarea id="blog-article-content" className="article-editor" rows={10} value={content} onChange={(event) => setContent(event.target.value)} placeholder="Escribe aquí el artículo o añade una publicación pública de Instagram con el botón superior..." />
               <small>Instagram se inserta como un bloque dentro del artículo y siempre enlaza a la publicación original.</small>
-            </label>
+            </div>
 
             <div className="cms-form-actions">
               <button className="button button-ghost" type="submit" disabled={saving || loading}>{saving ? 'Guardando…' : 'Guardar borrador'}</button>
