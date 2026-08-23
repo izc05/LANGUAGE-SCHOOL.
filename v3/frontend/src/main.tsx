@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router'
 import App from './app/App'
 import AppErrorBoundary from './components/AppErrorBoundary'
+import InstagramFeed from './components/InstagramFeed'
 import ScrollToTop from './components/ScrollToTop'
 import StudentCampusEntryProgress from './components/StudentCampusEntryProgress'
 import { AuthProvider } from './features/auth/AuthProvider'
@@ -142,6 +143,7 @@ createRoot(root).render(
         <CloudPortalProvider>
           <AuthProvider><App /></AuthProvider>
         </CloudPortalProvider>
+        <InstagramFeed />
       </BrowserRouter>
     </AppErrorBoundary>
   </StrictMode>,
