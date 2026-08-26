@@ -1,0 +1,190 @@
+.placement-result-method {
+  display: grid;
+  gap: .45rem;
+  max-width: 35rem;
+  margin-top: 1.5rem;
+  padding: 1rem 1.1rem;
+  border-left: 3px solid var(--placement-pink-deep);
+  background: rgba(255, 255, 255, .7);
+}
+
+.placement-result-method strong {
+  color: var(--placement-plum);
+}
+
+.placement-result-method p {
+  margin: 0;
+  color: var(--placement-muted);
+  font-size: .9rem;
+  line-height: 1.6;
+}
+
+.placement-result-evidence {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: .7rem 1.5rem;
+  align-items: end;
+  padding-bottom: 1.4rem;
+  border-bottom: 1px solid var(--placement-line);
+}
+
+.placement-result-evidence h2 {
+  margin: .3rem 0 0;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(1.55rem, 2.4vw, 2.05rem);
+  line-height: 1.12;
+}
+
+.placement-result-evidence > p {
+  grid-column: 1 / -1;
+  max-width: 48rem;
+  margin: 0;
+  color: var(--placement-muted);
+  font-size: .9rem;
+  line-height: 1.65;
+}
+
+.placement-result-score-secondary {
+  justify-content: flex-end;
+  margin: 0;
+}
+
+.placement-result-score-secondary strong {
+  color: var(--placement-plum);
+  font-size: 2rem;
+}
+
+.placement-result-score-secondary span {
+  max-width: 11rem;
+}
+
+.placement-result-insights {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.placement-result-insight-card {
+  min-width: 0;
+  padding: 1.2rem;
+  border: 1px solid var(--placement-line);
+  border-radius: 1.1rem;
+  background: #fff;
+}
+
+.placement-result-insight-card.is-strength {
+  background: linear-gradient(145deg, #fff, #fff8fb);
+}
+
+.placement-result-insight-card.is-focus {
+  background: linear-gradient(145deg, #fff, #fbf8f6);
+}
+
+.placement-result-insight-card h2 {
+  margin: .35rem 0 1rem;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(1.3rem, 2vw, 1.65rem);
+  line-height: 1.15;
+}
+
+.placement-result-insight-card ul {
+  display: grid;
+  gap: .8rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.placement-result-insight-card li {
+  padding-top: .8rem;
+  border-top: 1px solid var(--placement-line);
+}
+
+.placement-result-insight-card li > div {
+  display: flex;
+  justify-content: space-between;
+  gap: .75rem;
+}
+
+.placement-result-insight-card li span {
+  color: var(--placement-pink-deep);
+  font-weight: 800;
+}
+
+.placement-result-insight-card li p,
+.placement-result-no-gap p {
+  margin: .35rem 0 0;
+  color: var(--placement-muted);
+  font-size: .86rem;
+  line-height: 1.55;
+}
+
+.placement-result-no-gap {
+  padding-top: .9rem;
+  border-top: 1px solid var(--placement-line);
+}
+
+.placement-speaking-assessment {
+  display: grid;
+  grid-template-columns: minmax(7rem, .3fr) minmax(0, 1fr);
+  gap: 1.2rem;
+  align-items: center;
+  padding: 1.3rem;
+  border: 1px solid rgba(183, 53, 104, .18);
+  border-radius: 1.15rem;
+  background: linear-gradient(135deg, #fff2f6, #fff);
+}
+
+.placement-speaking-mark {
+  color: rgba(183, 53, 104, .22);
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(2rem, 4vw, 3.6rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -.04em;
+}
+
+.placement-speaking-assessment h2 {
+  margin: .35rem 0 .45rem;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(1.4rem, 2.2vw, 1.85rem);
+  line-height: 1.15;
+}
+
+.placement-speaking-assessment p {
+  margin: 0;
+  color: var(--placement-muted);
+  font-size: .9rem;
+  line-height: 1.6;
+}
+
+@media (max-width: 720px) {
+  .placement-result-evidence,
+  .placement-result-insights,
+  .placement-speaking-assessment {
+    grid-template-columns: 1fr;
+  }
+
+  .placement-result-score-secondary {
+    justify-content: flex-start;
+    align-items: baseline;
+    flex-direction: row;
+  }
+
+  .placement-speaking-mark {
+    font-size: 2.5rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .placement-result-insight-card,
+  .placement-speaking-assessment {
+    padding: 1rem;
+  }
+
+  .placement-result-score-secondary {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: .2rem;
+  }
+}

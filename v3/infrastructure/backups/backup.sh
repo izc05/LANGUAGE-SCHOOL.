@@ -2,6 +2,7 @@
 set -euo pipefail
 
 SERVICE="${SERVICE:-language-school-pocketbase.service}"
+SYSTEMCTL_BIN="${SYSTEMCTL_BIN:-systemctl}"
 DATA_PARENT="${DATA_PARENT:-/var/lib/language-school}"
 PB_DATA_NAME="${PB_DATA_NAME:-pb_data}"
 PRODUCTION_ENV="${PRODUCTION_ENV:-/etc/language-school/production.env}"
@@ -21,12 +22,23 @@ if [[ "${EUID}" -ne 0 ]]; then
   exit 1
 fi
 
-for command in mountpoint tar sha256sum find systemctl; do
+for command in mountpoint tar sha256sum find sync; do
   command -v "$command" >/dev/null || {
     echo "Missing required command: $command" >&2
     exit 1
   }
 done
+
+if [[ "$SYSTEMCTL_BIN" == */* ]]; then
+  [[ -x "$SYSTEMCTL_BIN" ]] || { echo "systemctl executable not found: $SYSTEMCTL_BIN" >&2; exit 1; }
+else
+  command -v "$SYSTEMCTL_BIN" >/dev/null || { echo "Missing required command: $SYSTEMCTL_BIN" >&2; exit 1; }
+fi
+
+if ! [[ "$BACKUP_RETENTION_DAYS" =~ ^[0-9]+$ ]] || (( 10#$BACKUP_RETENTION_DAYS < 1 || 10#$BACKUP_RETENTION_DAYS > 3650 )); then
+  echo 'BACKUP_RETENTION_DAYS must be an integer between 1 and 3650.' >&2
+  exit 1
+fi
 
 if ! mountpoint -q "$BACKUP_MOUNT"; then
   echo "Backup aborted: $BACKUP_MOUNT is not an active mountpoint." >&2
@@ -44,36 +56,42 @@ TIMESTAMP="$(date -u +'%Y%m%dT%H%M%SZ')"
 ARCHIVE="$BACKUP_DIR/language-school-$TIMESTAMP.tar.gz"
 PARTIAL="$ARCHIVE.partial"
 CHECKSUM="$ARCHIVE.sha256"
+backup_complete=0
 
 was_active=0
-if systemctl is-active --quiet "$SERVICE"; then
+if "$SYSTEMCTL_BIN" is-active --quiet "$SERVICE"; then
   was_active=1
-  systemctl stop "$SERVICE"
+  "$SYSTEMCTL_BIN" stop "$SERVICE"
 fi
 
-restart_service() {
+cleanup() {
   rm -f "$PARTIAL"
+  if [[ "$backup_complete" -ne 1 ]]; then
+    rm -f "$ARCHIVE" "$CHECKSUM"
+  fi
   if [[ "$was_active" -eq 1 ]]; then
-    systemctl start "$SERVICE" || true
+    "$SYSTEMCTL_BIN" start "$SERVICE" >/dev/null 2>&1 || true
   fi
 }
-trap restart_service EXIT
+trap cleanup EXIT
 
 tar -C "$DATA_PARENT" -czf "$PARTIAL" "$PB_DATA_NAME"
 mv "$PARTIAL" "$ARCHIVE"
 (
   cd "$BACKUP_DIR"
   sha256sum "$(basename "$ARCHIVE")" > "$(basename "$CHECKSUM")"
+  sha256sum -c "$(basename "$CHECKSUM")" >/dev/null
 )
 sync
+backup_complete=1
 
-trap - EXIT
 if [[ "$was_active" -eq 1 ]]; then
-  systemctl start "$SERVICE"
+  "$SYSTEMCTL_BIN" start "$SERVICE"
 fi
+trap - EXIT
 
 find "$BACKUP_DIR" -maxdepth 1 -type f -name 'language-school-*.tar.gz' -mtime "+$BACKUP_RETENTION_DAYS" -delete
 find "$BACKUP_DIR" -maxdepth 1 -type f -name 'language-school-*.tar.gz.sha256' -mtime "+$BACKUP_RETENTION_DAYS" -delete
 
 printf 'Backup created: %s\n' "$ARCHIVE"
-printf 'Checksum: %s\n' "$CHECKSUM"
+printf 'Checksum verified: %s\n' "$CHECKSUM"

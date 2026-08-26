@@ -133,6 +133,14 @@ export default function AdminContactsPage() {
                 <span className={`contact-request-status ${request.status.toLowerCase()}`}>{statusLabels[request.status]}</span>
               </div>
 
+              {request.placement_level && (
+                <div className="contact-placement-context" aria-label={`Resultado de test ${request.placement_level}`}>
+                  <div><span>TEST DE NIVEL ASOCIADO</span><strong>{request.placement_level}</strong></div>
+                  <div><span>Puntuación</span><strong>{Math.round(request.placement_score ?? 0)}%</strong></div>
+                  <p>Resultado adjuntado por el servidor desde el intento del visitante; no procede de un campo editable del formulario.</p>
+                </div>
+              )}
+
               <div className="contact-request-channels">
                 <a href={`mailto:${request.email}`}><span>Email</span><strong>{request.email}</strong></a>
                 {request.phone

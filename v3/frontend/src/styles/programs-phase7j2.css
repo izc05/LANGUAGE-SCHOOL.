@@ -1,0 +1,58 @@
+/* FASE 7J.2 · Programas
+ * Portada CMS > visual CMS de etapa > fallback local empaquetado.
+ * Ningún curso queda como superficie vacía ni depende de red externa.
+ */
+.programs-v2-hero-visual.has-local-fallback,
+.programs-v2-course-visual.has-local-fallback {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.programs-v2-course-visual.has-local-fallback {
+  background-color: #fff8f7;
+}
+
+.programs-v2-course-visual.has-local-fallback .programs-v2-course-symbol {
+  color: #c61f64;
+  background: rgba(255,255,255,.94);
+  border: 1px solid rgba(198,31,100,.14);
+  box-shadow: 0 12px 28px rgba(78,34,53,.10);
+}
+
+.programs-v2-course-visual.has-local-fallback .programs-v2-course-visual-label {
+  display: inline-flex;
+  align-items: center;
+  width: max-content;
+  max-width: calc(100% - 3rem);
+  padding: .55rem .75rem;
+  border: 1px solid rgba(255,255,255,.72);
+  border-radius: 999px;
+  color: #3a2731;
+  background: rgba(255,255,255,.86);
+  backdrop-filter: blur(10px);
+  text-shadow: none;
+}
+
+.programs-v2-course-visual.has-local-fallback > strong {
+  color: rgba(185,36,96,.15);
+  text-shadow: none;
+}
+
+.programs-v2-course-copy h3,
+.programs-v2-section-heading h2,
+.programs-v2-hero-copy h1 {
+  color: #2f252b;
+}
+
+.programs-v2-course-copy > p,
+.programs-v2-section-heading > p,
+.programs-v2-hero-copy > p {
+  color: #665860;
+}
+
+@media (max-width: 760px) {
+  .programs-v2-course-visual.has-local-fallback .programs-v2-course-visual-label {
+    max-width: calc(100% - 2rem);
+  }
+}

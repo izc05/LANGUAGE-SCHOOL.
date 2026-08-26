@@ -1,0 +1,246 @@
+.cloud-portal-transition {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  overflow: hidden;
+  pointer-events: all;
+  isolation: isolate;
+  background: #fae6ef;
+}
+
+.cloud-portal-transition > * {
+  position: absolute;
+  pointer-events: none;
+}
+
+.cloud-portal-sky,
+.cloud-portal-cloud {
+  background-image: url('/visuals/intro-pink-clouds.webp');
+  background-repeat: no-repeat;
+  background-size: cover;
+  will-change: transform, opacity, filter;
+}
+
+.cloud-portal-sky {
+  inset: -5%;
+  background-position: center;
+  opacity: .15;
+  filter: blur(3px) saturate(.9) brightness(1.06);
+  transform: scale(1.03);
+  animation: cloud-portal-background 3050ms cubic-bezier(.2,.7,.2,1) both;
+}
+
+.cloud-portal-cloud {
+  opacity: 0;
+  filter: saturate(1.08) contrast(1.035) brightness(1.02);
+}
+
+.cloud-portal-cloud-left {
+  left: -4%;
+  top: -6%;
+  width: 62%;
+  height: 112%;
+  background-position: left center;
+  -webkit-mask-image: linear-gradient(90deg, #000 0 70%, transparent 100%);
+  mask-image: linear-gradient(90deg, #000 0 70%, transparent 100%);
+  animation: cloud-portal-left 3050ms cubic-bezier(.18,.72,.2,1) both;
+}
+
+.cloud-portal-cloud-right {
+  right: -4%;
+  top: -5%;
+  width: 61%;
+  height: 110%;
+  background-position: right center;
+  -webkit-mask-image: linear-gradient(270deg, #000 0 70%, transparent 100%);
+  mask-image: linear-gradient(270deg, #000 0 70%, transparent 100%);
+  animation: cloud-portal-right 3050ms cubic-bezier(.18,.72,.2,1) both;
+}
+
+.cloud-portal-cloud-bottom {
+  left: -4%;
+  right: -4%;
+  bottom: -8%;
+  height: 55%;
+  background-position: center bottom;
+  -webkit-mask-image: linear-gradient(0deg, #000 0 62%, transparent 100%);
+  mask-image: linear-gradient(0deg, #000 0 62%, transparent 100%);
+  animation: cloud-portal-bottom 3050ms cubic-bezier(.18,.72,.2,1) both;
+}
+
+.cloud-portal-cloud-top {
+  left: -4%;
+  right: -4%;
+  top: -8%;
+  height: 45%;
+  background-position: center top;
+  -webkit-mask-image: linear-gradient(180deg, #000 0 52%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 0 52%, transparent 100%);
+  animation: cloud-portal-top 3050ms cubic-bezier(.18,.72,.2,1) both;
+}
+
+.cloud-portal-ribbon {
+  z-index: 4;
+  width: 58vw;
+  height: 15vh;
+  border-radius: 50%;
+  border-top: 2px solid rgba(255,255,255,.72);
+  background: linear-gradient(180deg, rgba(255,255,255,.32), rgba(255,255,255,.03) 48%, transparent);
+  filter: blur(1.5px);
+  opacity: 0;
+  transform-origin: center;
+}
+
+.cloud-portal-ribbon-one {
+  left: -6vw;
+  top: 54vh;
+  animation: cloud-portal-ribbon-one 2860ms ease-out both;
+}
+
+.cloud-portal-ribbon-two {
+  right: -7vw;
+  top: 24vh;
+  animation: cloud-portal-ribbon-two 2860ms ease-out both;
+}
+
+.cloud-portal-glow {
+  inset: 0;
+  z-index: 6;
+  background: radial-gradient(circle at 50% 43%, rgba(255,255,255,.98) 0 6%, rgba(255,255,255,.8) 12%, rgba(255,255,255,.25) 25%, transparent 44%);
+  opacity: .18;
+  animation: cloud-portal-glow 3050ms ease both;
+}
+
+.cloud-portal-whiteout {
+  inset: 0;
+  z-index: 10;
+  background: #fff;
+  opacity: 0;
+  animation: cloud-portal-whiteout 3050ms ease both;
+}
+
+@keyframes cloud-portal-background {
+  0% { transform: scale(1.03); opacity: .15; }
+  38% { transform: scale(1.09); opacity: .30; }
+  100% { transform: scale(1.24); opacity: .18; }
+}
+
+@keyframes cloud-portal-left {
+  0% { transform: translate3d(-10vw,2vh,0) scale(1.02); opacity: 0; }
+  20% { opacity: .80; }
+  65% { transform: translate3d(1vw,-1vh,0) scale(1.14); opacity: .94; }
+  100% { transform: translate3d(9vw,-3vh,0) scale(1.34); opacity: .72; }
+}
+
+@keyframes cloud-portal-right {
+  0% { transform: translate3d(10vw,1vh,0) scale(1.02); opacity: 0; }
+  20% { opacity: .82; }
+  65% { transform: translate3d(-1vw,-1vh,0) scale(1.14); opacity: .94; }
+  100% { transform: translate3d(-9vw,-3vh,0) scale(1.34); opacity: .74; }
+}
+
+@keyframes cloud-portal-bottom {
+  0% { transform: translate3d(0,13vh,0) scale(1.02); opacity: 0; }
+  24% { opacity: .72; }
+  70% { transform: translate3d(0,0,0) scale(1.16); opacity: .86; }
+  100% { transform: translate3d(0,-9vh,0) scale(1.34); opacity: .60; }
+}
+
+@keyframes cloud-portal-top {
+  0% { transform: translate3d(0,-10vh,0) scale(1.02); opacity: 0; }
+  24% { opacity: .45; }
+  70% { transform: translate3d(0,0,0) scale(1.14); opacity: .60; }
+  100% { transform: translate3d(0,6vh,0) scale(1.30); opacity: .34; }
+}
+
+@keyframes cloud-portal-ribbon-one {
+  0% { opacity: 0; transform: translateX(-12vw) rotate(12deg) skewX(-12deg) scaleX(.8); }
+  35% { opacity: .54; }
+  100% { opacity: .12; transform: translateX(32vw) rotate(-2deg) skewX(-5deg) scaleX(1.25); }
+}
+
+@keyframes cloud-portal-ribbon-two {
+  0% { opacity: 0; transform: translateX(12vw) rotate(-17deg) skewX(10deg) scaleX(.8); }
+  35% { opacity: .48; }
+  100% { opacity: .10; transform: translateX(-30vw) rotate(-4deg) skewX(3deg) scaleX(1.22); }
+}
+
+@keyframes cloud-portal-glow {
+  0% { opacity: .18; }
+  72% { opacity: .78; }
+  100% { opacity: .9; }
+}
+
+@keyframes cloud-portal-whiteout {
+  0%, 72% { opacity: 0; }
+  88% { opacity: .18; }
+  100% { opacity: 1; }
+}
+
+.cloud-portal-transition-reduced .cloud-portal-sky {
+  animation: cloud-portal-reduced-background 720ms ease-out both;
+}
+
+.cloud-portal-transition-reduced .cloud-portal-cloud {
+  filter: saturate(.9) blur(8px);
+  transform: none;
+  animation: cloud-portal-reduced-cloud 720ms ease-out both;
+}
+
+.cloud-portal-transition-reduced .cloud-portal-ribbon {
+  display: none;
+}
+
+.cloud-portal-transition-reduced .cloud-portal-glow {
+  animation: cloud-portal-reduced-glow 720ms ease-out both;
+}
+
+.cloud-portal-transition-reduced .cloud-portal-whiteout {
+  animation: cloud-portal-reduced-whiteout 720ms ease-out both;
+}
+
+@keyframes cloud-portal-reduced-background {
+  0% { opacity: 0; transform: scale(1.03); }
+  48%, 100% { opacity: .34; transform: scale(1.06); }
+}
+
+@keyframes cloud-portal-reduced-cloud {
+  0% { opacity: 0; transform: none; }
+  48%, 100% { opacity: .62; transform: none; }
+}
+
+@keyframes cloud-portal-reduced-glow {
+  0% { opacity: .18; }
+  58%, 100% { opacity: .72; }
+}
+
+@keyframes cloud-portal-reduced-whiteout {
+  0%, 45% { opacity: 0; }
+  72%, 100% { opacity: 1; }
+}
+
+@media (max-width: 760px) {
+  .cloud-portal-cloud-left,
+  .cloud-portal-cloud-right {
+    width: 72%;
+  }
+
+  .cloud-portal-cloud-bottom {
+    height: 62%;
+  }
+
+  .cloud-portal-ribbon {
+    width: 82vw;
+  }
+}
+
+@media (prefers-reduced-data: reduce) {
+  .cloud-portal-sky,
+  .cloud-portal-cloud {
+    background-image: none;
+  }
+
+  .cloud-portal-transition {
+    background: #f5d7e4;
+  }
+}

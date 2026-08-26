@@ -1,0 +1,263 @@
+/* FASE 7D · Programas editorial
+ * Una única herramienta de orientación, fotografía real y acceso directo a ficha.
+ */
+
+.programs-v2-hero-editorial {
+  min-height: 0;
+  background:
+    radial-gradient(circle at 83% 15%, rgba(210, 82, 123, .08), transparent 24rem),
+    linear-gradient(180deg, #fffdfb 0%, #fff8f5 100%);
+}
+
+.programs-v2-hero-editorial::before {
+  display: none;
+}
+
+.programs-v2-hero-editorial .programs-v2-hero-grid {
+  grid-template-columns: minmax(0, .9fr) minmax(470px, 1.1fr);
+  gap: clamp(3rem, 7vw, 7rem);
+  padding-top: clamp(4.8rem, 7vw, 7rem);
+  padding-bottom: clamp(5.2rem, 8vw, 8rem);
+}
+
+.programs-v2-hero-editorial .programs-v2-hero-copy h1 {
+  max-width: 720px;
+  font-size: clamp(3.45rem, 5.7vw, 5.9rem);
+  line-height: .94;
+}
+
+.programs-v2-hero-editorial .programs-v2-hero-copy h1 em {
+  font-weight: 500;
+}
+
+.programs-v2-hero-visual {
+  min-height: clamp(500px, 46vw, 650px);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(114, 67, 86, .09);
+  border-radius: 34px 34px 92px 34px;
+  background:
+    radial-gradient(circle at 26% 20%, rgba(255,255,255,.78), transparent 13rem),
+    linear-gradient(145deg, #f0dce3, #dcb4c3 55%, #f8e8e5);
+  background-position: center;
+  background-size: cover;
+  box-shadow: 0 31px 76px rgba(78, 37, 55, .12);
+}
+
+.programs-v2-hero-visual::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,.19), transparent 38%),
+    linear-gradient(180deg, transparent 44%, rgba(46,23,34,.24));
+}
+
+.programs-v2-hero-visual figcaption {
+  position: absolute;
+  z-index: 1;
+  left: 1.5rem;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  padding: 1.25rem 1.35rem;
+  border: 1px solid rgba(255,255,255,.58);
+  border-radius: 20px;
+  color: #543746;
+  background: rgba(255,251,249,.84);
+  box-shadow: 0 16px 40px rgba(58,28,42,.10);
+  backdrop-filter: blur(18px);
+}
+
+.programs-v2-hero-visual figcaption span,
+.programs-v2-hero-visual figcaption small {
+  display: block;
+  color: #956f7f;
+  font-size: .58rem;
+  font-weight: 800;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+}
+
+.programs-v2-hero-visual figcaption strong {
+  display: block;
+  max-width: 540px;
+  margin: .35rem 0 .45rem;
+  color: #3e2a35;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(1.45rem, 2.2vw, 2.05rem);
+  line-height: 1.08;
+}
+
+.programs-v2-stages {
+  padding: 0;
+  background: #fffdfb;
+}
+
+.programs-v2-stage-grid {
+  border-top: 1px solid rgba(105, 65, 82, .10);
+  border-bottom: 1px solid rgba(105, 65, 82, .10);
+}
+
+.programs-v2-stage {
+  min-height: 150px;
+  padding: 1.5rem 1.35rem;
+  border-right-color: rgba(105, 65, 82, .10);
+  background: transparent;
+}
+
+.programs-v2-stage:first-child {
+  border-left-color: rgba(105, 65, 82, .10);
+}
+
+.programs-v2-stage:hover {
+  transform: none;
+  background: #fff7f8;
+}
+
+.programs-v2-stage > div {
+  margin-bottom: 1rem;
+}
+
+.programs-v2-stage h2 {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.3rem;
+}
+
+.programs-v2-stage p {
+  line-height: 1.55;
+}
+
+.programs-v2-catalog {
+  padding: clamp(5.8rem, 8vw, 8rem) 0;
+  background:
+    radial-gradient(circle at 4% 18%, rgba(233, 169, 189, .10), transparent 22rem),
+    linear-gradient(180deg, #fffaf8, #fffdfb 60%, #fdf8f5);
+}
+
+.programs-v2-section-heading {
+  gap: clamp(2.8rem, 7vw, 7rem);
+  margin-bottom: clamp(3rem, 6vw, 5.2rem);
+}
+
+.programs-v2-course-list {
+  gap: clamp(2rem, 4vw, 3.5rem);
+}
+
+.programs-v2-course {
+  min-height: 460px;
+  grid-template-columns: minmax(350px, .94fr) minmax(0, 1.06fr);
+  border-color: rgba(111, 66, 84, .09);
+  border-radius: 30px 30px 70px 30px;
+  box-shadow: 0 23px 58px rgba(78, 38, 55, .07);
+}
+
+.programs-v2-course-visual {
+  min-height: 460px;
+}
+
+.programs-v2-course-visual::before,
+.programs-v2-course-visual::after {
+  display: none;
+}
+
+.programs-v2-course-copy {
+  padding: clamp(2.5rem, 5vw, 4.6rem);
+}
+
+.programs-v2-course-copy h3 {
+  max-width: 620px;
+  font-size: clamp(2.4rem, 4vw, 4rem);
+  line-height: .98;
+  letter-spacing: -.045em;
+}
+
+.programs-v2-course-copy > p {
+  max-width: 610px;
+  line-height: 1.72;
+}
+
+.programs-v2-course-points {
+  margin-top: 1.5rem;
+}
+
+.programs-v2-course-link {
+  margin-top: 2rem;
+}
+
+.programs-v2-guidance {
+  padding: clamp(4.8rem, 7vw, 6.5rem) 0;
+}
+
+.programs-v2-guidance-panel {
+  border-radius: 30px 30px 68px 30px;
+}
+
+@media (max-width: 1020px) {
+  .programs-v2-hero-editorial .programs-v2-hero-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .programs-v2-hero-visual {
+    min-height: 520px;
+  }
+
+  .programs-v2-stage-grid {
+    grid-template-columns: repeat(5, minmax(150px, 1fr));
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: thin;
+  }
+
+  .programs-v2-course {
+    grid-template-columns: minmax(300px, .9fr) minmax(0, 1.1fr);
+  }
+}
+
+@media (max-width: 760px) {
+  .programs-v2-hero-editorial .programs-v2-hero-grid {
+    padding-top: 3.5rem;
+    padding-bottom: 4.8rem;
+  }
+
+  .programs-v2-hero-editorial .programs-v2-hero-copy h1 {
+    font-size: clamp(3rem, 15vw, 4.7rem);
+  }
+
+  .programs-v2-hero-visual {
+    min-height: 380px;
+    border-radius: 26px 26px 56px 26px;
+  }
+
+  .programs-v2-hero-visual figcaption {
+    left: 1rem;
+    right: 1rem;
+    bottom: 1rem;
+    padding: 1rem;
+  }
+
+  .programs-v2-stage-grid {
+    grid-template-columns: repeat(5, minmax(190px, 1fr));
+  }
+
+  .programs-v2-course,
+  .programs-v2-course:nth-child(even) {
+    grid-template-columns: 1fr;
+  }
+
+  .programs-v2-course-visual,
+  .programs-v2-course:nth-child(even) .programs-v2-course-visual {
+    order: 1;
+    min-height: 330px;
+  }
+
+  .programs-v2-course-copy,
+  .programs-v2-course:nth-child(even) .programs-v2-course-copy {
+    order: 2;
+    padding: 2rem 1.4rem 2.3rem;
+  }
+
+  .programs-v2-guidance-panel {
+    border-radius: 24px 24px 48px 24px;
+  }
+}

@@ -1,6 +1,15 @@
 import { createContext, type ReactNode, useContext, useEffect, useMemo, useState } from 'react'
 import { isDemoMode } from '../../config/environment'
-import { getCurrentUser, loginWithPassword, logout as clearAuth, refreshAuthentication } from '../../services/pocketbase/auth'
+import {
+  getCurrentUser,
+  loginWithPassword,
+  logout as clearAuth,
+  refreshAuthentication,
+  resendMfaOtp,
+  verifyMfaWithOtp,
+  type LoginResult,
+  type MfaChallenge,
+} from '../../services/pocketbase/auth'
 import { pb } from '../../services/pocketbase/client'
 import type { AppUser } from '../../services/pocketbase/types'
 
@@ -9,7 +18,9 @@ type AuthContextValue = {
   ready: boolean
   isAuthenticated: boolean
   isDemoMode: boolean
-  login: (email: string, password: string) => Promise<AppUser>
+  login: (email: string, password: string) => Promise<LoginResult>
+  verifyMfa: (challenge: MfaChallenge, code: string) => Promise<AppUser>
+  resendMfa: (challenge: MfaChallenge) => Promise<MfaChallenge>
   logout: () => void
 }
 
@@ -39,9 +50,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isAuthenticated: Boolean(user && pb.authStore.isValid),
     isDemoMode,
     async login(email: string, password: string) {
-      const authenticatedUser = await loginWithPassword({ email, password })
+      const result = await loginWithPassword({ email, password })
+      if (result.kind === 'AUTHENTICATED') setUser(result.user)
+      return result
+    },
+    async verifyMfa(challenge: MfaChallenge, code: string) {
+      const authenticatedUser = await verifyMfaWithOtp({
+        mfaId: challenge.mfaId,
+        otpId: challenge.otpId,
+        code,
+      })
       setUser(authenticatedUser)
       return authenticatedUser
+    },
+    async resendMfa(challenge: MfaChallenge) {
+      return resendMfaOtp(challenge)
     },
     logout() {
       clearAuth()

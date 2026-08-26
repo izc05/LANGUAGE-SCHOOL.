@@ -1,0 +1,17 @@
+[Unit]
+Description=Language School periodic health check
+After=network-online.target nginx.service language-school-pocketbase.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/lib/language-school/health-check.sh
+User=root
+Group=root
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadOnlyPaths=/etc/language-school
+SyslogIdentifier=language-school-health

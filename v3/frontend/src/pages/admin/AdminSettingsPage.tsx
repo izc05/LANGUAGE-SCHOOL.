@@ -8,6 +8,7 @@ import {
   settingsToInput,
   type SiteSettingsInput,
 } from '../../services/pocketbase/siteManagement'
+import { buildWhatsAppUrl, formatWhatsAppNumber, normalizeWhatsAppNumber } from '../../utils/whatsapp'
 import { adminNav } from './adminNav'
 
 const allowedLogoTypes = new Set(['image/png', 'image/jpeg', 'image/webp'])
@@ -63,6 +64,10 @@ export default function AdminSettingsPage() {
     setLogoName(file?.name ?? 'Sin nuevo logo seleccionado')
   }
 
+  const normalizedWhatsApp = normalizeWhatsAppNumber(form.whatsapp)
+  const whatsappPreviewUrl = buildWhatsAppUrl(form.whatsapp, form.whatsappMessage)
+  const whatsappPreviewNumber = formatWhatsAppNumber(form.whatsapp)
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError(null)
@@ -73,14 +78,23 @@ export default function AdminSettingsPage() {
       return
     }
 
+    if (form.whatsappEnabled && !normalizedWhatsApp) {
+      setError('Introduce un número de WhatsApp válido. Puedes usar un móvil español de 9 cifras o un número internacional con prefijo de país.')
+      return
+    }
+
+    const payload = normalizedWhatsApp ? { ...form, whatsapp: normalizedWhatsApp } : form
+
     if (isDemoMode) {
+      if (normalizedWhatsApp && form.whatsapp !== normalizedWhatsApp) setForm(payload)
       setNotice('Configuración preparada en la demostración. No se ha guardado ningún cambio real.')
       return
     }
 
     setSaving(true)
     try {
-      await saveSiteSettings(form, logo)
+      await saveSiteSettings(payload, logo)
+      setForm(payload)
       setLogo(null)
       setLogoName('Sin nuevo logo seleccionado')
       setNotice('Configuración general guardada correctamente.')
@@ -98,7 +112,7 @@ export default function AdminSettingsPage() {
           <div>
             <span className="eyebrow">CMS · CONFIGURACIÓN</span>
             <h2>Identidad y contacto</h2>
-            <p>Centraliza aquí los datos que reutilizan la cabecera, el acceso, los portales, el contacto y el pie de la web.</p>
+            <p>Centraliza aquí los datos públicos de la academia, los canales de contacto, el consentimiento y la identificación legal.</p>
           </div>
           <span className="status info">Configuración global</span>
         </header>
@@ -113,7 +127,7 @@ export default function AdminSettingsPage() {
             <label className="field-stack"><span>Nombre</span><input value={form.academyName} onChange={(event) => setField('academyName', event.target.value)} required /></label>
             <label className="field-stack"><span>Logo</span><input type="file" accept="image/png,image/jpeg,image/webp" onChange={handleLogo} /></label>
             <div className="settings-file-note"><strong>{logoName}</strong><small>PNG, JPG o WEBP · máximo 5 MB. El logo anterior se conserva si no seleccionas otro.</small></div>
-            <label className="field-stack"><span>Dirección</span><textarea rows={3} value={form.address} onChange={(event) => setField('address', event.target.value)} placeholder="Dirección o localidad" /></label>
+            <label className="field-stack"><span>Dirección</span><textarea rows={3} value={form.address} onChange={(event) => setField('address', event.target.value)} placeholder="Dirección o localidad" /><small>También actualiza el mapa público de Contacto.</small></label>
           </section>
 
           <section className="panel cms-form">
@@ -121,14 +135,56 @@ export default function AdminSettingsPage() {
             <label className="field-stack"><span>Email</span><input type="email" autoComplete="email" value={form.email} onChange={(event) => setField('email', event.target.value)} placeholder="info@..." /></label>
             <div className="field-row">
               <label className="field-stack"><span>Teléfono</span><input type="tel" autoComplete="tel" value={form.phone} onChange={(event) => setField('phone', event.target.value)} /></label>
-              <label className="field-stack"><span>WhatsApp</span><input type="tel" value={form.whatsapp} onChange={(event) => setField('whatsapp', event.target.value)} /></label>
+              <label className="field-stack"><span>WhatsApp</span><input type="tel" autoComplete="tel" value={form.whatsapp} onChange={(event) => setField('whatsapp', event.target.value)} placeholder="618 218 187 o +34 618 218 187" /><small>Los móviles españoles de 9 cifras se guardan automáticamente con prefijo +34.</small></label>
             </div>
+            <label className="settings-toggle-row"><span><strong>Botón flotante de WhatsApp</strong><small>Permite mostrar u ocultar el acceso rápido en toda la web pública.</small></span><input type="checkbox" checked={form.whatsappEnabled} onChange={(event) => setField('whatsappEnabled', event.target.checked)} /></label>
+            <label className="field-stack"><span>Mensaje inicial de WhatsApp</span><textarea rows={3} value={form.whatsappMessage} onChange={(event) => setField('whatsappMessage', event.target.value)} placeholder="Hola, quiero información..." /></label>
+
+            <div className={`settings-whatsapp-preview${whatsappPreviewUrl ? ' is-valid' : ' is-invalid'}`} aria-live="polite">
+              <div>
+                <span className="eyebrow">PREVISUALIZACIÓN</span>
+                <strong>{form.whatsappEnabled ? 'Botón público de WhatsApp' : 'Botón de WhatsApp desactivado'}</strong>
+                {whatsappPreviewUrl ? (
+                  <small>{whatsappPreviewNumber} · {form.whatsappMessage.trim() || 'Sin mensaje inicial'}</small>
+                ) : (
+                  <small>Introduce un número válido para poder probar el enlace antes de guardarlo.</small>
+                )}
+              </div>
+              {whatsappPreviewUrl && (
+                <a className="button button-outline settings-whatsapp-test" href={whatsappPreviewUrl} target="_blank" rel="noopener noreferrer">Probar WhatsApp ↗</a>
+              )}
+            </div>
+
             <label className="field-stack"><span>Instagram</span><input type="url" value={form.instagram} onChange={(event) => setField('instagram', event.target.value)} placeholder="https://instagram.com/..." /></label>
             <label className="field-stack"><span>Facebook</span><input type="url" value={form.facebook} onChange={(event) => setField('facebook', event.target.value)} /></label>
             <label className="field-stack"><span>YouTube</span><input type="url" value={form.youtube} onChange={(event) => setField('youtube', event.target.value)} /></label>
+          </section>
+
+          <section className="panel cms-form admin-settings-privacy-panel">
+            <div className="panel-heading"><div><span className="eyebrow">COOKIES</span><h3>Consentimiento y servicios externos</h3></div></div>
+            <label className="settings-toggle-row"><span><strong>Mostrar panel de cookies</strong><small>Si está activo, Google Maps y futuros servicios opcionales esperan el consentimiento correspondiente.</small></span><input type="checkbox" checked={form.cookieBannerEnabled} onChange={(event) => setField('cookieBannerEnabled', event.target.checked)} /></label>
+            <label className="field-stack"><span>Texto breve del panel</span><textarea rows={4} value={form.cookieIntro} onChange={(event) => setField('cookieIntro', event.target.value)} /></label>
+            <div className="settings-legal-note"><strong>Consentimiento real</strong><p>Las categorías opcionales permanecen bloqueadas hasta que el visitante decida. Google Maps depende de Preferencias y el usuario puede cambiar su decisión desde el footer.</p></div>
+          </section>
+
+          <section className="panel cms-form admin-settings-legal-panel">
+            <div className="panel-heading"><div><span className="eyebrow">LEGAL Y PRIVACIDAD</span><h3>Identificación y textos públicos</h3></div></div>
+            <p className="muted">Estos datos alimentan automáticamente el Aviso legal y la Política de privacidad. Completa los datos reales del titular antes de publicar en producción.</p>
+            <label className="field-stack"><span>Titular / responsable legal</span><input value={form.legalOwnerName} onChange={(event) => setField('legalOwnerName', event.target.value)} placeholder="Nombre y apellidos o razón social" /><small>No confundas la marca comercial con el titular jurídico si son distintos.</small></label>
+            <div className="field-row">
+              <label className="field-stack"><span>NIF / CIF</span><input value={form.legalTaxId} onChange={(event) => setField('legalTaxId', event.target.value)} placeholder="NIF o CIF real" /></label>
+              <label className="field-stack"><span>Datos registrales, si procede</span><input value={form.legalRegistryDetails} onChange={(event) => setField('legalRegistryDetails', event.target.value)} placeholder="Registro, tomo, folio, hoja..." /></label>
+            </div>
+            <div className="settings-legal-note"><strong>Plantillas estructuradas incluidas</strong><p>La web ya presenta responsable, finalidades, bases jurídicas, conservación, destinatarios, derechos, cookies y condiciones de uso. Los campos siguientes sirven para añadir particularidades propias de la academia.</p></div>
+            <label className="field-stack"><span>Texto adicional · Política de cookies</span><textarea rows={6} value={form.cookiePolicyText} onChange={(event) => setField('cookiePolicyText', event.target.value)} placeholder="Información adicional específica sobre cookies o proveedores..." /></label>
+            <label className="field-stack"><span>Texto adicional · Política de privacidad</span><textarea rows={6} value={form.privacyPolicyText} onChange={(event) => setField('privacyPolicyText', event.target.value)} placeholder="Cláusulas o tratamientos específicos de la academia..." /></label>
+            <label className="field-stack"><span>Texto adicional · Aviso legal</span><textarea rows={6} value={form.legalNoticeText} onChange={(event) => setField('legalNoticeText', event.target.value)} placeholder="Autorizaciones, datos profesionales u otras condiciones específicas..." /></label>
+          </section>
+
+          <div className="admin-settings-submit-row">
             <button className="button button-primary" type="submit" disabled={saving}>{saving ? 'Guardando…' : 'Guardar configuración'}</button>
             {isDemoMode && <small className="muted">Vista de demostración: no se guardan cambios reales.</small>}
-          </section>
+          </div>
         </form>
       </div>
     </DashboardShell>

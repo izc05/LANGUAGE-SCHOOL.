@@ -21,10 +21,24 @@ function formatTime(value: string): string {
   return Number.isNaN(date.getTime()) ? '--:--' : new Intl.DateTimeFormat('es-ES', { hour: '2-digit', minute: '2-digit' }).format(date)
 }
 
+function TeacherWorkspaceHero({ summary }: { summary: string }) {
+  return (
+    <section className="teacher-workspace-hero">
+      <div>
+        <span className="eyebrow">TU ESPACIO DOCENTE</span>
+        <h2>Clases, alumnos y correcciones, <em>bien organizados.</em></h2>
+        <p>{summary}</p>
+      </div>
+      <img src={`${import.meta.env.BASE_URL}visuals/teacher-workspace-art.svg`} alt="" aria-hidden="true" />
+    </section>
+  )
+}
+
 function DemoTeacherDashboard() {
   return (
     <DashboardShell role="Profesor" name="Laura" nav={[...teacherNav]}>
-      <div className="dashboard-content">
+      <div className="dashboard-content teacher-dashboard-premium">
+        <TeacherWorkspaceHero summary="Todo lo importante del día a mano: grupos activos, próximas clases, entregas y material docente." />
         <section className="metric-grid">
           <article><span>Alumnos activos</span><strong>24</strong><small>4 grupos</small></article>
           <article><span>Clases hoy</span><strong>5</strong><small>Primera · 16:00</small></article>
@@ -63,12 +77,17 @@ function ConnectedTeacherDashboard() {
     return [item.student, record ? [record.name, record.surname].filter(Boolean).join(' ') : 'Alumno']
   })), [snapshot?.enrollments])
 
+  const summary = todayClasses.length > 0
+    ? `Hoy tienes ${todayClasses.length} ${todayClasses.length === 1 ? 'clase programada' : 'clases programadas'} y ${pending.length} ${pending.length === 1 ? 'entrega pendiente' : 'entregas pendientes'} de revisión.`
+    : `Hoy no tienes clases programadas. Tienes ${pending.length} ${pending.length === 1 ? 'entrega pendiente' : 'entregas pendientes'} de revisión.`
+
   return (
     <DashboardShell role="Profesor" name="Profesor" nav={[...teacherNav]}>
-      <div className="dashboard-content">
+      <div className="dashboard-content teacher-dashboard-premium">
         {loading && <div className="cms-notice">Cargando grupos, clases y entregas…</div>}
         {error && <div className="cms-notice auth-error">{error}</div>}
         {!loading && !error && <>
+          <TeacherWorkspaceHero summary={summary} />
           <section className="metric-grid">
             <article><span>Alumnos activos</span><strong>{students.size}</strong><small>{snapshot?.groups.length || 0} grupos</small></article>
             <article><span>Clases hoy</span><strong>{todayClasses.length}</strong><small>{todayClasses[0] ? `Primera · ${formatTime(todayClasses[0].starts_at)}` : 'Sin clases hoy'}</small></article>

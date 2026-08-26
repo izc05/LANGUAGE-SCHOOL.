@@ -113,23 +113,31 @@ test('ADMIN navega por el CMS completo', async ({ page }) => {
 
   await nav.getByRole('link', { name: 'Alumnos' }).click()
   await expect(page).toHaveURL(/\/admin\/alumnos$/)
+  await expect(page.getByRole('heading', { name: 'Directorio de alumnos' })).toBeVisible()
 
   await nav.getByRole('link', { name: 'Profesores', exact: true }).click()
   await expect(page).toHaveURL(/\/admin\/profesores$/)
-  const teacherCard = page.locator('.teacher-admin-card').filter({ hasText: 'E2E Teacher' })
-  await expect(teacherCard.getByRole('button', { name: 'Eliminar' })).toBeVisible()
+  const teacherCard = page.locator('.phase14-teacher-card').filter({ hasText: 'E2E Teacher' }).first()
+  await expect(teacherCard).toBeVisible()
+  await teacherCard.click()
+  await expect(page).toHaveURL(/\/admin\/profesores\/[^/]+$/)
+
+  const teacherDetail = page.locator('.phase14-profile-page')
+  const deleteButton = teacherDetail.getByRole('button', { name: 'Eliminar profesor' })
+  await expect(deleteButton).toBeVisible()
   page.once('dialog', async (dialog) => {
-    expect(dialog.message()).toContain('Esta acción no se puede deshacer')
+    expect(dialog.message()).toContain('Eliminar definitivamente')
     await dialog.dismiss()
   })
-  await teacherCard.getByRole('button', { name: 'Eliminar' }).click()
-  await expect(teacherCard).toBeVisible()
-  page.once('dialog', (dialog) => dialog.accept())
-  await teacherCard.getByRole('button', { name: 'Eliminar' }).click()
-  await expect(page.getByRole('alert')).toContainText('No se puede eliminar porque conserva datos vinculados')
-  await expect(teacherCard).toBeVisible()
+  await deleteButton.click()
+  await expect(teacherDetail).toBeVisible()
 
-  await nav.getByRole('link', { name: 'Profesores web' }).click()
+  page.once('dialog', (dialog) => dialog.accept())
+  await deleteButton.click()
+  await expect(page.getByRole('alert')).toContainText('No se puede eliminar porque conserva datos vinculados')
+  await expect(teacherDetail).toBeVisible()
+
+  await page.goto('/admin/profesores/publicos')
   await expect(page).toHaveURL(/\/admin\/profesores\/publicos$/)
   await expect(page.getByRole('heading', { name: 'Perfiles públicos del equipo' })).toBeVisible()
   await expect(page.locator('input[value="E2E Public Teacher"]')).toBeVisible()
@@ -161,10 +169,20 @@ test('TEACHER permanece en su ámbito', async ({ page }) => {
   await logout(page)
 })
 
-test('STUDENT navega y no puede entrar en otros portales', async ({ page }) => {
+test('STUDENT entra a un campus orientado a acciones y permanece en su ámbito', async ({ page }) => {
   await login(page, credentials.student.email, credentials.student.password, /\/alumno$/)
   await expect(page.getByRole('heading', { name: 'Hola, E2E Student' })).toBeVisible()
+  await expect(page.getByText('TU CAMPUS', { exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Hoy, empieza por aquí/i })).toBeVisible()
+  await expect(page.locator('.campus-next-class')).toBeVisible()
+  await expect(page.locator('.campus10-action-card')).toHaveCount(3)
+
   const nav = page.getByRole('navigation', { name: 'Menú de Alumno' })
+  await expect(nav.getByRole('link', { name: 'Inicio' })).toHaveAttribute('aria-current', 'page')
+
+  await page.setViewportSize({ width: 390, height: 844 })
+  await expectNoHorizontalPageOverflow(page)
+  await page.setViewportSize({ width: 1280, height: 900 })
 
   await nav.getByRole('link', { name: 'Mis clases' }).click()
   await expect(page).toHaveURL(/\/alumno\/clases$/)
@@ -192,7 +210,15 @@ test('cabecera pública responsive sin desbordamiento en móvil y tablet', async
     await page.setViewportSize(viewport)
     await enterHome(page)
     await expect(page.locator('.site-header .brand strong')).toHaveText(academyName)
-    await expect(page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('link', { name: 'Sobre nosotros' })).toBeVisible()
+    const toggle = page.getByRole('button', { name: 'Abrir menú' })
+    await expect(toggle).toBeVisible()
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    await toggle.click()
+    const navigation = page.getByRole('navigation', { name: 'Navegación principal' })
+    await expect(navigation.getByRole('link', { name: 'Sobre nosotros' })).toBeVisible()
+    await expectNoHorizontalPageOverflow(page)
+    await page.keyboard.press('Escape')
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false')
     await expectNoHorizontalPageOverflow(page)
   }
 })

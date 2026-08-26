@@ -12,6 +12,9 @@ export type ContactRequestRecord = RecordModel & {
   interest: string
   message: string
   status: ContactRequestStatus
+  placement_attempt?: string
+  placement_level?: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2' | ''
+  placement_score?: number
   created: string
   updated: string
 }
@@ -28,6 +31,9 @@ export const demoContactRequests: ContactRequestRecord[] = [
     interest: 'Preparación B1',
     message: 'Quiero información sobre horarios y grupos disponibles.',
     status: 'NEW',
+    placement_attempt: '',
+    placement_level: '',
+    placement_score: 0,
     created: new Date().toISOString(),
     updated: new Date().toISOString(),
   },

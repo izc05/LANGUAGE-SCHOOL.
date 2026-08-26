@@ -1,0 +1,477 @@
+/* FASE 7F · Tarifas + Contacto
+ * Dos páginas de alta intención: claridad, información real y acción rápida.
+ */
+
+/* =========================
+   TARIFAS
+   ========================= */
+.pricing-premium-v2 .pricing-v2-hero-editorial {
+  padding: clamp(4.8rem, 7vw, 7rem) 0 clamp(5rem, 8vw, 7.5rem);
+  background:
+    radial-gradient(circle at 84% 15%, rgba(210, 82, 123, .075), transparent 24rem),
+    linear-gradient(180deg, #fffdfb 0%, #fff8f5 100%);
+}
+
+.pricing-premium-v2 .pricing-v2-hero-grid {
+  grid-template-columns: minmax(0, .9fr) minmax(470px, 1.1fr);
+  gap: clamp(3rem, 7vw, 7rem);
+  align-items: center;
+}
+
+.pricing-premium-v2 .pricing-v2-hero-copy h1 {
+  max-width: 720px;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(3.45rem, 5.7vw, 5.9rem);
+  line-height: .94;
+  letter-spacing: -.058em;
+}
+
+.pricing-premium-v2 .pricing-v2-hero-copy > p {
+  max-width: 620px;
+  color: #72616b;
+  font-size: 1.03rem;
+  line-height: 1.78;
+}
+
+.pricing-premium-v2 .pricing-v2-trust-row {
+  display: grid;
+  gap: .55rem;
+  margin-top: 1.8rem;
+  color: #7d6873;
+  font-size: .78rem;
+}
+
+.pricing-premium-v2 .pricing-v2-trust-row span {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+}
+
+.pricing-premium-v2 .pricing-v2-trust-row span::before {
+  content: '✓';
+  width: 1.35rem;
+  height: 1.35rem;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  background: #d1587e;
+  font-size: .55rem;
+}
+
+.pricing-premium-v2 .pricing-v2-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .75rem;
+  margin-top: 1.8rem;
+}
+
+.pricing-premium-v2 .pricing-v2-hero-visual {
+  min-height: clamp(480px, 45vw, 630px);
+  overflow: hidden;
+  border: 1px solid rgba(111, 65, 83, .09);
+  border-radius: 34px 34px 92px 34px;
+  background-position: center;
+  background-size: cover;
+  box-shadow: 0 31px 76px rgba(78, 37, 55, .11);
+}
+
+.pricing-premium-v2 .pricing-v2-hero-visual.has-cms-photo > img {
+  display: none;
+}
+
+.pricing-premium-v2 .pricing-v2-floating-card {
+  left: 1.4rem;
+  right: 1.4rem;
+  bottom: 1.4rem;
+  width: auto;
+  max-width: 430px;
+  padding: 1rem 1.15rem;
+  border-radius: 18px;
+  background: rgba(255,251,249,.84);
+  backdrop-filter: blur(18px);
+}
+
+.pricing-premium-v2 .pricing-v2-plans-section {
+  padding: clamp(5.8rem, 8vw, 8rem) 0;
+  background: #fffdfb;
+}
+
+.pricing-premium-v2 .pricing-v2-section-head {
+  grid-template-columns: minmax(0, 1.15fr) minmax(280px, .55fr);
+  gap: clamp(2.8rem, 7vw, 7rem);
+  margin-bottom: clamp(3rem, 6vw, 5rem);
+}
+
+.pricing-premium-v2 .pricing-v2-section-head h2 {
+  max-width: 760px;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(2.8rem, 4.5vw, 4.7rem);
+  line-height: .98;
+  letter-spacing: -.052em;
+}
+
+.pricing-premium-v2 .pricing-v2-grid {
+  gap: clamp(1rem, 2vw, 1.5rem);
+  align-items: stretch;
+}
+
+.pricing-premium-v2 .pricing-v2-card {
+  min-height: 100%;
+  padding: clamp(1.8rem, 3vw, 2.5rem);
+  border: 1px solid rgba(103, 62, 79, .10);
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: none;
+  transition: border-color .2s ease, transform .2s ease;
+}
+
+.pricing-premium-v2 .pricing-v2-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(190, 61, 99, .22);
+  box-shadow: none;
+}
+
+.pricing-premium-v2 .pricing-v2-card.featured {
+  border-color: rgba(187, 55, 96, .27);
+  background: linear-gradient(180deg, #fff8fa, #fff);
+  box-shadow: 0 20px 48px rgba(83, 38, 57, .075);
+}
+
+.pricing-premium-v2 .pricing-v2-index {
+  color: #b94b6e;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1rem;
+  font-style: italic;
+}
+
+.pricing-premium-v2 .pricing-badge {
+  border-radius: 999px;
+  background: #f8e4eb;
+  color: #a8375c;
+  box-shadow: none;
+}
+
+.pricing-premium-v2 .pricing-v2-price strong {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(2.8rem, 4vw, 4.2rem);
+  letter-spacing: -.045em;
+}
+
+.pricing-premium-v2 .pricing-v2-card ul {
+  padding-top: 1.2rem;
+  border-top: 1px solid rgba(101, 61, 78, .10);
+}
+
+.pricing-premium-v2 .pricing-v2-fit-section {
+  padding: clamp(5.2rem, 7vw, 7rem) 0;
+  background: linear-gradient(180deg, #fff9f6, #fffdfb);
+}
+
+.pricing-premium-v2 .pricing-v2-fit {
+  border-radius: 30px 30px 68px 30px;
+  border-color: rgba(103, 62, 79, .09);
+  box-shadow: 0 23px 58px rgba(78, 37, 55, .055);
+}
+
+.pricing-premium-v2 .pricing-v2-fit-visual {
+  opacity: .72;
+}
+
+.pricing-premium-v2 .pricing-v2-faq-section {
+  padding: clamp(5rem, 7vw, 6.5rem) 0;
+  background: #fffdfb;
+}
+
+.pricing-premium-v2 .pricing-v2-faq-list details {
+  border-color: rgba(101, 61, 78, .12);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.pricing-premium-v2 .pricing-v2-cta-section {
+  padding: 0 0 clamp(5.2rem, 7vw, 7rem);
+  background: #fffdfb;
+}
+
+.pricing-premium-v2 .pricing-v2-cta {
+  border-radius: 30px 30px 68px 30px;
+}
+
+/* =========================
+   CONTACTO
+   ========================= */
+.contact-premium-v2 .contact-v2-hero-editorial {
+  padding: clamp(4.8rem, 7vw, 7rem) 0 clamp(5rem, 8vw, 7.5rem);
+  background:
+    radial-gradient(circle at 84% 14%, rgba(208, 79, 120, .075), transparent 24rem),
+    linear-gradient(180deg, #fffdfb 0%, #fff8f5 100%);
+}
+
+.contact-premium-v2 .contact-v2-hero-grid {
+  grid-template-columns: minmax(0, .92fr) minmax(470px, 1.08fr);
+  gap: clamp(3rem, 7vw, 7rem);
+  align-items: center;
+}
+
+.contact-premium-v2 .contact-v2-hero-copy h1 {
+  max-width: 720px;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(3.45rem, 5.7vw, 5.9rem);
+  line-height: .94;
+  letter-spacing: -.058em;
+}
+
+.contact-premium-v2 .contact-v2-hero-copy > p {
+  max-width: 620px;
+  color: #71606a;
+  font-size: 1.03rem;
+  line-height: 1.78;
+}
+
+.contact-premium-v2 .contact-v2-hero-tags {
+  display: none;
+}
+
+.contact-premium-v2 .contact-v2-direct {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  margin-top: 2rem;
+  border-top: 1px solid rgba(100, 61, 77, .12);
+  border-bottom: 1px solid rgba(100, 61, 77, .12);
+}
+
+.contact-premium-v2 .contact-v2-direct a {
+  min-width: 0;
+  padding: 1.15rem .9rem 1.15rem 0;
+  color: #44313b;
+  text-decoration: none;
+  border-right: 1px solid rgba(100, 61, 77, .12);
+}
+
+.contact-premium-v2 .contact-v2-direct a + a {
+  padding-left: .9rem;
+}
+
+.contact-premium-v2 .contact-v2-direct a:last-child {
+  border-right: 0;
+}
+
+.contact-premium-v2 .contact-v2-direct small,
+.contact-premium-v2 .contact-v2-direct strong {
+  display: block;
+}
+
+.contact-premium-v2 .contact-v2-direct small {
+  margin-bottom: .35rem;
+  color: #ae4568;
+  font-size: .56rem;
+  font-weight: 900;
+  letter-spacing: .13em;
+}
+
+.contact-premium-v2 .contact-v2-direct strong {
+  overflow-wrap: anywhere;
+  font-size: .78rem;
+  line-height: 1.4;
+}
+
+.contact-premium-v2 .contact-v2-hero-cta {
+  margin-top: 1.7rem;
+}
+
+.contact-premium-v2 .contact-v2-hero-visual {
+  min-height: clamp(480px, 45vw, 630px);
+  overflow: hidden;
+  border: 1px solid rgba(111, 65, 83, .09);
+  border-radius: 34px 34px 92px 34px;
+  background-position: center;
+  background-size: cover;
+  box-shadow: 0 31px 76px rgba(78, 37, 55, .11);
+}
+
+.contact-premium-v2 .contact-v2-hero-visual.has-cms-photo > img {
+  display: none;
+}
+
+.contact-premium-v2 .contact-v2-floating-note {
+  left: 1.4rem;
+  right: 1.4rem;
+  bottom: 1.4rem;
+  width: auto;
+  max-width: 470px;
+  padding: 1rem 1.15rem;
+  border-radius: 18px;
+  background: rgba(255,251,249,.85);
+  backdrop-filter: blur(18px);
+}
+
+.contact-premium-v2 .contact-v2-main-section {
+  padding: clamp(5.8rem, 8vw, 8rem) 0;
+  background: #fffdfb;
+}
+
+.contact-premium-v2 .contact-v2-grid {
+  grid-template-columns: minmax(0, 1.12fr) minmax(330px, .68fr);
+  gap: clamp(2rem, 5vw, 5rem);
+  align-items: start;
+}
+
+.contact-premium-v2 .contact-v2-form {
+  padding: clamp(2rem, 4vw, 3.5rem);
+  border: 1px solid rgba(101, 61, 78, .10);
+  border-radius: 28px 28px 62px 28px;
+  background: #fff;
+  box-shadow: 0 22px 58px rgba(75, 36, 52, .055);
+}
+
+.contact-premium-v2 .contact-v2-form-heading h2,
+.contact-premium-v2 .contact-v2-info-heading h2,
+.contact-premium-v2 .contact-v2-map-heading h2,
+.contact-premium-v2 .contact-v2-process h2 {
+  font-family: 'Playfair Display', Georgia, serif;
+  letter-spacing: -.045em;
+}
+
+.contact-premium-v2 .contact-v2-fields input,
+.contact-premium-v2 .contact-v2-fields textarea {
+  border-color: rgba(103, 62, 79, .13);
+  border-radius: 11px;
+  background: #fffdfc;
+}
+
+.contact-premium-v2 .contact-v2-info {
+  position: sticky;
+  top: 7.5rem;
+  padding: 2rem 0 0;
+  border-top: 1px solid rgba(101, 61, 78, .13);
+  background: transparent;
+  box-shadow: none;
+}
+
+.contact-premium-v2 .contact-v2-info-list > div {
+  border-bottom-color: rgba(101, 61, 78, .12);
+}
+
+.contact-premium-v2 .contact-v2-map-section {
+  padding: clamp(5.4rem, 7vw, 7rem) 0;
+  background: linear-gradient(180deg, #fff9f6, #fffdfb);
+}
+
+.contact-premium-v2 .contact-v2-map-card {
+  border-radius: 28px 28px 64px 28px;
+  box-shadow: 0 22px 58px rgba(75, 36, 52, .07);
+}
+
+.contact-premium-v2 .contact-v2-process-section {
+  padding: clamp(5rem, 7vw, 6.5rem) 0;
+  background: #fffdfb;
+}
+
+.contact-premium-v2 .contact-v2-process-grid {
+  gap: 0;
+  border-top: 1px solid rgba(101, 61, 78, .12);
+  border-bottom: 1px solid rgba(101, 61, 78, .12);
+}
+
+.contact-premium-v2 .contact-v2-process-grid article {
+  border-radius: 0;
+  border: 0;
+  border-right: 1px solid rgba(101, 61, 78, .12);
+  background: transparent;
+  box-shadow: none;
+}
+
+.contact-premium-v2 .contact-v2-process-grid article:last-child {
+  border-right: 0;
+}
+
+@media (max-width: 1040px) {
+  .pricing-premium-v2 .pricing-v2-hero-grid,
+  .pricing-premium-v2 .pricing-v2-section-head,
+  .contact-premium-v2 .contact-v2-hero-grid,
+  .contact-premium-v2 .contact-v2-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pricing-premium-v2 .pricing-v2-hero-visual,
+  .contact-premium-v2 .contact-v2-hero-visual {
+    min-height: 520px;
+  }
+
+  .contact-premium-v2 .contact-v2-info {
+    position: static;
+    top: auto;
+  }
+}
+
+@media (max-width: 700px) {
+  .pricing-premium-v2 .pricing-v2-hero-editorial,
+  .contact-premium-v2 .contact-v2-hero-editorial {
+    padding-top: 3.4rem;
+    padding-bottom: 4.6rem;
+  }
+
+  .pricing-premium-v2 .pricing-v2-hero-copy h1,
+  .contact-premium-v2 .contact-v2-hero-copy h1 {
+    font-size: clamp(3rem, 15vw, 4.7rem);
+  }
+
+  .pricing-premium-v2 .pricing-v2-hero-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .pricing-premium-v2 .pricing-v2-hero-actions .button,
+  .contact-premium-v2 .contact-v2-hero-cta {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .pricing-premium-v2 .pricing-v2-hero-visual,
+  .contact-premium-v2 .contact-v2-hero-visual {
+    min-height: 380px;
+    border-radius: 26px 26px 56px 26px;
+  }
+
+  .contact-premium-v2 .contact-v2-direct {
+    grid-template-columns: 1fr;
+  }
+
+  .contact-premium-v2 .contact-v2-direct a,
+  .contact-premium-v2 .contact-v2-direct a + a {
+    padding: .9rem 0;
+    border-right: 0;
+    border-bottom: 1px solid rgba(100, 61, 77, .10);
+  }
+
+  .contact-premium-v2 .contact-v2-direct a:last-child {
+    border-bottom: 0;
+  }
+
+  .contact-premium-v2 .contact-v2-form {
+    padding: 1.6rem 1.2rem 1.8rem;
+    border-radius: 24px 24px 48px 24px;
+  }
+
+  .contact-premium-v2 .contact-v2-process-grid {
+    display: block;
+  }
+
+  .contact-premium-v2 .contact-v2-process-grid article {
+    border-right: 0;
+    border-bottom: 1px solid rgba(101, 61, 78, .12);
+  }
+
+  .contact-premium-v2 .contact-v2-process-grid article:last-child {
+    border-bottom: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pricing-premium-v2 .pricing-v2-card {
+    transition: none;
+  }
+}

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router'
 import DashboardShell from '../../components/DashboardShell'
 import PortalEmptyState from '../../components/PortalEmptyState'
 import { useAuth } from '../../features/auth/AuthProvider'
@@ -33,6 +34,13 @@ function typeLabel(value: NoticeView['type']): string {
   if (value === 'ASSIGNMENT') return 'Tarea'
   if (value === 'SYSTEM') return 'Sistema'
   return 'General'
+}
+
+function noticeDestination(value: NoticeView['type']): { to: string; label: string } | null {
+  if (value === 'CLASS') return { to: '/alumno/clases', label: 'Abrir Mis clases' }
+  if (value === 'MATERIAL') return { to: '/alumno/material', label: 'Abrir Material' }
+  if (value === 'ASSIGNMENT') return { to: '/alumno/tareas', label: 'Abrir Tareas' }
+  return null
 }
 
 export default function StudentNotificationsPage() {
@@ -88,34 +96,41 @@ export default function StudentNotificationsPage() {
 
   return (
     <DashboardShell role="Alumno" name="Alumno" nav={[...studentNav]}>
-      <div className="dashboard-content student-files-page">
-        <header className="student-page-heading">
-          <div><span className="eyebrow">COMUNICACIONES</span><h2>Avisos</h2><p>Novedades sobre clases, material, tareas y comunicaciones de la academia.</p></div>
-          <div className="private-space-badge"><strong>{unread}</strong><span>sin leer</span></div>
+      <div className="dashboard-content student-files-page student-notifications-phase10f">
+        <header className="student-page-heading student-notifications-heading10">
+          <div><span className="eyebrow">COMUNICACIONES</span><h2>Avisos</h2><p>Clases, material, tareas y comunicaciones de la academia, con acciones claras para que sepas qué revisar.</p></div>
+          <div className="private-space-badge"><strong>{unread}</strong><span>{unread === 1 ? 'aviso sin leer' : 'avisos sin leer'}</span></div>
         </header>
 
         {loading && <div className="cms-notice" role="status">Cargando avisos…</div>}
         {error && <div className="cms-notice auth-error" role="alert">{error}</div>}
 
-        <section className="panel media-toolbar-panel">
+        <section className="panel media-toolbar-panel student-notifications-toolbar10" aria-label="Filtrar avisos">
           <div className="filter-pills">
             <button type="button" className={filter === 'ALL' ? 'active' : ''} onClick={() => setFilter('ALL')}>Todos</button>
             <button type="button" className={filter === 'UNREAD' ? 'active' : ''} onClick={() => setFilter('UNREAD')}>Sin leer · {unread}</button>
           </div>
         </section>
 
-        <section className="panel student-notice-list">
-          {visible.map((item) => (
-            <article key={item.id} className={item.readAt ? 'read' : 'unread'} onClick={() => void markRead(item)}>
-              <span className="student-notice-dot" />
-              <div>
-                <div className="student-notice-meta"><span>{typeLabel(item.type)}</span><small>{formatDate(item.created)}</small></div>
-                <h3>{item.title}</h3>
-                <p>{item.body}</p>
-              </div>
-              <span className={`status ${item.readAt ? 'success' : 'info'}`}>{item.readAt ? 'Leído' : 'Nuevo'}</span>
-            </article>
-          ))}
+        <section className="panel student-notice-list student-notice-list10" aria-label="Lista de avisos">
+          {visible.map((item) => {
+            const destination = noticeDestination(item.type)
+            return (
+              <article key={item.id} className={item.readAt ? 'read' : 'unread'}>
+                <span className="student-notice-dot" aria-hidden="true" />
+                <div className="student-notice-copy10">
+                  <div className="student-notice-meta"><span>{typeLabel(item.type)}</span><small>{formatDate(item.created)}</small></div>
+                  <h3>{item.title}</h3>
+                  <p>{item.body}</p>
+                  <div className="student-notice-actions10">
+                    {destination && <Link to={destination.to}>{destination.label} →</Link>}
+                    {!item.readAt && <button type="button" onClick={() => void markRead(item)}>Marcar como leído</button>}
+                  </div>
+                </div>
+                <span className={`status ${item.readAt ? 'success' : 'info'}`}>{item.readAt ? 'Leído' : 'Nuevo'}</span>
+              </article>
+            )
+          })}
           {!loading && visible.length === 0 && (
             <PortalEmptyState
               title={filter === 'UNREAD' ? 'No tienes avisos pendientes' : 'Todavía no hay avisos'}

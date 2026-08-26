@@ -18,6 +18,7 @@ export type BlogPostRecord = RecordModel & {
   excerpt: string
   content: string
   cover_image: string
+  media?: string[]
   category: string
   author: string
   status: BlogStatus
@@ -36,9 +37,17 @@ export type SaveBlogPostInput = {
   content: string
   category?: string
   coverImage?: File
+  mediaFiles?: File[]
+  removedMedia?: string[]
   status: BlogStatus
   seoTitle?: string
   seoDescription?: string
+}
+
+export type BlogMediaItem = {
+  name: string
+  url: string
+  type: 'IMAGE' | 'VIDEO'
 }
 
 export function slugifyBlogTitle(value: string): string {
@@ -58,6 +67,23 @@ export async function listPublishedBlogPosts(): Promise<BlogPostRecord[]> {
     sort: '-published_at',
     expand: 'category',
   })
+}
+
+export async function getPublishedBlogPostBySlug(slug: string): Promise<BlogPostRecord> {
+  const safeSlug = slug.trim().toLowerCase()
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(safeSlug)) throw new Error('Slug de artículo no válido.')
+
+  const record = await pb.collection(collections.blogPosts).getFirstListItem<BlogPostRecord>(
+    `slug = "${safeSlug}" && status = "PUBLISHED"`,
+    { expand: 'category' },
+  )
+
+  const publishedAt = new Date(record.published_at)
+  if (!record.published_at || Number.isNaN(publishedAt.getTime()) || publishedAt.getTime() > Date.now()) {
+    throw new Error('El artículo todavía no está publicado.')
+  }
+
+  return record
 }
 
 export async function listAdminBlogPosts(): Promise<BlogPostRecord[]> {
@@ -93,6 +119,7 @@ export async function createBlogPost(input: SaveBlogPostInput): Promise<BlogPost
 
   if (input.category) data.set('category', input.category)
   if (input.coverImage) data.set('cover_image', input.coverImage)
+  input.mediaFiles?.forEach((file) => data.append('media', file))
   if (input.status === 'PUBLISHED') data.set('published_at', new Date().toISOString())
 
   return pb.collection(collections.blogPosts).create<BlogPostRecord>(data)
@@ -113,6 +140,8 @@ export async function updateBlogPost(id: string, input: SaveBlogPostInput): Prom
   data.set('category', input.category || '')
 
   if (input.coverImage) data.set('cover_image', input.coverImage)
+  input.mediaFiles?.forEach((file) => data.append('media+', file))
+  input.removedMedia?.forEach((filename) => data.append('media-', filename))
   if (input.status === 'PUBLISHED') data.set('published_at', new Date().toISOString())
 
   return pb.collection(collections.blogPosts).update<BlogPostRecord>(id, data)
@@ -125,4 +154,15 @@ export async function deleteBlogPost(id: string): Promise<boolean> {
 export function getBlogCoverUrl(record: BlogPostRecord, thumb = '600x400'): string {
   if (!record.cover_image) return ''
   return pb.files.getURL(record, record.cover_image, { thumb })
+}
+
+export function getBlogMediaItems(record: BlogPostRecord, thumb = '1200x900'): BlogMediaItem[] {
+  return (record.media || []).map((name) => {
+    const type = /\.(?:mp4|webm)$/i.test(name) ? 'VIDEO' : 'IMAGE'
+    return {
+      name,
+      type,
+      url: pb.files.getURL(record, name, type === 'IMAGE' ? { thumb } : undefined),
+    }
+  })
 }

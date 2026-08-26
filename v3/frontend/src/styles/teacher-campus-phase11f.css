@@ -1,0 +1,261 @@
+/* FASE 11.6 · TAREAS
+   Plan de trabajo docente: planificar, publicar y cerrar actividades.
+   No modifica permisos, contratos de tareas ni límite de adjuntos. */
+
+.teacher-assignments-page{
+  --teacher-ink:#342a31;
+  --teacher-muted:#7d6c74;
+  --teacher-plum:#4a2a3a;
+  --teacher-rose:#b34f76;
+  --teacher-rose-soft:#f8e9ef;
+  --teacher-paper:#fffdfc;
+  --teacher-line:#eadfe3;
+  gap:28px;
+}
+
+.teacher-assignments-page>.teacher-page-heading{
+  position:relative;
+  align-items:flex-start;
+  padding:8px 2px 24px;
+  border-bottom:1px solid var(--teacher-line);
+}
+.teacher-assignments-page>.teacher-page-heading::before{
+  content:'Plan de trabajo';
+  position:absolute;
+  top:-11px;
+  left:2px;
+  color:var(--teacher-rose);
+  font-size:.63rem;
+  font-weight:900;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+}
+.teacher-assignments-page>.teacher-page-heading .eyebrow{margin-top:10px}
+.teacher-assignments-page>.teacher-page-heading h2{
+  margin:8px 0 9px;
+  color:var(--teacher-ink);
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:clamp(2.65rem,4.5vw,4.45rem);
+  line-height:.98;
+  letter-spacing:-.04em;
+}
+.teacher-assignments-page>.teacher-page-heading p{max-width:760px;color:var(--teacher-muted)}
+.teacher-assignments-page>.teacher-page-heading>.status{
+  padding:10px 14px;
+  border:1px solid #e7d8de;
+  border-radius:999px;
+  background:#fffafa;
+  box-shadow:none;
+}
+
+.teacher-assignments-page .teacher-assignment-workspace{
+  grid-template-columns:minmax(315px,.78fr) minmax(0,1.22fr);
+  gap:22px;
+  align-items:start;
+}
+.teacher-assignments-page .teacher-assignment-form,
+.teacher-assignments-page .teacher-assignment-plan{
+  overflow:hidden;
+  border-color:var(--teacher-line);
+  border-radius:26px;
+  box-shadow:0 15px 42px rgba(64,35,48,.035);
+}
+.teacher-assignments-page .teacher-assignment-form{
+  position:sticky;
+  top:94px;
+  background:linear-gradient(155deg,#fffdfc,#fff6f9);
+}
+.teacher-assignments-page .teacher-assignment-form::before{
+  content:'';
+  position:absolute;
+  inset:0 auto 0 0;
+  width:4px;
+  background:linear-gradient(var(--teacher-rose),#d98ca7);
+}
+.teacher-assignments-page .teacher-assignment-form>.panel-heading,
+.teacher-assignments-page .teacher-assignment-plan>.panel-heading{
+  padding-bottom:16px;
+  border-bottom:1px solid var(--teacher-line);
+}
+.teacher-assignments-page .teacher-assignment-form>.panel-heading h3,
+.teacher-assignments-page .teacher-assignment-plan>.panel-heading h3{
+  color:var(--teacher-ink);
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:1.85rem;
+}
+.teacher-assignments-page .teacher-assignment-form-intro{
+  margin:0 0 18px;
+  color:var(--teacher-muted);
+  font-size:.92rem;
+  line-height:1.65;
+}
+.teacher-assignments-page .teacher-assignment-form .field-stack>span{
+  color:#65545d;
+  font-size:.74rem;
+  font-weight:800;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+.teacher-assignments-page .teacher-assignment-form input,
+.teacher-assignments-page .teacher-assignment-form select,
+.teacher-assignments-page .teacher-assignment-form textarea{
+  border-color:#dfd2d7;
+  background:rgba(255,255,255,.84);
+}
+.teacher-assignments-page .teacher-assignment-form input:focus,
+.teacher-assignments-page .teacher-assignment-form select:focus,
+.teacher-assignments-page .teacher-assignment-form textarea:focus{
+  border-color:#c96b8d;
+  box-shadow:0 0 0 3px rgba(179,79,118,.11);
+}
+.teacher-assignments-page .teacher-assignment-dropzone{
+  min-height:118px;
+  border:1.5px dashed #d9bcc7;
+  border-radius:20px;
+  background:rgba(255,250,251,.75);
+}
+.teacher-assignments-page .teacher-assignment-draft{
+  padding:12px 14px;
+  border:1px solid #eadde2;
+  border-radius:14px;
+  background:#fffafa;
+}
+.teacher-assignments-page .teacher-assignment-draft span{color:#674f5a;font-weight:700}
+.teacher-assignments-page .teacher-assignment-form>.button{min-height:46px}
+
+.teacher-assignments-page .teacher-assignment-plan{background:rgba(255,253,252,.9)}
+.teacher-assignments-page .teacher-assignment-list{display:grid;gap:0}
+.teacher-assignments-page .teacher-assignment-record{
+  position:relative;
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  gap:15px;
+  align-items:start;
+  padding:18px 3px;
+  border-bottom:1px solid #eee3e7;
+  background:transparent;
+}
+.teacher-assignments-page .teacher-assignment-record:last-child{border-bottom:0}
+.teacher-assignments-page .teacher-assignment-record::before{
+  content:'';
+  position:absolute;
+  top:18px;
+  bottom:18px;
+  left:-12px;
+  width:3px;
+  border-radius:99px;
+  background:transparent;
+}
+.teacher-assignments-page .teacher-assignment-record.assignment-published::before{background:#c56c8c}
+.teacher-assignments-page .teacher-assignment-record.assignment-draft::before{background:#d5c3ca}
+.teacher-assignments-page .teacher-assignment-record.assignment-closed::before{background:#a8b9aa}
+
+.teacher-assignments-page .teacher-record-icon{
+  display:grid;
+  width:50px;
+  height:50px;
+  place-items:center;
+  border:1px solid #e5d1d9;
+  border-radius:16px;
+  background:linear-gradient(145deg,#fff,#faedf2);
+  color:var(--teacher-plum);
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:1.15rem;
+  font-weight:800;
+}
+.teacher-assignments-page .teacher-assignment-copy{display:grid;gap:7px;min-width:0}
+.teacher-assignments-page .teacher-assignment-title-row{display:flex;align-items:center;gap:10px;justify-content:space-between}
+.teacher-assignments-page .teacher-assignment-title-row>strong{
+  overflow:hidden;
+  color:var(--teacher-ink);
+  font-size:1.02rem;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.teacher-assignments-page .teacher-assignment-status{
+  flex:none;
+  padding:4px 8px;
+  border-radius:999px;
+  font-size:.67rem;
+  font-weight:900;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+}
+.teacher-assignments-page .status-published{background:#f7e5ec;color:#813b57}
+.teacher-assignments-page .status-draft{background:#f0ecee;color:#75636b}
+.teacher-assignments-page .status-closed{background:#edf2ed;color:#506a55}
+.teacher-assignments-page .teacher-assignment-audience{
+  display:inline-flex;
+  width:max-content;
+  max-width:100%;
+  padding:4px 8px;
+  overflow:hidden;
+  border-radius:999px;
+  background:#fff2f6;
+  color:#7f3c58;
+  font-size:.71rem;
+  font-weight:800;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.teacher-assignments-page .teacher-assignment-due{
+  display:flex;
+  gap:8px;
+  align-items:baseline;
+  color:var(--teacher-muted);
+  font-size:.76rem;
+}
+.teacher-assignments-page .teacher-assignment-due span{font-weight:700}
+.teacher-assignments-page .teacher-assignment-due strong{color:#5c4b53;font-weight:800}
+.teacher-assignments-page .teacher-assignment-due.due-past strong{color:#a64b62}
+.teacher-assignments-page .teacher-assignment-due.due-future strong{color:#765067}
+.teacher-assignments-page .teacher-assignment-copy p{
+  display:-webkit-box;
+  margin:1px 0 0;
+  overflow:hidden;
+  color:var(--teacher-muted);
+  font-size:.85rem;
+  line-height:1.5;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+}
+.teacher-assignments-page .teacher-record-actions{align-self:center}
+.teacher-assignments-page .teacher-record-actions button{
+  min-height:38px;
+  padding:8px 11px;
+  border-color:#dfd0d6;
+  border-radius:11px;
+  color:var(--teacher-plum);
+}
+.teacher-assignments-page .teacher-record-actions button:hover{background:#fff5f8;border-color:#ce9bad}
+.teacher-assignments-page .teacher-record-actions .button-danger{border-color:#e4b5c1;color:#963e58;background:#fff7f9}
+
+@media (max-width:1050px){
+  .teacher-assignments-page .teacher-assignment-workspace{grid-template-columns:minmax(280px,.9fr) minmax(0,1.1fr)}
+  .teacher-assignments-page .teacher-assignment-form{position:static}
+  .teacher-assignments-page .teacher-assignment-record{grid-template-columns:auto minmax(0,1fr)}
+  .teacher-assignments-page .teacher-record-actions{grid-column:2}
+}
+@media (max-width:820px){
+  .teacher-assignments-page .teacher-assignment-workspace{grid-template-columns:1fr}
+  .teacher-assignments-page>.teacher-page-heading{gap:16px}
+  .teacher-assignments-page>.teacher-page-heading h2{font-size:clamp(2.45rem,9vw,3.65rem)}
+  .teacher-assignments-page .teacher-assignment-form,
+  .teacher-assignments-page .teacher-assignment-plan{border-radius:22px}
+}
+@media (max-width:560px){
+  .teacher-assignments-page{gap:22px}
+  .teacher-assignments-page>.teacher-page-heading{padding-bottom:19px}
+  .teacher-assignments-page>.teacher-page-heading>.status{align-self:flex-start}
+  .teacher-assignments-page .teacher-assignment-record{grid-template-columns:44px minmax(0,1fr);gap:11px;padding:15px 0}
+  .teacher-assignments-page .teacher-record-icon{width:44px;height:44px;border-radius:14px}
+  .teacher-assignments-page .teacher-assignment-title-row{align-items:flex-start;flex-direction:column;gap:6px}
+  .teacher-assignments-page .teacher-assignment-title-row>strong{white-space:normal}
+  .teacher-assignments-page .teacher-assignment-due{align-items:flex-start;flex-direction:column;gap:2px}
+  .teacher-assignments-page .teacher-record-actions{grid-column:1/-1;justify-content:flex-end}
+  .teacher-assignments-page .teacher-record-actions button{min-height:42px}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .teacher-assignments-page *{scroll-behavior:auto}
+}

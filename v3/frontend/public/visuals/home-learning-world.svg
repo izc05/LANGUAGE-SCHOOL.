@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 760" role="img" aria-labelledby="title desc">
+<title id="title">Ilustración de aprendizaje global</title><desc id="desc">Globo, libros, portátil, conversación y viaje en una composición rosa y perla.</desc>
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff8fa"/><stop offset=".55" stop-color="#f8e7ee"/><stop offset="1" stop-color="#efd5df"/></linearGradient>
+  <linearGradient id="rose" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e66593"/><stop offset="1" stop-color="#b92367"/></linearGradient>
+  <linearGradient id="paper" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#fff5f7"/></linearGradient>
+  <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="22" stdDeviation="22" flood-color="#6b334a" flood-opacity=".14"/></filter>
+</defs>
+<rect width="960" height="760" rx="58" fill="url(#bg)"/>
+<circle cx="754" cy="138" r="178" fill="#fff" opacity=".42"/>
+<circle cx="144" cy="635" r="238" fill="#fff" opacity=".32"/>
+<path d="M77 173C207 66 426 45 611 116c151 58 231 149 269 256" fill="none" stroke="#d74f7e" stroke-width="3" stroke-linecap="round" stroke-dasharray="10 16" opacity=".38"/>
+<path d="M848 340l-42-13 17-11 8-29 9 3-3 26 18 7z" fill="#cc3b72" opacity=".72"/>
+<g transform="translate(506 180)" filter="url(#shadow)">
+  <circle cx="150" cy="150" r="138" fill="url(#paper)" stroke="#cf4f7d" stroke-width="7"/>
+  <ellipse cx="150" cy="150" rx="108" ry="138" fill="none" stroke="#df8eaa" stroke-width="3"/>
+  <ellipse cx="150" cy="150" rx="58" ry="138" fill="none" stroke="#e6a9bc" stroke-width="2"/>
+  <path d="M14 150h272M36 92h228M36 208h228" fill="none" stroke="#e3a0b6" stroke-width="3" opacity=".85"/>
+  <path d="M66 80c24-28 56-40 87-35 18 3 28 17 20 28-10 14-33 7-45 20-8 9-2 27-17 31-19 5-31-26-45-44zm126 95c20-8 41 4 50 21 8 14 3 33-9 42-11 8-17 25-35 24-19-2-28-25-19-40 7-11 2-23 13-47zM91 191c16-12 34-8 42 4 7 11 4 29-8 36-12 8-16 25-31 26-17 0-27-22-18-35 7-11 4-22 15-31z" fill="#f2c8d6" opacity=".8"/>
+  <path d="M19 157c42 47 226 51 268-7" fill="none" stroke="#bd2c69" stroke-width="7" stroke-linecap="round"/>
+</g>
+<g transform="translate(86 315)" filter="url(#shadow)">
+  <rect x="0" y="196" width="350" height="55" rx="16" fill="#bc2e69"/>
+  <rect x="22" y="145" width="330" height="55" rx="16" fill="#df6f95"/>
+  <rect x="7" y="96" width="292" height="52" rx="16" fill="#f0bacb"/>
+  <path d="M29 117h177M43 168h214M24 218h238" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".8"/>
+  <rect x="72" y="0" width="300" height="174" rx="25" fill="#40313a"/>
+  <rect x="88" y="16" width="268" height="142" rx="14" fill="#fff9fa"/>
+  <path d="M109 131c48-45 92-55 133-34 36 18 50 18 89-8" fill="none" stroke="#d94f7e" stroke-width="7" stroke-linecap="round"/>
+  <circle cx="155" cy="87" r="22" fill="#f3d1dc"/><circle cx="222" cy="76" r="28" fill="#e9a4bb"/><circle cx="287" cy="87" r="18" fill="#c84b77"/>
+  <path d="M44 171h350l28 55H16z" fill="#e7c7d2"/>
+</g>
+<g transform="translate(92 84)">
+  <rect x="0" y="0" width="265" height="120" rx="30" fill="#fff" opacity=".9" filter="url(#shadow)"/>
+  <path d="M49 49c0-20 16-35 36-35h74c20 0 36 15 36 35v10c0 20-16 35-36 35h-37l-25 19 6-19H85c-20 0-36-15-36-35z" fill="#f9e1e9"/>
+  <circle cx="90" cy="54" r="8" fill="#cf3b73"/><circle cx="123" cy="54" r="8" fill="#df7497"/><circle cx="156" cy="54" r="8" fill="#efb3c6"/>
+</g>
+<g transform="translate(750 492)" filter="url(#shadow)">
+  <rect width="130" height="136" rx="32" fill="#fff" opacity=".92"/>
+  <path d="M42 50c8-15 39-15 47 0v27c0 14-10 25-23 25S42 91 42 77z" fill="none" stroke="#ca3a71" stroke-width="6"/>
+  <path d="M87 59h12c18 0 20 29 1 34H88" fill="none" stroke="#ca3a71" stroke-width="6"/>
+  <path d="M35 110h64" stroke="#e6a2b9" stroke-width="6" stroke-linecap="round"/>
+</g>
+<g opacity=".75" fill="#c93870">
+  <circle cx="423" cy="126" r="7"/><circle cx="870" cy="202" r="5"/><circle cx="702" cy="635" r="6"/><circle cx="453" cy="654" r="4"/>
+</g>
+<g stroke="#d45782" stroke-width="4" fill="none" stroke-linecap="round" opacity=".55"><path d="M403 226c34 18 58 47 70 82"/><path d="M689 578c31-19 67-27 103-21"/></g>
+</svg>

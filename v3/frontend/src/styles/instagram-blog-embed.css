@@ -1,0 +1,102 @@
+.instagram-blog-consent {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+  margin: 34px 0;
+  padding: clamp(22px, 4vw, 32px);
+  border: 1px solid rgba(188, 65, 107, .15);
+  border-radius: 26px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(217, 84, 128, .12), transparent 17rem),
+    linear-gradient(145deg, #fff 0%, #fff7f8 100%);
+  box-shadow: 0 18px 48px rgba(70, 42, 56, .08);
+}
+
+.instagram-blog-consent-mark {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  border-radius: 18px;
+  background: linear-gradient(145deg, #da5a82, #ad315e);
+  color: #fff;
+  font-size: 1.75rem;
+  box-shadow: 0 12px 28px rgba(173, 49, 94, .22);
+}
+
+.instagram-blog-consent h2 {
+  margin: 7px 0 8px;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(1.55rem, 3vw, 2.2rem);
+  font-weight: 500;
+  line-height: 1.08;
+}
+
+.instagram-blog-consent p {
+  max-width: 620px;
+  margin: 0;
+  color: #705d68;
+  font-size: .98rem;
+  line-height: 1.65;
+}
+
+.instagram-blog-consent-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.instagram-blog-embed {
+  width: min(100%, 660px);
+  min-height: 420px;
+  margin: 38px auto;
+  overflow: hidden;
+  border-radius: 22px;
+}
+
+.instagram-blog-embed .instagram-media {
+  max-width: 100% !important;
+}
+
+.editor-toolbar button.instagram-insert-button {
+  padding: 4px 9px;
+  border: 1px solid rgba(184, 55, 98, .18);
+  border-radius: 999px;
+  background: #fff6f8;
+  color: #a9325e;
+  font: inherit;
+  font-size: .75rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.editor-toolbar button.instagram-insert-button:hover,
+.editor-toolbar button.instagram-insert-button:focus-visible {
+  border-color: rgba(184, 55, 98, .42);
+  background: #fff;
+}
+
+@media (max-width: 560px) {
+  .instagram-blog-consent {
+    grid-template-columns: 1fr;
+    border-radius: 20px;
+  }
+
+  .instagram-blog-consent-mark {
+    width: 50px;
+    height: 50px;
+    border-radius: 15px;
+  }
+
+  .instagram-blog-consent-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .instagram-blog-consent-actions .button {
+    width: 100%;
+    justify-content: center;
+  }
+}

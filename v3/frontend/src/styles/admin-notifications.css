@@ -1,99 +1,378 @@
-.notifications-admin-page {
+/* FASE 12.3 · ADMIN OPERACION — AVISOS
+   Refinado visual del centro de avisos sin cambiar destinatarios, tipos ni persistencia. */
+
+.dashboard-shell-admin .notifications-admin-page {
+  --admin-operation-ink: #382b33;
+  --admin-operation-muted: #806b76;
+  --admin-operation-plum: #4a2d3b;
+  --admin-operation-plum-deep: #281c23;
+  --admin-operation-pink: #bd4f79;
+  --admin-operation-pink-soft: #f8e8ee;
+  --admin-operation-paper: #fffdfb;
+  --admin-operation-line: rgba(105, 62, 80, 0.11);
   display: grid;
-  gap: 1.2rem;
+  gap: 22px;
+  max-width: 1460px;
+  margin: 0 auto;
+  padding-top: 30px;
+  padding-bottom: 52px;
 }
 
-.notification-admin-metrics {
+.dashboard-shell-admin .notifications-admin-page > .cms-page-heading {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 30px;
+  min-height: 220px;
+  overflow: hidden;
+  padding: 38px 42px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 28px;
+  color: #f8eef2;
+  background:
+    radial-gradient(circle at 84% 16%, rgba(218, 112, 151, 0.22), transparent 23rem),
+    linear-gradient(132deg, var(--admin-operation-plum) 0%, var(--admin-operation-plum-deep) 100%);
+  box-shadow: 0 26px 64px rgba(57, 31, 43, 0.13);
+}
+
+.dashboard-shell-admin .notifications-admin-page > .cms-page-heading::after {
+  content: '';
+  position: absolute;
+  right: -92px;
+  bottom: -152px;
+  width: 350px;
+  height: 350px;
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 50%;
+  box-shadow: 0 0 0 52px rgba(255, 255, 255, 0.018), 0 0 0 104px rgba(255, 255, 255, 0.012);
+  pointer-events: none;
+}
+
+.dashboard-shell-admin .notifications-admin-page > .cms-page-heading > * {
+  position: relative;
+  z-index: 1;
+}
+
+.dashboard-shell-admin .notifications-admin-page > .cms-page-heading > div:first-child {
+  max-width: 760px;
+}
+
+.dashboard-shell-admin .notifications-admin-page > .cms-page-heading .eyebrow {
+  color: #efb3c8;
+}
+
+.dashboard-shell-admin .notifications-admin-page > .cms-page-heading h2 {
+  margin: 10px 0 12px;
+  color: #fff;
+  font-size: clamp(2.25rem, 3.6vw, 3.9rem);
+  line-height: 1;
+  letter-spacing: -0.035em;
+}
+
+.dashboard-shell-admin .notifications-admin-page > .cms-page-heading p {
+  max-width: 650px;
+  margin: 0;
+  color: #d9c7cf;
+  font-size: 0.98rem;
+  line-height: 1.7;
+}
+
+.dashboard-shell-admin .notifications-admin-page .notification-admin-metrics {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.55rem;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
-.notification-admin-grid {
+.dashboard-shell-admin .notifications-admin-page > .cms-page-heading .status {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.09);
+  box-shadow: none;
+  backdrop-filter: blur(7px);
+}
+
+.dashboard-shell-admin .notifications-admin-page .notification-admin-grid {
   display: grid;
-  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-  gap: 1.25rem;
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  gap: 16px;
   align-items: start;
 }
 
-.notification-compose,
-.notification-history {
+.dashboard-shell-admin .notifications-admin-page .notification-compose,
+.dashboard-shell-admin .notifications-admin-page .notification-history {
   display: grid;
-  gap: 1rem;
+  gap: 17px;
+  margin: 0;
+  padding: 26px 28px;
+  border: 1px solid var(--admin-operation-line);
+  border-radius: 24px;
+  background: rgba(255, 253, 251, 0.88);
+  box-shadow: 0 14px 36px rgba(70, 36, 50, 0.04);
 }
 
-.notification-recipient-mode {
+.dashboard-shell-admin .notifications-admin-page .notification-compose {
+  position: sticky;
+  top: 96px;
+}
+
+.dashboard-shell-admin .notifications-admin-page .panel-heading {
+  padding-bottom: 4px;
+  border: 0;
+}
+
+.dashboard-shell-admin .notifications-admin-page .panel-heading .eyebrow {
+  color: #ac5876;
+}
+
+.dashboard-shell-admin .notifications-admin-page .panel-heading h3 {
+  margin-top: 5px;
+  color: var(--admin-operation-ink);
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(1.55rem, 2vw, 2rem);
+  line-height: 1.08;
+}
+
+.dashboard-shell-admin .notifications-admin-page .notification-recipient-mode {
   display: grid;
-  gap: 0.6rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+  margin: 0;
   padding: 0;
   border: 0;
 }
 
-.notification-recipient-mode legend {
-  margin-bottom: 0.5rem;
-  font-size: 0.78rem;
-  font-weight: 800;
+.dashboard-shell-admin .notifications-admin-page .notification-recipient-mode legend {
+  grid-column: 1 / -1;
+  margin-bottom: 1px;
+  color: #8f6d7c;
+  font-size: 0.68rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
 }
 
-.notification-recipient-mode label {
+.dashboard-shell-admin .notifications-admin-page .notification-recipient-mode label {
+  min-height: 54px;
   display: flex;
   align-items: center;
-  gap: 0.55rem;
+  gap: 9px;
+  padding: 11px 13px;
+  border: 1px solid rgba(105, 62, 80, 0.09);
+  border-radius: 15px;
+  color: #5f4e56;
+  background: rgba(251, 247, 242, 0.68);
+  cursor: pointer;
 }
 
-.notification-audience-note {
-  padding: 0.85rem 0.95rem;
+.dashboard-shell-admin .notifications-admin-page .notification-recipient-mode label:has(input:checked) {
+  border-color: rgba(189, 79, 121, 0.22);
+  color: #8f3658;
+  background: #fff3f7;
+}
+
+.dashboard-shell-admin .notifications-admin-page .notification-recipient-mode input {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--admin-operation-pink);
+}
+
+.dashboard-shell-admin .notifications-admin-page .notification-audience-note {
+  padding: 13px 15px;
+  border: 1px solid rgba(189, 79, 121, 0.11);
+  border-radius: 15px;
+  color: var(--admin-operation-muted);
+  background: linear-gradient(145deg, #fff9fb, #fff3f7);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.dashboard-shell-admin .notifications-admin-page .field-stack {
+  gap: 6px;
+}
+
+.dashboard-shell-admin .notifications-admin-page .field-stack > span {
+  color: #8f6d7c;
+  font-size: 0.68rem;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.dashboard-shell-admin .notifications-admin-page .field-stack input,
+.dashboard-shell-admin .notifications-admin-page .field-stack select,
+.dashboard-shell-admin .notifications-admin-page .field-stack textarea {
+  width: 100%;
+  border: 1px solid rgba(105, 62, 80, 0.12);
   border-radius: 14px;
-  background: rgba(184, 37, 124, 0.07);
-  color: var(--text-muted, #68717a);
+  color: var(--admin-operation-ink);
+  background: #fff;
+  box-shadow: none;
 }
 
-.notification-history-list {
-  display: grid;
-  gap: 0.8rem;
+.dashboard-shell-admin .notifications-admin-page .field-stack input,
+.dashboard-shell-admin .notifications-admin-page .field-stack select {
+  min-height: 46px;
 }
 
-.notification-history-list article {
-  display: grid;
-  gap: 0.55rem;
-  padding: 0.95rem;
-  border: 1px solid rgba(28, 43, 58, 0.08);
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.68);
-}
-
-.notification-history-list article > div {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  flex-wrap: wrap;
-}
-
-.notification-history-list p {
-  margin: 0;
-  color: var(--text-muted, #68717a);
+.dashboard-shell-admin .notifications-admin-page .field-stack textarea {
+  min-height: 150px;
+  resize: vertical;
   line-height: 1.55;
 }
 
-.notification-history-list small {
-  color: var(--text-muted, #68717a);
+.dashboard-shell-admin .notifications-admin-page .field-stack input:focus,
+.dashboard-shell-admin .notifications-admin-page .field-stack select:focus,
+.dashboard-shell-admin .notifications-admin-page .field-stack textarea:focus {
+  border-color: rgba(189, 79, 121, 0.4);
+  outline: 3px solid rgba(189, 79, 121, 0.12);
 }
 
-.notification-type-chip {
+.dashboard-shell-admin .notifications-admin-page .notification-compose > .button-primary {
+  min-height: 46px;
+  justify-self: start;
+  padding-inline: 22px;
+  border-radius: 999px;
+}
+
+.dashboard-shell-admin .notifications-admin-page .notification-history-list {
+  display: grid;
+  gap: 9px;
+}
+
+.dashboard-shell-admin .notifications-admin-page .notification-history-list article {
+  display: grid;
+  gap: 8px;
+  padding: 16px 17px;
+  border: 1px solid rgba(105, 62, 80, 0.085);
+  border-radius: 17px;
+  background: #fff;
+}
+
+.dashboard-shell-admin .notifications-admin-page .notification-history-list article > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dashboard-shell-admin .notifications-admin-page .notification-history-list strong {
+  color: var(--admin-operation-ink);
+  font-size: 0.9rem;
+}
+
+.dashboard-shell-admin .notifications-admin-page .notification-history-list p {
+  margin: 0;
+  color: #675760;
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+
+.dashboard-shell-admin .notifications-admin-page .notification-history-list small {
+  color: #9a7b89;
+  font-size: 0.7rem;
+  line-height: 1.45;
+}
+
+.dashboard-shell-admin .notifications-admin-page .notification-type-chip {
+  min-height: 27px;
   display: inline-flex;
   align-items: center;
-  min-height: 26px;
-  padding: 0.22rem 0.5rem;
+  padding: 0.22rem 0.52rem;
   border-radius: 999px;
-  background: rgba(28, 43, 58, 0.08);
-  font-size: 0.7rem;
-  font-weight: 800;
+  color: #9a4969;
+  background: var(--admin-operation-pink-soft);
+  font-size: 0.64rem;
+  font-weight: 850;
+  letter-spacing: 0.05em;
+}
+
+.dashboard-shell-admin .notifications-admin-page .public-empty-state {
+  border: 1px dashed rgba(105, 62, 80, 0.16);
+  border-radius: 18px;
+  color: var(--admin-operation-muted);
+  background: rgba(251, 247, 242, 0.58);
+}
+
+.dashboard-shell-admin .notifications-admin-page button:focus-visible,
+.dashboard-shell-admin .notifications-admin-page a:focus-visible,
+.dashboard-shell-admin .notifications-admin-page input:focus-visible,
+.dashboard-shell-admin .notifications-admin-page select:focus-visible,
+.dashboard-shell-admin .notifications-admin-page textarea:focus-visible {
+  outline: 3px solid rgba(189, 79, 121, 0.42);
+  outline-offset: 3px;
+}
+
+@media (max-width: 1180px) {
+  .dashboard-shell-admin .notifications-admin-page .notification-admin-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-shell-admin .notifications-admin-page .notification-compose {
+    position: static;
+  }
 }
 
 @media (max-width: 980px) {
-  .notification-admin-grid {
+  .dashboard-shell-admin .notifications-admin-page {
+    padding-top: 24px;
+  }
+
+  .dashboard-shell-admin .notifications-admin-page > .cms-page-heading {
     grid-template-columns: 1fr;
+    min-height: 0;
+    padding: 34px;
+  }
+
+  .dashboard-shell-admin .notifications-admin-page .notification-admin-metrics {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 700px) {
+  .dashboard-shell-admin .notifications-admin-page {
+    gap: 18px;
+    padding-top: 18px;
+    padding-bottom: 36px;
+  }
+
+  .dashboard-shell-admin .notifications-admin-page > .cms-page-heading {
+    padding: 28px 23px;
+    border-radius: 23px;
+  }
+
+  .dashboard-shell-admin .notifications-admin-page > .cms-page-heading h2 {
+    font-size: clamp(2.05rem, 11vw, 3rem);
+  }
+
+  .dashboard-shell-admin .notifications-admin-page .notification-compose,
+  .dashboard-shell-admin .notifications-admin-page .notification-history {
+    padding: 22px 20px;
+    border-radius: 21px;
+  }
+
+  .dashboard-shell-admin .notifications-admin-page .notification-recipient-mode {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-shell-admin .notifications-admin-page .notification-recipient-mode legend {
+    grid-column: auto;
+  }
+
+  .dashboard-shell-admin .notifications-admin-page .notification-compose > .button-primary {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-shell-admin .notifications-admin-page * {
+    scroll-behavior: auto;
   }
 }

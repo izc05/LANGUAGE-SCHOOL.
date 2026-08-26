@@ -1,0 +1,148 @@
+/* FASE 14B · PROFESOR · FORMULARIOS CON AIRE
+   Correccion basada en capturas reales del usuario en local.
+   Clases, Material y Tareas dejan de sacrificar el formulario para agrandar el panel derecho. */
+
+@media(min-width:1181px){
+  .dashboard-shell-teacher .teacher-class-workspace{
+    grid-template-columns:minmax(430px,.92fr) minmax(0,1.08fr) !important;
+    gap:26px;
+  }
+
+  .dashboard-shell-teacher .teacher-material-workspace,
+  .dashboard-shell-teacher .teacher-assignment-workspace{
+    grid-template-columns:minmax(440px,.94fr) minmax(0,1.06fr) !important;
+    gap:26px;
+  }
+}
+
+/* El contenido del formulario no puede arrancar pegado al acento vertical. */
+.dashboard-shell-teacher .teacher-class-create,
+.dashboard-shell-teacher .teacher-material-form,
+.dashboard-shell-teacher .teacher-assignment-form{
+  padding:28px 30px 32px !important;
+}
+
+.dashboard-shell-teacher .teacher-class-create::before,
+.dashboard-shell-teacher .teacher-material-form::before,
+.dashboard-shell-teacher .teacher-assignment-form::before{
+  width:5px;
+}
+
+.dashboard-shell-teacher .teacher-class-create>.panel-heading,
+.dashboard-shell-teacher .teacher-material-form>.panel-heading,
+.dashboard-shell-teacher .teacher-assignment-form>.panel-heading{
+  margin:0 0 20px;
+  padding:0 0 18px;
+}
+
+.dashboard-shell-teacher .teacher-material-form-intro,
+.dashboard-shell-teacher .teacher-assignment-form-intro{
+  max-width:62ch;
+  margin-bottom:22px;
+  color:#66515b;
+}
+
+.dashboard-shell-teacher .teacher-class-create form,
+.dashboard-shell-teacher .teacher-material-form,
+.dashboard-shell-teacher .teacher-assignment-form{
+  row-gap:16px;
+}
+
+.dashboard-shell-teacher .teacher-class-create form>label,
+.dashboard-shell-teacher .teacher-material-form .field-stack>span,
+.dashboard-shell-teacher .teacher-assignment-form .field-stack>span{
+  color:#563f4a;
+  font-size:.76rem;
+}
+
+.dashboard-shell-teacher .teacher-class-create input,
+.dashboard-shell-teacher .teacher-class-create select,
+.dashboard-shell-teacher .teacher-class-create textarea,
+.dashboard-shell-teacher .teacher-material-form input,
+.dashboard-shell-teacher .teacher-material-form select,
+.dashboard-shell-teacher .teacher-material-form textarea,
+.dashboard-shell-teacher .teacher-assignment-form input,
+.dashboard-shell-teacher .teacher-assignment-form select,
+.dashboard-shell-teacher .teacher-assignment-form textarea{
+  min-height:50px;
+  padding-inline:15px;
+  border-radius:14px;
+}
+
+.dashboard-shell-teacher .teacher-class-create textarea,
+.dashboard-shell-teacher .teacher-material-form textarea,
+.dashboard-shell-teacher .teacher-assignment-form textarea{
+  min-height:120px;
+  padding-block:14px;
+}
+
+.dashboard-shell-teacher .teacher-date-grid{
+  gap:14px;
+}
+
+.dashboard-shell-teacher .teacher-material-dropzone,
+.dashboard-shell-teacher .teacher-assignment-dropzone{
+  min-height:138px;
+  background:#fff;
+}
+
+.dashboard-shell-teacher .teacher-class-create .button-primary,
+.dashboard-shell-teacher .teacher-material-form>.button,
+.dashboard-shell-teacher .teacher-assignment-form>.button{
+  min-height:50px;
+  margin-top:4px;
+}
+
+/* El panel derecho también gana padding para que una lista vacía no parezca una caja enorme sin intención. */
+.dashboard-shell-teacher .teacher-class-agenda,
+.dashboard-shell-teacher .teacher-material-library,
+.dashboard-shell-teacher .teacher-assignment-plan{
+  padding:28px 30px !important;
+}
+
+.dashboard-shell-teacher .teacher-class-agenda>.panel-heading,
+.dashboard-shell-teacher .teacher-material-library>.panel-heading,
+.dashboard-shell-teacher .teacher-assignment-plan>.panel-heading{
+  margin:0 0 18px;
+  padding:0 0 18px;
+}
+
+.dashboard-shell-teacher .teacher-class-agenda .portal-empty-state,
+.dashboard-shell-teacher .teacher-material-library .portal-empty-state,
+.dashboard-shell-teacher .teacher-assignment-plan .portal-empty-state{
+  min-height:150px;
+  align-content:center;
+  border-color:#e6d5dc;
+  background:#fff;
+}
+
+@media(max-width:1180px){
+  .dashboard-shell-teacher .teacher-class-create,
+  .dashboard-shell-teacher .teacher-material-form,
+  .dashboard-shell-teacher .teacher-assignment-form,
+  .dashboard-shell-teacher .teacher-class-agenda,
+  .dashboard-shell-teacher .teacher-material-library,
+  .dashboard-shell-teacher .teacher-assignment-plan{
+    padding:26px 28px 30px !important;
+  }
+}
+
+@media(max-width:560px){
+  .dashboard-shell-teacher .teacher-class-create,
+  .dashboard-shell-teacher .teacher-material-form,
+  .dashboard-shell-teacher .teacher-assignment-form,
+  .dashboard-shell-teacher .teacher-class-agenda,
+  .dashboard-shell-teacher .teacher-material-library,
+  .dashboard-shell-teacher .teacher-assignment-plan{
+    padding:22px 18px 24px !important;
+  }
+
+  .dashboard-shell-teacher .teacher-class-create input,
+  .dashboard-shell-teacher .teacher-class-create select,
+  .dashboard-shell-teacher .teacher-material-form input,
+  .dashboard-shell-teacher .teacher-material-form select,
+  .dashboard-shell-teacher .teacher-assignment-form input,
+  .dashboard-shell-teacher .teacher-assignment-form select{
+    min-height:48px;
+  }
+}

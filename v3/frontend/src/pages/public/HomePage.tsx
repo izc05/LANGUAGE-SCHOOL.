@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { type CSSProperties, useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import SiteShell from '../../components/SiteShell'
 import { getMediaById, getMediaUrl } from '../../services/pocketbase/media'
@@ -9,22 +9,72 @@ import {
 } from '../../services/pocketbase/siteContent'
 
 const programs = [
-  { tag: '6–12 años', title: 'Kids', text: 'Una base sólida con vocabulario, comprensión, juegos guiados y speaking progresivo.' },
-  { tag: '13–17 años', title: 'Teens', text: 'Refuerzo, confianza al hablar y preparación orientada a objetivos académicos.' },
-  { tag: 'Adultos', title: 'English for life', text: 'Inglés práctico para trabajo, viajes, conversación y desarrollo personal.' },
-  { tag: 'A2 · B1 · B2 · C1', title: 'Exámenes', text: 'Preparación estructurada por destrezas, simulacros y corrección personalizada.' },
-]
+  { className: 'kids', visualKey: 'kidsMediaId', symbol: '✦', tag: '6–12 años', title: 'Kids', text: 'Una base sólida con vocabulario, comprensión, juegos guiados y speaking progresivo.' },
+  { className: 'teens', visualKey: 'teensMediaId', symbol: '★', tag: '13–17 años', title: 'Teens', text: 'Refuerzo, confianza al hablar y preparación orientada a objetivos académicos.' },
+  { className: 'university', visualKey: 'universityMediaId', symbol: 'U', tag: 'Universidad', title: 'Young adults', text: 'Inglés para estudios, presentaciones, intercambios, Erasmus y primeros retos profesionales.' },
+  { className: 'adults', visualKey: 'adultsMediaId', symbol: '∞', tag: 'Adultos', title: 'English for life', text: 'Inglés práctico para trabajo, viajes, conversación y desarrollo personal.' },
+  { className: 'exams', visualKey: 'examsMediaId', symbol: '✓', tag: 'A2 · B1 · B2 · C1', title: 'Exámenes', text: 'Preparación estructurada por destrezas, simulacros y corrección personalizada.' },
+] as const
+
+const reasons = [
+  ['01', 'Grupos reducidos', 'Más espacio para participar, preguntar y recibir correcciones durante la clase.'],
+  ['02', 'Seguimiento personal', 'Sabes qué estás trabajando, qué necesitas reforzar y cuál es tu siguiente paso.'],
+  ['03', 'Una academia para cada etapa', 'Kids, Teens, universidad, adultos y preparación de exámenes dentro de un mismo recorrido.'],
+  ['04', 'Continuidad fuera del aula', 'Clases, tareas, materiales y progreso siguen disponibles también en el espacio digital.'],
+  ['05', 'Cercanía de verdad', 'Una academia local en Jódar, con comunicación directa para alumnos y familias.'],
+  ['06', 'Objetivos que tienen sentido', 'Colegio, conversación, trabajo, viajes o certificación: el punto de partida es lo que necesitas conseguir.'],
+] as const
 
 const steps = [
-  ['01', 'Conocemos tu punto de partida', 'Nivel, objetivo, disponibilidad y la forma en que aprendes mejor.'],
-  ['02', 'Creamos una ruta clara', 'Cada etapa tiene contenidos, tareas y objetivos que puedes seguir.'],
-  ['03', 'Practicamos de verdad', 'Speaking, listening, writing y vocabulario aplicado a situaciones reales.'],
-  ['04', 'Medimos el progreso', 'El alumno puede consultar material, tareas, clases y evolución desde su espacio privado.'],
+  ['01', 'Conectamos', 'Conocemos el nivel, los objetivos, el ritmo y lo que necesita cada alumno.'],
+  ['02', 'Aprendemos', 'Clases dinámicas, práctica guiada y contenidos pensados para cada etapa.'],
+  ['03', 'Practicamos', 'Speaking, listening, writing y vocabulario aplicados a situaciones reales.'],
+  ['04', 'Avanzamos', 'Seguimiento, tareas, materiales y progreso visibles también fuera del aula.'],
 ]
+
+const platformFeatures = [
+  ['01', 'Clases', 'Próximas sesiones y acceso directo.'],
+  ['02', 'Recursos', 'Materiales, audios, PDFs y vocabulario.'],
+  ['03', 'Tareas', 'Entregas y feedback en un mismo espacio.'],
+  ['04', 'Progreso', 'Objetivos, evolución y próximos pasos.'],
+]
+
+type HomeSectionVisualKey = 'kidsMediaId' | 'teensMediaId' | 'universityMediaId' | 'adultsMediaId' | 'examsMediaId' | 'methodMediaId' | 'journalMediaId' | 'teachersHeroMediaId' | 'aboutHeroMediaId'
+
+const homeVisualKeys: HomeSectionVisualKey[] = [
+  'kidsMediaId',
+  'teensMediaId',
+  'universityMediaId',
+  'adultsMediaId',
+  'examsMediaId',
+  'methodMediaId',
+  'journalMediaId',
+  'teachersHeroMediaId',
+  'aboutHeroMediaId',
+]
+
+const emptyVisualUrls: Record<HomeSectionVisualKey, string> = {
+  kidsMediaId: '',
+  teensMediaId: '',
+  universityMediaId: '',
+  adultsMediaId: '',
+  examsMediaId: '',
+  methodMediaId: '',
+  journalMediaId: '',
+  teachersHeroMediaId: '',
+  aboutHeroMediaId: '',
+}
+
+function cssPhotoVariable(name: string, url: string): CSSProperties | undefined {
+  if (!url) return undefined
+  return { [name]: `url("${url}")` } as CSSProperties
+}
 
 export default function HomePage() {
   const [homeContent, setHomeContent] = useState<HomePageContent>(demoHomeContent)
   const [heroImageUrl, setHeroImageUrl] = useState<string | null>(null)
+  const [visualUrls, setVisualUrls] = useState<Record<HomeSectionVisualKey, string>>({ ...emptyVisualUrls })
+  const visualBase = `${import.meta.env.BASE_URL}visuals/`
 
   useEffect(() => {
     let mounted = true
@@ -45,17 +95,27 @@ export default function HomePage() {
         } else {
           setHeroImageUrl(null)
         }
+
+        const visualEntries = await Promise.all(
+          homeVisualKeys.map(async (key) => {
+            const id = content.visuals[key]
+            if (!id) return [key, ''] as const
+            try {
+              const media = await getMediaById(id)
+              return [key, getMediaUrl(media, '1200x800')] as const
+            } catch {
+              return [key, ''] as const
+            }
+          }),
+        )
+        if (mounted) setVisualUrls({ ...emptyVisualUrls, ...Object.fromEntries(visualEntries) })
       } catch {
         // La web pública nunca queda inutilizada si PocketBase no responde.
-        // Conservamos el contenido local seguro y evitamos mostrar detalles internos al visitante.
       }
     }
 
     void loadHome()
-
-    return () => {
-      mounted = false
-    }
+    return () => { mounted = false }
   }, [])
 
   const hero = homeContent.hero
@@ -73,113 +133,184 @@ export default function HomePage() {
               <Link className="button button-ghost" to="/acceso">{hero.secondaryCta}</Link>
             </div>
             <div className="trust-row">
-              <span>Grupos reducidos</span><span>Seguimiento personal</span><span>Recursos privados</span>
+              <span>Grupos reducidos</span><span>Seguimiento personal</span><span>Clases + espacio digital</span>
             </div>
           </div>
 
           <div
-            className="hero-visual"
-            aria-label="Vista conceptual de la plataforma del alumno"
-            style={heroImageUrl ? {
-              backgroundImage: `linear-gradient(rgba(16,38,60,.14), rgba(16,38,60,.22)), url(${heroImageUrl})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              borderRadius: '32px',
-              boxShadow: 'var(--shadow)',
-            } : undefined}
+            className={`hero-stage${heroImageUrl ? ' has-photo' : ''}`}
+            aria-label="Language School: aprendizaje para distintas etapas"
+            style={heroImageUrl ? { backgroundImage: `linear-gradient(100deg, rgba(63,35,48,.10), rgba(63,35,48,.02)), url(${heroImageUrl})` } : undefined}
           >
-            <div className="hero-orbit orbit-one" />
-            <div className="hero-orbit orbit-two" />
-            <article className="portal-card portal-card-main">
-              <span className="portal-label">MY ENGLISH SPACE</span>
-              <h3>Good afternoon, Emma.</h3>
-              <p>Tu próxima clase empieza el jueves a las 18:00.</p>
-              <div className="progress-line"><span style={{ width: '72%' }} /></div>
-              <div className="portal-stats"><strong>72%</strong><span>Objetivo B1</span></div>
-            </article>
-            <article className="portal-card portal-card-small portal-card-task">
-              <span>Writing</span><strong>1 tarea pendiente</strong><small>Entrega · viernes</small>
-            </article>
-            <article className="portal-card portal-card-small portal-card-file">
-              <span>Nuevo material</span><strong>Unit 04 · Travel</strong><small>PDF · Listening</small>
-            </article>
+            {!heroImageUrl && <img className="hero-stage-illustration" src={`${visualBase}home-learning-world.svg`} alt="" />}
+            <div className="hero-stage-copy"><strong>Tu camino. Tu ritmo.</strong><span>Niños, adolescentes, universidad, adultos y preparación de exámenes.</span></div>
+            <div className="hero-float-stack" aria-hidden="true">
+              <article className="hero-float-card"><span className="hero-float-icon">01</span><div><strong>Clases cercanas</strong><span>Atención personal y objetivos claros.</span></div></article>
+              <article className="hero-float-card"><span className="hero-float-icon">02</span><div><strong>Tu progreso</strong><span>Material, tareas y seguimiento siempre disponibles.</span></div></article>
+              <article className="hero-float-card"><span className="hero-float-icon">03</span><div><strong>Tu siguiente paso</strong><span>Una ruta distinta para cada etapa.</span></div></article>
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="section section-soft" id="programas">
+      <section className="programs-premium" id="programas">
         <div className="container">
           <div className="section-heading">
-            <span className="eyebrow">PROGRAMAS</span>
-            <h2>Un camino distinto para cada etapa.</h2>
-            <p>No queremos llenar una web de cursos. Queremos que cada persona encuentre rápidamente dónde encaja.</p>
+            <span className="eyebrow">PROGRAMAS PARA TODAS LAS ETAPAS</span>
+            <h2>Encuentra tu camino en inglés.</h2>
+            <p>Una misma academia, distintas necesidades. El programa cambia contigo: colegio, instituto, universidad, vida adulta o certificación.</p>
           </div>
-          <div className="program-grid">
-            {programs.map((program, index) => (
-              <article className="program-card" key={program.title}>
-                <span className="program-number">0{index + 1}</span>
-                <span className="pill">{program.tag}</span>
-                <h3>{program.title}</h3>
-                <p>{program.text}</p>
-                <a href="#contacto">Consultar →</a>
+          <div className="programs-path-wrap" aria-hidden="true"><img src={`${visualBase}home-programs-path.svg`} alt="" loading="lazy" /></div>
+          <div className="program-grid-premium">
+            {programs.map((program) => (
+              <article className={`program-card-premium ${program.className}`} key={program.title} style={cssPhotoVariable('--program-photo', visualUrls[program.visualKey])}>
+                <span className="program-symbol">{program.symbol}</span><span className="pill">{program.tag}</span><h3>{program.title}</h3><p>{program.text}</p><Link to="/programas">Ver programa →</Link>
               </article>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="section">
-        <div className="container split-feature">
-          <div className="section-heading left">
-            <span className="eyebrow">MÉTODO</span>
-            <h2>La clase termina. El aprendizaje continúa.</h2>
-            <p>El trabajo realizado en clase continúa en el espacio privado del alumno, con materiales, tareas y seguimiento siempre disponibles.</p>
-            <Link className="text-link" to="/acceso">Ver cómo será el área privada →</Link>
+      <section className="academy-real-premium" aria-labelledby="academy-real-title">
+        <div className="container academy-real-grid">
+          <div className="academy-real-copy">
+            <span className="eyebrow">LANGUAGE SCHOOL · ROCÍO RUIZ</span>
+            <h2 id="academy-real-title">Una academia donde aprender también significa sentirte <em>acompañado.</em></h2>
+            <p className="academy-real-lead">Una academia local, cercana y cuidada, donde cada etapa tiene su ritmo y el seguimiento no termina cuando acaba la clase.</p>
+            <p>Queremos que cada alumno sepa qué está trabajando, por qué lo está trabajando y cuál es su siguiente paso. Y que las familias tengan una referencia clara cuando necesitan orientación.</p>
+
+            <div className="academy-real-proof">
+              <article><span>01</span><div><strong>Personas antes que procesos</strong><p>Clases cercanas y comunicación directa para entender lo que necesita cada alumno.</p></div></article>
+              <article><span>02</span><div><strong>Objetivos que se entienden</strong><p>Una ruta clara para saber dónde estás, qué estás reforzando y hacia dónde avanzas.</p></div></article>
+              <article><span>03</span><div><strong>Continuidad entre clases</strong><p>Materiales, tareas y seguimiento siguen disponibles también fuera del aula.</p></div></article>
+            </div>
+
+            <div className="academy-real-actions">
+              <Link className="button button-primary" to="/sobre-nosotros">Conoce Language School</Link>
+              <Link className="text-link" to="/profesores">Conoce al equipo →</Link>
+            </div>
           </div>
-          <div className="steps-list">
+
+          <div className="academy-real-visuals">
+            <figure
+              className={`academy-real-photo academy-real-main${visualUrls.aboutHeroMediaId ? ' has-photo' : ''}`}
+              style={visualUrls.aboutHeroMediaId ? { backgroundImage: `linear-gradient(180deg, rgba(45,28,36,.02), rgba(45,28,36,.18)), url(${visualUrls.aboutHeroMediaId})` } : undefined}
+            >
+              {!visualUrls.aboutHeroMediaId && <div className="academy-real-fallback"><span>LANGUAGE SCHOOL</span><strong>Una academia hecha de personas.</strong><small>Jódar · Jaén</small></div>}
+              <figcaption>Language School · Jódar</figcaption>
+            </figure>
+
+            <figure
+              className={`academy-real-photo academy-real-team${visualUrls.teachersHeroMediaId ? ' has-photo' : ''}`}
+              style={visualUrls.teachersHeroMediaId ? { backgroundImage: `linear-gradient(180deg, rgba(45,28,36,.02), rgba(45,28,36,.15)), url(${visualUrls.teachersHeroMediaId})` } : undefined}
+            >
+              {!visualUrls.teachersHeroMediaId && <div className="academy-real-fallback compact"><span>PROFESORES</span><strong>Acompañamiento real.</strong></div>}
+              <figcaption>Profesores · cercanía y seguimiento</figcaption>
+            </figure>
+
+            <div className="academy-real-note" aria-hidden="true"><span>LS</span><p><strong>Academia real.</strong> Personas, clases y progreso.</p></div>
+          </div>
+        </div>
+      </section>
+
+      <section className="home-reasons" aria-labelledby="home-reasons-title">
+        <div className="container home-reasons-grid">
+          <div className="home-reasons-heading">
+            <span className="eyebrow">POR QUÉ LANGUAGE SCHOOL</span>
+            <h2 id="home-reasons-title">Lo que importa no es solo dar clase. Es que <em>notes que avanzas.</em></h2>
+            <p>Una estructura sencilla, cercana y continua para que el aprendizaje tenga sentido dentro y fuera del aula.</p>
+            <div className="home-reasons-actions">
+              <Link className="button button-primary" to="/programas">Encuentra tu programa</Link>
+              <Link className="text-link" to="/contacto">Pregúntanos →</Link>
+            </div>
+          </div>
+          <div className="home-reasons-list">
+            {reasons.map(([number, title, text]) => (
+              <article key={number}>
+                <span>{number}</span>
+                <div><h3>{title}</h3><p>{text}</p></div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="method-premium">
+        <div className="container method-premium-grid">
+          <div className="method-premium-intro">
+            <span className="eyebrow">NUESTRO MÉTODO</span>
+            <h2>Un método pensado para que <em>realmente</em> aprendas.</h2>
+            <p>Conversación, objetivos claros y continuidad entre clases. Lo importante no es acumular teoría: es notar que cada semana entiendes, hablas y avanzas un poco más.</p>
+            <Link className="button button-ghost" to="/sobre-nosotros">Conoce nuestro método</Link>
+            <figure className="method-premium-art" aria-hidden="true" style={cssPhotoVariable('--method-photo', visualUrls.methodMediaId)}><img src={`${visualBase}home-method-compass.svg`} alt="" loading="lazy" /></figure>
+          </div>
+
+          <div className="method-premium-steps">
             {steps.map(([number, title, text]) => (
-              <div className="step-row" key={number}>
-                <span>{number}</span><div><h3>{title}</h3><p>{text}</p></div>
+              <article className="method-premium-step" key={number}>
+                <span className="method-number">{number}</span><div className="method-icon" aria-hidden="true">{number === '01' ? '◎' : number === '02' ? '▤' : number === '03' ? '◌' : '↗'}</div><div><h3>{title}</h3><p>{text}</p></div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="platform-premium">
+        <div className="container platform-premium-grid">
+          <div className="platform-premium-copy">
+            <span className="eyebrow">PLATAFORMA DEL ALUMNO</span>
+            <h2>Todo tu inglés, <em>en un solo lugar.</em></h2>
+            <p>Clases, materiales, tareas y seguimiento continúan disponibles después de salir del aula. El alumno sabe siempre qué tiene, qué viene después y cómo está avanzando.</p>
+            <Link className="button button-primary" to="/acceso">Entrar a mi plataforma</Link>
+            <div className="platform-mini-features">
+              {platformFeatures.map(([number, title, text]) => <div key={title}><span>{number}</span><p><strong>{title}</strong>{text}</p></div>)}
+            </div>
+          </div>
+
+          <div className="platform-dashboard-wrap" aria-label="Vista conceptual del espacio privado del alumno">
+            <div className="platform-dashboard-glow" />
+            <div className="platform-dashboard-card">
+              <aside className="platform-dashboard-nav" aria-hidden="true"><div className="platform-dashboard-brand">LS</div>{['Inicio', 'Clases', 'Tareas', 'Recursos', 'Progreso', 'Mensajes'].map((item, index) => <span className={index === 0 ? 'active' : ''} key={item}>{item}</span>)}</aside>
+              <div className="platform-dashboard-main">
+                <div className="platform-dashboard-top"><div><small>GOOD AFTERNOON</small><strong>Hola, Marta 👋</strong></div><span className="platform-avatar">MR</span></div>
+                <div className="platform-dashboard-metrics">
+                  <article className="platform-class-card"><small>PRÓXIMA CLASE</small><strong>Speaking Club · B1</strong><span>Miércoles · 18:00</span><span className="platform-class-action">Entrar a clase</span></article>
+                  <article className="platform-progress-card"><small>TU PROGRESO</small><div className="platform-progress-ring"><strong>72%</strong></div><span>¡Vas por buen camino!</span></article>
+                </div>
+                <div className="platform-dashboard-list"><small>CONTINUAR APRENDIENDO</small><div><span>Vocabulary · Travel & experiences</span><strong>80%</strong></div><div><span>Listening practice</span><strong>60%</strong></div></div>
               </div>
-            ))}
+            </div>
+            <div className="platform-floating-feature feature-listening"><span>♫</span><strong>Listening</strong></div><div className="platform-floating-feature feature-tasks"><span>✓</span><strong>Tareas</strong></div><div className="platform-floating-feature feature-progress"><span>↗</span><strong>Progreso</strong></div>
           </div>
         </div>
       </section>
 
-      <section className="section platform-band">
-        <div className="container platform-grid">
-          <div>
-            <span className="eyebrow eyebrow-light">PLATAFORMA DEL ALUMNO</span>
-            <h2>Todo lo importante, en un solo lugar.</h2>
-            <p>Material del profesor, archivos propios, tareas, próximas clases, avisos y recursos. Sin carpetas perdidas ni enlaces dispersos.</p>
-            <Link className="button button-light" to="/acceso">Acceder al espacio del alumno</Link>
-          </div>
-          <div className="platform-features">
-            {['Mis clases', 'Archivos privados', 'Tareas y entregas', 'Material de estudio', 'Listening', 'Avisos'].map(item => (
-              <div key={item}><span>✓</span>{item}</div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="section">
+      <section className="blog-premium">
         <div className="container">
-          <div className="section-heading section-heading-row">
-            <div><span className="eyebrow">BLOG</span><h2>English, one useful idea at a time.</h2></div>
-            <Link className="text-link" to="/blog">Ver todos los artículos →</Link>
+          <div className="blog-premium-heading">
+            <div><span className="eyebrow">ENGLISH JOURNAL</span><h2>Ideas que puedes llevarte <em>hoy</em> a clase.</h2></div>
+            <div className="blog-premium-heading-side"><img className="blog-journal-art" src={`${visualBase}home-journal-visual.svg`} alt="" loading="lazy" /><p>Speaking, vocabulario, exámenes y pequeños hábitos para seguir aprendiendo también fuera del aula.</p><Link className="text-link" to="/blog">Explorar el blog →</Link></div>
           </div>
-          <div className="article-grid">
-            <article className="article-card featured-article"><span>Speaking</span><h3>5 formas de ganar confianza al hablar inglés</h3><p>Pequeños hábitos para dejar de traducir mentalmente cada frase.</p><Link to="/blog">Leer artículo →</Link></article>
-            <article className="article-card"><span>Vocabulary</span><h3>Cómo aprender vocabulario sin memorizar listas infinitas</h3><p>Contexto, repetición y uso real.</p><Link to="/blog">Leer →</Link></article>
-            <article className="article-card"><span>Exams</span><h3>B1: qué debes dominar antes de empezar simulacros</h3><p>Una lista sencilla para comprobar tu base.</p><Link to="/blog">Leer →</Link></article>
+
+          <div className="blog-premium-grid">
+            <article className="blog-featured-card">
+              <div className="blog-visual blog-visual-speaking" aria-hidden="true" style={cssPhotoVariable('--journal-photo', visualUrls.journalMediaId)}><span className="blog-visual-word">SPEAK</span><span className="blog-visual-number">01</span><span className="blog-visual-orbit" /></div>
+              <div className="blog-featured-copy"><div className="blog-meta"><span>Speaking</span><small>5 min</small></div><h3>5 formas de ganar confianza al hablar inglés</h3><p>Pequeños hábitos para dejar de traducir mentalmente cada frase y empezar a comunicarte con más naturalidad.</p><Link to="/blog">Leer artículo <span aria-hidden="true">↗</span></Link></div>
+            </article>
+            <div className="blog-secondary-stack">
+              <article className="blog-secondary-card vocabulary"><div className="blog-secondary-index">02</div><div className="blog-meta"><span>Vocabulary</span><small>4 min</small></div><h3>Cómo aprender vocabulario sin memorizar listas infinitas</h3><p>Contexto, repetición y uso real: una forma más natural de hacer que las palabras se queden.</p><Link to="/blog" aria-label="Leer artículo sobre vocabulario">Leer →</Link></article>
+              <article className="blog-secondary-card exams"><div className="blog-secondary-index">03</div><div className="blog-meta"><span>Exams</span><small>6 min</small></div><h3>B1: qué debes dominar antes de empezar simulacros</h3><p>Una guía sencilla para comprobar tu base y preparar el examen con una ruta más clara.</p><Link to="/blog" aria-label="Leer artículo sobre exámenes">Leer →</Link></article>
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="section cta-section">
-        <div className="container cta-panel">
-          <div><span className="eyebrow">PRIMER PASO</span><h2>Cuéntanos qué quieres conseguir con tu inglés.</h2></div>
-          <a className="button button-primary" href="#contacto">Solicitar información</a>
+      <section className="home-final-cta" id="contacto">
+        <div className="home-final-orb home-final-orb-one" aria-hidden="true" /><div className="home-final-orb home-final-orb-two" aria-hidden="true" />
+        <div className="container home-final-cta-inner">
+          <div className="home-final-kicker"><span>Kids</span><i>·</i><span>Teens</span><i>·</i><span>Universidad</span><i>·</i><span>Adultos</span><i>·</i><span>Exámenes</span></div>
+          <span className="eyebrow">TU SIGUIENTE PASO</span><h2>Tu inglés puede empezar <em>aquí.</em></h2><p>Cuéntanos tu edad, nivel u objetivo. Te ayudamos a encontrar el programa y el ritmo que mejor encajan contigo.</p>
+          <div className="home-final-actions"><Link className="button button-primary" to="/contacto">Cuéntanos qué necesitas</Link><Link className="button button-ghost" to="/programas">Ver todos los programas</Link></div><small>Language School · Rocío Ruiz · inglés para cada etapa</small>
         </div>
       </section>
     </SiteShell>

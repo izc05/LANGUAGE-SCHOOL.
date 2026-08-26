@@ -4,6 +4,7 @@ import { isDemoMode } from '../../config/environment'
 import {
   createBlogPost,
   deleteBlogPost,
+  getBlogMediaItems,
   listAdminBlogPosts,
   listBlogCategories,
   updateBlogPost,
@@ -11,6 +12,7 @@ import {
   type BlogPostRecord,
   type BlogStatus,
 } from '../../services/pocketbase/blog'
+import { normalizeInstagramPublicPostUrl } from '../../utils/instagram'
 import { adminNav } from './adminNav'
 
 type PostItem = {
@@ -36,6 +38,16 @@ const initialPosts: PostItem[] = [
   { id: 'demo-2', title: 'Guía B1 para septiembre', category: 'Exams', status: 'DRAFT', updated: 'Ayer' },
   { id: 'demo-3', title: 'Vocabulario sin listas infinitas', category: 'Vocabulary', status: 'PUBLISHED', updated: 'Hace 4 días' },
 ]
+
+const MAX_BLOG_MEDIA_FILES = 12
+const MAX_BLOG_MEDIA_FILE_BYTES = 50 * 1024 * 1024
+const MAX_BLOG_MEDIA_UPLOAD_BYTES = 70 * 1024 * 1024
+const BLOG_MEDIA_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'video/mp4', 'video/webm'])
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
 
 function statusLabel(status: BlogStatus): string {
   if (status === 'PUBLISHED') return 'Publicado'
@@ -68,6 +80,9 @@ export default function AdminBlogManager() {
   const [content, setContent] = useState('')
   const [coverImage, setCoverImage] = useState<File | null>(null)
   const [coverImageName, setCoverImageName] = useState('Sin imagen nueva')
+  const [mediaFiles, setMediaFiles] = useState<File[]>([])
+  const [existingMedia, setExistingMedia] = useState<string[]>([])
+  const [removedMedia, setRemovedMedia] = useState<string[]>([])
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(!isDemoMode)
@@ -108,6 +123,15 @@ export default function AdminBlogManager() {
     drafts: posts.filter((post) => post.status === 'DRAFT').length,
   }), [posts])
 
+  const editingRecord = useMemo(
+    () => posts.find((post) => post.id === editingId)?.record,
+    [editingId, posts],
+  )
+  const existingMediaItems = useMemo(
+    () => editingRecord ? getBlogMediaItems(editingRecord).filter((item) => existingMedia.includes(item.name)) : [],
+    [editingRecord, existingMedia],
+  )
+
   function resetEditor() {
     setEditingId(null)
     setTitle('')
@@ -115,6 +139,9 @@ export default function AdminBlogManager() {
     setContent('')
     setCoverImage(null)
     setCoverImageName('Sin imagen nueva')
+    setMediaFiles([])
+    setExistingMedia([])
+    setRemovedMedia([])
     setCategory(categories[0]?.id || '')
   }
 
@@ -128,12 +155,72 @@ export default function AdminBlogManager() {
     setCategory(post.record?.category || categories.find((item) => item.name === post.category)?.id || categories[0]?.id || '')
     setCoverImage(null)
     setCoverImageName(post.record?.cover_image ? `Actual: ${post.record.cover_image}` : 'Sin imagen actual')
+    setMediaFiles([])
+    setExistingMedia(post.record?.media || [])
+    setRemovedMedia([])
   }
 
   function handleCoverImage(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0] || null
     setCoverImage(file)
     setCoverImageName(file?.name || 'Sin imagen nueva')
+  }
+
+  function handleMediaFiles(event: ChangeEvent<HTMLInputElement>) {
+    const selectedFiles = Array.from(event.target.files || [])
+    event.target.value = ''
+    if (selectedFiles.length === 0) return
+
+    const invalidFile = selectedFiles.find((file) => !BLOG_MEDIA_TYPES.has(file.type))
+    if (invalidFile) {
+      setError(`“${invalidFile.name}” no es compatible. Usa JPG, PNG, WebP, MP4 o WebM.`)
+      return
+    }
+
+    const oversizedFile = selectedFiles.find((file) => file.size > MAX_BLOG_MEDIA_FILE_BYTES)
+    if (oversizedFile) {
+      setError(`“${oversizedFile.name}” supera el máximo de 50 MB por archivo.`)
+      return
+    }
+
+    if (existingMedia.length + mediaFiles.length + selectedFiles.length > MAX_BLOG_MEDIA_FILES) {
+      setError(`Puedes incluir hasta ${MAX_BLOG_MEDIA_FILES} archivos multimedia por artículo.`)
+      return
+    }
+
+    const selectedBytes = [...mediaFiles, ...selectedFiles].reduce((total, file) => total + file.size, 0)
+    if (selectedBytes > MAX_BLOG_MEDIA_UPLOAD_BYTES) {
+      setError('La selección nueva supera 70 MB. Reduce el vídeo o reparte las imágenes en otra carga.')
+      return
+    }
+
+    setError(null)
+    setMediaFiles((current) => [...current, ...selectedFiles])
+  }
+
+  function insertInstagramPost() {
+    setMessage(null)
+    const rawUrl = window.prompt('Pega la URL pública de la publicación o Reel de Instagram:')
+    if (!rawUrl) return
+
+    const instagramUrl = normalizeInstagramPublicPostUrl(rawUrl)
+    if (!instagramUrl) {
+      setError('La URL no parece una publicación o Reel público de Instagram.')
+      return
+    }
+
+    setError(null)
+    setContent((current) => `${current.trimEnd()}${current.trim() ? '\n\n' : ''}${instagramUrl}`)
+    setMessage('Publicación de Instagram añadida al artículo. Guarda o publica para verla integrada en el blog.')
+  }
+
+  function removePendingMedia(index: number) {
+    setMediaFiles((current) => current.filter((_, itemIndex) => itemIndex !== index))
+  }
+
+  function removeExistingMedia(filename: string) {
+    setExistingMedia((current) => current.filter((item) => item !== filename))
+    setRemovedMedia((current) => current.includes(filename) ? current : [...current, filename])
   }
 
   async function savePost(status: BlogStatus) {
@@ -171,6 +258,8 @@ export default function AdminBlogManager() {
         content,
         category: category || undefined,
         coverImage: coverImage || undefined,
+        mediaFiles,
+        removedMedia,
         status,
       }
 
@@ -281,16 +370,67 @@ export default function AdminBlogManager() {
               </label>
             </div>
 
+            <section className="blog-media-field" aria-labelledby="blog-media-title">
+              <div className="blog-media-heading">
+                <div>
+                  <span id="blog-media-title">Galería del artículo</span>
+                  <small>Selecciona varias imágenes o vídeos de una vez. Máximo 12 archivos y 70 MB por carga.</small>
+                </div>
+                <strong>{existingMedia.length + mediaFiles.length}/{MAX_BLOG_MEDIA_FILES}</strong>
+              </div>
+              <label className="blog-media-picker">
+                <span>Añadir imágenes o vídeos</span>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,video/mp4,video/webm"
+                  multiple
+                  onChange={handleMediaFiles}
+                  disabled={existingMedia.length + mediaFiles.length >= MAX_BLOG_MEDIA_FILES}
+                />
+                <small>JPG, PNG, WebP, MP4 o WebM · hasta 50 MB por archivo.</small>
+              </label>
+
+              {existingMediaItems.length > 0 && (
+                <div className="blog-media-existing" aria-label="Archivos guardados">
+                  {existingMediaItems.map((item) => (
+                    <article key={item.name}>
+                      {item.type === 'VIDEO'
+                        ? <video src={item.url} muted preload="metadata" />
+                        : <img src={item.url} alt="" loading="lazy" />}
+                      <div><strong>{item.type === 'VIDEO' ? 'Vídeo' : 'Imagen'}</strong><small>{item.name}</small></div>
+                      <button type="button" onClick={() => removeExistingMedia(item.name)}>Quitar</button>
+                    </article>
+                  ))}
+                </div>
+              )}
+
+              {mediaFiles.length > 0 && (
+                <div className="blog-media-pending" aria-label="Archivos nuevos seleccionados">
+                  {mediaFiles.map((file, index) => (
+                    <article key={`${file.name}-${file.lastModified}-${index}`}>
+                      <span>{file.type.startsWith('video/') ? 'VÍDEO' : 'IMAGEN'}</span>
+                      <div><strong>{file.name}</strong><small>{formatFileSize(file.size)}</small></div>
+                      <button type="button" onClick={() => removePendingMedia(index)}>Quitar</button>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </section>
+
             <label className="field-stack">
               <span>Resumen</span>
               <textarea rows={3} value={summary} onChange={(event) => setSummary(event.target.value)} placeholder="Texto breve que aparecerá en la tarjeta del blog..." />
             </label>
 
-            <label className="field-stack">
-              <span>Contenido</span>
-              <div className="editor-toolbar" aria-hidden="true"><b>B</b><i>I</i><span>H2</span><span>Lista</span><span>Enlace</span></div>
-              <textarea className="article-editor" rows={10} value={content} onChange={(event) => setContent(event.target.value)} placeholder="Escribe aquí el artículo..." />
-            </label>
+            <div className="field-stack">
+              <label htmlFor="blog-article-content">Contenido</label>
+              <div className="editor-toolbar" aria-label="Herramientas del editor">
+                <b aria-hidden="true">B</b><i aria-hidden="true">I</i><span aria-hidden="true">H2</span><span aria-hidden="true">Lista</span><span aria-hidden="true">Enlace</span>
+                <button className="instagram-insert-button" type="button" aria-label="Añadir publicación de Instagram" onClick={insertInstagramPost}>◎ Instagram</button>
+              </div>
+              <textarea id="blog-article-content" className="article-editor" rows={10} value={content} onChange={(event) => setContent(event.target.value)} placeholder="Escribe aquí el artículo o añade una publicación pública de Instagram con el botón superior..." />
+              <small>Instagram se inserta como un bloque dentro del artículo y siempre enlaza a la publicación original.</small>
+            </div>
 
             <div className="cms-form-actions">
               <button className="button button-ghost" type="submit" disabled={saving || loading}>{saving ? 'Guardando…' : 'Guardar borrador'}</button>

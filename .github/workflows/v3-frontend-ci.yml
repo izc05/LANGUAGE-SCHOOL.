@@ -17,6 +17,10 @@ jobs:
     defaults:
       run:
         working-directory: v3/frontend
+    env:
+      # Review artifact: explicit demo. Connected E2E and physical deployment
+      # use their own explicit connected mode + PocketBase URL.
+      VITE_APP_MODE: demo
 
     steps:
       - name: Checkout
@@ -34,3 +38,56 @@ jobs:
 
       - name: Build V3 frontend
         run: npm run build
+
+      - name: Reject production build without explicit app mode
+        run: |
+          set +e
+          env -u VITE_APP_MODE -u VITE_POCKETBASE_URL -u VITE_TURNSTILE_SITE_KEY npm run build >"$RUNNER_TEMP/frontend-missing-mode.log" 2>&1
+          EXIT_CODE=$?
+          set -e
+          if [ "$EXIT_CODE" -eq 0 ]; then
+            cat "$RUNNER_TEMP/frontend-missing-mode.log" >&2
+            echo 'Frontend build unexpectedly succeeded without VITE_APP_MODE.' >&2
+            exit 1
+          fi
+          grep -q 'Production build requires VITE_APP_MODE' "$RUNNER_TEMP/frontend-missing-mode.log"
+
+      - name: Reject connected build without PocketBase URL
+        run: |
+          set +e
+          env -u VITE_POCKETBASE_URL \
+            VITE_APP_MODE=connected \
+            VITE_TURNSTILE_SITE_KEY=1x00000000000000000000AA \
+            npm run build >"$RUNNER_TEMP/frontend-missing-url.log" 2>&1
+          EXIT_CODE=$?
+          set -e
+          if [ "$EXIT_CODE" -eq 0 ]; then
+            cat "$RUNNER_TEMP/frontend-missing-url.log" >&2
+            echo 'Connected frontend build unexpectedly succeeded without VITE_POCKETBASE_URL.' >&2
+            exit 1
+          fi
+          grep -q 'Connected production build requires VITE_POCKETBASE_URL' "$RUNNER_TEMP/frontend-missing-url.log"
+
+      - name: Reject connected build without Turnstile sitekey
+        run: |
+          set +e
+          env -u VITE_TURNSTILE_SITE_KEY \
+            VITE_APP_MODE=connected \
+            VITE_POCKETBASE_URL=https://school.example.invalid \
+            npm run build >"$RUNNER_TEMP/frontend-missing-turnstile.log" 2>&1
+          EXIT_CODE=$?
+          set -e
+          if [ "$EXIT_CODE" -eq 0 ]; then
+            cat "$RUNNER_TEMP/frontend-missing-turnstile.log" >&2
+            echo 'Connected frontend build unexpectedly succeeded without VITE_TURNSTILE_SITE_KEY.' >&2
+            exit 1
+          fi
+          grep -q 'Connected production build requires VITE_TURNSTILE_SITE_KEY' "$RUNNER_TEMP/frontend-missing-turnstile.log"
+
+      - name: Upload compiled visual preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: v3-frontend-preview-${{ github.sha }}
+          path: v3/frontend/dist
+          if-no-files-found: error
+          retention-days: 7

@@ -37,65 +37,27 @@ async function visitRoutes(page: Page, routes: string[], errors: string[]) {
 
 test('todas las rutas públicas cargan sin errores runtime', async ({ page }) => {
   const errors = collectRuntimeErrors(page)
-  await visitRoutes(page, [
-    '/',
-    '/programas',
-    '/profesores',
-    '/sobre-nosotros',
-    '/tarifas',
-    '/blog',
-    '/contacto',
-    '/acceso',
-    '/pagina-inexistente-e2e',
-  ], errors)
+  await visitRoutes(page, ['/', '/programas', '/test-de-nivel', '/profesores', '/sobre-nosotros', '/tarifas', '/blog', '/contacto', '/acceso', '/pagina-inexistente-e2e'], errors)
 })
 
 test('todas las rutas ADMIN cargan sin errores runtime', async ({ page }) => {
   const errors = collectRuntimeErrors(page)
   await login(page, requiredEnv('E2E_ADMIN_EMAIL'), requiredEnv('E2E_ADMIN_PASSWORD'), /\/admin$/)
   await visitRoutes(page, [
-    '/admin',
-    '/admin/web',
-    '/admin/web/sobre-nosotros',
-    '/admin/blog',
-    '/admin/multimedia',
-    '/admin/contactos',
-    '/admin/avisos',
-    '/admin/alumnos',
-    '/admin/profesores',
-    '/admin/profesores/publicos',
-    '/admin/cursos',
-    '/admin/clases',
-    '/admin/tarifas',
-    '/admin/configuracion',
-    '/admin/sistema',
+    '/admin', '/admin/web', '/admin/web/sobre-nosotros', '/admin/blog', '/admin/multimedia', '/admin/contactos', '/admin/avisos',
+    '/admin/alumnos', '/admin/profesores', '/admin/profesores/publicos', '/admin/cursos', '/admin/clases', '/admin/agenda', '/admin/pagos',
+    '/admin/aula-online', '/admin/zoom', '/admin/test-de-nivel', '/admin/test-de-nivel/resultados', '/admin/tarifas', '/admin/administradores', '/admin/configuracion', '/admin/sistema',
   ], errors)
 })
 
 test('todas las rutas TEACHER cargan sin errores runtime', async ({ page }) => {
   const errors = collectRuntimeErrors(page)
   await login(page, requiredEnv('E2E_TEACHER_EMAIL'), requiredEnv('E2E_TEACHER_PASSWORD'), /\/profesor$/)
-  await visitRoutes(page, [
-    '/profesor',
-    '/profesor/alumnos',
-    '/profesor/clases',
-    '/profesor/material',
-    '/profesor/tareas',
-    '/profesor/correcciones',
-    '/profesor/perfil',
-  ], errors)
+  await visitRoutes(page, ['/profesor', '/profesor/alumnos', '/profesor/niveles', '/profesor/clases', '/profesor/agenda', '/profesor/material', '/profesor/tareas', '/profesor/correcciones', '/profesor/perfil'], errors)
 })
 
 test('todas las rutas STUDENT cargan sin errores runtime', async ({ page }) => {
   const errors = collectRuntimeErrors(page)
   await login(page, requiredEnv('E2E_STUDENT_EMAIL'), requiredEnv('E2E_STUDENT_PASSWORD'), /\/alumno$/)
-  await visitRoutes(page, [
-    '/alumno',
-    '/alumno/clases',
-    '/alumno/material',
-    '/alumno/tareas',
-    '/alumno/archivos',
-    '/alumno/avisos',
-    '/alumno/perfil',
-  ], errors)
+  await visitRoutes(page, ['/alumno', '/alumno/nivel', '/alumno/clases', '/alumno/material', '/alumno/tareas', '/alumno/archivos', '/alumno/avisos', '/alumno/perfil'], errors)
 })

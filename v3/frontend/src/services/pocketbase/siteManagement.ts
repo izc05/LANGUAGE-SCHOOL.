@@ -41,44 +41,32 @@ export type SiteSettingsInput = {
   phone: string
   email: string
   whatsapp: string
+  whatsappEnabled: boolean
+  whatsappMessage: string
   address: string
   instagram: string
   facebook: string
   youtube: string
+  cookieBannerEnabled: boolean
+  cookieIntro: string
+  legalOwnerName: string
+  legalTaxId: string
+  legalRegistryDetails: string
+  cookiePolicyText: string
+  privacyPolicyText: string
+  legalNoticeText: string
 }
 
 export const demoPricingPlans: PricingPlanRecord[] = [
   {
-    id: 'demo-starter',
-    collectionId: 'demo',
-    collectionName: collections.pricingPlans,
-    created: '',
-    updated: '',
-    expand: {},
-    name: 'Starter',
-    description: 'Plan de demostración para visualizar el CMS.',
-    price: 35,
-    billing_text: 'al mes',
-    features: ['Clases en grupo', 'Material de apoyo'],
-    sort_order: 10,
-    active: true,
-    featured: false,
+    id: 'demo-starter', collectionId: 'demo', collectionName: collections.pricingPlans, created: '', updated: '', expand: {},
+    name: 'Starter', description: 'Plan de demostración para visualizar el CMS.', price: 35, billing_text: 'al mes',
+    features: ['Clases en grupo', 'Material de apoyo'], sort_order: 10, active: true, featured: false,
   },
   {
-    id: 'demo-plus',
-    collectionId: 'demo',
-    collectionName: collections.pricingPlans,
-    created: '',
-    updated: '',
-    expand: {},
-    name: 'Plus',
-    description: 'Plan destacado de demostración.',
-    price: 49,
-    billing_text: 'al mes',
-    features: ['Clases en grupo', 'Material de apoyo', 'Seguimiento'],
-    sort_order: 20,
-    active: true,
-    featured: true,
+    id: 'demo-plus', collectionId: 'demo', collectionName: collections.pricingPlans, created: '', updated: '', expand: {},
+    name: 'Plus', description: 'Plan destacado de demostración.', price: 49, billing_text: 'al mes',
+    features: ['Clases en grupo', 'Material de apoyo', 'Seguimiento'], sort_order: 20, active: true, featured: true,
   },
 ]
 
@@ -87,18 +75,26 @@ export const demoSiteSettings: SiteSettingsInput = {
   phone: '',
   email: '',
   whatsapp: '',
-  address: 'Jódar, Jaén',
-  instagram: 'https://www.instagram.com/languageschool_rociuruiz/',
+  whatsappEnabled: true,
+  whatsappMessage: 'Hola, quiero información sobre las clases de inglés.',
+  address: 'Calle Luis Carvajal, 23, Jódar, Jaén',
+  instagram: 'https://www.instagram.com/languageschool_rocioruiz/',
   facebook: '',
   youtube: '',
+  cookieBannerEnabled: true,
+  cookieIntro: 'Usamos almacenamiento técnico necesario y, solo si lo autorizas, preferencias para cargar servicios externos como Google Maps. Puedes aceptar, rechazar o configurar tus preferencias.',
+  legalOwnerName: '',
+  legalTaxId: '',
+  legalRegistryDetails: '',
+  cookiePolicyText: '',
+  privacyPolicyText: '',
+  legalNoticeText: '',
 }
 
 function requireAdmin() {
   if (isDemoMode) return
   const record = pb.authStore.record
-  if (!record || record.role !== 'ADMIN') {
-    throw new Error('Se requiere una sesión ADMIN.')
-  }
+  if (!record || record.role !== 'ADMIN') throw new Error('Se requiere una sesión ADMIN.')
 }
 
 function normalizeFeatures(value: unknown): string[] {
@@ -106,40 +102,34 @@ function normalizeFeatures(value: unknown): string[] {
   return value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
 }
 
+function readBoolean(value: unknown, fallback: boolean): boolean {
+  if (typeof value === 'boolean') return value
+  if (typeof value !== 'string') return fallback
+  if (value.toLowerCase() === 'true') return true
+  if (value.toLowerCase() === 'false') return false
+  return fallback
+}
+
 export async function listPricingPlans(): Promise<PricingPlanRecord[]> {
   if (isDemoMode) return demoPricingPlans
   requireAdmin()
-  const records = await pb.collection(collections.pricingPlans).getFullList<PricingPlanRecord>({
-    sort: 'sort_order,name',
-  })
+  const records = await pb.collection(collections.pricingPlans).getFullList<PricingPlanRecord>({ sort: 'sort_order,name' })
   return records.map((record) => ({ ...record, features: normalizeFeatures(record.features) }))
 }
 
 export async function createPricingPlan(input: PricingPlanInput): Promise<PricingPlanRecord> {
   requireAdmin()
   return pb.collection(collections.pricingPlans).create<PricingPlanRecord>({
-    name: input.name.trim(),
-    description: input.description.trim(),
-    price: input.price,
-    billing_text: input.billingText.trim(),
-    features: input.features.map((item) => item.trim()).filter(Boolean),
-    sort_order: input.sortOrder,
-    active: input.active,
-    featured: input.featured,
+    name: input.name.trim(), description: input.description.trim(), price: input.price, billing_text: input.billingText.trim(),
+    features: input.features.map((item) => item.trim()).filter(Boolean), sort_order: input.sortOrder, active: input.active, featured: input.featured,
   })
 }
 
 export async function updatePricingPlan(id: string, input: PricingPlanInput): Promise<PricingPlanRecord> {
   requireAdmin()
   return pb.collection(collections.pricingPlans).update<PricingPlanRecord>(id, {
-    name: input.name.trim(),
-    description: input.description.trim(),
-    price: input.price,
-    billing_text: input.billingText.trim(),
-    features: input.features.map((item) => item.trim()).filter(Boolean),
-    sort_order: input.sortOrder,
-    active: input.active,
-    featured: input.featured,
+    name: input.name.trim(), description: input.description.trim(), price: input.price, billing_text: input.billingText.trim(),
+    features: input.features.map((item) => item.trim()).filter(Boolean), sort_order: input.sortOrder, active: input.active, featured: input.featured,
   })
 }
 
@@ -155,12 +145,8 @@ export async function getSiteSettings(): Promise<SiteSettingsRecord | null> {
   return result.items[0] ?? null
 }
 
-export async function saveSiteSettings(
-  input: SiteSettingsInput,
-  logo?: File | null,
-): Promise<SiteSettingsRecord> {
+export async function saveSiteSettings(input: SiteSettingsInput, logo?: File | null): Promise<SiteSettingsRecord> {
   requireAdmin()
-
   const current = await getSiteSettings()
   const payload = new FormData()
   payload.set('academy_name', input.academyName.trim())
@@ -169,17 +155,27 @@ export async function saveSiteSettings(
   payload.set('whatsapp', input.whatsapp.trim())
   payload.set('address', input.address.trim())
   payload.set('social_links', JSON.stringify({
+    ...(current?.social_links ?? {}),
     instagram: input.instagram.trim(),
     facebook: input.facebook.trim(),
     youtube: input.youtube.trim(),
+    whatsapp_enabled: String(input.whatsappEnabled),
+    whatsapp_message: input.whatsappMessage.trim(),
   }))
-  payload.set('legal_texts', JSON.stringify(current?.legal_texts ?? {}))
+  payload.set('legal_texts', JSON.stringify({
+    ...(current?.legal_texts ?? {}),
+    cookie_banner_enabled: String(input.cookieBannerEnabled),
+    cookie_intro: input.cookieIntro.trim(),
+    legal_owner_name: input.legalOwnerName.trim(),
+    legal_tax_id: input.legalTaxId.trim(),
+    legal_registry_details: input.legalRegistryDetails.trim(),
+    cookie_policy: input.cookiePolicyText.trim(),
+    privacy_policy: input.privacyPolicyText.trim(),
+    legal_notice: input.legalNoticeText.trim(),
+  }))
   if (logo) payload.set('logo', logo)
 
-  if (current) {
-    return pb.collection(collections.siteSettings).update<SiteSettingsRecord>(current.id, payload)
-  }
-
+  if (current) return pb.collection(collections.siteSettings).update<SiteSettingsRecord>(current.id, payload)
   return pb.collection(collections.siteSettings).create<SiteSettingsRecord>(payload)
 }
 
@@ -190,9 +186,19 @@ export function settingsToInput(record: SiteSettingsRecord | null): SiteSettings
     phone: record.phone || '',
     email: record.email || '',
     whatsapp: record.whatsapp || '',
+    whatsappEnabled: readBoolean(record.social_links?.whatsapp_enabled, true),
+    whatsappMessage: record.social_links?.whatsapp_message || demoSiteSettings.whatsappMessage,
     address: record.address || '',
     instagram: record.social_links?.instagram || '',
     facebook: record.social_links?.facebook || '',
     youtube: record.social_links?.youtube || '',
+    cookieBannerEnabled: readBoolean(record.legal_texts?.cookie_banner_enabled, true),
+    cookieIntro: record.legal_texts?.cookie_intro || demoSiteSettings.cookieIntro,
+    legalOwnerName: record.legal_texts?.legal_owner_name || '',
+    legalTaxId: record.legal_texts?.legal_tax_id || '',
+    legalRegistryDetails: record.legal_texts?.legal_registry_details || '',
+    cookiePolicyText: record.legal_texts?.cookie_policy || '',
+    privacyPolicyText: record.legal_texts?.privacy_policy || '',
+    legalNoticeText: record.legal_texts?.legal_notice || '',
   }
 }

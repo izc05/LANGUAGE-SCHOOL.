@@ -1,0 +1,12 @@
+/* FASE 12.5 · ajuste de la franja académica
+   Cursos y Clases exponen 4 métricas; Aula online expone 3. */
+@media (min-width:761px){
+  .dashboard-shell-admin .cms-page:has(.course-admin-grid)>.metric-grid,
+  .dashboard-shell-admin .cms-page:has(.admin-real-calendar)>.metric-grid{
+    grid-template-columns:repeat(4,minmax(0,1fr));
+  }
+
+  .dashboard-shell-admin .class-delivery-admin-page>.class-delivery-metrics{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+  }
+}

@@ -1,4 +1,5 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
+import AdminPricingPlanEditor from '../../components/AdminPricingPlanEditor'
 import DashboardShell from '../../components/DashboardShell'
 import { isDemoMode } from '../../config/environment'
 import {
@@ -36,10 +37,15 @@ function inputFromRecord(record: PricingPlanRecord): PricingPlanInput {
   }
 }
 
+function sortPlans(records: PricingPlanRecord[]): PricingPlanRecord[] {
+  return [...records].sort((a, b) => a.sort_order - b.sort_order || a.name.localeCompare(b.name, 'es'))
+}
+
 export default function AdminPricingPage() {
   const [plans, setPlans] = useState<PricingPlanRecord[]>(isDemoMode ? demoPricingPlans : [])
   const [draft, setDraft] = useState<PricingPlanInput>(emptyPlan)
   const [featuresText, setFeaturesText] = useState('')
+  const [editingPlanId, setEditingPlanId] = useState<string | null>(null)
   const [loading, setLoading] = useState(!isDemoMode)
   const [saving, setSaving] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
@@ -88,7 +94,7 @@ export default function AdminPricingPage() {
         active: input.active,
         featured: input.featured,
       } as PricingPlanRecord
-      setPlans((current) => [...current, record].sort((a, b) => a.sort_order - b.sort_order))
+      setPlans((current) => sortPlans([...current, record]))
       setDraft(emptyPlan)
       setFeaturesText('')
       setNotice('Modo demo: tarifa creada únicamente en este navegador.')
@@ -98,7 +104,7 @@ export default function AdminPricingPage() {
     setSaving(true)
     try {
       const created = await createPricingPlan(input)
-      setPlans((current) => [...current, created].sort((a, b) => a.sort_order - b.sort_order))
+      setPlans((current) => sortPlans([...current, created]))
       setDraft(emptyPlan)
       setFeaturesText('')
       setNotice('Tarifa creada en PocketBase.')
@@ -114,7 +120,7 @@ export default function AdminPricingPage() {
     setError(null)
 
     if (isDemoMode) {
-      setPlans((current) => current.map((item) => item.id === record.id ? {
+      setPlans((current) => sortPlans(current.map((item) => item.id === record.id ? {
         ...item,
         name: input.name,
         description: input.description,
@@ -124,16 +130,23 @@ export default function AdminPricingPage() {
         sort_order: input.sortOrder,
         active: input.active,
         featured: input.featured,
-      } : item))
+      } : item)))
       return
     }
 
     try {
       const updated = await updatePricingPlan(record.id, input)
-      setPlans((current) => current.map((item) => item.id === updated.id ? updated : item))
+      setPlans((current) => sortPlans(current.map((item) => item.id === updated.id ? updated : item)))
     } catch {
       setError('No se ha podido actualizar la tarifa.')
     }
+  }
+
+  function handlePlanSaved(updated: PricingPlanRecord) {
+    setPlans((current) => sortPlans(current.map((item) => item.id === updated.id ? updated : item)))
+    setEditingPlanId(null)
+    setError(null)
+    setNotice(isDemoMode ? 'Cambios de tarifa preparados en la demostración.' : 'Tarifa actualizada correctamente.')
   }
 
   async function removePlan(record: PricingPlanRecord) {
@@ -145,6 +158,7 @@ export default function AdminPricingPage() {
     try {
       await deletePricingPlan(record.id)
       setPlans((current) => current.filter((item) => item.id !== record.id))
+      if (editingPlanId === record.id) setEditingPlanId(null)
       setNotice('Tarifa eliminada.')
     } catch {
       setError('No se ha podido eliminar la tarifa.')
@@ -197,10 +211,12 @@ export default function AdminPricingPage() {
                 <div className="pricing-admin-price"><strong>{Number(plan.price).toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} €</strong><span>{plan.billing_text}</span></div>
                 {plan.features?.length > 0 && <ul>{plan.features.map((feature) => <li key={feature}>{feature}</li>)}</ul>}
                 <div className="pricing-admin-actions">
+                  <button className="button button-ghost" type="button" onClick={() => { setEditingPlanId((current) => current === plan.id ? null : plan.id); setNotice(null); setError(null) }}>{editingPlanId === plan.id ? 'Cerrar edición' : 'Editar'}</button>
                   <button className="button button-ghost" type="button" onClick={() => void patchPlan(plan, { active: !plan.active })}>{plan.active ? 'Ocultar' : 'Activar'}</button>
                   <button className="button button-ghost" type="button" onClick={() => void patchPlan(plan, { featured: !plan.featured })}>{plan.featured ? 'Quitar destacado' : 'Destacar'}</button>
                   <button className="button button-danger-soft" type="button" onClick={() => void removePlan(plan)}>Eliminar</button>
                 </div>
+                {editingPlanId === plan.id && <AdminPricingPlanEditor plan={plan} demo={isDemoMode} onSaved={handlePlanSaved} onCancel={() => setEditingPlanId(null)} />}
               </article>
             ))}
           </section>

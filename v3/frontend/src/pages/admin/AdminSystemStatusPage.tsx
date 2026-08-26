@@ -2,7 +2,14 @@ import { useEffect, useMemo, useState } from 'react'
 import DashboardShell from '../../components/DashboardShell'
 import { appMode, pocketBaseUrl } from '../../config/environment'
 import { checkBackendHealth, type BackendHealth } from '../../services/pocketbase/health'
+import { listPlacementAdminTests, type PlacementAdminTest } from '../../services/pocketbase/placementAdmin'
+import { getZoomIntegrationStatus, type ZoomIntegrationStatus } from '../../services/pocketbase/zoomIntegration'
 import { adminNav } from './adminNav'
+
+type DiagnosticState<T> = {
+  status: 'loading' | 'ready' | 'unavailable'
+  value: T | null
+}
 
 function formatCheckedAt(value: string): string {
   if (!value) return 'Todavía no comprobado'
@@ -20,8 +27,14 @@ function publicApiOrigin(): string {
   }
 }
 
+function loadingDiagnostic<T>(): DiagnosticState<T> {
+  return { status: 'loading', value: null }
+}
+
 export default function AdminSystemStatusPage() {
   const [health, setHealth] = useState<BackendHealth | null>(null)
+  const [zoom, setZoom] = useState<DiagnosticState<ZoomIntegrationStatus>>(loadingDiagnostic)
+  const [placement, setPlacement] = useState<DiagnosticState<PlacementAdminTest>>(loadingDiagnostic)
   const [checking, setChecking] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const apiOrigin = useMemo(publicApiOrigin, [])
@@ -29,20 +42,58 @@ export default function AdminSystemStatusPage() {
   async function refresh() {
     setChecking(true)
     setError(null)
-    try {
-      const result = await checkBackendHealth(5000)
-      setHealth(result)
-      if (!result.ok) setError('PocketBase no está respondiendo correctamente.')
-    } catch {
+    setZoom(loadingDiagnostic())
+    setPlacement(loadingDiagnostic())
+
+    const [healthResult, zoomResult, testsResult] = await Promise.allSettled([
+      checkBackendHealth(5000),
+      getZoomIntegrationStatus(),
+      listPlacementAdminTests(),
+    ])
+
+    if (healthResult.status === 'fulfilled') {
+      setHealth(healthResult.value)
+      if (!healthResult.value.ok) setError('PocketBase no está respondiendo correctamente.')
+    } else {
+      setHealth(null)
       setError('No se ha podido comprobar el estado del backend.')
-    } finally {
-      setChecking(false)
     }
+
+    setZoom(zoomResult.status === 'fulfilled'
+      ? { status: 'ready', value: zoomResult.value }
+      : { status: 'unavailable', value: null })
+
+    if (testsResult.status === 'fulfilled') {
+      setPlacement({
+        status: 'ready',
+        value: testsResult.value.find((test) => test.status === 'PUBLISHED') ?? null,
+      })
+    } else {
+      setPlacement({ status: 'unavailable', value: null })
+    }
+
+    setChecking(false)
   }
 
   useEffect(() => {
     void refresh()
   }, [])
+
+  const zoomLabel = zoom.status === 'loading'
+    ? 'Comprobando'
+    : zoom.status === 'unavailable'
+      ? 'No disponible'
+      : zoom.value?.configured
+        ? 'Preparado'
+        : 'Pendiente'
+
+  const placementLabel = placement.status === 'loading'
+    ? 'Comprobando'
+    : placement.status === 'unavailable'
+      ? 'No disponible'
+      : placement.value
+        ? 'Publicado'
+        : 'Sin publicar'
 
   return (
     <DashboardShell role="Administrador" name="Admin" nav={[...adminNav]}>
@@ -51,7 +102,7 @@ export default function AdminSystemStatusPage() {
           <div>
             <span className="eyebrow">SISTEMA · DIAGNÓSTICO</span>
             <h2>Estado de la plataforma</h2>
-            <p>Comprobación rápida de la conexión entre el frontend y PocketBase sin mostrar credenciales ni datos de sesión.</p>
+            <p>Comprobación segura de los servicios críticos sin mostrar credenciales ni datos de sesión.</p>
           </div>
           <button className="button button-primary" type="button" onClick={() => void refresh()} disabled={checking}>
             {checking ? 'Comprobando…' : 'Volver a comprobar'}
@@ -85,7 +136,27 @@ export default function AdminSystemStatusPage() {
           <article className="panel system-status-card">
             <span className="eyebrow">API</span>
             <strong className="system-status-origin">{apiOrigin}</strong>
-            <small>Solo se muestra el origen público; nunca tokens o contraseñas.</small>
+            <small>Solo se muestra el origen público.</small>
+          </article>
+
+          <article className="panel system-status-card" data-testid="system-zoom-status">
+            <span className="eyebrow">ZOOM</span>
+            <strong className="system-status-number">{zoomLabel}</strong>
+            <small>
+              {zoom.status === 'ready' && zoom.value
+                ? `API ${zoom.value.meetingCreationConfigured ? 'lista' : 'pendiente'} · SDK ${zoom.value.meetingSdkConfigured ? 'listo' : 'pendiente'}`
+                : 'Estado seguro de configuración server-side'}
+            </small>
+          </article>
+
+          <article className="panel system-status-card" data-testid="system-placement-status">
+            <span className="eyebrow">TEST DE NIVEL</span>
+            <strong className="system-status-number">{placementLabel}</strong>
+            <small>
+              {placement.status === 'ready' && placement.value
+                ? `${placement.value.version} · ${placement.value.algorithmVersion}`
+                : 'Versión académica activa'}
+            </small>
           </article>
         </section>
 
@@ -95,6 +166,8 @@ export default function AdminSystemStatusPage() {
             <div><span>Frontend</span><strong>Aplicación cargada</strong></div>
             <div><span>PocketBase</span><strong>{health?.ok ? 'Health-check correcto' : 'Pendiente / sin respuesta'}</strong></div>
             <div><span>Modo de datos</span><strong>{appMode === 'connected' ? 'Connected' : 'Demo'}</strong></div>
+            <div><span>Zoom</span><strong>{zoomLabel}</strong></div>
+            <div><span>Test de nivel</span><strong>{placementLabel}</strong></div>
             <div><span>Secretos</span><strong>No se muestran en esta pantalla</strong></div>
           </div>
         </section>

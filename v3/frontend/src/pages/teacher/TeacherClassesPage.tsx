@@ -2,7 +2,7 @@ import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import DashboardShell from '../../components/DashboardShell'
 import PortalEmptyState from '../../components/PortalEmptyState'
 import { useAuth } from '../../features/auth/AuthProvider'
-import type { AttendanceRecord, ClassRecord } from '../../services/pocketbase/studentPortal'
+import type { AttendanceRecord, ClassDeliveryMode, ClassRecord } from '../../services/pocketbase/studentPortal'
 import {
   createTeacherClass,
   listAttendanceForClass,
@@ -34,6 +34,16 @@ function statusLabel(status: ClassRecord['status']): string {
   return 'Programada'
 }
 
+function modeOf(record: ClassRecord): ClassDeliveryMode {
+  return record.delivery_mode || 'IN_PERSON'
+}
+
+function modeLabel(mode: ClassDeliveryMode): string {
+  if (mode === 'ONLINE') return 'Online'
+  if (mode === 'HYBRID') return 'Híbrida'
+  return 'Presencial'
+}
+
 function attendanceLabel(status?: AttendanceRecord['status']): string {
   if (status === 'PRESENT') return 'Presente'
   if (status === 'ABSENT') return 'Ausente'
@@ -43,13 +53,14 @@ function attendanceLabel(status?: AttendanceRecord['status']): string {
 
 const demoGroup: TeacherGroupRecord = {
   id: 'demo-group', collectionId: '', collectionName: 'groups', created: '', updated: '', expand: {},
-  name: 'Adultos B1', course: 'demo-course', teacher: 'demo-teacher', academic_year: '2026/27', schedule_text: 'Jueves 18:00', capacity: 8, status: 'ACTIVE',
+  name: 'Adultos B1', course: 'demo-course', teacher: 'demo-teacher', academic_year: '2026/27', schedule_text: 'Jueves 18:00', capacity: 8,
+  target_level: 'B1', default_delivery_mode: 'HYBRID', status: 'ACTIVE',
 }
 
 const demoClass: ClassRecord = {
   id: 'demo-class', collectionId: '', collectionName: 'classes', created: '', updated: '',
   group: 'demo-group', teacher: 'demo-teacher', starts_at: '2026-08-13T18:00:00Z', ends_at: '2026-08-13T19:00:00Z',
-  topic: 'Travel & experiences', description: 'Speaking + vocabulary', status: 'SCHEDULED',
+  topic: 'Travel & experiences', description: 'Speaking + vocabulary', status: 'SCHEDULED', delivery_mode: 'HYBRID', location_text: 'Aula 2', online_join_url: 'https://example.com/demo-class',
   expand: { group: demoGroup },
 }
 
@@ -89,6 +100,9 @@ export default function TeacherClassesPage() {
   const [description, setDescription] = useState('')
   const [startsAt, setStartsAt] = useState(datetimeLocal(60))
   const [endsAt, setEndsAt] = useState(datetimeLocal(120))
+  const [deliveryMode, setDeliveryMode] = useState<ClassDeliveryMode>('IN_PERSON')
+  const [locationText, setLocationText] = useState('')
+  const [onlineJoinUrl, setOnlineJoinUrl] = useState('')
 
   useEffect(() => {
     if (isDemoMode) return
@@ -146,11 +160,12 @@ export default function TeacherClassesPage() {
     }
     setSaving(true)
     try {
-      const record = await createTeacherClass({ groupId, startsAt, endsAt, topic, description })
+      const record = await createTeacherClass({ groupId, startsAt, endsAt, topic, description, deliveryMode, locationText, onlineJoinUrl })
       setClasses((current) => [record, ...current])
       setSelectedId(record.id)
       setTopic('')
       setDescription('')
+      setOnlineJoinUrl('')
       setMessage('Clase creada correctamente.')
     } catch (creationError) {
       setError(creationError instanceof Error ? creationError.message : 'No se ha podido crear la clase. Comprueba el grupo y el horario y vuelve a intentarlo.')
@@ -200,7 +215,7 @@ export default function TeacherClassesPage() {
     <DashboardShell role="Profesor" name="Profesor" nav={[...teacherNav]}>
       <div className="dashboard-content teacher-portal-page">
         <header className="teacher-page-heading">
-          <div><span className="eyebrow">AGENDA DOCENTE</span><h2>Clases y asistencia</h2><p>Programa clases en tus grupos y registra la asistencia de los alumnos con matrícula activa.</p></div>
+          <div><span className="eyebrow">AGENDA DOCENTE</span><h2>Clases y asistencia</h2><p>Programa clases presenciales, online o híbridas y registra la asistencia de los alumnos con matrícula activa.</p></div>
           <div className="private-space-badge"><strong>{classes.length}</strong><span>clases registradas</span></div>
         </header>
 
@@ -218,6 +233,14 @@ export default function TeacherClassesPage() {
                 <option value="">{noGroups ? 'Sin grupos disponibles' : 'Selecciona grupo'}</option>
                 {groups.map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}
               </select>
+              <label>Modalidad</label>
+              <select value={deliveryMode} onChange={(e) => setDeliveryMode(e.target.value as ClassDeliveryMode)} disabled={noGroups}>
+                <option value="IN_PERSON">Presencial</option>
+                <option value="ONLINE">Online</option>
+                <option value="HYBRID">Híbrida</option>
+              </select>
+              {deliveryMode !== 'ONLINE' && <><label>Lugar / aula</label><input value={locationText} onChange={(e) => setLocationText(e.target.value)} placeholder="Ej. Aula 2" disabled={noGroups} /></>}
+              {deliveryMode !== 'IN_PERSON' && <><label>Enlace de videoclase</label><input type="url" value={onlineJoinUrl} onChange={(e) => setOnlineJoinUrl(e.target.value)} placeholder="https://meet.google.com/... (opcional)" disabled={noGroups} /><small className="muted">Si la sesión usa Google Meet, pega aquí su enlace. Si lo dejas vacío, Administración puede preparar Zoom de forma segura desde Language School.</small></>}
               <label>Tema</label>
               <input value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="Ej. Travel & experiences" required disabled={noGroups} />
               <label>Descripción</label>
@@ -236,7 +259,7 @@ export default function TeacherClassesPage() {
               {orderedClasses.map((record) => (
                 <button key={record.id} type="button" className={selectedId === record.id ? 'active' : ''} onClick={() => setSelectedId(record.id)}>
                   <time>{formatDateTime(record.starts_at)}</time>
-                  <span><strong>{record.topic}</strong><small>{record.expand?.group?.name || 'Grupo'} · {statusLabel(record.status)}</small></span>
+                  <span><strong>{record.topic}</strong><small>{record.expand?.group?.name || 'Grupo'} · {modeLabel(modeOf(record))} · {statusLabel(record.status)}</small></span>
                   <b>→</b>
                 </button>
               ))}
@@ -253,7 +276,16 @@ export default function TeacherClassesPage() {
             />
           ) : <>
             <div className="teacher-class-detail-heading">
-              <div><span className="eyebrow">CLASE SELECCIONADA</span><h3>{selectedClass.topic}</h3><p>{selectedClass.expand?.group?.name || 'Grupo'} · {formatDateTime(selectedClass.starts_at)} · {statusLabel(selectedClass.status)}</p></div>
+              <div>
+                <span className="eyebrow">CLASE SELECCIONADA</span><h3>{selectedClass.topic}</h3>
+                <p>{selectedClass.expand?.group?.name || 'Grupo'} · {formatDateTime(selectedClass.starts_at)} · {statusLabel(selectedClass.status)}</p>
+                <div className="class-delivery-summary">
+                  <span className={`class-mode class-mode-${modeOf(selectedClass).toLowerCase()}`}>{modeLabel(modeOf(selectedClass))}</span>
+                  {selectedClass.location_text && <span>📍 {selectedClass.location_text}</span>}
+                  {modeOf(selectedClass) !== 'IN_PERSON' && selectedClass.online_join_url && <a href={selectedClass.online_join_url} target="_blank" rel="noreferrer">Abrir videoclase ↗</a>}
+                  {modeOf(selectedClass) !== 'IN_PERSON' && !selectedClass.online_join_url && <span>Acceso online pendiente</span>}
+                </div>
+              </div>
               <div className="teacher-class-status-actions">
                 {selectedClass.status !== 'SCHEDULED' && <button type="button" onClick={() => void changeClassStatus(selectedClass, 'SCHEDULED')}>Reabrir</button>}
                 {selectedClass.status !== 'COMPLETED' && <button type="button" onClick={() => void changeClassStatus(selectedClass, 'COMPLETED')}>Completar</button>}

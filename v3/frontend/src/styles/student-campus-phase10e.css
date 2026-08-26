@@ -1,0 +1,128 @@
+/* FASE 10.5 · MI NIVEL + PROGRESO
+   Clarifica la fuente del nivel sin alterar el motor 8C ni sus contratos. */
+
+.student-level-phase10e{
+  padding:30px clamp(20px,3vw,48px) 58px;
+  background:
+    radial-gradient(circle at 91% 2%,rgba(216,77,124,.065),transparent 25rem),
+    #f7f6f3;
+}
+
+.student-level-heading10{gap:18px}
+
+.student-level-current10{
+  position:relative;
+  overflow:hidden;
+  min-height:250px;
+}
+
+.student-level-current10::after{
+  content:'';
+  position:absolute;
+  right:-36px;
+  bottom:-50px;
+  width:170px;
+  height:170px;
+  border:1px solid rgba(255,255,255,.13);
+  border-radius:50%;
+}
+
+.student-level-current10>p{
+  position:relative;
+  z-index:1;
+  max-width:280px;
+  margin:12px 0 0;
+  color:rgba(255,255,255,.72);
+  font-size:.75rem;
+  line-height:1.5;
+}
+
+.student-level-reference10{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:12px;
+}
+
+.student-level-reference10>div{
+  min-width:0;
+  padding:18px 20px;
+  border:1px solid #e9e2e3;
+  border-radius:18px;
+  background:#fff;
+}
+
+.student-level-reference10>div.is-primary{
+  border-color:#dfb9c7;
+  background:#fff8fa;
+  box-shadow:inset 3px 0 0 #d64d7a;
+}
+
+.student-level-reference10 small{
+  display:block;
+  color:#a45e79;
+  font-size:.59rem;
+  font-weight:900;
+  letter-spacing:.11em;
+}
+
+.student-level-reference10 strong{
+  display:block;
+  margin:6px 0 3px;
+  color:#372a31;
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:2rem;
+  line-height:1;
+}
+
+.student-level-reference10 span{
+  color:#88767e;
+  font-size:.76rem;
+  line-height:1.4;
+}
+
+.student-level-overview10{align-items:stretch}
+.student-level-action-card10,.student-level-latest10{box-shadow:0 14px 38px rgba(48,30,38,.035)}
+.student-level-action-card10{border-color:#e9e2e3}
+
+.student-level-diagnostic-note10{
+  margin:4px 0 0;
+  padding:12px 14px;
+  border:1px solid #eee3e7;
+  border-radius:14px;
+  background:#fff9fb;
+  color:#806d75;
+  font-size:.75rem;
+  line-height:1.5;
+}
+
+.student-level-validation10{
+  border-color:#dcc6cf;
+  background:linear-gradient(135deg,#fff 64%,#fff5f8);
+  box-shadow:0 14px 38px rgba(48,30,38,.03);
+}
+
+.student-level-history10 .student-level-history-heading{padding:0 4px}
+.student-level-history10 .student-level-history-list article{transition:border-color .18s ease,background .18s ease}
+.student-level-history10 .student-level-history-list article:hover{border-color:#e8d1da;background:#fffbfc}
+
+.student-level-phase10e button:focus-visible,
+.student-level-phase10e input:focus-visible,
+.student-level-phase10e a:focus-visible{
+  outline:3px solid rgba(194,63,114,.34);
+  outline-offset:3px;
+}
+
+@media(max-width:900px){
+  .student-level-reference10{grid-template-columns:1fr}
+  .student-level-current10{min-height:210px}
+}
+
+@media(max-width:600px){
+  .student-level-phase10e{padding:24px 18px 46px}
+  .student-level-reference10>div{padding:16px 17px}
+  .student-level-current10>p{max-width:none}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .student-level-history10 .student-level-history-list article{transition:none}
+}

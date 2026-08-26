@@ -1,0 +1,1004 @@
+/* FASE 12.7 · ADMIN WEB Y CONTENIDO
+   Portada + Sobre nosotros + Profesores públicos + Blog + Multimedia + Tarifas.
+   Capa visual aislada: conserva publicación/borrador, uploads, CRUD y contratos PocketBase. */
+
+.dashboard-shell-admin .cms-page:has(.cms-editor-grid),
+.dashboard-shell-admin .cms-page:has(.about-admin-layout),
+.dashboard-shell-admin .cms-page:has(.public-teacher-admin-grid),
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid),
+.dashboard-shell-admin .cms-page:has(.media-grid-admin),
+.dashboard-shell-admin .cms-page:has(.pricing-admin-list) {
+  --content-ink: #382b33;
+  --content-muted: #806b76;
+  --content-plum: #4a2d3b;
+  --content-plum-deep: #281c23;
+  --content-pink: #bd4f79;
+  --content-pink-soft: #f8e8ee;
+  --content-blush: #fff5f8;
+  --content-paper: #fffdfb;
+  --content-ivory: #fbf7f2;
+  --content-line: rgba(105, 62, 80, .11);
+  --content-shadow: 0 14px 36px rgba(70, 36, 50, .04);
+  display: grid;
+  gap: 22px;
+  max-width: 1480px;
+  margin: 0 auto;
+  padding-top: 30px;
+  padding-bottom: 52px;
+}
+
+/* Cabeceras premium compartidas */
+.dashboard-shell-admin .cms-page:has(.cms-editor-grid) > .cms-page-heading,
+.dashboard-shell-admin .cms-page:has(.about-admin-layout) > .cms-page-heading,
+.dashboard-shell-admin .cms-page:has(.public-teacher-admin-grid) > .cms-page-heading,
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) > .cms-page-heading,
+.dashboard-shell-admin .cms-page:has(.media-grid-admin) > .cms-page-heading,
+.dashboard-shell-admin .cms-page:has(.pricing-admin-list) > .cms-page-heading {
+  position: relative;
+  min-height: 225px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 30px;
+  overflow: hidden;
+  padding: 40px 43px;
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: 29px;
+  color: #f8eef2;
+  background:
+    radial-gradient(circle at 84% 16%, rgba(218, 112, 151, .22), transparent 23rem),
+    linear-gradient(132deg, var(--content-plum) 0%, var(--content-plum-deep) 100%);
+  box-shadow: 0 27px 66px rgba(57, 31, 43, .13);
+}
+
+.dashboard-shell-admin .cms-page:has(.cms-editor-grid) > .cms-page-heading::after,
+.dashboard-shell-admin .cms-page:has(.about-admin-layout) > .cms-page-heading::after,
+.dashboard-shell-admin .cms-page:has(.public-teacher-admin-grid) > .cms-page-heading::after,
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) > .cms-page-heading::after,
+.dashboard-shell-admin .cms-page:has(.media-grid-admin) > .cms-page-heading::after,
+.dashboard-shell-admin .cms-page:has(.pricing-admin-list) > .cms-page-heading::after {
+  content: '';
+  position: absolute;
+  right: -95px;
+  bottom: -154px;
+  width: 355px;
+  height: 355px;
+  border: 1px solid rgba(255, 255, 255, .075);
+  border-radius: 50%;
+  box-shadow: 0 0 0 53px rgba(255, 255, 255, .018), 0 0 0 106px rgba(255, 255, 255, .012);
+  pointer-events: none;
+}
+
+.dashboard-shell-admin .cms-page:has(.cms-editor-grid) > .cms-page-heading > *,
+.dashboard-shell-admin .cms-page:has(.about-admin-layout) > .cms-page-heading > *,
+.dashboard-shell-admin .cms-page:has(.public-teacher-admin-grid) > .cms-page-heading > *,
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) > .cms-page-heading > *,
+.dashboard-shell-admin .cms-page:has(.media-grid-admin) > .cms-page-heading > *,
+.dashboard-shell-admin .cms-page:has(.pricing-admin-list) > .cms-page-heading > * {
+  position: relative;
+  z-index: 1;
+}
+
+.dashboard-shell-admin .cms-page:has(.cms-editor-grid) > .cms-page-heading > div:first-child,
+.dashboard-shell-admin .cms-page:has(.about-admin-layout) > .cms-page-heading > div:first-child,
+.dashboard-shell-admin .cms-page:has(.public-teacher-admin-grid) > .cms-page-heading > div:first-child,
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) > .cms-page-heading > div:first-child,
+.dashboard-shell-admin .cms-page:has(.media-grid-admin) > .cms-page-heading > div:first-child,
+.dashboard-shell-admin .cms-page:has(.pricing-admin-list) > .cms-page-heading > div:first-child {
+  max-width: 790px;
+}
+
+.dashboard-shell-admin .cms-page:has(.cms-editor-grid) > .cms-page-heading .eyebrow,
+.dashboard-shell-admin .cms-page:has(.about-admin-layout) > .cms-page-heading .eyebrow,
+.dashboard-shell-admin .cms-page:has(.public-teacher-admin-grid) > .cms-page-heading .eyebrow,
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) > .cms-page-heading .eyebrow,
+.dashboard-shell-admin .cms-page:has(.media-grid-admin) > .cms-page-heading .eyebrow,
+.dashboard-shell-admin .cms-page:has(.pricing-admin-list) > .cms-page-heading .eyebrow {
+  color: #efb3c8;
+}
+
+.dashboard-shell-admin .cms-page:has(.cms-editor-grid) > .cms-page-heading h2,
+.dashboard-shell-admin .cms-page:has(.about-admin-layout) > .cms-page-heading h2,
+.dashboard-shell-admin .cms-page:has(.public-teacher-admin-grid) > .cms-page-heading h2,
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) > .cms-page-heading h2,
+.dashboard-shell-admin .cms-page:has(.media-grid-admin) > .cms-page-heading h2,
+.dashboard-shell-admin .cms-page:has(.pricing-admin-list) > .cms-page-heading h2 {
+  margin: 10px 0 12px;
+  color: #fff;
+  font-size: clamp(2.3rem, 3.7vw, 4rem);
+  line-height: .99;
+  letter-spacing: -.038em;
+}
+
+.dashboard-shell-admin .cms-page:has(.cms-editor-grid) > .cms-page-heading p,
+.dashboard-shell-admin .cms-page:has(.about-admin-layout) > .cms-page-heading p,
+.dashboard-shell-admin .cms-page:has(.public-teacher-admin-grid) > .cms-page-heading p,
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) > .cms-page-heading p,
+.dashboard-shell-admin .cms-page:has(.media-grid-admin) > .cms-page-heading p,
+.dashboard-shell-admin .cms-page:has(.pricing-admin-list) > .cms-page-heading p {
+  max-width: 700px;
+  margin: 0;
+  color: #d9c7cf;
+  font-size: .98rem;
+  line-height: 1.7;
+}
+
+.dashboard-shell-admin .cms-page:has(.cms-editor-grid) > .cms-page-heading .button,
+.dashboard-shell-admin .cms-page:has(.about-admin-layout) > .cms-page-heading .button,
+.dashboard-shell-admin .cms-page:has(.public-teacher-admin-grid) > .cms-page-heading .button,
+.dashboard-shell-admin .cms-page:has(.media-grid-admin) > .cms-page-heading .button,
+.dashboard-shell-admin .cms-page:has(.pricing-admin-list) > .cms-page-heading .status {
+  min-height: 45px;
+  border: 1px solid rgba(255, 255, 255, .16);
+  border-radius: 999px;
+  color: #fff;
+  background: rgba(255, 255, 255, .09);
+  box-shadow: none;
+  backdrop-filter: blur(8px);
+}
+
+.dashboard-shell-admin .cms-page:has(.media-grid-admin) > .cms-page-heading .button-primary {
+  color: var(--content-plum-deep);
+  background: #fff7fa;
+}
+
+/* Paneles, formularios y foco comunes */
+.dashboard-shell-admin .cms-page:has(.cms-editor-grid) .panel,
+.dashboard-shell-admin .cms-page:has(.about-admin-layout) .panel,
+.dashboard-shell-admin .cms-page:has(.public-teacher-admin-grid) .panel,
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .panel,
+.dashboard-shell-admin .cms-page:has(.media-grid-admin) .panel,
+.dashboard-shell-admin .cms-page:has(.pricing-admin-list) .panel {
+  border: 1px solid var(--content-line);
+  border-radius: 23px;
+  background: rgba(255, 253, 251, .9);
+  box-shadow: var(--content-shadow);
+}
+
+.dashboard-shell-admin .cms-page:has(.cms-editor-grid) .panel-heading,
+.dashboard-shell-admin .cms-page:has(.about-admin-layout) .panel-heading,
+.dashboard-shell-admin .cms-page:has(.public-teacher-admin-grid) .panel-heading,
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .panel-heading,
+.dashboard-shell-admin .cms-page:has(.media-grid-admin) .panel-heading,
+.dashboard-shell-admin .cms-page:has(.pricing-admin-list) .panel-heading {
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.dashboard-shell-admin .cms-page:has(.cms-editor-grid) .panel-heading .eyebrow,
+.dashboard-shell-admin .cms-page:has(.about-admin-layout) .panel-heading .eyebrow,
+.dashboard-shell-admin .cms-page:has(.public-teacher-admin-grid) .eyebrow,
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .panel-heading .eyebrow,
+.dashboard-shell-admin .cms-page:has(.media-grid-admin) .eyebrow,
+.dashboard-shell-admin .cms-page:has(.pricing-admin-list) .panel-heading .eyebrow {
+  color: #ad5876;
+}
+
+.dashboard-shell-admin .cms-page:has(.cms-editor-grid) .panel-heading h3,
+.dashboard-shell-admin .cms-page:has(.about-admin-layout) .panel-heading h3,
+.dashboard-shell-admin .cms-page:has(.public-teacher-admin-grid) h3,
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .panel-heading h3,
+.dashboard-shell-admin .cms-page:has(.media-grid-admin) h3,
+.dashboard-shell-admin .cms-page:has(.pricing-admin-list) .panel-heading h3 {
+  color: var(--content-ink);
+  font-family: 'Playfair Display', Georgia, serif;
+}
+
+.dashboard-shell-admin .cms-page:has(.cms-editor-grid) .field-stack > span,
+.dashboard-shell-admin .cms-page:has(.about-admin-layout) .field-stack > span,
+.dashboard-shell-admin .cms-page:has(.public-teacher-admin-grid) .admin-create-grid label,
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .field-stack > span,
+.dashboard-shell-admin .cms-page:has(.media-grid-admin) .media-search,
+.dashboard-shell-admin .cms-page:has(.pricing-admin-list) .field-stack > span {
+  color: #8f6d7c;
+  font-size: .68rem;
+  font-weight: 850;
+  letter-spacing: .055em;
+  text-transform: uppercase;
+}
+
+.dashboard-shell-admin .cms-page:has(.cms-editor-grid) .field-stack input,
+.dashboard-shell-admin .cms-page:has(.cms-editor-grid) .field-stack textarea,
+.dashboard-shell-admin .cms-page:has(.cms-editor-grid) .field-stack select,
+.dashboard-shell-admin .cms-page:has(.about-admin-layout) .field-stack input,
+.dashboard-shell-admin .cms-page:has(.about-admin-layout) .field-stack textarea,
+.dashboard-shell-admin .cms-page:has(.public-teacher-admin-grid) .admin-create-grid input,
+.dashboard-shell-admin .cms-page:has(.public-teacher-admin-grid) .admin-create-grid textarea,
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .field-stack input,
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .field-stack textarea,
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .field-stack select,
+.dashboard-shell-admin .cms-page:has(.media-grid-admin) .media-search input,
+.dashboard-shell-admin .cms-page:has(.pricing-admin-list) .field-stack input,
+.dashboard-shell-admin .cms-page:has(.pricing-admin-list) .field-stack textarea,
+.dashboard-shell-admin .cms-page:has(.pricing-admin-list) .field-stack select {
+  border: 1px solid rgba(105, 62, 80, .12);
+  border-radius: 13px;
+  color: var(--content-ink);
+  background: #fff;
+  box-shadow: none;
+}
+
+.dashboard-shell-admin .cms-page:has(.cms-editor-grid) .field-stack input:focus,
+.dashboard-shell-admin .cms-page:has(.cms-editor-grid) .field-stack textarea:focus,
+.dashboard-shell-admin .cms-page:has(.cms-editor-grid) .field-stack select:focus,
+.dashboard-shell-admin .cms-page:has(.about-admin-layout) .field-stack input:focus,
+.dashboard-shell-admin .cms-page:has(.about-admin-layout) .field-stack textarea:focus,
+.dashboard-shell-admin .cms-page:has(.public-teacher-admin-grid) input:focus,
+.dashboard-shell-admin .cms-page:has(.public-teacher-admin-grid) textarea:focus,
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) input:focus,
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) textarea:focus,
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) select:focus,
+.dashboard-shell-admin .cms-page:has(.media-grid-admin) .media-search input:focus,
+.dashboard-shell-admin .cms-page:has(.pricing-admin-list) input:focus,
+.dashboard-shell-admin .cms-page:has(.pricing-admin-list) textarea:focus,
+.dashboard-shell-admin .cms-page:has(.pricing-admin-list) select:focus {
+  border-color: rgba(189, 79, 121, .42);
+  outline: 3px solid rgba(189, 79, 121, .11);
+  box-shadow: none;
+}
+
+/* Página web / preview */
+.dashboard-shell-admin .cms-page:has(.cms-editor-grid) .cms-editor-grid {
+  grid-template-columns: minmax(0, .86fr) minmax(430px, 1.14fr);
+  gap: 18px;
+}
+
+.dashboard-shell-admin .cms-page:has(.cms-editor-grid) .cms-form {
+  gap: 19px;
+  padding: 25px 26px;
+}
+
+.dashboard-shell-admin .cms-page:has(.cms-editor-grid) .hero-image-management {
+  padding: 16px;
+  border: 1px solid var(--content-line);
+  border-radius: 17px;
+  background: var(--content-ivory);
+}
+
+.dashboard-shell-admin .cms-page:has(.cms-editor-grid) .hero-image-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.dashboard-shell-admin .cms-page:has(.cms-editor-grid) .hero-image-actions .button,
+.dashboard-shell-admin .cms-page:has(.cms-editor-grid) .cms-form-actions .button {
+  min-height: 43px;
+  border-radius: 999px;
+}
+
+.dashboard-shell-admin .cms-page:has(.cms-editor-grid) .selected-file {
+  border: 1px solid rgba(105, 62, 80, .08);
+  background: #fff;
+}
+
+.dashboard-shell-admin .cms-page:has(.cms-editor-grid) .selected-file > span {
+  background: linear-gradient(145deg, #674052, #382832);
+}
+
+.dashboard-shell-admin .cms-page:has(.cms-editor-grid) .cms-preview-panel {
+  top: 22px;
+  border: 1px solid var(--content-line);
+  border-radius: 23px;
+  background: #fff;
+  box-shadow: var(--content-shadow);
+}
+
+.dashboard-shell-admin .cms-page:has(.cms-editor-grid) .preview-browser-bar {
+  border-bottom-color: var(--content-line);
+  background: #f7f1f3;
+}
+
+.dashboard-shell-admin .cms-page:has(.cms-editor-grid) .preview-browser-bar i {
+  background: #cda7b6;
+}
+
+.dashboard-shell-admin .cms-page:has(.cms-editor-grid) .cms-hero-preview {
+  min-height: 520px;
+  background:
+    radial-gradient(circle at 84% 18%, rgba(217, 123, 154, .18), transparent 32%),
+    linear-gradient(135deg, #fffdfb, #f8eff2);
+}
+
+.dashboard-shell-admin .cms-page:has(.cms-editor-grid) .cms-image-preview {
+  background: linear-gradient(145deg, #f1dfe6, #eee4dc);
+  box-shadow: 0 18px 45px rgba(70, 36, 50, .12);
+}
+
+.dashboard-shell-admin .cms-page:has(.cms-editor-grid) .cms-image-preview span {
+  color: #994663;
+}
+
+.dashboard-shell-admin .cms-page:has(.cms-editor-grid) .cms-section-cards button {
+  border-color: var(--content-line);
+  border-radius: 17px;
+  color: var(--content-ink);
+  background: #fff;
+}
+
+.dashboard-shell-admin .cms-page:has(.cms-editor-grid) .cms-section-cards button:hover {
+  border-color: rgba(189, 79, 121, .2);
+  background: #fff7f9;
+}
+
+.dashboard-shell-admin .cms-page:has(.cms-editor-grid) .cms-section-cards b {
+  color: #994663;
+}
+
+/* Sobre nosotros */
+.dashboard-shell-admin .cms-page:has(.about-admin-layout) .about-admin-layout {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.dashboard-shell-admin .cms-page:has(.about-admin-layout) .cms-form {
+  gap: 18px;
+  padding: 25px 26px;
+}
+
+.dashboard-shell-admin .cms-page:has(.about-admin-layout) .about-values-admin {
+  grid-column: 1 / -1;
+}
+
+.dashboard-shell-admin .cms-page:has(.about-admin-layout) .about-value-editor {
+  gap: 16px;
+  padding: 17px 0;
+  border-top-color: var(--content-line);
+}
+
+.dashboard-shell-admin .cms-page:has(.about-admin-layout) .teacher-public-actions .button {
+  min-height: 43px;
+  border-radius: 999px;
+}
+
+/* Profesores públicos */
+.dashboard-shell-admin .cms-page:has(.public-teacher-admin-grid) .public-teacher-admin-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.dashboard-shell-admin .cms-page:has(.public-teacher-admin-grid) .public-teacher-admin-card {
+  gap: 18px;
+  padding: 25px 26px;
+}
+
+.dashboard-shell-admin .cms-page:has(.public-teacher-admin-grid) .public-teacher-admin-heading {
+  grid-template-columns: 62px minmax(0, 1fr) auto;
+  gap: 14px;
+}
+
+.dashboard-shell-admin .cms-page:has(.public-teacher-admin-grid) .public-teacher-admin-avatar {
+  width: 62px;
+  height: 62px;
+  border-radius: 17px;
+  color: #fff;
+  background: linear-gradient(145deg, #674052, #382832);
+  box-shadow: 0 10px 24px rgba(69, 38, 51, .16);
+}
+
+.dashboard-shell-admin .cms-page:has(.public-teacher-admin-grid) .public-teacher-admin-heading h3 {
+  margin: 3px 0;
+  font-size: 1.5rem;
+}
+
+.dashboard-shell-admin .cms-page:has(.public-teacher-admin-grid) .public-teacher-admin-heading small {
+  color: var(--content-muted);
+  overflow-wrap: anywhere;
+}
+
+.dashboard-shell-admin .cms-page:has(.public-teacher-admin-grid) .teacher-public-fields {
+  gap: 12px;
+}
+
+.dashboard-shell-admin .cms-page:has(.public-teacher-admin-grid) .teacher-public-check {
+  padding: 12px 13px;
+  border: 1px solid var(--content-line);
+  border-radius: 13px;
+  background: var(--content-ivory);
+}
+
+.dashboard-shell-admin .cms-page:has(.public-teacher-admin-grid) .teacher-public-actions .button {
+  min-height: 43px;
+  border-radius: 999px;
+}
+
+/* Blog */
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .blog-admin-stats {
+  justify-content: flex-end;
+}
+
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .blog-admin-stats span {
+  min-height: 44px;
+  border: 1px solid rgba(255, 255, 255, .13);
+  border-radius: 999px;
+  color: #ddc9d1;
+  background: rgba(255, 255, 255, .08);
+  backdrop-filter: blur(8px);
+}
+
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .blog-admin-stats strong {
+  color: #fff;
+}
+
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .blog-admin-grid {
+  grid-template-columns: minmax(330px, .78fr) minmax(0, 1.22fr);
+  gap: 16px;
+}
+
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .blog-list-panel,
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .blog-editor-panel {
+  gap: 17px;
+  padding: 24px 25px;
+}
+
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .blog-list-panel {
+  position: sticky;
+  top: 22px;
+}
+
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .blog-list-panel .panel-heading > button,
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .admin-post-list article > button {
+  min-height: 39px;
+  padding: 0 12px;
+  border: 1px solid var(--content-line);
+  border-radius: 999px;
+  color: #684f5b;
+  background: #fff;
+  font-weight: 800;
+}
+
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .admin-post-list article {
+  min-height: 76px;
+  padding: 14px 0;
+  border-bottom-color: var(--content-line);
+}
+
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .admin-post-list article strong {
+  color: var(--content-ink);
+}
+
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .admin-post-list small {
+  color: var(--content-muted);
+}
+
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .content-state.published {
+  color: #2e6948;
+  background: #e8f4ec;
+}
+
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .content-state.draft {
+  color: #855400;
+  background: #fff1d4;
+}
+
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .editor-toolbar {
+  border-color: rgba(105, 62, 80, .12);
+  background: #f8f2f4;
+}
+
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .editor-toolbar > * {
+  color: #6d5360;
+  background: #fff;
+}
+
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .cms-form-actions .button {
+  min-height: 43px;
+  border-radius: 999px;
+}
+
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .blog-media-field {
+  display: grid;
+  gap: 13px;
+  padding: 17px;
+  border: 1px solid var(--content-line);
+  border-radius: 17px;
+  background: var(--content-ivory);
+}
+
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .blog-media-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .blog-media-heading > div,
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .blog-media-picker {
+  display: grid;
+  gap: 5px;
+}
+
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .blog-media-heading span,
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .blog-media-picker > span {
+  color: var(--content-ink);
+  font-size: .82rem;
+  font-weight: 800;
+}
+
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .blog-media-heading small,
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .blog-media-picker small,
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .blog-media-existing small,
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .blog-media-pending small {
+  color: var(--content-muted);
+  font-size: .72rem;
+}
+
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .blog-media-heading > strong {
+  flex: 0 0 auto;
+  padding: 6px 9px;
+  border-radius: 999px;
+  color: #8f3658;
+  background: var(--content-pink-soft);
+  font-size: .72rem;
+}
+
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .blog-media-picker {
+  padding: 13px;
+  border: 1px dashed rgba(189, 79, 121, .32);
+  border-radius: 14px;
+  background: #fff;
+}
+
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .blog-media-picker input {
+  width: 100%;
+  color: var(--content-muted);
+  font-size: .78rem;
+}
+
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .blog-media-existing,
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .blog-media-pending {
+  display: grid;
+  gap: 8px;
+}
+
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .blog-media-existing article,
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .blog-media-pending article {
+  display: grid;
+  grid-template-columns: 62px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid var(--content-line);
+  border-radius: 13px;
+  background: #fff;
+}
+
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .blog-media-existing img,
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .blog-media-existing video {
+  width: 62px;
+  height: 48px;
+  display: block;
+  border-radius: 9px;
+  background: #2e2228;
+  object-fit: cover;
+}
+
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .blog-media-existing article > div,
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .blog-media-pending article > div {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .blog-media-existing article > div small,
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .blog-media-pending article > div strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .blog-media-pending article > span {
+  color: #8f3658;
+  font-size: .62rem;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .blog-media-existing button,
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) .blog-media-pending button {
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--content-line);
+  border-radius: 999px;
+  color: #7f465b;
+  background: #fff9fb;
+  font-size: .7rem;
+  font-weight: 800;
+}
+
+/* Multimedia */
+.dashboard-shell-admin .cms-page:has(.media-grid-admin) .media-toolbar-panel {
+  padding: 15px 17px;
+}
+
+.dashboard-shell-admin .cms-page:has(.media-grid-admin) .media-toolbar {
+  gap: 16px;
+}
+
+.dashboard-shell-admin .cms-page:has(.media-grid-admin) .filter-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.dashboard-shell-admin .cms-page:has(.media-grid-admin) .filter-pills button {
+  min-height: 40px;
+  padding: 0 13px;
+  border: 1px solid var(--content-line);
+  border-radius: 999px;
+  color: var(--content-muted);
+  background: #fff;
+  font-size: .72rem;
+  font-weight: 800;
+}
+
+.dashboard-shell-admin .cms-page:has(.media-grid-admin) .filter-pills button.active {
+  border-color: rgba(189, 79, 121, .22);
+  color: #8f3658;
+  background: var(--content-pink-soft);
+}
+
+.dashboard-shell-admin .cms-page:has(.media-grid-admin) .media-search input {
+  min-height: 42px;
+  min-width: 240px;
+  border-radius: 999px;
+}
+
+.dashboard-shell-admin .cms-page:has(.media-grid-admin) .media-grid-admin {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 15px;
+}
+
+.dashboard-shell-admin .cms-page:has(.media-grid-admin) .media-card-admin {
+  overflow: hidden;
+  border: 1px solid var(--content-line);
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 10px 28px rgba(70, 36, 50, .035);
+}
+
+.dashboard-shell-admin .cms-page:has(.media-grid-admin) .media-card-visual {
+  min-height: 190px;
+  background-color: #f4e9ed;
+}
+
+.dashboard-shell-admin .cms-page:has(.media-grid-admin) .media-tone-1,
+.dashboard-shell-admin .cms-page:has(.media-grid-admin) .media-tone-2,
+.dashboard-shell-admin .cms-page:has(.media-grid-admin) .media-tone-3,
+.dashboard-shell-admin .cms-page:has(.media-grid-admin) .media-tone-4 {
+  background-image: linear-gradient(145deg, #f0dfe6, #eee5dc);
+}
+
+.dashboard-shell-admin .cms-page:has(.media-grid-admin) .media-card-info {
+  padding: 14px 15px 11px;
+}
+
+.dashboard-shell-admin .cms-page:has(.media-grid-admin) .media-card-info strong {
+  color: var(--content-ink);
+}
+
+.dashboard-shell-admin .cms-page:has(.media-grid-admin) .media-card-info small {
+  color: var(--content-muted);
+}
+
+.dashboard-shell-admin .cms-page:has(.media-grid-admin) .media-card-actions {
+  border-top-color: var(--content-line);
+}
+
+.dashboard-shell-admin .cms-page:has(.media-grid-admin) .media-card-actions button {
+  min-height: 44px;
+  border-right-color: var(--content-line);
+  color: #684f5b;
+}
+
+.dashboard-shell-admin .cms-page:has(.media-grid-admin) .media-card-actions button:hover {
+  color: #8f3658;
+  background: #fff7f9;
+}
+
+.dashboard-shell-admin .cms-page:has(.media-grid-admin) .storage-panel {
+  border: 1px solid var(--content-line);
+  background: linear-gradient(145deg, #fffdfb, #fff7f9);
+}
+
+.dashboard-shell-admin .cms-page:has(.media-grid-admin) .progress-line {
+  background: #f0e5e9;
+}
+
+.dashboard-shell-admin .cms-page:has(.media-grid-admin) .progress-line > span {
+  background: linear-gradient(90deg, #8d3d5d, var(--content-pink));
+}
+
+/* Tarifas */
+.dashboard-shell-admin .cms-page:has(.pricing-admin-list) .admin-settings-grid {
+  grid-template-columns: minmax(320px, .7fr) minmax(0, 1.3fr);
+  gap: 16px;
+}
+
+.dashboard-shell-admin .cms-page:has(.pricing-admin-list) .cms-form,
+.dashboard-shell-admin .cms-page:has(.pricing-admin-list) .pricing-admin-list {
+  gap: 17px;
+  padding: 24px 25px;
+}
+
+.dashboard-shell-admin .cms-page:has(.pricing-admin-list) .cms-form {
+  position: sticky;
+  top: 22px;
+}
+
+.dashboard-shell-admin .cms-page:has(.pricing-admin-list) .pricing-admin-card {
+  gap: 14px;
+  padding: 19px 20px;
+  border: 1px solid var(--content-line);
+  border-radius: 18px;
+  background: #fff;
+}
+
+.dashboard-shell-admin .cms-page:has(.pricing-admin-list) .pricing-admin-card.featured {
+  border-color: rgba(189, 79, 121, .2);
+  background: linear-gradient(145deg, #fff4f7, #fffdfb);
+  box-shadow: inset 4px 0 0 var(--content-pink);
+}
+
+.dashboard-shell-admin .cms-page:has(.pricing-admin-list) .pricing-admin-title strong {
+  color: var(--content-ink);
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.3rem;
+}
+
+.dashboard-shell-admin .cms-page:has(.pricing-admin-list) .pricing-admin-title small,
+.dashboard-shell-admin .cms-page:has(.pricing-admin-list) .pricing-admin-price span,
+.dashboard-shell-admin .cms-page:has(.pricing-admin-list) .pricing-admin-card ul {
+  color: var(--content-muted);
+}
+
+.dashboard-shell-admin .cms-page:has(.pricing-admin-list) .pricing-admin-price strong {
+  color: #923b5e;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 2rem;
+}
+
+.dashboard-shell-admin .cms-page:has(.pricing-admin-list) .pricing-admin-actions {
+  gap: 7px;
+}
+
+.dashboard-shell-admin .cms-page:has(.pricing-admin-list) .pricing-admin-actions .button,
+.dashboard-shell-admin .cms-page:has(.pricing-admin-list) .cms-form > .button-primary {
+  min-height: 42px;
+  border-radius: 999px;
+}
+
+.dashboard-shell-admin .cms-page:has(.pricing-admin-list) .settings-file-note,
+.dashboard-shell-admin .cms-page:has(.pricing-admin-list) .check-field {
+  border-color: var(--content-line);
+  background: var(--content-ivory);
+}
+
+/* Foco accesible */
+.dashboard-shell-admin .cms-page:has(.cms-editor-grid) button:focus-visible,
+.dashboard-shell-admin .cms-page:has(.cms-editor-grid) a:focus-visible,
+.dashboard-shell-admin .cms-page:has(.about-admin-layout) button:focus-visible,
+.dashboard-shell-admin .cms-page:has(.about-admin-layout) a:focus-visible,
+.dashboard-shell-admin .cms-page:has(.public-teacher-admin-grid) button:focus-visible,
+.dashboard-shell-admin .cms-page:has(.public-teacher-admin-grid) a:focus-visible,
+.dashboard-shell-admin .cms-page:has(.blog-admin-grid) button:focus-visible,
+.dashboard-shell-admin .cms-page:has(.media-grid-admin) button:focus-visible,
+.dashboard-shell-admin .cms-page:has(.media-grid-admin) label:focus-within,
+.dashboard-shell-admin .cms-page:has(.pricing-admin-list) button:focus-visible {
+  outline: 3px solid rgba(189, 79, 121, .42);
+  outline-offset: 3px;
+}
+
+@media (max-width: 1180px) {
+  .dashboard-shell-admin .cms-page:has(.cms-editor-grid),
+  .dashboard-shell-admin .cms-page:has(.about-admin-layout),
+  .dashboard-shell-admin .cms-page:has(.public-teacher-admin-grid),
+  .dashboard-shell-admin .cms-page:has(.blog-admin-grid),
+  .dashboard-shell-admin .cms-page:has(.media-grid-admin),
+  .dashboard-shell-admin .cms-page:has(.pricing-admin-list) {
+    padding-top: 24px;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.cms-editor-grid) > .cms-page-heading,
+  .dashboard-shell-admin .cms-page:has(.about-admin-layout) > .cms-page-heading,
+  .dashboard-shell-admin .cms-page:has(.public-teacher-admin-grid) > .cms-page-heading,
+  .dashboard-shell-admin .cms-page:has(.blog-admin-grid) > .cms-page-heading,
+  .dashboard-shell-admin .cms-page:has(.media-grid-admin) > .cms-page-heading,
+  .dashboard-shell-admin .cms-page:has(.pricing-admin-list) > .cms-page-heading {
+    grid-template-columns: 1fr;
+    min-height: 0;
+    padding: 35px;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.cms-editor-grid) > .cms-page-heading .button,
+  .dashboard-shell-admin .cms-page:has(.about-admin-layout) > .cms-page-heading .button,
+  .dashboard-shell-admin .cms-page:has(.public-teacher-admin-grid) > .cms-page-heading .button,
+  .dashboard-shell-admin .cms-page:has(.media-grid-admin) > .cms-page-heading .button,
+  .dashboard-shell-admin .cms-page:has(.pricing-admin-list) > .cms-page-heading .status {
+    justify-self: start;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.cms-editor-grid) .cms-editor-grid,
+  .dashboard-shell-admin .cms-page:has(.blog-admin-grid) .blog-admin-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.cms-editor-grid) .cms-preview-panel,
+  .dashboard-shell-admin .cms-page:has(.blog-admin-grid) .blog-list-panel {
+    position: static;
+  }
+}
+
+@media (max-width: 1040px) {
+  .dashboard-shell-admin .cms-page:has(.public-teacher-admin-grid) .public-teacher-admin-grid,
+  .dashboard-shell-admin .cms-page:has(.pricing-admin-list) .admin-settings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.pricing-admin-list) .cms-form {
+    position: static;
+  }
+}
+
+@media (max-width: 900px) {
+  .dashboard-shell-admin .cms-page:has(.about-admin-layout) .about-admin-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.about-admin-layout) .about-values-admin {
+    grid-column: auto;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.media-grid-admin) .media-grid-admin {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-shell-admin .cms-page:has(.media-grid-admin) .storage-panel {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.cms-editor-grid) .cms-hero-preview {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 680px) {
+  .dashboard-shell-admin .cms-page:has(.cms-editor-grid),
+  .dashboard-shell-admin .cms-page:has(.about-admin-layout),
+  .dashboard-shell-admin .cms-page:has(.public-teacher-admin-grid),
+  .dashboard-shell-admin .cms-page:has(.blog-admin-grid),
+  .dashboard-shell-admin .cms-page:has(.media-grid-admin),
+  .dashboard-shell-admin .cms-page:has(.pricing-admin-list) {
+    gap: 18px;
+    padding-top: 18px;
+    padding-bottom: 36px;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.cms-editor-grid) > .cms-page-heading,
+  .dashboard-shell-admin .cms-page:has(.about-admin-layout) > .cms-page-heading,
+  .dashboard-shell-admin .cms-page:has(.public-teacher-admin-grid) > .cms-page-heading,
+  .dashboard-shell-admin .cms-page:has(.blog-admin-grid) > .cms-page-heading,
+  .dashboard-shell-admin .cms-page:has(.media-grid-admin) > .cms-page-heading,
+  .dashboard-shell-admin .cms-page:has(.pricing-admin-list) > .cms-page-heading {
+    padding: 29px 23px;
+    border-radius: 23px;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.cms-editor-grid) > .cms-page-heading h2,
+  .dashboard-shell-admin .cms-page:has(.about-admin-layout) > .cms-page-heading h2,
+  .dashboard-shell-admin .cms-page:has(.public-teacher-admin-grid) > .cms-page-heading h2,
+  .dashboard-shell-admin .cms-page:has(.blog-admin-grid) > .cms-page-heading h2,
+  .dashboard-shell-admin .cms-page:has(.media-grid-admin) > .cms-page-heading h2,
+  .dashboard-shell-admin .cms-page:has(.pricing-admin-list) > .cms-page-heading h2 {
+    font-size: clamp(2.05rem, 11vw, 3rem);
+  }
+
+  .dashboard-shell-admin .cms-page:has(.cms-editor-grid) .field-grid-two,
+  .dashboard-shell-admin .cms-page:has(.cms-editor-grid) .cms-section-cards,
+  .dashboard-shell-admin .cms-page:has(.media-grid-admin) .media-grid-admin {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.cms-editor-grid) .cms-form,
+  .dashboard-shell-admin .cms-page:has(.about-admin-layout) .cms-form,
+  .dashboard-shell-admin .cms-page:has(.public-teacher-admin-grid) .public-teacher-admin-card,
+  .dashboard-shell-admin .cms-page:has(.blog-admin-grid) .blog-list-panel,
+  .dashboard-shell-admin .cms-page:has(.blog-admin-grid) .blog-editor-panel,
+  .dashboard-shell-admin .cms-page:has(.pricing-admin-list) .cms-form,
+  .dashboard-shell-admin .cms-page:has(.pricing-admin-list) .pricing-admin-list {
+    padding: 21px 20px;
+    border-radius: 20px;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.cms-editor-grid) .cms-hero-preview {
+    padding: 24px;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.cms-editor-grid) .hero-image-actions,
+  .dashboard-shell-admin .cms-page:has(.cms-editor-grid) .cms-form-actions,
+  .dashboard-shell-admin .cms-page:has(.about-admin-layout) .teacher-public-actions,
+  .dashboard-shell-admin .cms-page:has(.public-teacher-admin-grid) .teacher-public-actions,
+  .dashboard-shell-admin .cms-page:has(.pricing-admin-list) .pricing-admin-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.cms-editor-grid) .hero-image-actions .button,
+  .dashboard-shell-admin .cms-page:has(.cms-editor-grid) .cms-form-actions .button,
+  .dashboard-shell-admin .cms-page:has(.about-admin-layout) .teacher-public-actions .button,
+  .dashboard-shell-admin .cms-page:has(.public-teacher-admin-grid) .teacher-public-actions .button,
+  .dashboard-shell-admin .cms-page:has(.pricing-admin-list) .pricing-admin-actions .button {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.public-teacher-admin-grid) .public-teacher-admin-heading {
+    grid-template-columns: 54px minmax(0, 1fr);
+  }
+
+  .dashboard-shell-admin .cms-page:has(.public-teacher-admin-grid) .public-teacher-admin-heading > .status {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.blog-admin-grid) .blog-admin-stats {
+    justify-content: flex-start;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.blog-admin-grid) .admin-post-list article {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.blog-admin-grid) .admin-post-list article > button {
+    justify-self: start;
+    min-height: 44px;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.media-grid-admin) .media-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.media-grid-admin) .media-search {
+    display: grid;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.media-grid-admin) .media-search input {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.pricing-admin-list) .pricing-admin-title,
+  .dashboard-shell-admin .cms-page:has(.pricing-admin-list) .pricing-admin-price {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-shell-admin .cms-page:has(.about-admin-layout) .about-value-editor,
+  .dashboard-shell-admin .cms-page:has(.public-teacher-admin-grid) .teacher-public-fields,
+  .dashboard-shell-admin .cms-page:has(.pricing-admin-list) .field-row {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.media-grid-admin) .filter-pills {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-shell-admin .cms-page:has(.cms-editor-grid) *,
+  .dashboard-shell-admin .cms-page:has(.about-admin-layout) *,
+  .dashboard-shell-admin .cms-page:has(.public-teacher-admin-grid) *,
+  .dashboard-shell-admin .cms-page:has(.blog-admin-grid) *,
+  .dashboard-shell-admin .cms-page:has(.media-grid-admin) *,
+  .dashboard-shell-admin .cms-page:has(.pricing-admin-list) * {
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+  }
+}

@@ -1,0 +1,204 @@
+.placement-test-page{
+  --placement-pink:#e56f9d;
+  --placement-pink-deep:#b73568;
+  --placement-plum:#4a2538;
+  --placement-soft:#fff5f8;
+}
+
+.placement-test-intro{
+  padding:clamp(3.25rem,6vw,5.75rem) 0 clamp(3.5rem,7vw,6rem);
+  background:
+    radial-gradient(circle at 86% 18%,rgba(229,111,157,.2),transparent 25rem),
+    linear-gradient(180deg,#fff 0%,#fff8fb 100%);
+}
+
+.placement-test-intro-grid{
+  grid-template-columns:minmax(0,1.05fr) minmax(19rem,.72fr);
+  gap:clamp(2rem,5vw,4.5rem);
+}
+
+.placement-test-intro-copy .eyebrow{
+  color:var(--placement-pink-deep);
+  letter-spacing:.12em;
+}
+
+.placement-test-intro-copy h1{
+  max-width:11ch;
+  margin:.65rem 0 1.05rem;
+  font-size:clamp(3rem,5.7vw,5.8rem);
+}
+
+.placement-test-lead{
+  max-width:38rem;
+  font-size:clamp(1.02rem,1.45vw,1.16rem);
+  line-height:1.62;
+}
+
+.placement-test-facts{
+  gap:.55rem;
+  margin:1.45rem 0 1.6rem;
+}
+
+.placement-test-facts span{
+  min-height:42px;
+  padding:.58rem .82rem;
+  border-color:rgba(183,53,104,.16);
+  background:#fff;
+  box-shadow:0 8px 22px rgba(74,37,56,.035);
+}
+
+.placement-test-start{
+  min-width:13.5rem;
+  min-height:52px;
+  padding-inline:1.5rem;
+  background:linear-gradient(135deg,var(--placement-pink-deep),#cf4e7d);
+  border-color:transparent;
+  box-shadow:0 14px 30px rgba(183,53,104,.19);
+}
+
+.placement-test-start:hover{
+  transform:translateY(-1px);
+  box-shadow:0 17px 34px rgba(183,53,104,.24);
+}
+
+.placement-test-intro-card{
+  padding:clamp(1.45rem,2.6vw,2rem);
+  border-color:rgba(183,53,104,.18);
+  border-radius:1.6rem;
+  background:#fff;
+  box-shadow:0 18px 45px rgba(74,37,56,.07);
+}
+
+.placement-test-card-mark{
+  margin-bottom:1.25rem;
+  color:var(--placement-plum);
+}
+
+.placement-test-intro-card h2{
+  max-width:14ch;
+  font-size:clamp(1.55rem,2.5vw,2rem);
+}
+
+.placement-test-intro-card>p{
+  margin-bottom:1.2rem;
+  font-size:.92rem;
+}
+
+.placement-test-intro-card ul{
+  margin:1.1rem 0;
+  gap:0;
+}
+
+.placement-test-intro-card li{
+  min-height:56px;
+  padding:.68rem 0;
+}
+
+.placement-test-privacy-note{
+  color:#725761;
+  font-weight:700;
+}
+
+.placement-test-run{
+  min-height:calc(100vh - 10rem);
+  padding:clamp(2.25rem,4.5vw,4rem) 0 clamp(3rem,6vw,5.5rem);
+  background:#fff;
+}
+
+.placement-test-run-shell{max-width:54rem}
+
+.placement-test-progress{
+  height:.5rem;
+  margin-bottom:clamp(1.6rem,3vw,2.4rem);
+  background:#f6e9ee;
+}
+
+.placement-question-card{
+  padding:clamp(1.4rem,3.5vw,2.7rem);
+  border-color:rgba(74,37,56,.12);
+  border-radius:1.45rem;
+  box-shadow:0 16px 42px rgba(74,37,56,.06);
+}
+
+.placement-question-card legend{
+  max-width:27ch;
+  margin-bottom:1.35rem;
+  font-size:clamp(1.65rem,2.8vw,2.35rem);
+}
+
+.placement-option-list{gap:.65rem}
+
+.placement-option{
+  min-height:64px;
+  border-radius:.9rem;
+  border-color:rgba(74,37,56,.14);
+  padding:.85rem 1rem;
+}
+
+.placement-option:hover{
+  border-color:rgba(183,53,104,.48);
+  background:#fffafd;
+}
+
+.placement-option.is-selected{
+  background:var(--placement-soft);
+  border-color:var(--placement-pink-deep);
+}
+
+.placement-question-actions{
+  margin-top:1.55rem;
+  padding-top:1.25rem;
+}
+
+.placement-question-actions .button{
+  min-height:48px;
+  min-width:12rem;
+}
+
+.placement-test-result{
+  padding:clamp(3rem,6vw,5.5rem) 0;
+  background:linear-gradient(180deg,#fff 0%,#fff7fa 100%);
+}
+
+.placement-result-shell{
+  gap:clamp(2rem,5vw,4rem);
+}
+
+.placement-result-level{
+  color:rgba(183,53,104,.14);
+}
+
+.placement-result-summary h2,
+.placement-result-skills article strong{
+  color:var(--placement-pink-deep);
+}
+
+.placement-result-detail{
+  border-color:rgba(74,37,56,.13);
+  background:#fff;
+  box-shadow:0 16px 42px rgba(74,37,56,.055);
+}
+
+.placement-result-notice{
+  background:#fff2f6;
+}
+
+@media(max-width:900px){
+  .placement-test-intro-grid{grid-template-columns:1fr;gap:2rem}
+  .placement-test-intro-card{max-width:none}
+}
+
+@media(max-width:620px){
+  .placement-test-intro{padding-top:2.1rem}
+  .placement-test-intro-copy h1{font-size:clamp(2.45rem,13vw,3.7rem)}
+  .placement-test-facts{grid-template-columns:1fr 1fr}
+  .placement-test-facts span{justify-content:flex-start;align-items:flex-start;flex-direction:column;gap:.1rem}
+  .placement-test-facts span:last-child{grid-column:1/-1}
+  .placement-test-start{width:100%}
+  .placement-question-card{padding:1rem;border-radius:1rem}
+  .placement-option{min-height:60px}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .placement-test-start:hover{transform:none}
+}

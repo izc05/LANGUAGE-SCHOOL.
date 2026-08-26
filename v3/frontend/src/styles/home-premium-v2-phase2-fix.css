@@ -1,0 +1,10 @@
+.home-premium-v2 .platform-class-card .platform-class-action {
+  width: max-content;
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  color: #fff;
+  background: #d94f7a;
+  font-size: .62rem;
+  font-weight: 700;
+}

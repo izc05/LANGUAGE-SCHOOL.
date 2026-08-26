@@ -1,0 +1,87 @@
+/* FASE 8A.2 · Modalidad de clase: Presencial / Online / Híbrida */
+.class-mode{display:inline-flex;align-items:center;justify-content:center;min-height:28px;padding:5px 10px;border:1px solid transparent;border-radius:999px;font-size:.72rem;font-weight:800;line-height:1;letter-spacing:.055em;text-transform:uppercase;white-space:nowrap}
+.class-mode-in_person{color:#5e5047;background:#f5efe9;border-color:#e8ddd3}
+.class-mode-online{color:#8f2853;background:#fde7ef;border-color:#f3cad9}
+.class-mode-hybrid{color:#6a3b75;background:#f2e8f6;border-color:#dfcde7}
+.class-delivery-summary,.student-class-delivery,.campus-next-delivery{display:flex;align-items:center;flex-wrap:wrap;gap:9px 12px}
+.class-delivery-summary{margin-top:12px;color:#78646f;font-size:.84rem}
+.class-delivery-summary a,.student-online-class-link,.campus-online-entry{color:#a72f62;font-weight:800;text-decoration:none}
+.class-delivery-summary a:hover,.student-online-class-link:hover,.campus-online-entry:hover{text-decoration:underline}
+
+/* Campus alumno */
+.campus-next-delivery{margin:14px 0 8px;color:#735d68;font-size:.84rem}
+.campus-online-entry{display:inline-flex;align-items:center;justify-content:center;min-height:42px;margin-top:8px;padding:10px 14px;border:1px solid rgba(177,49,100,.18);border-radius:12px;background:#fff;color:#aa2f63;box-shadow:0 8px 20px rgba(96,40,62,.05)}
+.campus-online-pending,.student-online-pending{color:#8a7480;font-size:.82rem;font-weight:700}
+.student-class-list-delivery>article{align-items:flex-start}
+.student-class-main{min-width:0}
+.student-class-main h4{margin-bottom:4px}
+.student-class-main>p{margin-bottom:10px}
+.student-class-delivery{margin-top:8px;color:#806c76;font-size:.8rem}
+.student-online-class-link{display:inline-flex;align-items:center;min-height:36px;padding:7px 10px;border-radius:10px;background:#fff2f6;border:1px solid #f0d1dc}
+.student-class-location{font-weight:650}
+
+/* Profesor */
+.teacher-class-create form>small.muted{display:block;margin:-4px 0 10px;font-size:.76rem;line-height:1.45}
+.teacher-class-detail-heading>.teacher-class-status-actions{align-self:flex-start}
+
+/* Admin · Aula online */
+.class-delivery-admin-page{padding-bottom:72px}
+.class-delivery-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:20px 0}
+.class-delivery-metrics article{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;min-height:106px;padding:22px 24px;border:1px solid rgba(177,62,105,.1);border-radius:20px;background:#fff;box-shadow:0 12px 30px rgba(75,34,51,.04)}
+.class-delivery-metrics span{color:#987783;font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.class-delivery-metrics strong{color:#3c2a34;font-family:'Playfair Display',Georgia,serif;font-size:2.2rem;line-height:1}
+.class-delivery-admin-grid{display:grid;grid-template-columns:minmax(390px,.9fr) minmax(430px,1.1fr);gap:20px;align-items:start}
+.class-delivery-list-panel,.class-delivery-editor-panel{overflow:hidden;border-radius:24px}
+.class-delivery-list{max-height:680px;overflow:auto;padding:8px 12px 14px}
+.class-delivery-list>button{width:100%;display:grid;grid-template-columns:122px minmax(0,1fr) auto;align-items:center;gap:14px;padding:17px 12px;border:0;border-bottom:1px solid #f1e5ea;background:transparent;text-align:left;cursor:pointer}
+.class-delivery-list>button:hover{background:#fff7f9}
+.class-delivery-list>button.active{background:#fff1f5;box-shadow:inset 3px 0 0 #cf4776}
+.class-delivery-list time{color:#9a7483;font-size:.75rem;font-weight:700;text-transform:capitalize}
+.class-delivery-list button>span{min-width:0}
+.class-delivery-list button>span strong,.class-delivery-list button>span small{display:block}
+.class-delivery-list button>span strong{overflow:hidden;color:#45313b;text-overflow:ellipsis;white-space:nowrap}
+.class-delivery-list button>span small{margin-top:4px;overflow:hidden;color:#9a828d;font-size:.76rem;text-overflow:ellipsis;white-space:nowrap}
+.class-delivery-editor-panel>.panel-heading p{margin:5px 0 0;color:#987f8a;font-size:.82rem}
+.class-delivery-form{display:grid;gap:20px;padding:24px}
+.class-delivery-form fieldset{margin:0;padding:0;border:0}
+.class-delivery-form legend,.class-delivery-form>div>label{display:block;margin-bottom:8px;color:#5a404c;font-size:.82rem;font-weight:800}
+.class-delivery-form input[type='text'],.class-delivery-form input[type='url'],.class-delivery-form div>input{width:100%;min-height:46px;padding:10px 12px;border:1px solid #e8d9df;border-radius:12px;background:#fff;color:#3e2d36}
+.class-mode-picker{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.class-mode-picker label{position:relative;display:flex;min-height:108px;flex-direction:column;justify-content:flex-end;gap:5px;padding:16px;border:1px solid #eadce2;border-radius:16px;background:#fff;cursor:pointer;transition:border-color .18s ease,background .18s ease,transform .18s ease}
+.class-mode-picker label:hover{transform:translateY(-2px);border-color:#dca9bc}
+.class-mode-picker label.active{border-color:#cf5c84;background:#fff2f6;box-shadow:0 10px 25px rgba(145,52,86,.07)}
+.class-mode-picker input{position:absolute;top:12px;right:12px;width:18px;height:18px;accent-color:#c84776}
+.class-mode-picker strong{color:#4b333f;font-size:.91rem}
+.class-mode-picker small{color:#9b7d89;font-size:.72rem;line-height:1.35}
+.class-delivery-form .muted{display:block;margin-top:6px;font-size:.76rem;line-height:1.45}
+.class-delivery-preview{display:flex;align-items:center;flex-wrap:wrap;gap:10px;padding:14px 16px;border-radius:14px;background:#fff8fa;color:#775e69;font-size:.82rem}
+.class-delivery-form>.button{justify-self:start;min-width:180px}
+.class-zoom-meeting-card{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:18px;border:1px solid #eadbe1;border-radius:18px;background:linear-gradient(135deg,#fff 0%,#fff7fa 100%)}
+.class-zoom-meeting-card.is-ready{border-color:#cfe5d5;background:linear-gradient(135deg,#fff 0%,#f3faf5 100%)}
+.class-zoom-meeting-card h4{margin:5px 0 6px;color:#45313b;font-size:1rem}.class-zoom-meeting-card p{margin:0;color:#89737d;font-size:.78rem;line-height:1.5}
+.zoom-meeting-ready-pill{flex:0 0 auto;padding:8px 11px;border-radius:999px;background:#e7f3ea;color:#3d704d;font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em}
+.zoom-meeting-needs-config{display:flex;align-items:flex-end;flex-direction:column;gap:6px;flex:0 0 auto}.zoom-meeting-needs-config span{color:#9b6c4e;font-size:.74rem;font-weight:750}.zoom-meeting-needs-config a{color:#ab3464;font-size:.78rem;font-weight:800;text-decoration:none}.zoom-meeting-needs-config a:hover{text-decoration:underline}
+.class-zoom-meeting-card>.button{flex:0 0 auto;min-width:176px}
+
+@media(max-width:1100px){
+  .class-delivery-admin-grid{grid-template-columns:1fr}
+  .class-delivery-list{max-height:460px}
+}
+@media(max-width:720px){
+  .class-delivery-metrics{grid-template-columns:1fr}
+  .class-delivery-metrics article{min-height:82px}
+  .class-mode-picker{grid-template-columns:1fr}
+  .class-mode-picker label{min-height:86px}
+  .class-delivery-list>button{grid-template-columns:1fr auto;gap:8px 10px}
+  .class-delivery-list time{grid-column:1/-1}
+  .student-class-list-delivery>article{display:grid;grid-template-columns:1fr;gap:12px}
+  .student-class-list-delivery>article>.status{justify-self:start}
+  .class-zoom-meeting-card{align-items:flex-start;flex-direction:column}.class-zoom-meeting-card>.button,.zoom-meeting-needs-config{width:100%;align-items:flex-start}
+}
+@media(max-width:480px){
+  .class-delivery-form{padding:18px}
+  .class-delivery-metrics article{padding:18px}
+  .campus-next-delivery,.student-class-delivery{align-items:flex-start;flex-direction:column}
+  .campus-online-entry,.student-online-class-link{width:100%;text-align:center}
+}
+@media(prefers-reduced-motion:reduce){.class-mode-picker label{transition:none}}

@@ -1,0 +1,111 @@
+.premium-static-globe {
+  z-index: 1;
+  border: 1px solid rgba(255, 255, 255, .86);
+  outline: 1px solid rgba(214, 41, 116, .14);
+  outline-offset: -3px;
+  background:
+    radial-gradient(circle at 27% 20%, rgba(255,255,255,.19) 0 1.5%, rgba(255,255,255,.04) 6%, transparent 18%),
+    radial-gradient(circle at 78% 76%, rgba(244,167,200,.025), transparent 31%),
+    rgba(255,255,255,.0025);
+  box-shadow:
+    inset 11px 9px 24px rgba(255,255,255,.065),
+    inset -14px -12px 31px rgba(214,41,116,.013),
+    inset 0 0 0 1px rgba(244,167,200,.052),
+    0 0 0 1px rgba(255,255,255,.58),
+    0 0 28px rgba(244,167,200,.065),
+    0 27px 76px rgba(214,41,116,.036);
+  backdrop-filter: blur(.06px);
+  -webkit-backdrop-filter: blur(.06px);
+  animation: premiumBubbleBreath 6.5s ease-in-out infinite alternate;
+}
+
+.premium-static-globe::before,
+.premium-static-globe::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+}
+
+.premium-static-globe::before {
+  inset: 6.5%;
+  border-radius: 50%;
+  border-top: 3px solid rgba(255,255,255,.88);
+  border-left: 1.5px solid rgba(244,167,200,.58);
+  border-right: 1px solid transparent;
+  border-bottom: 1px solid transparent;
+  transform: rotate(-24deg);
+  filter: blur(.05px);
+  opacity: .94;
+  clip-path: polygon(0 0, 67% 0, 54% 42%, 0 57%);
+}
+
+.premium-static-globe::after {
+  width: 31%;
+  height: 8%;
+  left: 18%;
+  top: 17%;
+  border-radius: 50%;
+  transform: rotate(-34deg);
+  background: linear-gradient(90deg, rgba(255,255,255,.9), rgba(255,255,255,.48) 23%, rgba(244,167,200,.42) 58%, rgba(214,41,116,0));
+  box-shadow: 0 0 13px rgba(244,167,200,.20);
+  filter: blur(1px);
+  opacity: .9;
+  animation: premiumBubbleGlint 5.2s ease-in-out infinite alternate;
+}
+
+.premium-intro-glow {
+  background:
+    radial-gradient(circle at 50% 49%, rgba(255,255,255,.028) 0 20%, rgba(244,167,200,.042) 44%, rgba(255,252,253,0) 70%);
+  filter: blur(24px);
+}
+
+@keyframes premiumBubbleBreath {
+  from {
+    box-shadow:
+      inset 11px 9px 24px rgba(255,255,255,.06),
+      inset -14px -12px 31px rgba(214,41,116,.012),
+      inset 0 0 0 1px rgba(244,167,200,.05),
+      0 0 0 1px rgba(255,255,255,.56),
+      0 0 25px rgba(244,167,200,.055),
+      0 27px 72px rgba(214,41,116,.032);
+  }
+  to {
+    box-shadow:
+      inset 9px 12px 27px rgba(255,255,255,.075),
+      inset -12px -11px 34px rgba(214,41,116,.017),
+      inset 0 0 0 1px rgba(244,167,200,.066),
+      0 0 0 1px rgba(255,255,255,.66),
+      0 0 34px rgba(244,167,200,.082),
+      0 29px 80px rgba(214,41,116,.04);
+  }
+}
+
+@keyframes premiumBubbleGlint {
+  from { transform: rotate(-34deg) translate(-2%, 0); opacity: .74; }
+  to { transform: rotate(-30deg) translate(5%, 4%); opacity: .98; }
+}
+
+@media (max-width: 760px) {
+  .premium-static-globe {
+    outline-color: rgba(214,41,116,.13);
+    box-shadow:
+      inset 8px 7px 20px rgba(255,255,255,.06),
+      inset -9px -8px 23px rgba(214,41,116,.012),
+      inset 0 0 0 1px rgba(244,167,200,.05),
+      0 0 0 1px rgba(255,255,255,.60),
+      0 0 23px rgba(244,167,200,.06),
+      0 20px 54px rgba(214,41,116,.032);
+  }
+
+  .premium-static-globe::before {
+    border-top-width: 2.5px;
+    border-left-width: 1px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .premium-static-globe,
+  .premium-static-globe::after {
+    animation: none !important;
+  }
+}

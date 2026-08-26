@@ -1,0 +1,250 @@
+/* FASE 10V.5 · CAMPUS ALUMNO · MATERIAL · REVISIÓN VISUAL FINAL
+   Refinamiento exclusivamente visual de la biblioteca académica.
+   Mantiene intactos filtros, búsqueda, ordenación, ámbitos y descarga protegida. */
+
+.student-material-phase10d{
+  --material-v-ink:#342830;
+  --material-v-muted:#786a71;
+  --material-v-pink:#c93f72;
+  --material-v-pink-deep:#983354;
+  --material-v-line:rgba(108,72,86,.11);
+  --material-v-blush:#fff3f7;
+  padding:38px clamp(22px,3.6vw,58px) 64px;
+  background:
+    radial-gradient(circle at 90% 2%,rgba(224,110,151,.085),transparent 26rem),
+    linear-gradient(180deg,#fffdfc 0%,#fffaf9 50%,#fdf9f7 100%);
+}
+
+/* Cabecera editorial común del Campus. */
+.student-material-phase10d .student-material-heading10{
+  align-items:end;
+  margin-bottom:20px;
+  padding:12px 0 24px;
+  border-bottom:1px solid var(--material-v-line);
+}
+
+.student-material-phase10d .student-material-heading10>div:first-child{max-width:760px}
+.student-material-phase10d .student-material-heading10 .eyebrow{color:var(--material-v-pink-deep);letter-spacing:.16em}
+
+.student-material-phase10d .student-material-heading10 h2{
+  margin:9px 0 10px;
+  color:var(--material-v-ink);
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:clamp(3rem,4.7vw,4.8rem);
+  line-height:.96;
+  letter-spacing:-.052em;
+}
+
+.student-material-phase10d .student-material-heading10 p{
+  max-width:660px;
+  margin:0;
+  color:var(--material-v-muted);
+  font-size:.98rem;
+  line-height:1.72;
+}
+
+.student-material-phase10d .student-material-heading10 .private-space-badge{
+  min-width:150px;
+  padding:8px 0 5px 24px;
+  border:0;
+  border-left:1px solid var(--material-v-line);
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+}
+
+.student-material-phase10d .student-material-heading10 .private-space-badge strong{
+  color:var(--material-v-pink-deep);
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:2.45rem;
+  line-height:.95;
+}
+
+.student-material-phase10d .student-material-heading10 .private-space-badge span{color:var(--material-v-muted)}
+
+/* Resumen por ámbito como índice, no tres tarjetas. */
+.student-material-phase10d .student-material-overview10{
+  gap:0;
+  margin:0 0 28px;
+  padding:13px 0;
+  border-bottom:1px solid var(--material-v-line);
+}
+
+.student-material-phase10d .student-material-overview10>div{
+  padding:5px 20px;
+  border:0;
+  border-radius:0;
+  background:transparent;
+}
+
+.student-material-phase10d .student-material-overview10>div:first-child{padding-left:0}
+.student-material-phase10d .student-material-overview10>div+div{border-left:1px solid var(--material-v-line)}
+.student-material-phase10d .student-material-overview10 small{color:#9d5871}
+.student-material-phase10d .student-material-overview10 strong{color:var(--material-v-ink);font-size:1.8rem}
+
+/* Último recurso: pieza editorial protagonista. */
+.student-material-phase10d .student-material-featured10{
+  grid-template-columns:118px minmax(0,1fr) auto;
+  gap:30px;
+  margin-bottom:28px;
+  padding:32px;
+  border:1px solid rgba(198,75,118,.16);
+  border-radius:28px;
+  background:
+    radial-gradient(circle at 88% 15%,rgba(219,87,135,.1),transparent 17rem),
+    linear-gradient(150deg,#fff 0%,#fff6f9 100%);
+  box-shadow:0 18px 48px rgba(58,33,44,.04);
+}
+
+.student-material-phase10d .student-material-featured-type{
+  min-height:118px;
+  border:0;
+  border-radius:22px;
+  background:linear-gradient(145deg,#4a2d3b,#31212a);
+  box-shadow:0 14px 30px rgba(54,31,42,.11);
+}
+
+.student-material-phase10d .student-material-featured-type>span{color:#fff;font-size:2.15rem}
+.student-material-phase10d .student-material-featured-type>small{color:#e9bdcd}
+.student-material-phase10d .student-material-featured-meta .eyebrow{color:var(--material-v-pink-deep)}
+.student-material-phase10d .student-material-featured-meta>span:last-child{color:#927d85}
+
+.student-material-phase10d .student-material-featured-copy h3{
+  color:var(--material-v-ink);
+  font-size:clamp(1.9rem,2.8vw,2.75rem);
+}
+
+.student-material-phase10d .student-material-featured-copy p{color:var(--material-v-muted);line-height:1.65}
+.student-material-phase10d .student-material-featured-copy>small{color:#9a8990}
+
+.student-material-phase10d .student-material-featured10>.button{
+  min-height:46px;
+  padding-inline:20px;
+  border:0;
+  border-radius:999px;
+  background:linear-gradient(135deg,#c74372,#a7355e);
+  box-shadow:0 10px 24px rgba(171,53,94,.13);
+}
+
+/* Herramientas: controles útiles, sin panel pesado. */
+.student-material-phase10d .student-material-toolbar10{
+  margin-bottom:25px;
+  padding:0 0 20px;
+  border:0;
+  border-bottom:1px solid var(--material-v-line);
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+}
+
+.student-material-phase10d .student-material-toolbar10 .filter-pills{
+  display:inline-flex;
+  gap:5px;
+  padding:5px;
+  border:1px solid var(--material-v-line);
+  border-radius:999px;
+  background:rgba(255,255,255,.72);
+}
+
+.student-material-phase10d .student-material-toolbar10 .filter-pills button{
+  min-height:40px;
+  padding-inline:15px;
+  border-radius:999px;
+}
+
+.student-material-phase10d .student-material-toolbar10 .filter-pills button.active{
+  color:#fff;
+  background:linear-gradient(135deg,#c74372,#a7355e);
+}
+
+.student-material-phase10d .student-material-sort10 select,
+.student-material-phase10d .student-material-toolbar10 .media-search input{
+  border-color:var(--material-v-line);
+  background:rgba(255,255,255,.84);
+}
+
+.student-material-phase10d .student-material-library-heading10{
+  padding:3px 0 14px;
+}
+
+.student-material-phase10d .student-material-library-heading10 h3{
+  color:var(--material-v-ink);
+  font-size:1.6rem;
+}
+
+.student-material-phase10d .student-material-reset10{color:var(--material-v-pink-deep)}
+
+/* Los recursos sí son entidades reales: tarjetas sobrias y consistentes. */
+.student-material-phase10d .student-resource-grid10{gap:15px}
+
+.student-material-phase10d .student-resource-card10{
+  min-height:275px;
+  padding:22px;
+  border:1px solid var(--material-v-line);
+  border-radius:22px;
+  background:rgba(255,255,255,.84);
+  box-shadow:none;
+  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;
+}
+
+.student-material-phase10d .student-resource-card10:hover{
+  transform:translateY(-2px);
+  border-color:rgba(198,75,118,.22);
+  box-shadow:0 16px 36px rgba(58,33,44,.04);
+}
+
+.student-material-phase10d .student-resource-icon{
+  border:0;
+  color:#fff;
+  background:#4a2f3c;
+}
+
+.student-material-phase10d .student-resource-card-top10>span{color:#99858e}
+.student-material-phase10d .student-resource-copy .eyebrow{color:var(--material-v-pink-deep)}
+.student-material-phase10d .student-resource-copy h3{color:var(--material-v-ink);font-family:'Playfair Display',Georgia,serif;font-size:1.45rem}
+.student-material-phase10d .student-resource-copy p{color:var(--material-v-muted)}
+.student-material-phase10d .student-resource-card10 .button-ghost{color:var(--material-v-pink-deep);border-color:rgba(185,75,115,.16)}
+
+.student-material-phase10d .student-material-empty10{
+  border-color:var(--material-v-line);
+  background:rgba(255,255,255,.7);
+  box-shadow:none;
+}
+
+@media(max-width:980px){
+  .student-material-phase10d .student-material-featured10{grid-template-columns:105px minmax(0,1fr)}
+  .student-material-phase10d .student-material-featured10>.button{grid-column:2;justify-self:start}
+}
+
+@media(max-width:760px){
+  .student-material-phase10d{padding:28px 18px 48px}
+  .student-material-phase10d .student-material-heading10{align-items:flex-start;gap:18px}
+  .student-material-phase10d .student-material-heading10 h2{font-size:clamp(2.8rem,11vw,4rem)}
+  .student-material-phase10d .student-material-heading10 .private-space-badge{
+    width:100%;
+    padding:12px 0 0;
+    border-top:1px solid var(--material-v-line);
+    border-left:0;
+  }
+  .student-material-phase10d .student-material-overview10{grid-template-columns:repeat(3,minmax(0,1fr));overflow-x:auto}
+  .student-material-phase10d .student-material-overview10>div{min-width:140px;padding-inline:14px}
+  .student-material-phase10d .student-material-featured10{grid-template-columns:1fr;gap:20px;padding:25px 22px;border-radius:23px}
+  .student-material-phase10d .student-material-featured-type{width:105px;min-height:86px}
+  .student-material-phase10d .student-material-featured10>.button{grid-column:auto;width:100%;justify-self:stretch}
+  .student-material-phase10d .student-material-toolbar10 .filter-pills{width:100%;overflow-x:auto}
+}
+
+@media(max-width:560px){
+  .student-material-phase10d{padding:24px 16px 42px}
+  .student-material-phase10d .student-material-heading10 h2{font-size:2.8rem}
+  .student-material-phase10d .student-material-overview10{grid-template-columns:1fr;overflow:visible}
+  .student-material-phase10d .student-material-overview10>div{min-width:0;padding:11px 0}
+  .student-material-phase10d .student-material-overview10>div+div{border-top:1px solid var(--material-v-line);border-left:0}
+  .student-material-phase10d .student-material-tools10{align-items:stretch;flex-direction:column}
+  .student-material-phase10d .student-resource-card10{min-height:auto}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .student-material-phase10d .student-resource-card10{transition:none}
+  .student-material-phase10d .student-resource-card10:hover{transform:none}
+}

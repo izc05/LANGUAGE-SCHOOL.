@@ -1,0 +1,167 @@
+.teachers-v2-method-section {
+  position: relative;
+  overflow: hidden;
+  padding-top: 0;
+  background:
+    radial-gradient(circle at 4% 42%, rgba(239, 155, 191, 0.16), transparent 26rem),
+    linear-gradient(180deg, #fffafc 0%, #fff 100%);
+}
+
+.teachers-v2-method-intro {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, .72fr);
+  gap: clamp(2rem, 5vw, 5rem);
+  align-items: end;
+  margin-bottom: clamp(2rem, 4vw, 3.6rem);
+}
+
+.teachers-v2-method-intro h2,
+.teachers-v2-method-card h3 {
+  font-family: Georgia, 'Times New Roman', serif;
+  color: var(--teachers-ink);
+  letter-spacing: -.045em;
+}
+
+.teachers-v2-method-intro h2 {
+  max-width: 13ch;
+  margin: .55rem 0 0;
+  font-size: clamp(2.5rem, 4.4vw, 4.8rem);
+  line-height: .98;
+}
+
+.teachers-v2-method-intro p {
+  margin: 0 0 .35rem;
+  color: #6e626a;
+  line-height: 1.78;
+}
+
+.teachers-v2-method-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(1.25rem, 2.5vw, 2rem);
+}
+
+.teachers-v2-method-card {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 44rem;
+  overflow: hidden;
+  border: 1px solid rgba(181, 33, 102, .12);
+  border-radius: 2rem;
+  background: rgba(255,255,255,.92);
+  box-shadow: 0 24px 72px rgba(91, 31, 60, .08);
+}
+
+.teachers-v2-method-card::before {
+  content: '';
+  position: absolute;
+  width: 11rem;
+  height: 11rem;
+  right: -5rem;
+  top: -5rem;
+  border-radius: 50%;
+  border: 1px solid rgba(211, 61, 129, .18);
+}
+
+.teachers-v2-method-card:nth-child(2) {
+  background: linear-gradient(160deg, #fff 0%, #fff8fb 100%);
+}
+
+.teachers-v2-method-copy {
+  position: relative;
+  z-index: 2;
+  padding: clamp(1.8rem, 3.5vw, 3rem) clamp(1.8rem, 3.5vw, 3rem) 1.4rem;
+}
+
+.teachers-v2-method-card h3 {
+  max-width: 11ch;
+  margin: .55rem 0 1rem;
+  font-size: clamp(2.25rem, 3.5vw, 4rem);
+  line-height: .98;
+}
+
+.teachers-v2-method-card p {
+  max-width: 38rem;
+  margin: 0;
+  color: #6b6067;
+  line-height: 1.75;
+}
+
+.teachers-v2-method-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .55rem;
+  margin-top: 1.35rem;
+}
+
+.teachers-v2-method-tags span {
+  padding: .48rem .72rem;
+  border-radius: 999px;
+  border: 1px solid rgba(187, 38, 106, .11);
+  background: rgba(255, 240, 246, .8);
+  color: #8d2858;
+  font-size: .76rem;
+  font-weight: 800;
+}
+
+.teachers-v2-method-visual {
+  position: relative;
+  align-self: end;
+  padding: 0 clamp(1rem, 2vw, 1.5rem) clamp(1rem, 2vw, 1.5rem);
+}
+
+.teachers-v2-method-visual img {
+  display: block;
+  width: 100%;
+  border-radius: 1.55rem;
+  box-shadow: 0 18px 52px rgba(102, 35, 67, .1);
+}
+
+.teachers-v2-method-caption {
+  position: absolute;
+  right: clamp(1.8rem, 4vw, 3rem);
+  bottom: clamp(1.8rem, 4vw, 3rem);
+  display: grid;
+  gap: .15rem;
+  max-width: 13rem;
+  padding: .9rem 1rem;
+  border: 1px solid rgba(192, 34, 103, .13);
+  border-radius: 1rem;
+  background: rgba(255,255,255,.86);
+  box-shadow: 0 12px 34px rgba(87, 29, 55, .12);
+  backdrop-filter: blur(14px);
+}
+
+.teachers-v2-method-caption small {
+  color: var(--teachers-pink);
+  font-size: .64rem;
+  font-weight: 800;
+  letter-spacing: .14em;
+}
+
+.teachers-v2-method-caption strong {
+  font-family: Georgia, 'Times New Roman', serif;
+  color: #4f4148;
+  font-size: .96rem;
+  line-height: 1.3;
+}
+
+@media (max-width: 1040px) {
+  .teachers-v2-method-grid { grid-template-columns: 1fr; }
+  .teachers-v2-method-card {
+    grid-template-columns: minmax(0, .82fr) minmax(24rem, 1fr);
+    grid-template-rows: 1fr;
+    min-height: 0;
+    align-items: center;
+  }
+  .teachers-v2-method-visual { align-self: stretch; display: flex; align-items: center; padding: 1.25rem; }
+}
+
+@media (max-width: 760px) {
+  .teachers-v2-method-intro { grid-template-columns: 1fr; align-items: start; }
+  .teachers-v2-method-card { grid-template-columns: 1fr; grid-template-rows: auto auto; }
+  .teachers-v2-method-card h3 { max-width: 12ch; }
+  .teachers-v2-method-visual { padding: 0 1rem 1rem; }
+  .teachers-v2-method-caption { right: 1.7rem; bottom: 1.7rem; }
+}

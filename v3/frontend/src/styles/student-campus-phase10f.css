@@ -1,0 +1,434 @@
+/* FASE 10.6 · AVISOS + ARCHIVOS + PERFIL
+   Capa específica del alumno; no altera la presentación del perfil de Profesor.
+   Dirección: editorial humana, blanco cálido, rosa como acento y jerarquía académica clara. */
+
+.student-notifications-phase10f,
+.student-files-phase10f,
+.account-profile-student10{
+  padding:30px clamp(20px,3vw,48px) 58px;
+  background:
+    radial-gradient(circle at 91% 2%,rgba(216,77,124,.075),transparent 25rem),
+    radial-gradient(circle at 8% 92%,rgba(238,194,211,.16),transparent 28rem),
+    #f7f6f3;
+}
+
+.student-notifications-heading10,
+.student-files-heading10,
+.account-profile-heading10{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:28px;
+  margin:0 0 22px;
+  padding:8px 4px 18px;
+  border-bottom:1px solid rgba(130,85,101,.09);
+}
+
+.student-notifications-heading10>div:first-child,
+.student-files-heading10>div:first-child,
+.account-profile-heading10>div:first-child{max-width:760px}
+
+.student-notifications-heading10 h2,
+.student-files-heading10 h2,
+.account-profile-heading10 h2{
+  margin:7px 0 10px;
+  color:#2f252a;
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:clamp(2.35rem,3.5vw,3.7rem);
+  line-height:1;
+  letter-spacing:-.04em;
+}
+
+.student-notifications-heading10 p,
+.student-files-heading10 p,
+.account-profile-heading10 p{
+  max-width:690px;
+  margin:0;
+  color:#7d7076;
+  font-size:.94rem;
+  line-height:1.65;
+}
+
+.student-notifications-phase10f .private-space-badge,
+.student-files-phase10f .private-space-badge{
+  min-width:142px;
+  padding:14px 18px;
+  border:1px solid #ead8df;
+  border-radius:20px;
+  background:rgba(255,255,255,.9);
+  box-shadow:0 12px 30px rgba(66,38,49,.035);
+}
+
+.student-notifications-phase10f .private-space-badge strong,
+.student-files-phase10f .private-space-badge strong{
+  color:#c74372;
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:1.75rem;
+  line-height:1;
+}
+
+.student-notifications-phase10f .private-space-badge span,
+.student-files-phase10f .private-space-badge span{color:#8b747d}
+
+/* Avisos */
+.student-notifications-toolbar10{
+  margin-bottom:18px;
+  padding:10px;
+  border-color:#ece4e4;
+  border-radius:20px;
+  background:rgba(255,255,255,.78);
+  box-shadow:0 10px 28px rgba(50,31,39,.025);
+}
+
+.student-notifications-toolbar10 .filter-pills{gap:8px}
+
+.student-notifications-toolbar10 .filter-pills button{
+  min-height:40px;
+  padding:0 16px;
+  border:1px solid transparent;
+  border-radius:999px;
+  color:#806d75;
+  background:transparent;
+  font-weight:800;
+  transition:background .18s ease,border-color .18s ease,color .18s ease;
+}
+
+.student-notifications-toolbar10 .filter-pills button.active{
+  color:#8f2f55;
+  border-color:#ebccd7;
+  background:#fff5f8;
+}
+
+.student-notice-list10{
+  padding:10px;
+  border-color:#ebe3e3;
+  border-radius:28px;
+  background:rgba(255,255,255,.92);
+  box-shadow:0 18px 48px rgba(49,31,40,.035);
+}
+
+.student-notice-list10 article{
+  cursor:default;
+  gap:18px;
+  margin:0;
+  padding:22px 20px;
+  border:1px solid transparent;
+  border-radius:20px;
+  background:#fff;
+  transition:border-color .18s ease,background .18s ease,transform .18s ease,box-shadow .18s ease;
+}
+
+.student-notice-list10 article+article{margin-top:8px}
+
+.student-notice-list10 article.unread{
+  border-color:#edced9;
+  background:linear-gradient(115deg,#fff 0%,#fff7fa 72%,#f8e5ec 100%);
+  box-shadow:0 10px 28px rgba(91,42,61,.04);
+}
+
+.student-notice-list10 article.read{
+  border-color:#f0eceb;
+  background:#fff;
+  opacity:.9;
+}
+
+.student-notice-list10 article.unread:hover{
+  transform:translateY(-1px);
+  border-color:#e4b5c6;
+  box-shadow:0 14px 34px rgba(83,39,56,.06);
+}
+
+.student-notice-list10 .student-notice-dot{
+  width:9px;
+  height:9px;
+  margin-top:8px;
+  border-radius:999px;
+  background:#d94d7c;
+  box-shadow:0 0 0 5px rgba(217,77,124,.09);
+}
+
+.student-notice-list10 article.read .student-notice-dot{
+  background:#c7bdc1;
+  box-shadow:none;
+}
+
+.student-notice-copy10{min-width:0}
+
+.student-notice-meta{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-bottom:5px;
+}
+
+.student-notice-meta>span{
+  color:#aa3b64;
+  font-size:.63rem;
+  font-weight:900;
+  letter-spacing:.11em;
+  text-transform:uppercase;
+}
+
+.student-notice-meta small{color:#9b8e93}
+
+.student-notice-copy10 h3{
+  margin:5px 0 7px;
+  color:#352a2f;
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:1.35rem;
+  line-height:1.2;
+}
+
+.student-notice-copy10>p{margin:0;color:#786b71;line-height:1.58}
+
+.student-notice-actions10{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-top:14px;
+  flex-wrap:wrap;
+}
+
+.student-notice-actions10 a,
+.student-notice-actions10 button{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:38px;
+  padding:0 13px;
+  border:1px solid #ead3dc;
+  border-radius:999px;
+  background:#fff;
+  color:#a63864;
+  font:inherit;
+  font-size:.75rem;
+  font-weight:850;
+  text-decoration:none;
+  cursor:pointer;
+  transition:background .18s ease,border-color .18s ease,color .18s ease;
+}
+
+.student-notice-actions10 a:hover,
+.student-notice-actions10 button:hover{
+  color:#8d294f;
+  border-color:#dfaebf;
+  background:#fff6f9;
+  text-decoration:none;
+}
+
+/* Archivos */
+.student-files-overview10{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:12px;
+  margin:0 0 20px;
+}
+
+.student-files-overview10>div{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:15px;
+  min-height:82px;
+  padding:17px 19px;
+  border:1px solid #e9e1e1;
+  border-radius:20px;
+  background:linear-gradient(145deg,#fff 0%,#fffbfc 100%);
+  box-shadow:0 10px 28px rgba(47,30,37,.025);
+}
+
+.student-files-overview10>div:first-child{background:linear-gradient(145deg,#fff 0%,#fff5f8 100%)}
+.student-files-overview10 small{color:#a45e79;font-size:.61rem;font-weight:900;letter-spacing:.1em}
+.student-files-overview10 strong{color:#382b32;font-family:'Playfair Display',Georgia,serif;font-size:1.7rem}
+
+.student-files-layout10{align-items:start;gap:20px}
+
+.student-upload-panel10,
+.student-files-list-panel10{
+  overflow:hidden;
+  border-color:#e9e1e1;
+  border-radius:26px;
+  box-shadow:0 16px 42px rgba(48,30,38,.035);
+}
+
+.student-upload-panel10{
+  background:linear-gradient(155deg,#fff 0%,#fff8fa 100%);
+}
+
+.student-files-list-panel10{background:#fff}
+
+.student-upload-panel10 .panel-heading,
+.student-files-list-panel10 .panel-heading{padding-bottom:17px}
+
+.student-upload-intro10{margin:-4px 0 16px;color:#88777e;font-size:.82rem;line-height:1.55}
+
+.student-file-dropzone{
+  border:1.5px dashed #ddb3c3;
+  border-radius:20px;
+  background:rgba(255,255,255,.72);
+  transition:border-color .18s ease,background .18s ease;
+}
+
+.student-file-dropzone:hover{border-color:#cf7899;background:#fff}
+
+.student-files-list-panel10 .student-files-search{
+  min-height:40px;
+  border-radius:999px;
+  background:#fffafb;
+}
+
+.student-private-file-list10{display:grid;gap:9px}
+
+.student-private-file-list10 article{
+  border:1px solid #eee7e6;
+  border-radius:18px;
+  background:#fff;
+  transition:border-color .18s ease,background .18s ease,transform .18s ease;
+}
+
+.student-private-file-list10 article:hover{
+  transform:translateY(-1px);
+  border-color:#e5c6d1;
+  background:#fffbfc;
+}
+
+.student-private-file-list10 .student-file-type{
+  color:#a73a63;
+  border-color:#ecd3dc;
+  background:#fff4f7;
+}
+
+.student-private-file-list10 .student-file-copy>strong{
+  color:#392d33;
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:1.08rem;
+}
+
+.student-private-file-list10 .student-file-actions button{
+  border-radius:999px;
+}
+
+.student-security-note10{
+  margin-top:20px;
+  border-color:#e4d9dd;
+  border-radius:20px;
+  background:linear-gradient(120deg,#fff 0%,#fff8fa 100%);
+}
+
+.student-security-note10>span{color:#a53a62;font-weight:900;letter-spacing:.11em}
+
+/* Perfil de alumno: la lógica sigue compartida con Profesor; solo cambia la piel del portal STUDENT. */
+.account-profile-student10 .account-profile-grid{gap:20px;align-items:stretch}
+
+.account-profile-student10 .account-profile-summary,
+.account-profile-student10 .account-profile-form{
+  overflow:hidden;
+  border-color:#e8dfe1;
+  border-radius:28px;
+  box-shadow:0 18px 46px rgba(48,30,38,.04);
+}
+
+.account-profile-student10 .account-profile-summary{
+  position:relative;
+  background:
+    radial-gradient(circle at 85% 12%,rgba(218,84,129,.12),transparent 13rem),
+    linear-gradient(160deg,#fff 0%,#fff7fa 100%);
+}
+
+.account-profile-student10 .account-profile-summary::before{
+  content:'';
+  position:absolute;
+  inset:0 auto 0 0;
+  width:4px;
+  background:linear-gradient(#e978a1,#c43d6d);
+}
+
+.account-profile-student10 .account-avatar-large{
+  border:1px solid #ebc9d5;
+  box-shadow:0 0 0 8px rgba(221,99,141,.07);
+}
+
+.account-profile-student10 .account-profile-summary h3{
+  color:#34282e;
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:1.7rem;
+  letter-spacing:-.02em;
+}
+
+.account-profile-student10 .account-protected-note{
+  border-color:#ead7de;
+  border-radius:18px;
+  background:rgba(255,255,255,.72);
+}
+
+.account-profile-student10 .account-profile-form{background:#fff}
+.account-profile-student10 .account-profile-form .panel-heading h3{font-family:'Playfair Display',Georgia,serif;font-size:1.45rem}
+.account-profile-student10 .account-profile-form input{min-height:46px;border-radius:14px}
+.account-profile-student10 .account-profile-form input[readonly]{color:#82757a;background:#f8f5f4}
+.account-profile-student10 .account-profile-form .button-primary{min-height:46px;border-radius:999px;padding-inline:22px}
+
+.student-notifications-phase10f a:focus-visible,
+.student-notifications-phase10f button:focus-visible,
+.student-files-phase10f button:focus-visible,
+.student-files-phase10f input:focus-visible,
+.student-files-phase10f select:focus-visible,
+.student-files-phase10f textarea:focus-visible,
+.account-profile-student10 button:focus-visible,
+.account-profile-student10 input:focus-visible{
+  outline:3px solid rgba(194,63,114,.34);
+  outline-offset:3px;
+}
+
+@media(max-width:1180px){
+  .student-notifications-heading10,
+  .student-files-heading10,
+  .account-profile-heading10{align-items:flex-start}
+}
+
+@media(max-width:820px){
+  .student-notifications-phase10f,
+  .student-files-phase10f,
+  .account-profile-student10{padding:24px 18px 46px}
+
+  .student-notifications-heading10,
+  .student-files-heading10,
+  .account-profile-heading10{align-items:flex-start;flex-direction:column;gap:14px;padding-bottom:16px}
+
+  .student-notifications-phase10f .private-space-badge,
+  .student-files-phase10f .private-space-badge{min-width:0;width:100%}
+
+  .student-files-overview10{grid-template-columns:1fr}
+  .student-files-layout10{grid-template-columns:1fr}
+  .account-profile-student10 .account-profile-grid{grid-template-columns:1fr}
+  .student-notice-list10 article{align-items:flex-start}
+  .student-notice-list10 article>.status{align-self:flex-start}
+}
+
+@media(max-width:560px){
+  .student-notifications-heading10 h2,
+  .student-files-heading10 h2,
+  .account-profile-heading10 h2{font-size:2.35rem}
+
+  .student-notice-list10{padding:7px;border-radius:22px}
+  .student-notice-list10 article{padding:19px 16px;border-radius:17px}
+  .student-notice-actions10{align-items:stretch;flex-direction:column;gap:7px}
+  .student-notice-actions10 a,.student-notice-actions10 button{width:100%}
+  .student-upload-panel10,.student-files-list-panel10{border-radius:22px}
+  .student-files-list-panel10 .panel-heading{align-items:flex-start;flex-direction:column;gap:12px}
+  .student-files-list-panel10 .student-files-search{width:100%}
+  .student-private-file-list10 article{align-items:flex-start}
+  .student-private-file-list10 .student-file-actions{width:100%;justify-content:flex-start;flex-wrap:wrap}
+  .account-profile-student10 .account-profile-summary,.account-profile-student10 .account-profile-form{border-radius:22px}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .student-notifications-toolbar10 .filter-pills button,
+  .student-notice-list10 article,
+  .student-notice-actions10 a,
+  .student-notice-actions10 button,
+  .student-file-dropzone,
+  .student-private-file-list10 article{transition:none}
+
+  .student-notice-list10 article.unread:hover,
+  .student-private-file-list10 article:hover{transform:none}
+}

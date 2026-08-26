@@ -1,0 +1,436 @@
+/* FASE 12.5 · CURSOS + CLASES + AULA ONLINE + ZOOM
+   Capa visual coordinada. No cambia matrículas, asistencia, modalidad ni seguridad Zoom. */
+
+.dashboard-shell-admin .cms-page:has(.course-admin-grid),
+.dashboard-shell-admin .cms-page:has(.admin-real-calendar),
+.dashboard-shell-admin .class-delivery-admin-page,
+.dashboard-shell-admin .zoom-integration-page{
+  --academic-ink:#382b33;
+  --academic-muted:#806b76;
+  --academic-plum:#4a2d3b;
+  --academic-plum-deep:#281c23;
+  --academic-pink:#bd4f79;
+  --academic-soft:#f8e8ee;
+  --academic-blush:#fff5f7;
+  --academic-paper:#fffdfb;
+  --academic-line:rgba(105,62,80,.11);
+  display:grid;
+  gap:24px;
+  max-width:1500px;
+  margin:0 auto;
+  padding-top:30px;
+  padding-bottom:54px;
+}
+
+.dashboard-shell-admin .cms-page:has(.course-admin-grid)>.cms-page-heading,
+.dashboard-shell-admin .cms-page:has(.admin-real-calendar)>.cms-page-heading,
+.dashboard-shell-admin .class-delivery-admin-page>.cms-page-heading,
+.dashboard-shell-admin .zoom-integration-page>.cms-page-heading{
+  min-height:210px;
+  align-items:end;
+  gap:30px;
+  padding:38px 42px;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:28px;
+  color:#f8eef2;
+  background:
+    radial-gradient(circle at 86% 16%,rgba(218,112,151,.22),transparent 22rem),
+    linear-gradient(132deg,var(--academic-plum) 0%,var(--academic-plum-deep) 100%);
+  box-shadow:0 26px 64px rgba(57,31,43,.13);
+}
+.dashboard-shell-admin .cms-page:has(.course-admin-grid)>.cms-page-heading .eyebrow,
+.dashboard-shell-admin .cms-page:has(.admin-real-calendar)>.cms-page-heading .eyebrow,
+.dashboard-shell-admin .class-delivery-admin-page>.cms-page-heading .eyebrow,
+.dashboard-shell-admin .zoom-integration-page>.cms-page-heading .eyebrow{color:#efb3c8}
+.dashboard-shell-admin .cms-page:has(.course-admin-grid)>.cms-page-heading h2,
+.dashboard-shell-admin .cms-page:has(.admin-real-calendar)>.cms-page-heading h2,
+.dashboard-shell-admin .class-delivery-admin-page>.cms-page-heading h2,
+.dashboard-shell-admin .zoom-integration-page>.cms-page-heading h2{
+  margin:9px 0 11px;
+  color:#fff;
+  font-size:clamp(2.2rem,3.5vw,3.8rem);
+  line-height:1;
+  letter-spacing:-.035em;
+}
+.dashboard-shell-admin .cms-page:has(.course-admin-grid)>.cms-page-heading p,
+.dashboard-shell-admin .cms-page:has(.admin-real-calendar)>.cms-page-heading p,
+.dashboard-shell-admin .class-delivery-admin-page>.cms-page-heading p,
+.dashboard-shell-admin .zoom-integration-page>.cms-page-heading p{
+  max-width:720px;
+  color:#d9c7cf;
+  line-height:1.65;
+}
+.dashboard-shell-admin .cms-page:has(.course-admin-grid)>.cms-page-heading .button-primary,
+.dashboard-shell-admin .cms-page:has(.admin-real-calendar)>.cms-page-heading .button-primary{
+  color:#32222a;
+  background:#fff7fa;
+  box-shadow:0 14px 34px rgba(12,5,9,.18);
+}
+
+/* Métricas académicas: una sola franja de contexto. */
+.dashboard-shell-admin .cms-page:has(.course-admin-grid)>.metric-grid,
+.dashboard-shell-admin .cms-page:has(.admin-real-calendar)>.metric-grid,
+.dashboard-shell-admin .class-delivery-admin-page>.class-delivery-metrics{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:0;
+  margin:0;
+  overflow:hidden;
+  border:1px solid var(--academic-line);
+  border-radius:21px;
+  background:rgba(255,253,251,.84);
+  box-shadow:0 12px 30px rgba(70,36,50,.035);
+}
+.dashboard-shell-admin .cms-page:has(.course-admin-grid)>.metric-grid article,
+.dashboard-shell-admin .cms-page:has(.admin-real-calendar)>.metric-grid article,
+.dashboard-shell-admin .class-delivery-admin-page>.class-delivery-metrics article{
+  min-height:112px;
+  display:grid;
+  align-content:center;
+  gap:5px;
+  padding:20px 23px;
+  border:0;
+  border-right:1px solid var(--academic-line);
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+}
+.dashboard-shell-admin .cms-page:has(.course-admin-grid)>.metric-grid article:last-child,
+.dashboard-shell-admin .cms-page:has(.admin-real-calendar)>.metric-grid article:last-child,
+.dashboard-shell-admin .class-delivery-admin-page>.class-delivery-metrics article:last-child{border-right:0}
+.dashboard-shell-admin .cms-page:has(.course-admin-grid)>.metric-grid span,
+.dashboard-shell-admin .cms-page:has(.admin-real-calendar)>.metric-grid span,
+.dashboard-shell-admin .class-delivery-admin-page>.class-delivery-metrics span{
+  color:#987783;
+  font-size:.67rem;
+  font-weight:800;
+  letter-spacing:.09em;
+  text-transform:uppercase;
+}
+.dashboard-shell-admin .cms-page:has(.course-admin-grid)>.metric-grid strong,
+.dashboard-shell-admin .cms-page:has(.admin-real-calendar)>.metric-grid strong,
+.dashboard-shell-admin .class-delivery-admin-page>.class-delivery-metrics strong{
+  color:var(--academic-ink);
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:2rem;
+  line-height:1;
+}
+
+/* CURSOS Y GRUPOS */
+.dashboard-shell-admin .course-admin-grid{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:15px;
+}
+.dashboard-shell-admin .course-admin-card{
+  min-width:0;
+  gap:16px;
+  padding:25px;
+  border:1px solid var(--academic-line);
+  border-radius:23px;
+  background:rgba(255,253,251,.9);
+  box-shadow:0 14px 36px rgba(70,36,50,.04);
+}
+.dashboard-shell-admin .course-card-number{
+  top:17px;
+  right:19px;
+  color:#e8bdcc;
+  font-size:1.75rem;
+}
+.dashboard-shell-admin .course-admin-card .eyebrow{color:#ad5876}
+.dashboard-shell-admin .course-admin-card h3{
+  max-width:80%;
+  color:var(--academic-ink);
+  font-size:1.55rem;
+  line-height:1.08;
+}
+.dashboard-shell-admin .course-admin-card>p{color:var(--academic-muted);line-height:1.55}
+.dashboard-shell-admin .course-admin-card dl{
+  gap:0;
+  overflow:hidden;
+  border:1px solid var(--academic-line);
+  border-radius:15px;
+}
+.dashboard-shell-admin .course-admin-card dl>div{
+  padding:12px 14px;
+  border:0;
+  border-bottom:1px solid var(--academic-line);
+  border-radius:0;
+  background:#fff;
+}
+.dashboard-shell-admin .course-admin-card dl>div:last-child{border-bottom:0}
+.dashboard-shell-admin .course-admin-card dt{color:#9b7485}
+.dashboard-shell-admin .course-admin-card dd{color:#56434c}
+.dashboard-shell-admin .course-capacity>div:first-child{color:#7f6873}
+.dashboard-shell-admin .course-card-actions button{
+  min-height:42px;
+  border-color:var(--academic-line);
+  border-radius:999px;
+  color:#604c56;
+  background:#fff;
+}
+.dashboard-shell-admin .course-card-actions button:first-child{color:#fff;border-color:#a74469;background:#a74469}
+.dashboard-shell-admin .groups-overview-panel{
+  gap:0;
+  overflow:hidden;
+  border:1px solid var(--academic-line);
+  border-radius:23px;
+  background:rgba(255,253,251,.88);
+  box-shadow:0 14px 36px rgba(70,36,50,.04);
+}
+.dashboard-shell-admin .groups-overview-panel>.panel-heading{padding:23px 25px 17px}
+.dashboard-shell-admin .groups-overview-panel .group-row{
+  padding:0 25px;
+  border-bottom-color:rgba(105,62,80,.085);
+}
+.dashboard-shell-admin .groups-overview-panel .group-row:hover{background:#fff8fa}
+.dashboard-shell-admin .group-code{color:#963e60;background:#faeaf0}
+
+/* CLASES · agenda central y asistencia. */
+.dashboard-shell-admin .cms-page:has(.admin-real-calendar) .calendar-admin-panel,
+.dashboard-shell-admin .cms-page:has(.admin-real-calendar) .panel{
+  border:1px solid var(--academic-line);
+  border-radius:23px;
+  background:rgba(255,253,251,.88);
+  box-shadow:0 14px 36px rgba(70,36,50,.04);
+}
+.dashboard-shell-admin .cms-page:has(.admin-real-calendar) .calendar-admin-panel>.panel-heading{padding-bottom:18px}
+.dashboard-shell-admin .calendar-actions button{
+  min-height:40px;
+  border-color:var(--academic-line);
+  border-radius:999px;
+  color:#6a505c;
+  background:#fff;
+}
+.dashboard-shell-admin .week-calendar{
+  border-color:rgba(105,62,80,.1);
+  border-radius:18px;
+  background:rgba(105,62,80,.09);
+}
+.dashboard-shell-admin .calendar-day{background:#fffdfb}
+.dashboard-shell-admin .calendar-day-heading{
+  border-bottom-color:var(--academic-line);
+  background:#fcf7f8;
+}
+.dashboard-shell-admin .calendar-day-heading span{color:#9b7485}
+.dashboard-shell-admin .calendar-day-heading strong{color:var(--academic-ink)}
+.dashboard-shell-admin .calendar-class{
+  min-height:96px;
+  border-color:#efd7e1;
+  border-left-color:var(--academic-pink);
+  border-radius:13px;
+  color:var(--academic-ink);
+  background:linear-gradient(145deg,#fff7fa,#fffdfb);
+}
+.dashboard-shell-admin .calendar-class:hover{
+  border-color:#dea9bd;
+  box-shadow:0 10px 24px rgba(125,52,80,.07);
+}
+.dashboard-shell-admin .calendar-class span,
+.dashboard-shell-admin .calendar-class small{color:#8e7480}
+.dashboard-shell-admin .class-bottom-grid{gap:16px}
+.dashboard-shell-admin .upcoming-class-list>div{border-bottom-color:var(--academic-line)}
+.dashboard-shell-admin .upcoming-class-list>div>span{color:#a04065}
+.dashboard-shell-admin .availability-grid button{
+  min-height:92px;
+  border-color:var(--academic-line);
+  border-radius:15px;
+  background:#fffaf9;
+}
+.dashboard-shell-admin .availability-grid button:hover{border-color:#ddb0c0;background:#fff5f8}
+.dashboard-shell-admin .admin-class-attendance{
+  border-color:var(--academic-line);
+  border-radius:23px;
+  background:rgba(255,253,251,.92);
+}
+.dashboard-shell-admin .admin-class-attendance button,
+.dashboard-shell-admin .cms-page:has(.admin-real-calendar) .filter-pills button{
+  min-height:40px;
+}
+.dashboard-shell-admin .cms-page:has(.admin-real-calendar) .filter-pills button.active{
+  color:#fff;
+  border-color:#a74469;
+  background:#a74469;
+}
+
+/* AULA ONLINE · preparación de la sesión. */
+.dashboard-shell-admin .class-delivery-admin-grid{
+  grid-template-columns:minmax(350px,.82fr) minmax(440px,1.18fr);
+  gap:17px;
+}
+.dashboard-shell-admin .class-delivery-list-panel,
+.dashboard-shell-admin .class-delivery-editor-panel{
+  border:1px solid var(--academic-line);
+  border-radius:23px;
+  background:rgba(255,253,251,.9);
+  box-shadow:0 14px 36px rgba(70,36,50,.04);
+}
+.dashboard-shell-admin .class-delivery-list>button{border-bottom-color:rgba(105,62,80,.085)}
+.dashboard-shell-admin .class-delivery-list>button:hover{background:#fff8fa}
+.dashboard-shell-admin .class-delivery-list>button.active{
+  background:linear-gradient(90deg,#fff1f5,#fffdfb 72%);
+  box-shadow:inset 4px 0 0 var(--academic-pink);
+}
+.dashboard-shell-admin .class-delivery-list time{color:#9d6f82}
+.dashboard-shell-admin .class-mode-picker label{
+  border-color:var(--academic-line);
+  border-radius:17px;
+  background:#fff;
+}
+.dashboard-shell-admin .class-mode-picker label.active{
+  border-color:#cf6d91;
+  background:#fff3f7;
+  box-shadow:0 10px 25px rgba(145,52,86,.07);
+}
+.dashboard-shell-admin .class-delivery-form input[type='text'],
+.dashboard-shell-admin .class-delivery-form input[type='url'],
+.dashboard-shell-admin .class-delivery-form div>input{
+  border-color:rgba(105,62,80,.14);
+  border-radius:13px;
+}
+.dashboard-shell-admin .class-delivery-form input:focus{
+  border-color:rgba(189,79,121,.42);
+  box-shadow:0 0 0 4px rgba(189,79,121,.09);
+  outline:none;
+}
+.dashboard-shell-admin .class-delivery-preview{
+  border:1px solid rgba(189,79,121,.1);
+  background:#fff7f9;
+}
+.dashboard-shell-admin .class-zoom-meeting-card{
+  border-color:rgba(189,79,121,.15);
+  border-radius:19px;
+  background:linear-gradient(135deg,#fffdfb,#fff5f8);
+}
+.dashboard-shell-admin .class-zoom-meeting-card.is-ready{
+  border-color:#d7e7db;
+  background:linear-gradient(135deg,#fff,#f5faf6);
+}
+.dashboard-shell-admin .class-delivery-form>.button-primary,
+.dashboard-shell-admin .class-zoom-meeting-card>.button-primary{background:#a74469}
+
+/* ZOOM · herramienta avanzada y sobria. */
+.dashboard-shell-admin .zoom-integration-page{
+  --zoom-ink:#382b33;
+  --zoom-muted:#806b76;
+  --zoom-pink:#bd4f79;
+}
+.dashboard-shell-admin .zoom-connection-card{
+  min-height:175px;
+  padding:30px 32px;
+  border:1px solid var(--academic-line);
+  border-radius:24px;
+  background:linear-gradient(145deg,#fffdfb,#fff6f8);
+  box-shadow:0 14px 36px rgba(70,36,50,.04);
+}
+.dashboard-shell-admin .zoom-connection-card.is-ready{background:linear-gradient(145deg,#fffdfb,#f5faf6)}
+.dashboard-shell-admin .zoom-capability-grid{
+  gap:0;
+  overflow:hidden;
+  border:1px solid var(--academic-line);
+  border-radius:22px;
+  background:#fffdfb;
+  box-shadow:0 12px 30px rgba(70,36,50,.035);
+}
+.dashboard-shell-admin .zoom-capability-grid article{
+  border:0;
+  border-right:1px solid var(--academic-line);
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+}
+.dashboard-shell-admin .zoom-capability-grid article:last-child{border-right:0}
+.dashboard-shell-admin .zoom-capability-grid article>span{color:#d49ab0}
+.dashboard-shell-admin .zoom-api-check-panel,
+.dashboard-shell-admin .zoom-next-step-panel{
+  border:1px solid var(--academic-line);
+  border-radius:22px;
+  background:rgba(255,253,251,.9);
+  box-shadow:0 12px 30px rgba(70,36,50,.035);
+}
+.dashboard-shell-admin .zoom-next-step-copy code{
+  border-color:rgba(105,62,80,.1);
+  color:#684b58;
+  background:#faf5f6;
+}
+
+.dashboard-shell-admin .cms-page:has(.course-admin-grid) button:focus-visible,
+.dashboard-shell-admin .cms-page:has(.course-admin-grid) a:focus-visible,
+.dashboard-shell-admin .cms-page:has(.admin-real-calendar) button:focus-visible,
+.dashboard-shell-admin .cms-page:has(.admin-real-calendar) a:focus-visible,
+.dashboard-shell-admin .class-delivery-admin-page button:focus-visible,
+.dashboard-shell-admin .class-delivery-admin-page a:focus-visible,
+.dashboard-shell-admin .class-delivery-admin-page input:focus-visible,
+.dashboard-shell-admin .zoom-integration-page button:focus-visible,
+.dashboard-shell-admin .zoom-integration-page a:focus-visible{
+  outline:3px solid rgba(189,79,121,.42);
+  outline-offset:3px;
+}
+
+@media(max-width:1260px){
+  .dashboard-shell-admin .course-admin-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .dashboard-shell-admin .class-delivery-admin-grid{grid-template-columns:1fr}
+  .dashboard-shell-admin .zoom-capability-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .dashboard-shell-admin .zoom-capability-grid article{border-bottom:1px solid var(--academic-line)}
+  .dashboard-shell-admin .zoom-capability-grid article:nth-child(2n){border-right:0}
+  .dashboard-shell-admin .zoom-capability-grid article:nth-last-child(-n+2){border-bottom:0}
+}
+
+@media(max-width:760px){
+  .dashboard-shell-admin .cms-page:has(.course-admin-grid),
+  .dashboard-shell-admin .cms-page:has(.admin-real-calendar),
+  .dashboard-shell-admin .class-delivery-admin-page,
+  .dashboard-shell-admin .zoom-integration-page{gap:18px;padding-top:18px;padding-bottom:36px}
+
+  .dashboard-shell-admin .cms-page:has(.course-admin-grid)>.cms-page-heading,
+  .dashboard-shell-admin .cms-page:has(.admin-real-calendar)>.cms-page-heading,
+  .dashboard-shell-admin .class-delivery-admin-page>.cms-page-heading,
+  .dashboard-shell-admin .zoom-integration-page>.cms-page-heading{
+    min-height:0;
+    padding:28px 23px;
+    border-radius:23px;
+  }
+  .dashboard-shell-admin .cms-page:has(.course-admin-grid)>.cms-page-heading h2,
+  .dashboard-shell-admin .cms-page:has(.admin-real-calendar)>.cms-page-heading h2,
+  .dashboard-shell-admin .class-delivery-admin-page>.cms-page-heading h2,
+  .dashboard-shell-admin .zoom-integration-page>.cms-page-heading h2{font-size:clamp(2rem,10vw,3rem)}
+
+  .dashboard-shell-admin .cms-page:has(.course-admin-grid)>.metric-grid,
+  .dashboard-shell-admin .cms-page:has(.admin-real-calendar)>.metric-grid,
+  .dashboard-shell-admin .class-delivery-admin-page>.class-delivery-metrics{grid-template-columns:1fr}
+  .dashboard-shell-admin .cms-page:has(.course-admin-grid)>.metric-grid article,
+  .dashboard-shell-admin .cms-page:has(.admin-real-calendar)>.metric-grid article,
+  .dashboard-shell-admin .class-delivery-admin-page>.class-delivery-metrics article{min-height:92px;border-right:0;border-bottom:1px solid var(--academic-line)}
+  .dashboard-shell-admin .cms-page:has(.course-admin-grid)>.metric-grid article:last-child,
+  .dashboard-shell-admin .cms-page:has(.admin-real-calendar)>.metric-grid article:last-child,
+  .dashboard-shell-admin .class-delivery-admin-page>.class-delivery-metrics article:last-child{border-bottom:0}
+
+  .dashboard-shell-admin .course-admin-grid{grid-template-columns:1fr}
+  .dashboard-shell-admin .course-admin-card{padding:22px;border-radius:20px}
+  .dashboard-shell-admin .groups-overview-panel .group-row{padding:12px 18px}
+  .dashboard-shell-admin .week-calendar{grid-template-columns:repeat(5,minmax(180px,1fr));overflow-x:auto}
+  .dashboard-shell-admin .class-mode-picker{grid-template-columns:1fr}
+  .dashboard-shell-admin .class-delivery-form{padding:20px}
+  .dashboard-shell-admin .zoom-capability-grid{grid-template-columns:1fr}
+  .dashboard-shell-admin .zoom-capability-grid article{border-right:0!important;border-bottom:1px solid var(--academic-line)!important}
+  .dashboard-shell-admin .zoom-capability-grid article:last-child{border-bottom:0!important}
+  .dashboard-shell-admin .zoom-connection-card{align-items:flex-start;flex-direction:column;padding:24px}
+}
+
+@media(max-width:480px){
+  .dashboard-shell-admin .course-card-actions{grid-template-columns:1fr}
+  .dashboard-shell-admin .class-zoom-meeting-card{align-items:flex-start;flex-direction:column}
+  .dashboard-shell-admin .class-zoom-meeting-card>.button,
+  .dashboard-shell-admin .zoom-meeting-needs-config{width:100%;align-items:flex-start}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .dashboard-shell-admin .course-admin-card,
+  .dashboard-shell-admin .calendar-class,
+  .dashboard-shell-admin .class-mode-picker label,
+  .dashboard-shell-admin .class-delivery-list>button,
+  .dashboard-shell-admin .zoom-integration-page button{
+    transition:none!important;
+    transition-duration:0s!important;
+  }
+}

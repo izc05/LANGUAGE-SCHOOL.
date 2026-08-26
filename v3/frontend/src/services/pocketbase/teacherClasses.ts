@@ -1,7 +1,7 @@
 import { getCurrentUser } from './auth'
 import { collections } from './collections'
 import { pb } from './client'
-import type { AttendanceRecord, ClassRecord } from './studentPortal'
+import type { AttendanceRecord, ClassDeliveryMode, ClassRecord } from './studentPortal'
 import type { TeacherEnrollmentRecord, TeacherGroupRecord } from './teacherPortal'
 import { listMyTeacherGroups } from './teacherPortal'
 
@@ -13,6 +13,18 @@ function requireTeacher() {
 
 function quote(value: string): string {
   return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+}
+
+function normalizeOnlineUrl(value?: string): string {
+  const url = value?.trim() || ''
+  if (!url) return ''
+  try {
+    const parsed = new URL(url)
+    if (parsed.protocol !== 'https:') throw new Error()
+    return parsed.toString()
+  } catch {
+    throw new Error('El enlace de la clase online debe ser una URL https válida.')
+  }
 }
 
 async function assertMyGroup(groupId: string): Promise<TeacherGroupRecord> {
@@ -44,6 +56,9 @@ export async function createTeacherClass(input: {
   endsAt: string
   topic: string
   description?: string
+  deliveryMode?: ClassDeliveryMode
+  locationText?: string
+  onlineJoinUrl?: string
 }): Promise<ClassRecord> {
   const teacher = requireTeacher()
   await assertMyGroup(input.groupId)
@@ -54,6 +69,10 @@ export async function createTeacherClass(input: {
     throw new Error('La fecha final debe ser posterior al inicio de la clase.')
   }
 
+  const deliveryMode = input.deliveryMode || 'IN_PERSON'
+  const onlineJoinUrl = deliveryMode === 'IN_PERSON' ? '' : normalizeOnlineUrl(input.onlineJoinUrl)
+  const locationText = deliveryMode === 'ONLINE' ? '' : input.locationText?.trim() || ''
+
   return pb.collection(collections.classes).create<ClassRecord>({
     group: input.groupId,
     teacher: teacher.id,
@@ -62,6 +81,9 @@ export async function createTeacherClass(input: {
     topic: input.topic.trim(),
     description: input.description?.trim() || '',
     status: 'SCHEDULED',
+    delivery_mode: deliveryMode,
+    location_text: locationText,
+    online_join_url: onlineJoinUrl,
   }, { expand: 'group,group.course' })
 }
 

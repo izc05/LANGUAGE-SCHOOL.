@@ -2,25 +2,29 @@
 
 Este directorio contiene el paquete reproducible para desplegar la V3 en Linux amd64 o ARM64 sin exponer PocketBase directamente a Internet. El mismo flujo sirve para el mini PC de preproducción y para la futura Raspberry Pi 4.
 
+Los valores operativos se leen de `/etc/language-school/production.env`. Los puertos documentados aquí corresponden a la plantilla actual: Nginx `8083` y PocketBase `8091`, ambos únicamente en loopback.
+
 ## Arquitectura objetivo
 
 ```text
 Internet
   -> Cloudflare Tunnel
-  -> 127.0.0.1:8080 Nginx
+  -> 127.0.0.1:8083 Nginx
        -> /        React/Vite estático
-       -> /api/*   127.0.0.1:8090 PocketBase
+       -> /api/*   127.0.0.1:8091 PocketBase
 
 SSD principal
   /opt/language-school/frontend
   /opt/language-school/pocketbase
+    /pb_migrations
+    /pb_hooks
   /var/lib/language-school/pb_data
 
 Disco externo
   /mnt/language-school-backup/language-school
 ```
 
-PocketBase escucha exclusivamente en `127.0.0.1:8090`. Nginx escucha exclusivamente en `127.0.0.1:8080`. El router no necesita publicar puertos entrantes.
+PocketBase escucha exclusivamente en `127.0.0.1:8091`. Nginx escucha exclusivamente en `127.0.0.1:8083`. El router no necesita publicar puertos entrantes.
 
 ## Versiones y decisiones fijadas
 
@@ -31,12 +35,14 @@ PocketBase escucha exclusivamente en `127.0.0.1:8090`. Nginx escucha exclusivame
 - Usuario de servicio: `languageschool`.
 - Frontend: `VITE_APP_MODE=connected`.
 - `VITE_POCKETBASE_URL` se compila con el mismo `PUBLIC_ORIGIN` HTTPS de la web.
+- `pb_migrations` y `pb_hooks` forman parte inseparable del runtime PocketBase de Language School.
 
 ## Directorios
 
 ```text
 infrastructure/
   .env.example
+  PRIVATE-VARIABLES.md
   raspberry-pi/
     prepare-production-env.sh
     install-pocketbase.sh
@@ -81,7 +87,7 @@ sudo bash v3/infrastructure/raspberry-pi/prepare-production-env.sh
 sudo nano /etc/language-school/production.env
 ```
 
-Ajustar al menos `PUBLIC_ORIGIN`. El archivo real de producción no se guarda en GitHub.
+Ajustar `PUBLIC_ORIGIN` al dominio HTTPS definitivo y `BACKUP_MOUNT` al mountpoint real. Si se activa Zoom, añadir únicamente en el host las variables descritas en `PRIVATE-VARIABLES.md`. El archivo real de producción no se guarda en GitHub.
 
 ### 2. Instalar PocketBase para la arquitectura del host
 
@@ -89,7 +95,9 @@ Ajustar al menos `PUBLIC_ORIGIN`. El archivo real de producción no se guarda en
 sudo bash v3/infrastructure/raspberry-pi/install-pocketbase.sh
 ```
 
-El instalador detecta `x86_64`/`amd64` o `aarch64`/`arm64`, verifica el SHA-256 correspondiente, crea usuario/directorios, copia migraciones y registra el servicio. No inicia todavía PocketBase.
+El instalador detecta `x86_64`/`amd64` o `aarch64`/`arm64`, verifica el SHA-256 correspondiente, crea usuario/directorios, copia **migraciones y hooks server-side** y registra el servicio. No inicia todavía PocketBase.
+
+Una instalación que no contenga `/opt/language-school/pocketbase/pb_hooks` es incompleta y el wrapper de arranque debe rechazarla.
 
 ### 3. Aplicar migraciones
 
@@ -115,13 +123,20 @@ sudo bash v3/infrastructure/reverse-proxy/install-nginx.sh
 
 Nginx y PocketBase usan `PROXY_URL` y `PB_URL` de `/etc/language-school/production.env`. El instalador solo añade el sitio de Language School, valida la configuración global y recarga Nginx sin reemplazar otros sitios.
 
+Con la plantilla actual:
+
+```text
+PROXY_URL=http://127.0.0.1:8083
+PB_URL=http://127.0.0.1:8091
+```
+
 ### 6. Compilar y desplegar frontend
 
 ```bash
 bash v3/infrastructure/raspberry-pi/deploy-frontend.sh
 ```
 
-El build usa `PUBLIC_ORIGIN` de `/etc/language-school/production.env` y publica `dist/` en `/opt/language-school/frontend`.
+El build fuerza `VITE_APP_MODE=connected`, exige un `PUBLIC_ORIGIN` HTTPS real y rechaza hosts locales o placeholder antes de publicar `dist/` en `/opt/language-school/frontend`.
 
 ### 7. Comprobar localmente
 
@@ -129,14 +144,14 @@ El build usa `PUBLIC_ORIGIN` de `/etc/language-school/production.env` y publica 
 bash v3/infrastructure/raspberry-pi/health-check.sh
 ```
 
-Debe validar servicio PocketBase, `/api/health` directo, `/api/health` mediante Nginx y frontend.
+Debe validar servicio PocketBase, `/api/health` directo, `/api/health` mediante Nginx, frontend y bloqueo de `/_/`.
 
 ### 8. Crear Cloudflare Tunnel
 
-Seguir `cloudflare/README.md`. El origen debe ser únicamente:
+Seguir `cloudflare/README.md`. El origen debe ser únicamente el `PROXY_URL` local. Con la plantilla actual:
 
 ```text
-http://127.0.0.1:8080
+http://127.0.0.1:8083
 ```
 
 ### 9. Montar disco externo y habilitar backups
@@ -160,18 +175,19 @@ Para una versión nueva de la aplicación:
 
 1. actualizar repositorio;
 2. realizar backup;
-3. copiar/actualizar migraciones en `/opt/language-school/pocketbase/pb_migrations` si han cambiado;
+3. ejecutar de nuevo `install-pocketbase.sh` para actualizar binario/runtime cuando corresponda, incluyendo `pb_migrations` y `pb_hooks`;
 4. ejecutar `migrate.sh`;
-5. ejecutar `deploy-frontend.sh`;
-6. ejecutar `health-check.sh`.
+5. reiniciar PocketBase si se han actualizado hooks;
+6. ejecutar `deploy-frontend.sh`;
+7. ejecutar `health-check.sh`.
 
-Nunca sustituir `pb_data` manualmente durante una actualización ordinaria.
+No actualizar únicamente `pb_migrations`: los hooks server-side deben viajar con la misma revisión de la aplicación. Nunca sustituir `pb_data` manualmente durante una actualización ordinaria.
 
 ## Seguridad
 
-- No publicar `8090` ni `8080` en el router.
+- No publicar `8091` ni `8083` en el router; si los puertos se cambian en `production.env`, mantener igualmente ambos en loopback.
 - No publicar PocketBase `/_/` mediante Nginx.
-- No guardar superuser, ADMIN, Cloudflare token ni JSON de credenciales en GitHub.
+- No guardar superuser, ADMIN, secretos Zoom, token Cloudflare ni JSON de credenciales en GitHub.
 - El superuser de PocketBase es para operación local excepcional; la academia se administra con un usuario `ADMIN` de aplicación.
 - Los backups abortan si el destino configurado no es un mountpoint real.
 - Antes de una migración de producción, realizar una copia válida.

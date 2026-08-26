@@ -56,6 +56,30 @@ function submissionLabel(submission?: SubmissionView): string {
   return 'Entregada'
 }
 
+function taskPriority(task: TaskView, submission?: SubmissionView): number {
+  if (!submission && task.status !== 'CLOSED') return 0
+  if (submission?.status === 'RETURNED') return 1
+  if (submission?.status === 'SUBMITTED') return 2
+  if (submission?.status === 'REVIEWED') return 3
+  return 4
+}
+
+function taskStateTone(task: TaskView, submission?: SubmissionView): 'warning' | 'info' | 'success' | 'muted' {
+  if (!submission && task.status !== 'CLOSED') return 'warning'
+  if (submission?.status === 'RETURNED') return 'warning'
+  if (submission?.status === 'SUBMITTED') return 'info'
+  if (submission?.status === 'REVIEWED') return 'success'
+  return 'muted'
+}
+
+function taskStateHelper(task: TaskView, submission?: SubmissionView): string {
+  if (!submission && task.status !== 'CLOSED') return 'Necesita tu entrega'
+  if (submission?.status === 'RETURNED') return 'Revisa la corrección'
+  if (submission?.status === 'SUBMITTED') return 'Esperando al profesor'
+  if (submission?.status === 'REVIEWED') return 'Feedback disponible'
+  return 'Actividad cerrada'
+}
+
 export default function StudentAssignmentsPage() {
   const { isDemoMode } = useAuth()
   const [tasks, setTasks] = useState<TaskView[]>(isDemoMode ? demoTasks : [])
@@ -104,9 +128,25 @@ export default function StudentAssignmentsPage() {
   }, [isDemoMode])
 
   const submissionMap = useMemo(() => new Map(submissions.map((item) => [item.assignment, item])), [submissions])
+  const orderedTasks = useMemo(() => [...tasks].sort((a, b) => {
+    const priorityDifference = taskPriority(a, submissionMap.get(a.id)) - taskPriority(b, submissionMap.get(b.id))
+    if (priorityDifference !== 0) return priorityDifference
+    const aDue = a.dueAt ? new Date(a.dueAt).getTime() : Number.MAX_SAFE_INTEGER
+    const bDue = b.dueAt ? new Date(b.dueAt).getTime() : Number.MAX_SAFE_INTEGER
+    return aDue - bDue
+  }), [tasks, submissionMap])
+
+  useEffect(() => {
+    if (!selectedId && orderedTasks.length > 0) setSelectedId(orderedTasks[0].id)
+  }, [orderedTasks, selectedId])
+
   const selectedTask = tasks.find((item) => item.id === selectedId) || null
   const selectedSubmission = selectedTask ? submissionMap.get(selectedTask.id) : undefined
   const pending = tasks.filter((item) => !submissionMap.has(item.id) && item.status !== 'CLOSED').length
+  const returned = submissions.filter((item) => item.status === 'RETURNED').length
+  const inReview = submissions.filter((item) => item.status === 'SUBMITTED').length
+  const reviewed = submissions.filter((item) => item.status === 'REVIEWED').length
+  const attention = pending + returned
 
   function chooseFile(event: ChangeEvent<HTMLInputElement>) {
     const selected = event.target.files?.[0] || null
@@ -195,26 +235,33 @@ export default function StudentAssignmentsPage() {
 
   return (
     <DashboardShell role="Alumno" name="Alumno" nav={[...studentNav]}>
-      <div className="dashboard-content student-files-page">
-        <header className="student-page-heading">
-          <div><span className="eyebrow">TRABAJO PERSONAL</span><h2>Tareas y entregas</h2><p>Consulta qué tienes pendiente, entrega tu trabajo y revisa el feedback del profesor.</p></div>
-          <div className="private-space-badge"><strong>{pending}</strong><span>tareas pendientes</span></div>
+      <div className="dashboard-content student-files-page student-tasks-phase10c">
+        <header className="student-page-heading student-tasks-heading10">
+          <div><span className="eyebrow">TRABAJO PERSONAL</span><h2>Tareas y correcciones</h2><p>Primero lo que requiere acción. Después, tus entregas en revisión y las correcciones que ya puedes consultar.</p></div>
+          <div className="private-space-badge"><strong>{attention}</strong><span>{attention === 1 ? 'acción pendiente' : 'acciones pendientes'}</span></div>
         </header>
+
+        <section className="student-task-overview10" aria-label="Resumen de tareas">
+          <div className={attention > 0 ? 'needs-attention' : 'is-clear'}><small>POR HACER / REVISAR</small><strong>{attention}</strong><span>{attention > 0 ? 'Necesita tu atención' : 'Todo al día'}</span></div>
+          <div><small>EN REVISIÓN</small><strong>{inReview}</strong><span>Entregadas al profesor</span></div>
+          <div><small>CORREGIDAS</small><strong>{reviewed}</strong><span>Con feedback disponible</span></div>
+        </section>
 
         {loading && <div className="cms-notice" role="status">Cargando tareas…</div>}
         {message && <div className="cms-notice success-notice" role="status">{message}</div>}
         {error && <div className="cms-notice auth-error" role="alert">{error}</div>}
 
-        <div className="student-tasks-layout">
-          <section className="panel student-task-list-panel">
-            <div className="panel-heading"><div><span className="eyebrow">MIS TAREAS</span><h3>{tasks.length} actividades</h3></div></div>
-            <div className="student-task-list">
-              {tasks.map((task) => {
+        <div className="student-tasks-layout student-tasks-layout10">
+          <section className="panel student-task-list-panel student-task-list-panel10">
+            <div className="panel-heading"><div><span className="eyebrow">TU LISTA</span><h3>{tasks.length} actividades</h3></div></div>
+            <div className="student-task-list student-task-list10">
+              {orderedTasks.map((task) => {
                 const submission = submissionMap.get(task.id)
+                const tone = taskStateTone(task, submission)
                 return (
-                  <button key={task.id} type="button" className={selectedId === task.id ? 'active' : ''} onClick={() => openTask(task)}>
+                  <button key={task.id} type="button" className={`${selectedId === task.id ? 'active ' : ''}task-tone-${tone}`} onClick={() => openTask(task)}>
                     <span className="student-task-state">{submissionLabel(submission)}</span>
-                    <span><strong>{task.title}</strong><small>{formatDue(task.dueAt)}</small></span>
+                    <span className="student-task-list-copy"><strong>{task.title}</strong><small>{taskStateHelper(task, submission)} · {formatDue(task.dueAt)}</small></span>
                     <b>→</b>
                   </button>
                 )
@@ -230,7 +277,7 @@ export default function StudentAssignmentsPage() {
             </div>
           </section>
 
-          <section className="panel student-task-detail">
+          <section className="panel student-task-detail student-task-detail10">
             {!selectedTask && (
               <PortalEmptyState
                 title={tasks.length === 0 ? 'Sin tareas pendientes' : 'Selecciona una actividad'}
@@ -240,31 +287,36 @@ export default function StudentAssignmentsPage() {
 
             {selectedTask && (
               <>
-                <div className="student-task-header">
+                <div className="student-task-header student-task-header10">
                   <div><span className="eyebrow">{submissionLabel(selectedSubmission)}</span><h3>{selectedTask.title}</h3><p>{selectedTask.description || 'Sin instrucciones adicionales.'}</p></div>
-                  <span className={`status ${selectedSubmission ? 'success' : 'warning'}`}>{formatDue(selectedTask.dueAt)}</span>
+                  <div className="student-task-due10"><small>FECHA LÍMITE</small><strong>{formatDue(selectedTask.dueAt)}</strong></div>
                 </div>
 
                 {selectedTask.attachment && <button className="button button-ghost button-small" type="button" onClick={() => void downloadInstructions(selectedTask)}>Descargar adjunto</button>}
 
                 {selectedSubmission ? (
-                  <div className="student-submission-review">
-                    <span className="eyebrow">TU ENTREGA</span>
-                    {selectedSubmission.textAnswer && <p>{selectedSubmission.textAnswer}</p>}
-                    {selectedSubmission.file && <button type="button" className="text-link button-reset" onClick={() => void downloadSubmission(selectedSubmission)}>Abrir archivo entregado →</button>}
-                    <div className="student-feedback-box">
-                      <span className="eyebrow">FEEDBACK</span>
-                      <strong>{selectedSubmission.grade || (selectedSubmission.status === 'REVIEWED' ? 'Revisada' : 'Pendiente de revisión')}</strong>
-                      <p>{selectedSubmission.feedback || 'Tu profesor todavía no ha añadido comentarios.'}</p>
+                  <div className="student-submission-review student-submission-review10">
+                    <section className="student-submission-copy10">
+                      <span className="eyebrow">TU ENTREGA</span>
+                      {selectedSubmission.textAnswer && <p>{selectedSubmission.textAnswer}</p>}
+                      {selectedSubmission.file && <button type="button" className="text-link button-reset" onClick={() => void downloadSubmission(selectedSubmission)}>Abrir archivo entregado →</button>}
+                      {!selectedSubmission.textAnswer && !selectedSubmission.file && <p className="muted">La entrega está registrada.</p>}
+                    </section>
+                    <div className={`student-feedback-box student-feedback-box10 feedback-${selectedSubmission.status.toLowerCase()}`}>
+                      <div className="student-feedback-heading10"><span className="eyebrow">FEEDBACK DEL PROFESOR</span><span className={`status ${selectedSubmission.status === 'RETURNED' ? 'warning' : selectedSubmission.status === 'REVIEWED' ? 'success' : 'info'}`}>{submissionLabel(selectedSubmission)}</span></div>
+                      <strong>{selectedSubmission.grade || (selectedSubmission.status === 'REVIEWED' ? 'Revisada' : selectedSubmission.status === 'RETURNED' ? 'Revisa los comentarios' : 'Pendiente de revisión')}</strong>
+                      <p>{selectedSubmission.feedback || (selectedSubmission.status === 'SUBMITTED' ? 'Tu entrega está registrada. El feedback aparecerá aquí cuando el profesor la revise.' : 'Tu profesor todavía no ha añadido comentarios.')}</p>
+                      {selectedSubmission.status === 'RETURNED' && <small>Esta entrega sigue registrada. El Campus no habilita una segunda entrega automática mientras no exista un flujo de reentrega autorizado.</small>}
                     </div>
                   </div>
                 ) : (
-                  <form className="student-submission-form" onSubmit={submit}>
+                  <form className="student-submission-form student-submission-form10" onSubmit={submit}>
+                    <div className="student-submission-callout10"><span className="eyebrow">TU SIGUIENTE PASO</span><strong>Prepara y entrega esta actividad</strong><p>Puedes escribir la respuesta, adjuntar un archivo o combinar ambas opciones cuando la tarea lo necesite.</p></div>
                     <label className="field-stack"><span>Respuesta</span><textarea rows={6} value={textAnswer} onChange={(event) => setTextAnswer(event.target.value)} placeholder="Escribe aquí tu respuesta si la actividad admite texto..." /></label>
                     <label className="upload-dropzone student-file-dropzone">
                       <input type="file" accept=".pdf,.doc,.docx,.mp3,.m4a,.jpg,.jpeg,.png,.webp" onChange={chooseFile} disabled={submitting || selectedTask.status === 'CLOSED'} />
                       <strong>{file ? file.name : 'Adjuntar archivo opcional'}</strong>
-                      <small>Máximo 20 MB</small>
+                      <small>PDF, documento, audio o imagen · máximo 20 MB</small>
                     </label>
                     <button className="button button-primary" type="submit" disabled={submitting || selectedTask.status === 'CLOSED'}>{submitting ? 'Entregando…' : selectedTask.status === 'CLOSED' ? 'Tarea cerrada' : 'Entregar tarea'}</button>
                   </form>

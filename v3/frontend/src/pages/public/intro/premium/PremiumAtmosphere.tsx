@@ -8,66 +8,66 @@ export default function PremiumAtmosphere() {
   const compact = useThree((state) => state.size.width <= 760)
 
   useFrame((state) => {
-    if (groupRef.current) groupRef.current.rotation.y = state.clock.elapsedTime * 0.018
+    if (groupRef.current) groupRef.current.rotation.y = state.clock.elapsedTime * 0.014
   })
 
   return (
     <group ref={groupRef}>
-      <Clouds material={THREE.MeshLambertMaterial} limit={compact ? 320 : 520}>
+      <Clouds material={THREE.MeshLambertMaterial} limit={compact ? 260 : 420}>
         <Cloud
           seed={1}
-          scale={2.08}
-          volume={6.3}
+          scale={1.92}
+          volume={5.7}
           color="#ffffff"
-          fade={120}
-          segments={compact ? 32 : 50}
+          fade={122}
+          segments={compact ? 28 : 42}
           bounds={[10, 2.2, 10]}
-          position={[0, 1, -5]}
-          opacity={0.44}
+          position={[0, 1.2, -5.6]}
+          opacity={0.32}
         />
         <Cloud
           seed={2}
-          scale={2.02}
-          volume={5.35}
+          scale={1.82}
+          volume={4.8}
           color="#fdf0f5"
-          fade={118}
-          segments={compact ? 24 : 38}
+          fade={120}
+          segments={compact ? 20 : 30}
           bounds={[8, 3, 8]}
-          position={[-6, 0, -2]}
-          opacity={0.34}
+          position={[-7, 0.2, -2.6]}
+          opacity={0.24}
         />
         <Cloud
           seed={3}
-          scale={2.02}
-          volume={5.35}
+          scale={1.82}
+          volume={4.8}
           color="#fdf0f5"
-          fade={118}
-          segments={compact ? 24 : 38}
+          fade={120}
+          segments={compact ? 20 : 30}
           bounds={[8, 3, 8]}
-          position={[6, -1, 1]}
-          opacity={0.34}
+          position={[7, -0.8, 0.5]}
+          opacity={0.24}
         />
         <Cloud
           seed={4}
-          scale={1.55}
-          volume={4.25}
+          scale={1.42}
+          volume={3.8}
           color="#ffffff"
-          fade={116}
-          segments={compact ? 16 : 26}
+          fade={118}
+          segments={compact ? 14 : 22}
           bounds={[6, 2, 6]}
-          position={[0, -3, 2]}
-          opacity={0.28}
+          position={[0, -3.3, 1.7]}
+          opacity={0.2}
         />
         <Cloud
           seed={5}
-          scale={1.3}
-          volume={3.4}
+          scale={1.16}
+          volume={3}
           color="#fff6fa"
-          fade={122}
-          segments={compact ? 14 : 22}
+          fade={124}
+          segments={compact ? 12 : 18}
           bounds={[5, 2, 5]}
-          position={[0, 3.2, -1.5]}
-          opacity={0.2}
+          position={[0, 3.5, -2]}
+          opacity={0.14}
         />
       </Clouds>
     </group>

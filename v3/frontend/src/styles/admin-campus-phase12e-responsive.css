@@ -1,0 +1,178 @@
+/* FASE 12.5 · cierre responsive y de densidad académica.
+   Corrige la franja de 4 métricas y representa los 7 días reales sin overflow de página. */
+
+.dashboard-shell-admin .cms-page:has(.course-admin-grid) > .metric-grid,
+.dashboard-shell-admin .cms-page:has(.admin-real-calendar) > .metric-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.dashboard-shell-admin .cms-page:has(.admin-real-calendar) .week-calendar {
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  overflow: visible;
+}
+
+.dashboard-shell-admin .cms-page:has(.course-admin-grid) .admin-academic-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.dashboard-shell-admin .cms-page:has(.course-admin-grid) .admin-course-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(320px, .68fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.dashboard-shell-admin .cms-page:has(.course-admin-grid) .course-admin-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.dashboard-shell-admin .cms-page:has(.course-admin-grid) .groups-overview-panel {
+  position: sticky;
+  top: 22px;
+}
+
+.dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-calendar-filters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-calendar-filters > div {
+  display: grid;
+  gap: 6px;
+}
+
+.dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-calendar-filters select,
+.dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-calendar-filters > button {
+  min-height: 44px;
+}
+
+.dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-class-detail-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-class-status-actions,
+.dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-attendance-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-attendance-list > article {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 13px;
+  align-items: center;
+}
+
+@media (max-width: 1180px) {
+  .dashboard-shell-admin .cms-page:has(.course-admin-grid) > .cms-page-heading,
+  .dashboard-shell-admin .cms-page:has(.admin-real-calendar) > .cms-page-heading {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.course-admin-grid) .admin-academic-header-actions,
+  .dashboard-shell-admin .cms-page:has(.admin-real-calendar) > .cms-page-heading .button {
+    justify-self: start;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.course-admin-grid) .admin-course-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.course-admin-grid) .groups-overview-panel {
+    position: static;
+  }
+}
+
+@media (max-width: 900px) {
+  .dashboard-shell-admin .cms-page:has(.course-admin-grid) > .metric-grid,
+  .dashboard-shell-admin .cms-page:has(.admin-real-calendar) > .metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-shell-admin .cms-page:has(.admin-real-calendar) .week-calendar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    overflow: visible;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.admin-real-calendar) .calendar-day {
+    min-width: 0;
+    min-height: 220px;
+  }
+}
+
+@media (max-width: 760px) {
+  .dashboard-shell-admin .cms-page:has(.course-admin-grid) .admin-academic-header-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.course-admin-grid) .admin-academic-header-actions .button,
+  .dashboard-shell-admin .cms-page:has(.admin-real-calendar) > .cms-page-heading .button {
+    width: 100%;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.course-admin-grid) .course-admin-grid,
+  .dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-calendar-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.course-admin-grid) .course-card-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-class-detail-heading {
+    display: grid;
+    gap: 15px;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-class-status-actions {
+    justify-content: flex-start;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-attendance-list > article {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-attendance-actions {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .dashboard-shell-admin .cms-page:has(.course-admin-grid) .course-card-actions button,
+  .dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-class-status-actions button,
+  .dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-attendance-actions button {
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 560px) {
+  .dashboard-shell-admin .cms-page:has(.course-admin-grid) > .metric-grid,
+  .dashboard-shell-admin .cms-page:has(.admin-real-calendar) > .metric-grid,
+  .dashboard-shell-admin .cms-page:has(.admin-real-calendar) .week-calendar,
+  .dashboard-shell-admin .cms-page:has(.admin-real-calendar) .admin-attendance-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-shell-admin .cms-page:has(.admin-real-calendar) .calendar-day {
+    min-height: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-shell-admin .cms-page:has(.course-admin-grid) *,
+  .dashboard-shell-admin .cms-page:has(.admin-real-calendar) * {
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+  }
+}

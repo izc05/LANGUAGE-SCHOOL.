@@ -1,0 +1,376 @@
+/* FASE 7C.5 · Plataforma del alumno
+ * Scope exclusivo: sección Plataforma de Home.
+ * Objetivo: mostrar un espacio real de trabajo del alumno, sin perspectiva 3D,
+ * badges flotantes ni estética de mockup SaaS.
+ */
+
+.home-premium-v2 .platform-premium {
+  padding: clamp(5.8rem, 8vw, 8rem) 0;
+  background:
+    radial-gradient(circle at 78% 12%, rgba(240, 155, 184, .11), transparent 25rem),
+    radial-gradient(circle at 5% 92%, rgba(207, 72, 115, .10), transparent 28rem),
+    linear-gradient(145deg, #402b38 0%, #30212c 52%, #271b24 100%);
+}
+
+.home-premium-v2 .platform-premium::before {
+  opacity: 1;
+  background:
+    radial-gradient(circle at 74% 28%, rgba(255,255,255,.055), transparent 20rem),
+    linear-gradient(115deg, transparent 0 58%, rgba(255,255,255,.018) 58% 59%, transparent 59% 100%);
+  background-size: auto;
+  mask-image: none;
+}
+
+.home-premium-v2 .platform-premium-grid {
+  grid-template-columns: minmax(320px, .86fr) minmax(560px, 1.14fr);
+  gap: clamp(3rem, 6vw, 6.4rem);
+  align-items: center;
+}
+
+.home-premium-v2 .platform-premium-copy .eyebrow {
+  color: #efa2bb;
+}
+
+.home-premium-v2 .platform-premium-copy h2 {
+  max-width: 600px;
+  margin: 1rem 0 1.45rem;
+  font-size: clamp(2.85rem, 4.4vw, 4.7rem);
+  line-height: .98;
+  letter-spacing: -.052em;
+}
+
+.home-premium-v2 .platform-premium-copy h2 em {
+  display: inline;
+  color: #f1aec2;
+  font-weight: 500;
+}
+
+.home-premium-v2 .platform-premium-copy > p {
+  max-width: 560px;
+  margin-bottom: 1.8rem;
+  color: #ddcfd6;
+  font-size: 1rem;
+  line-height: 1.76;
+}
+
+.home-premium-v2 .platform-premium-copy .button-primary {
+  min-height: 49px;
+  background: #d84f79;
+  box-shadow: 0 13px 30px rgba(201, 58, 103, .20);
+}
+
+.home-premium-v2 .platform-mini-features {
+  grid-template-columns: 1fr 1fr;
+  gap: .8rem 2rem;
+  max-width: 560px;
+  margin-top: 2.5rem;
+}
+
+.home-premium-v2 .platform-mini-features > div {
+  grid-template-columns: 2.1rem 1fr;
+  gap: .7rem;
+  padding-top: .9rem;
+  border-top-color: rgba(255, 226, 235, .13);
+}
+
+.home-premium-v2 .platform-mini-features > div > span {
+  color: #eea0b8;
+  font-size: .78rem;
+}
+
+.home-premium-v2 .platform-mini-features p {
+  color: #baaab2;
+  font-size: .76rem;
+  line-height: 1.48;
+}
+
+.home-premium-v2 .platform-mini-features strong {
+  margin-bottom: .18rem;
+  color: #fff9fb;
+  font-size: .82rem;
+}
+
+.home-premium-v2 .platform-dashboard-wrap {
+  min-height: 500px;
+  display: grid;
+  place-items: center;
+  padding-top: 2rem;
+}
+
+.home-premium-v2 .platform-dashboard-wrap::before {
+  content: 'ÁREA DEL ALUMNO · VISTA DE TRABAJO';
+  position: absolute;
+  top: 0;
+  left: 5%;
+  color: rgba(255, 232, 239, .62);
+  font-size: .58rem;
+  font-weight: 800;
+  letter-spacing: .15em;
+}
+
+.home-premium-v2 .platform-dashboard-glow {
+  width: 74%;
+  height: 28%;
+  left: 13%;
+  bottom: 3%;
+  background: rgba(214, 79, 120, .12);
+  filter: blur(72px);
+}
+
+.home-premium-v2 .platform-dashboard-card {
+  width: min(690px, 100%);
+  min-height: 430px;
+  grid-template-columns: 112px minmax(0, 1fr);
+  border: 1px solid rgba(255,255,255,.30);
+  border-radius: 24px;
+  background: #fffdfc;
+  box-shadow: 0 28px 65px rgba(12, 7, 12, .28);
+  transform: none;
+}
+
+.home-premium-v2 .platform-dashboard-card::before {
+  content: '';
+  position: absolute;
+  z-index: 4;
+  top: 0;
+  left: 112px;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #d84f79, #f0a6bc 42%, transparent 86%);
+}
+
+.home-premium-v2 .platform-dashboard-nav {
+  gap: .28rem;
+  padding: 1.25rem .7rem;
+  border-right: 1px solid #efe4e8;
+  background: #faf3f5;
+}
+
+.home-premium-v2 .platform-dashboard-brand {
+  width: 40px;
+  height: 40px;
+  margin: .1rem 0 1.2rem .55rem;
+  background: #c83e6a;
+  box-shadow: 0 8px 20px rgba(177, 48, 88, .15);
+}
+
+.home-premium-v2 .platform-dashboard-nav > span {
+  padding: .58rem .68rem;
+  border-radius: 8px;
+  color: #8b747f;
+  font-size: .64rem;
+}
+
+.home-premium-v2 .platform-dashboard-nav > span.active {
+  color: #a72f58;
+  background: #f8e4ea;
+}
+
+.home-premium-v2 .platform-dashboard-main {
+  padding: 1.7rem 1.8rem 1.8rem;
+}
+
+.home-premium-v2 .platform-dashboard-top {
+  margin-bottom: 1.4rem;
+  padding-bottom: 1.05rem;
+  border-bottom: 1px solid #f1e8eb;
+}
+
+.home-premium-v2 .platform-dashboard-top small,
+.home-premium-v2 .platform-class-card small,
+.home-premium-v2 .platform-progress-card small,
+.home-premium-v2 .platform-dashboard-list > small {
+  color: #a98796;
+  font-size: .53rem;
+  letter-spacing: .12em;
+}
+
+.home-premium-v2 .platform-dashboard-top strong {
+  color: #3d2934;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.home-premium-v2 .platform-avatar {
+  width: 38px;
+  height: 38px;
+  color: #9f3157;
+  background: #f7dfe6;
+  font-size: .62rem;
+}
+
+.home-premium-v2 .platform-dashboard-metrics {
+  grid-template-columns: minmax(0, 1.45fr) minmax(135px, .55fr);
+  gap: .9rem;
+}
+
+.home-premium-v2 .platform-class-card,
+.home-premium-v2 .platform-progress-card,
+.home-premium-v2 .platform-dashboard-list {
+  border-color: #efe4e8;
+  border-radius: 13px;
+  box-shadow: none;
+}
+
+.home-premium-v2 .platform-class-card {
+  gap: .58rem;
+  padding: 1.15rem 1.2rem;
+  background: linear-gradient(145deg, #fff 0%, #fff8fa 100%);
+}
+
+.home-premium-v2 .platform-class-card strong {
+  color: #3d2a34;
+  font-size: .84rem;
+}
+
+.home-premium-v2 .platform-class-card > span {
+  color: #927b86;
+}
+
+.home-premium-v2 .platform-class-card .platform-class-action {
+  margin-top: .35rem;
+  padding: .48rem .7rem;
+  border-radius: 7px;
+  background: #cf466f;
+  box-shadow: none;
+}
+
+.home-premium-v2 .platform-progress-card {
+  gap: .48rem;
+  background: #fff;
+}
+
+.home-premium-v2 .platform-progress-ring {
+  width: 70px;
+  height: 70px;
+  background: conic-gradient(#cf4d75 0 72%, #f2e8eb 72% 100%);
+}
+
+.home-premium-v2 .platform-progress-ring::after {
+  inset: 6px;
+}
+
+.home-premium-v2 .platform-progress-ring strong {
+  color: #49333e;
+  font-size: .82rem;
+}
+
+.home-premium-v2 .platform-dashboard-list {
+  gap: .55rem;
+  margin-top: .9rem;
+  padding: 1rem 1.05rem;
+  background: #fff;
+}
+
+.home-premium-v2 .platform-dashboard-list > div {
+  padding-top: .55rem;
+  border-top-color: #f2eaed;
+  color: #74626b;
+  font-size: .64rem;
+}
+
+.home-premium-v2 .platform-dashboard-list strong {
+  color: #b43b63;
+}
+
+.home-premium-v2 .platform-floating-feature {
+  display: none;
+}
+
+@media (max-width: 1040px) {
+  .home-premium-v2 .platform-premium-grid {
+    grid-template-columns: minmax(0, .78fr) minmax(0, 1.22fr);
+    gap: 2.5rem;
+  }
+
+  .home-premium-v2 .platform-dashboard-card {
+    width: 100%;
+    grid-template-columns: 100px minmax(0, 1fr);
+  }
+
+  .home-premium-v2 .platform-dashboard-card::before {
+    left: 100px;
+  }
+}
+
+@media (max-width: 860px) {
+  .home-premium-v2 .platform-premium-grid {
+    grid-template-columns: 1fr;
+    gap: 3.2rem;
+  }
+
+  .home-premium-v2 .platform-premium-copy {
+    max-width: 690px;
+  }
+
+  .home-premium-v2 .platform-dashboard-wrap {
+    min-height: 470px;
+    margin-top: 0;
+  }
+
+  .home-premium-v2 .platform-dashboard-wrap::before {
+    left: 0;
+  }
+
+  .home-premium-v2 .platform-dashboard-card {
+    width: min(720px, 100%);
+  }
+}
+
+@media (max-width: 600px) {
+  .home-premium-v2 .platform-premium {
+    padding: 4.9rem 0 5.4rem;
+  }
+
+  .home-premium-v2 .platform-premium-copy h2 {
+    font-size: clamp(2.65rem, 12vw, 3.7rem);
+  }
+
+  .home-premium-v2 .platform-mini-features {
+    grid-template-columns: 1fr;
+    gap: .65rem;
+  }
+
+  .home-premium-v2 .platform-dashboard-wrap {
+    min-height: 360px;
+    padding-top: 1.8rem;
+  }
+
+  .home-premium-v2 .platform-dashboard-wrap::before {
+    font-size: .5rem;
+  }
+
+  .home-premium-v2 .platform-dashboard-card {
+    min-height: 330px;
+    grid-template-columns: 1fr;
+    border-radius: 18px;
+  }
+
+  .home-premium-v2 .platform-dashboard-card::before {
+    left: 0;
+  }
+
+  .home-premium-v2 .platform-dashboard-nav {
+    display: none;
+  }
+
+  .home-premium-v2 .platform-dashboard-main {
+    padding: 1.25rem 1rem;
+  }
+
+  .home-premium-v2 .platform-dashboard-top {
+    margin-bottom: 1rem;
+  }
+
+  .home-premium-v2 .platform-dashboard-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .home-premium-v2 .platform-progress-card {
+    display: none;
+  }
+
+  .home-premium-v2 .platform-dashboard-list {
+    margin-top: .7rem;
+  }
+}

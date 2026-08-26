@@ -24,6 +24,10 @@ const categories: Array<{ value: StudentFileCategory; label: string }> = [
   { value: 'OTHER', label: 'Otro' },
 ]
 
+function categoryLabel(value: StudentFileCategory): string {
+  return categories.find((item) => item.value === value)?.label || 'Archivo'
+}
+
 function formatDate(value: string): string {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return 'Sin fecha'
@@ -60,16 +64,18 @@ export default function StudentFilesPage() {
       .finally(() => {
         if (mounted) setLoading(false)
       })
-    return () => {
-      mounted = false
-    }
+    return () => { mounted = false }
   }, [isDemoMode])
 
   const visibleFiles = useMemo(() => {
     const query = search.trim().toLowerCase()
     if (!query) return files
-    return files.filter((file) => `${file.title} ${file.description} ${file.category}`.toLowerCase().includes(query))
+    return files.filter((file) => `${file.title} ${file.description} ${categoryLabel(file.category)}`.toLowerCase().includes(query))
   }, [files, search])
+
+  const homeworkCount = files.filter((file) => file.category === 'HOMEWORK').length
+  const audioCount = files.filter((file) => file.category === 'AUDIO').length
+  const documentCount = files.filter((file) => file.category === 'DOCUMENT' || file.category === 'MATERIAL' || file.category === 'OTHER').length
 
   function chooseFile(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0] || null
@@ -100,18 +106,9 @@ export default function StudentFilesPage() {
     if (isDemoMode) {
       const demo: StudentFileRecord = {
         id: `demo-${Date.now()}`,
-        collectionId: '',
-        collectionName: 'student_files',
-        created: new Date().toISOString(),
-        updated: new Date().toISOString(),
-        expand: {},
-        title: title.trim() || selectedFile.name,
-        file: selectedFile.name,
-        student: 'demo',
-        uploaded_by: 'demo',
-        category,
-        description: description.trim(),
-        status: 'ACTIVE',
+        collectionId: '', collectionName: 'student_files', created: new Date().toISOString(), updated: new Date().toISOString(), expand: {},
+        title: title.trim() || selectedFile.name, file: selectedFile.name, student: 'demo', uploaded_by: 'demo', category,
+        description: description.trim(), status: 'ACTIVE',
       }
       setFiles((current) => [demo, ...current])
       setSelectedFile(null)
@@ -142,7 +139,6 @@ export default function StudentFilesPage() {
       setMessage('La descarga real no está disponible en la demostración.')
       return
     }
-
     try {
       const url = await getMyFileDownloadUrl(record)
       window.location.assign(url)
@@ -172,49 +168,50 @@ export default function StudentFilesPage() {
 
   return (
     <DashboardShell role="Alumno" name="Alumno" nav={[...studentNav]}>
-      <div className="dashboard-content student-files-page">
-        <header className="student-page-heading">
-          <div>
-            <span className="eyebrow">ESPACIO PRIVADO</span>
-            <h2>Mis archivos</h2>
-            <p>Guarda aquí tus documentos, tareas, audios y recursos personales para tenerlos siempre organizados.</p>
-          </div>
-          <div className="private-space-badge"><strong>Privado</strong><span>Acceso con tu cuenta</span></div>
+      <div className="dashboard-content student-files-page student-files-phase10f">
+        <header className="student-page-heading student-files-heading10">
+          <div><span className="eyebrow">ESPACIO PRIVADO</span><h2>Mis archivos</h2><p>Tu carpeta personal para tareas, documentos y audios. Solo muestra archivos activos vinculados a tu cuenta.</p></div>
+          <div className="private-space-badge"><strong>{files.length}</strong><span>{files.length === 1 ? 'archivo privado' : 'archivos privados'}</span></div>
         </header>
+
+        <section className="student-files-overview10" aria-label="Resumen de archivos">
+          <div><small>TAREAS</small><strong>{homeworkCount}</strong></div>
+          <div><small>AUDIOS</small><strong>{audioCount}</strong></div>
+          <div><small>DOCUMENTOS Y MATERIAL</small><strong>{documentCount}</strong></div>
+        </section>
 
         {loading && <div className="cms-notice" role="status">Abriendo tu carpeta privada…</div>}
         {message && <div className="cms-notice success-notice" role="status">{message}</div>}
         {error && <div className="cms-notice auth-error" role="alert">{error}</div>}
 
-        <div className="student-files-layout">
-          <form className="panel student-upload-panel" onSubmit={submitUpload}>
+        <div className="student-files-layout student-files-layout10">
+          <form className="panel student-upload-panel student-upload-panel10" onSubmit={submitUpload}>
             <div className="panel-heading"><div><span className="eyebrow">SUBIR</span><h3>Nuevo archivo</h3></div><span className="status success">Máx. 20 MB</span></div>
-
+            <p className="student-upload-intro10">Guarda un archivo en tu carpeta privada. Elige una categoría clara para encontrarlo después.</p>
             <label className="upload-dropzone student-file-dropzone">
               <input type="file" accept=".txt,.pdf,.doc,.docx,.mp3,.m4a,.jpg,.jpeg,.png,.webp" onChange={chooseFile} disabled={uploading} />
               <strong>{selectedFile ? selectedFile.name : 'Seleccionar archivo'}</strong>
               <small>Texto, PDF, Word, audio o imagen</small>
             </label>
-
             <label className="field-stack"><span>Título</span><input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Nombre que verás en tu carpeta" /></label>
             <label className="field-stack"><span>Categoría</span><select value={category} onChange={(event) => setCategory(event.target.value as StudentFileCategory)}>{categories.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
             <label className="field-stack"><span>Descripción</span><textarea rows={3} value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Opcional" /></label>
             <button className="button button-primary button-full" type="submit" disabled={uploading}>{uploading ? 'Subiendo…' : 'Guardar en mi espacio'}</button>
           </form>
 
-          <section className="panel student-files-list-panel">
+          <section className="panel student-files-list-panel student-files-list-panel10">
             <div className="panel-heading">
-              <div><span className="eyebrow">ARCHIVOS</span><h3>{files.length} elementos</h3></div>
+              <div><span className="eyebrow">ARCHIVOS</span><h3>{visibleFiles.length} {visibleFiles.length === 1 ? 'resultado' : 'resultados'}</h3></div>
               <input className="student-files-search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar..." aria-label="Buscar archivos" />
             </div>
 
-            <div className="student-private-file-list">
+            <div className="student-private-file-list student-private-file-list10">
               {visibleFiles.map((record) => (
                 <article key={record.id}>
                   <span className="student-file-type">{extension(record.file)}</span>
                   <div className="student-file-copy">
                     <strong>{record.title}</strong>
-                    <small>{record.category} · {formatDate(record.created)}</small>
+                    <small>{categoryLabel(record.category)} · {formatDate(record.created)}</small>
                     {record.description && <p>{record.description}</p>}
                   </div>
                   <div className="student-file-actions">
@@ -233,7 +230,7 @@ export default function StudentFilesPage() {
           </section>
         </div>
 
-        <section className="panel student-security-note">
+        <section className="panel student-security-note student-security-note10">
           <span>PRIVACIDAD</span>
           <p>Tus archivos están vinculados a tu cuenta. Solo tú y el personal autorizado de la academia pueden acceder a ellos según sus permisos.</p>
         </section>

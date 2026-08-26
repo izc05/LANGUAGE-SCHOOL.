@@ -1,0 +1,73 @@
+/* FASE 7J.1 · heroes interiores limpios */
+.teachers-premium-v2 .teachers-v2-hero-visual > img,
+.about-premium-v2 .about-v2-visual > img,
+.pricing-premium-v2 .pricing-v2-hero-visual > img,
+.blog-premium-v2 .blog-v2-hero-visual > img,
+.contact-premium-v2 .contact-v2-hero-visual > img {
+  display: none !important;
+  opacity: 0 !important;
+  mix-blend-mode: normal !important;
+}
+
+.teachers-premium-v2 .teachers-v2-hero-visual,
+.about-premium-v2 .about-v2-visual,
+.pricing-premium-v2 .pricing-v2-hero-visual,
+.blog-premium-v2 .blog-v2-hero-visual,
+.contact-premium-v2 .contact-v2-hero-visual {
+  background-blend-mode: normal !important;
+  filter: none !important;
+}
+
+.teachers-premium-v2 .teachers-v2-hero-visual::before,
+.about-premium-v2 .about-v2-visual::before,
+.pricing-premium-v2 .pricing-v2-hero-visual::before,
+.blog-premium-v2 .blog-v2-hero-visual::before,
+.contact-premium-v2 .contact-v2-hero-visual::before {
+  background: linear-gradient(180deg, rgba(255,255,255,.015) 58%, rgba(34,21,28,.075) 100%) !important;
+}
+
+.teachers-premium-v2 .teachers-v2-hero-editorial,
+.about-premium-v2 .about-v2-hero-editorial,
+.pricing-premium-v2 .pricing-v2-hero-editorial,
+.blog-premium-v2 .blog-v2-hero-editorial,
+.contact-premium-v2 .contact-v2-hero-editorial,
+.programs-premium-v2 .programs-v2-hero-editorial {
+  background: #fffdfb !important;
+}
+
+.teachers-premium-v2 .teachers-v2-hero-copy h1,
+.about-premium-v2 .about-v2-hero-copy h1,
+.pricing-premium-v2 .pricing-v2-hero-copy h1,
+.blog-premium-v2 .blog-v2-hero-copy h1,
+.contact-premium-v2 .contact-v2-hero-copy h1,
+.programs-premium-v2 .programs-v2-hero-copy h1 {
+  color: #2b2228 !important;
+}
+
+.teachers-premium-v2 .teachers-v2-hero-copy > p,
+.about-premium-v2 .about-v2-hero-copy > p,
+.pricing-premium-v2 .pricing-v2-hero-copy > p,
+.blog-premium-v2 .blog-v2-hero-copy > p,
+.contact-premium-v2 .contact-v2-hero-copy > p,
+.programs-premium-v2 .programs-v2-hero-copy > p {
+  color: #5d5359 !important;
+}
+
+.teachers-premium-v2 .eyebrow,
+.about-premium-v2 .eyebrow,
+.pricing-premium-v2 .eyebrow,
+.blog-premium-v2 .eyebrow,
+.contact-premium-v2 .eyebrow,
+.programs-premium-v2 .eyebrow {
+  color: #b51f58;
+}
+
+.teachers-premium-v2 .teachers-v2-floating-note,
+.about-premium-v2 .about-v2-visual-note,
+.pricing-premium-v2 .pricing-v2-floating-card,
+.blog-premium-v2 .blog-v2-floating-note,
+.contact-premium-v2 .contact-v2-floating-note {
+  background: rgba(255,253,251,.94) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+}

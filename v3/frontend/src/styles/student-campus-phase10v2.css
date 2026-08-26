@@ -1,0 +1,380 @@
+/* FASE 10V.2 · CAMPUS ALUMNO · MI NIVEL · REVISIÓN VISUAL FINAL
+   Refinamiento exclusivamente visual sobre Mi nivel.
+   Mantiene intactos motor, histórico, VALIDATED/AUTOMATIC/NONE, Listening y reglas de repetición. */
+
+.student-level-phase10e{
+  --level-v-ink:#342830;
+  --level-v-muted:#786a71;
+  --level-v-pink:#c93f72;
+  --level-v-pink-deep:#983354;
+  --level-v-line:rgba(108,72,86,.11);
+  --level-v-plum:#432b37;
+  --level-v-plum-deep:#30202a;
+  --level-v-paper:rgba(255,255,255,.82);
+  padding:38px clamp(22px,3.6vw,58px) 64px;
+  gap:1.45rem;
+  background:
+    radial-gradient(circle at 89% 2%,rgba(224,110,151,.09),transparent 27rem),
+    linear-gradient(180deg,#fffdfc 0%,#fffaf9 50%,#fdf9f7 100%);
+}
+
+/* Cabecera editorial: explicación limpia + nivel actual protagonista. */
+.student-level-phase10e .student-level-heading10{
+  grid-template-columns:minmax(0,1.08fr) minmax(330px,.62fr);
+  gap:28px;
+}
+
+.student-level-phase10e .student-level-heading10>div:first-child{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  min-height:310px;
+  padding:32px 24px 34px 6px;
+  border:0;
+  border-radius:0;
+  background:transparent;
+}
+
+.student-level-phase10e .student-level-heading10>div:first-child>.eyebrow{
+  color:var(--level-v-pink-deep);
+  letter-spacing:.16em;
+}
+
+.student-level-phase10e .student-level-heading10 h2{
+  max-width:720px;
+  margin:14px 0 18px;
+  color:var(--level-v-ink);
+  font-size:clamp(3rem,4.8vw,5rem);
+  line-height:.96;
+  letter-spacing:-.052em;
+}
+
+.student-level-phase10e .student-level-heading10 h2 em{
+  color:var(--level-v-pink);
+}
+
+.student-level-phase10e .student-level-heading10>div:first-child>p{
+  max-width:640px;
+  color:var(--level-v-muted);
+  font-size:1rem;
+  line-height:1.78;
+}
+
+.student-level-phase10e .student-level-current10{
+  min-height:310px;
+  padding:34px;
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:30px;
+  background:
+    radial-gradient(circle at 86% 10%,rgba(234,126,166,.25),transparent 15rem),
+    linear-gradient(145deg,var(--level-v-plum) 0%,var(--level-v-plum-deep) 100%);
+  box-shadow:0 24px 60px rgba(53,31,42,.13);
+}
+
+.student-level-phase10e .student-level-current10.source-validated{
+  background:
+    radial-gradient(circle at 86% 10%,rgba(237,139,176,.28),transparent 15rem),
+    linear-gradient(145deg,#503041 0%,#30202a 100%);
+}
+
+.student-level-phase10e .student-level-current10 small{
+  color:#efb8cc;
+  letter-spacing:.12em;
+}
+
+.student-level-phase10e .student-level-current10 strong{
+  margin:8px 0 3px;
+  color:#fff;
+  font-size:clamp(4rem,7vw,6.2rem);
+}
+
+.student-level-phase10e .student-level-current10>span{color:#efe1e7}
+.student-level-phase10e .student-level-current10>p{max-width:310px;color:#d8c6ce;font-size:.79rem;line-height:1.62}
+
+/* Tres fuentes de nivel como una sola franja informativa. */
+.student-level-phase10e .student-level-reference10{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:0;
+  padding:16px 0;
+  border-top:1px solid var(--level-v-line);
+  border-bottom:1px solid var(--level-v-line);
+}
+
+.student-level-phase10e .student-level-reference10>div,
+.student-level-phase10e .student-level-reference10>div.is-primary{
+  min-height:92px;
+  padding:8px 24px;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+}
+
+.student-level-phase10e .student-level-reference10>div:first-child{padding-left:0}
+.student-level-phase10e .student-level-reference10>div+div{border-left:1px solid var(--level-v-line)}
+
+.student-level-phase10e .student-level-reference10>div.is-primary{
+  background:linear-gradient(90deg,rgba(255,241,246,.65),transparent 92%);
+}
+
+.student-level-phase10e .student-level-reference10 small{color:#9e5873}
+.student-level-phase10e .student-level-reference10 strong{color:var(--level-v-ink);font-size:2.25rem}
+.student-level-phase10e .student-level-reference10 span{color:var(--level-v-muted);line-height:1.5}
+
+/* Siguiente paso y último test: acciones reales, con distinta jerarquía. */
+.student-level-phase10e .student-level-overview10{
+  grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr);
+  gap:20px;
+}
+
+.student-level-phase10e .student-level-action-card10,
+.student-level-phase10e .student-level-latest10{
+  border:1px solid var(--level-v-line);
+  border-radius:24px;
+  box-shadow:none;
+}
+
+.student-level-phase10e .student-level-action-card10{
+  padding:28px;
+  background:
+    radial-gradient(circle at 88% 9%,rgba(218,84,129,.10),transparent 14rem),
+    linear-gradient(155deg,#fff 0%,#fff5f8 100%);
+}
+
+.student-level-phase10e .student-level-action-card10 h3{
+  margin:.45rem 0 .6rem;
+  color:var(--level-v-ink);
+  font-size:clamp(1.75rem,2.4vw,2.35rem);
+  letter-spacing:-.025em;
+}
+
+.student-level-phase10e .student-level-action-card10 p{color:var(--level-v-muted);line-height:1.68}
+
+.student-level-phase10e .student-level-action-meta{
+  gap:0;
+  padding:12px 0;
+  border-top:1px solid var(--level-v-line);
+  border-bottom:1px solid var(--level-v-line);
+}
+
+.student-level-phase10e .student-level-action-meta span{
+  padding:5px 14px;
+  border:0;
+  border-radius:0;
+  background:transparent;
+}
+
+.student-level-phase10e .student-level-action-meta span:first-child{padding-left:0}
+.student-level-phase10e .student-level-action-meta span+span{border-left:1px solid var(--level-v-line)}
+.student-level-phase10e .student-level-action-meta strong{color:var(--level-v-ink);font-size:1.08rem}
+
+.student-level-phase10e .student-level-action-card10 .button-primary{
+  min-height:46px;
+  width:max-content;
+  border:0;
+  border-radius:999px;
+  background:linear-gradient(135deg,#c74372,#a7355e);
+  box-shadow:0 10px 24px rgba(171,53,94,.14);
+}
+
+.student-level-phase10e .student-level-retake{
+  border-left:2px solid rgba(201,63,114,.4);
+  border-radius:0 15px 15px 0;
+  background:rgba(255,244,248,.75);
+}
+
+.student-level-phase10e .student-level-latest10{
+  padding:28px;
+  background:var(--level-v-paper);
+}
+
+.student-level-phase10e .student-level-latest10 .panel-heading{
+  padding-bottom:17px;
+  border-bottom:1px solid var(--level-v-line);
+}
+
+.student-level-phase10e .student-level-latest10 .panel-heading h3{color:var(--level-v-ink)}
+.student-level-phase10e .student-level-score{padding:4px 0 2px}
+.student-level-phase10e .student-level-score>strong{color:var(--level-v-pink);font-size:3.6rem}
+.student-level-phase10e .student-level-score>span{color:var(--level-v-muted)}
+
+.student-level-phase10e .student-level-skill-track{background:#f0e5e9}
+.student-level-phase10e .student-level-skill-track i{background:linear-gradient(90deg,#c84573,#df7298)}
+.student-level-phase10e .student-level-skill-list>div>span,
+.student-level-phase10e .student-level-skill-list>div>strong{color:var(--level-v-ink)}
+
+.student-level-phase10e .student-level-diagnostic-note10{
+  padding:12px 0 0;
+  border:0;
+  border-top:1px solid var(--level-v-line);
+  border-radius:0;
+  background:transparent;
+  color:var(--level-v-muted);
+}
+
+/* Validación docente: evidencia académica, no una cuarta tarjeta de métricas. */
+.student-level-phase10e .student-level-validation10{
+  grid-template-columns:minmax(0,1.25fr) minmax(300px,.75fr);
+  gap:24px;
+  padding:27px 28px;
+  border:0;
+  border-left:3px solid rgba(201,63,114,.58);
+  border-radius:0 22px 22px 0;
+  background:linear-gradient(105deg,rgba(255,245,248,.85),rgba(255,255,255,.55));
+  box-shadow:none;
+}
+
+.student-level-phase10e .student-level-validation10 h3{color:var(--level-v-ink);font-size:1.85rem}
+.student-level-phase10e .student-level-validation10 p{color:var(--level-v-muted);line-height:1.65}
+.student-level-phase10e .student-level-validation-values{gap:0}
+
+.student-level-phase10e .student-level-validation-values span{
+  padding:9px 13px;
+  border-radius:0;
+  background:transparent;
+}
+
+.student-level-phase10e .student-level-validation-values span+span{border-left:1px solid var(--level-v-line)}
+.student-level-phase10e .student-level-validation-values strong{color:var(--level-v-pink-deep);font-size:1.3rem}
+
+/* Histórico como línea de evolución, menos colección de paneles. */
+.student-level-phase10e .student-level-history10{margin-top:6px;gap:1rem}
+
+.student-level-phase10e .student-level-history-heading{
+  padding:0 0 14px;
+  border-bottom:1px solid var(--level-v-line);
+}
+
+.student-level-phase10e .student-level-history-heading h3{
+  color:var(--level-v-ink);
+  font-size:clamp(1.75rem,2.4vw,2.25rem);
+}
+
+.student-level-phase10e .student-level-history-heading p{color:var(--level-v-muted)}
+
+.student-level-phase10e .student-level-history-list{
+  gap:0;
+  border-top:0;
+}
+
+.student-level-phase10e .student-level-history-list article{
+  padding:18px 2px;
+  border:0;
+  border-bottom:1px solid var(--level-v-line);
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+}
+
+.student-level-phase10e .student-level-history-list article:hover{
+  border-color:var(--level-v-line);
+  background:rgba(255,246,249,.52);
+}
+
+.student-level-phase10e .student-level-history-list article>div:first-child strong{color:var(--level-v-pink)}
+.student-level-phase10e .student-level-history-list article>div:last-child>span{
+  border:1px solid rgba(181,79,116,.11);
+  background:rgba(255,247,250,.8);
+  color:var(--level-v-muted);
+}
+
+.student-level-phase10e .student-level-empty{
+  border:1px dashed rgba(135,93,109,.2);
+  background:rgba(255,255,255,.5);
+  box-shadow:none;
+}
+
+.student-level-phase10e .student-level-complete{
+  border-color:rgba(62,130,88,.16);
+  background:rgba(239,249,242,.72);
+}
+
+/* Ejecución del test: lectura calmada, opciones grandes y foco claro. */
+.student-level-phase10e .student-level-run{
+  max-width:940px;
+  gap:1rem;
+  padding-top:8px;
+}
+
+.student-level-phase10e .student-level-progress-head{color:var(--level-v-ink)}
+.student-level-phase10e .student-level-progress-head>span{color:var(--level-v-pink-deep)}
+.student-level-phase10e .student-level-progress{height:.48rem;background:#eee3e7}
+.student-level-phase10e .student-level-progress>span{background:linear-gradient(90deg,#c74372,#df7298)}
+
+.student-level-phase10e .student-level-question-card{
+  padding:clamp(22px,3.5vw,36px);
+  border:1px solid var(--level-v-line);
+  border-radius:26px;
+  background:rgba(255,255,255,.9);
+  box-shadow:0 18px 48px rgba(55,33,42,.04);
+}
+
+.student-level-phase10e .student-level-question-card legend{color:var(--level-v-ink);font-size:clamp(1.6rem,3vw,2.2rem)}
+.student-level-phase10e .student-level-passage{border-left-color:#d56b91;background:#fff7fa}
+
+.student-level-phase10e .student-level-options label{
+  min-height:3.65rem;
+  border-color:rgba(99,67,80,.12);
+  border-radius:15px;
+  background:rgba(255,255,255,.86);
+}
+
+.student-level-phase10e .student-level-options label:hover{border-color:rgba(185,79,116,.34);background:#fff9fb}
+.student-level-phase10e .student-level-options label.is-selected{border-color:#c64a76;background:#fff1f6;box-shadow:0 0 0 2px rgba(185,79,116,.06)}
+.student-level-phase10e .student-level-question-actions{border-top-color:var(--level-v-line)}
+
+@media(max-width:900px){
+  .student-level-phase10e .student-level-heading10,
+  .student-level-phase10e .student-level-overview10,
+  .student-level-phase10e .student-level-validation10{grid-template-columns:1fr}
+
+  .student-level-phase10e .student-level-heading10>div:first-child{min-height:auto;padding:24px 4px 30px}
+  .student-level-phase10e .student-level-current10{min-height:270px}
+  .student-level-phase10e .student-level-reference10{grid-template-columns:repeat(3,minmax(0,1fr));overflow-x:auto}
+  .student-level-phase10e .student-level-reference10>div{min-width:180px}
+  .student-level-phase10e .student-level-validation-values{max-width:560px}
+}
+
+@media(max-width:600px){
+  .student-level-phase10e{padding:24px 16px 44px;gap:1.05rem}
+  .student-level-phase10e .student-level-heading10>div:first-child{padding:14px 1px 24px}
+  .student-level-phase10e .student-level-heading10 h2{font-size:2.7rem;line-height:.98}
+  .student-level-phase10e .student-level-heading10>div:first-child>p{font-size:.94rem;line-height:1.7}
+  .student-level-phase10e .student-level-current10{min-height:auto;padding:27px 22px;border-radius:24px}
+  .student-level-phase10e .student-level-current10 strong{font-size:4.4rem}
+
+  .student-level-phase10e .student-level-reference10{
+    display:grid;
+    grid-template-columns:1fr;
+    overflow:visible;
+    padding:8px 0;
+  }
+  .student-level-phase10e .student-level-reference10>div,
+  .student-level-phase10e .student-level-reference10>div.is-primary{
+    min-height:auto;
+    padding:13px 0;
+    border-left:0;
+  }
+  .student-level-phase10e .student-level-reference10>div+div{border-top:1px solid var(--level-v-line);border-left:0}
+
+  .student-level-phase10e .student-level-action-card10,
+  .student-level-phase10e .student-level-latest10{padding:22px 19px;border-radius:21px}
+  .student-level-phase10e .student-level-action-meta{grid-template-columns:1fr}
+  .student-level-phase10e .student-level-action-meta span{padding:9px 0}
+  .student-level-phase10e .student-level-action-meta span+span{border-top:1px solid var(--level-v-line);border-left:0}
+  .student-level-phase10e .student-level-action-card10 .button-primary{width:100%}
+
+  .student-level-phase10e .student-level-validation10{padding:21px 18px}
+  .student-level-phase10e .student-level-validation-values{grid-template-columns:1fr}
+  .student-level-phase10e .student-level-validation-values span{padding:8px 0}
+  .student-level-phase10e .student-level-validation-values span+span{border-top:1px solid var(--level-v-line);border-left:0}
+
+  .student-level-phase10e .student-level-history-list article{padding:16px 0}
+  .student-level-phase10e .student-level-question-card{padding:21px 17px;border-radius:21px}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .student-level-phase10e .student-level-history-list article,
+  .student-level-phase10e .student-level-options label,
+  .student-level-phase10e .student-level-progress>span{transition:none!important}
+}

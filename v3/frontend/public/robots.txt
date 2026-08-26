@@ -1,0 +1,35 @@
+# Language School · crawler preferences
+# Security is enforced by authentication, PocketBase rules, Nginx and Cloudflare.
+# robots.txt is only a crawler preference/content-use signal.
+
+User-agent: *
+Content-Signal: search=yes, ai-input=yes, ai-train=no, use=reference
+Allow: /
+Disallow: /acceso
+Disallow: /admin
+Disallow: /admin/
+Disallow: /alumno
+Disallow: /alumno/
+Disallow: /profesor
+Disallow: /profesor/
+Disallow: /api/
+
+# Keep public Language School content discoverable in ChatGPT search while
+# excluding private/application routes.
+User-agent: OAI-SearchBot
+Content-Signal: search=yes, ai-input=yes, ai-train=no, use=reference
+Allow: /
+Disallow: /acceso
+Disallow: /admin
+Disallow: /admin/
+Disallow: /alumno
+Disallow: /alumno/
+Disallow: /profesor
+Disallow: /profesor/
+Disallow: /api/
+
+# Exclude content collection for model training. Enforcement for AI crawler
+# categories is configured separately at Cloudflare AI Crawl Control.
+User-agent: GPTBot
+Content-Signal: search=yes, ai-input=yes, ai-train=no, use=reference
+Disallow: /

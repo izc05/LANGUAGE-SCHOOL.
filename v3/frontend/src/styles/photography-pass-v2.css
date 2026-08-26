@@ -1,0 +1,48 @@
+/* Photography pass V2 — real photography layered over the blush/pearl identity.
+ * PocketBase-published media stays authoritative wherever available.
+ */
+
+.home-premium-v2 .hero-stage:not(.has-photo){background-image:linear-gradient(105deg,rgba(65,34,48,.06),rgba(65,34,48,.18)),url('https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1600&q=84');background-size:cover;background-position:center 47%}
+.home-premium-v2 .hero-stage:not(.has-photo) .hero-stage-illustration{display:none}
+.home-premium-v2 .hero-stage:not(.has-photo)::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:0;background:linear-gradient(180deg,rgba(255,255,255,.02) 45%,rgba(73,33,51,.20))}
+.home-premium-v2 .hero-stage-copy,.home-premium-v2 .hero-float-stack{z-index:3}.home-premium-v2 .hero-stage:not(.has-photo) .hero-stage-copy{background:rgba(255,250,248,.88)}
+
+.home-premium-v2 .program-card-premium{padding-top:166px;min-height:414px}
+.home-premium-v2 .program-card-premium::after{content:'';position:absolute;z-index:0;left:14px;right:14px;top:17px;height:132px;border-radius:18px;background-size:cover;background-position:center;box-shadow:inset 0 -45px 60px rgba(55,26,40,.12);transition:transform .45s ease,filter .45s ease}
+.home-premium-v2 .program-card-premium:hover::after{transform:scale(1.025);filter:saturate(1.04)}
+.home-premium-v2 .program-card-premium>*{position:relative;z-index:2}
+.home-premium-v2 .program-card-premium.kids::after{background-image:var(--program-photo,url('https://images.unsplash.com/photo-1771765754567-e7b5bbf6a3b3?auto=format&fit=crop&w=900&q=82'))}
+.home-premium-v2 .program-card-premium.teens::after{background-image:var(--program-photo,url('https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=900&q=82'))}
+.home-premium-v2 .program-card-premium.university::after{background-image:var(--program-photo,url('https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=900&q=82'))}
+.home-premium-v2 .program-card-premium.adults::after{background-image:var(--program-photo,url('https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=900&q=82'))}
+.home-premium-v2 .program-card-premium.exams::after{background-image:var(--program-photo,url('https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=900&q=82'))}
+.home-premium-v2 .program-symbol{margin-top:0}
+
+.home-premium-v2 .method-premium-art{min-height:250px;overflow:hidden;border-radius:26px;background:linear-gradient(180deg,rgba(255,250,248,.02),rgba(78,36,54,.16)),var(--method-photo,url('https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=1100&q=82')) center/cover;box-shadow:0 24px 55px rgba(76,37,54,.09)}
+.home-premium-v2 .method-premium-art img{width:150px;position:absolute;right:16px;bottom:14px;padding:8px;border-radius:22px;background:rgba(255,250,248,.78);backdrop-filter:blur(12px);box-shadow:0 14px 34px rgba(70,33,49,.10)}
+.home-premium-v2 .blog-visual-speaking{background-image:linear-gradient(140deg,rgba(108,38,64,.10),rgba(108,38,64,.28)),var(--journal-photo,url('https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1300&q=84'));background-size:cover;background-position:center}
+.home-premium-v2 .blog-visual-word{color:#fff;text-shadow:0 8px 28px rgba(52,22,36,.32)}.home-premium-v2 .blog-visual-number{color:rgba(255,255,255,.88)}
+
+.programs-v2-course-visual.has-artwork{background-size:cover!important;background-position:center!important}
+.programs-v2-course.kids .programs-v2-course-visual.has-artwork{background-image:linear-gradient(160deg,rgba(58,28,41,.02),rgba(58,28,41,.28)),url('https://images.unsplash.com/photo-1771765754567-e7b5bbf6a3b3?auto=format&fit=crop&w=1500&q=84')}
+.programs-v2-course.teens .programs-v2-course-visual.has-artwork{background-image:linear-gradient(160deg,rgba(58,28,41,.02),rgba(58,28,41,.28)),url('https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1500&q=84')}
+.programs-v2-course.university .programs-v2-course-visual.has-artwork{background-image:linear-gradient(160deg,rgba(58,28,41,.02),rgba(58,28,41,.30)),url('https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1500&q=84')}
+.programs-v2-course.adults .programs-v2-course-visual.has-artwork{background-image:linear-gradient(160deg,rgba(58,28,41,.03),rgba(58,28,41,.31)),url('https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=1500&q=84')}
+.programs-v2-course.exams .programs-v2-course-visual.has-artwork{background-image:linear-gradient(160deg,rgba(58,28,41,.02),rgba(58,28,41,.30)),url('https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1500&q=84')}
+.programs-v2-course-visual.has-artwork .programs-v2-course-fallback{display:none}.programs-v2-course-visual.has-artwork::before{background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(53,24,38,.08));box-shadow:none;border-color:rgba(255,255,255,.28)}.programs-v2-course-visual.has-artwork .programs-v2-course-symbol{background:rgba(255,250,248,.90)}
+
+.teachers-premium-v2 .teachers-v2-hero-visual{overflow:hidden;background:linear-gradient(180deg,rgba(52,24,38,.02),rgba(52,24,38,.22)),url('https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1500&q=84') center/cover;box-shadow:0 30px 72px rgba(80,38,57,.12)}
+.teachers-premium-v2 .teachers-v2-hero-visual>img{opacity:.15;mix-blend-mode:screen;transform:scale(.9)}.teachers-premium-v2 .teachers-v2-floating-note{background:rgba(255,250,248,.90);backdrop-filter:blur(14px)}
+.about-premium-v2 .about-v2-visual{overflow:hidden;background:linear-gradient(180deg,rgba(52,24,38,.02),rgba(52,24,38,.18)),url('https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1500&q=84') center/cover;box-shadow:0 28px 68px rgba(80,38,57,.11)}
+.about-premium-v2 .about-v2-visual>img{opacity:.20;mix-blend-mode:screen;transform:scale(.92)}.about-premium-v2 .about-v2-visual-note{background:rgba(255,250,248,.88);backdrop-filter:blur(14px)}
+.pricing-premium-v2 .pricing-v2-hero-visual{overflow:hidden;background:linear-gradient(180deg,rgba(52,24,38,.03),rgba(52,24,38,.19)),url('https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1500&q=84') center/cover;box-shadow:0 28px 68px rgba(80,38,57,.10)}
+.pricing-premium-v2 .pricing-v2-hero-visual>img{opacity:.17;mix-blend-mode:screen;transform:scale(.92)}.pricing-premium-v2 .pricing-v2-floating-card{background:rgba(255,250,248,.90);backdrop-filter:blur(14px)}
+.blog-premium-v2 .blog-v2-hero-visual{overflow:hidden;background:linear-gradient(180deg,rgba(53,25,39,.02),rgba(53,25,39,.20)),url('https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1500&q=84') center/cover;box-shadow:0 28px 68px rgba(80,38,57,.11)}
+.blog-premium-v2 .blog-v2-hero-visual>img{opacity:.18;mix-blend-mode:screen;transform:scale(.92)}.blog-premium-v2 .blog-v2-floating-note{background:rgba(255,250,248,.90);backdrop-filter:blur(14px)}
+.contact-premium-v2 .contact-v2-hero-visual{overflow:hidden;background:linear-gradient(180deg,rgba(53,25,39,.03),rgba(53,25,39,.21)),url('https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=1500&q=84') center/cover;box-shadow:0 28px 68px rgba(80,38,57,.11)}
+.contact-premium-v2 .contact-v2-hero-visual>img{opacity:.17;mix-blend-mode:screen;transform:scale(.92)}.contact-premium-v2 .contact-v2-floating-note{background:rgba(255,250,248,.90);backdrop-filter:blur(14px)}
+
+.home-premium-v2 .programs-premium,.home-premium-v2 .method-premium,.home-premium-v2 .blog-premium{border-top:1px solid rgba(118,70,89,.055)}
+@media(max-width:1100px){.home-premium-v2 .program-card-premium{padding-top:158px}}
+@media(max-width:600px){.home-premium-v2 .program-card-premium{padding-top:180px;min-height:390px}.home-premium-v2 .program-card-premium::after{height:148px}.home-premium-v2 .method-premium-art{min-height:220px}.teachers-premium-v2 .teachers-v2-hero-visual>img,.about-premium-v2 .about-v2-visual>img,.pricing-premium-v2 .pricing-v2-hero-visual>img,.blog-premium-v2 .blog-v2-hero-visual>img,.contact-premium-v2 .contact-v2-hero-visual>img{opacity:.10}}
+@media(prefers-reduced-motion:reduce){.home-premium-v2 .program-card-premium::after{transition:none}}

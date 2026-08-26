@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Language School · Rocío Ruiz</title>
+  <desc id="desc">Versión vectorial ligera del logotipo circular de Language School para la web.</desc>
+  <defs>
+    <linearGradient id="pink" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#a60069"/>
+      <stop offset="1" stop-color="#e20085"/>
+    </linearGradient>
+  </defs>
+  <g fill="none" stroke="url(#pink)" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="256" cy="256" r="224" stroke-width="12"/>
+    <circle cx="256" cy="256" r="207" stroke-width="2" opacity=".75"/>
+    <g transform="translate(0,-8)">
+      <circle cx="256" cy="115" r="55" stroke-width="7"/>
+      <path d="M210 112c28 10 64 13 106 2M245 66c8 12 8 22-2 31-7 6-7 14 1 21 7 6 9 14 6 24M286 72c-7 13-4 24 11 31 10 5 12 13 7 24M231 151c9-8 18-9 27-2 6 5 13 6 20 2" stroke-width="5"/>
+      <path d="M199 95c29 1 72 11 128 31M327 126c7 4 11 8 10 12-1 6-9 10-25 13" stroke-width="5"/>
+      <path d="M197 90l-16-11 10-4 14 4 8-10 6 1-3 13 12 10-3 6-17-5-9 13-5-1 3-16z" fill="url(#pink)" stroke="none"/>
+      <path d="M256 170v25M230 198h52" stroke-width="6"/>
+    </g>
+  </g>
+  <g text-anchor="middle">
+    <text x="256" y="236" font-family="Georgia, 'Times New Roman', serif" font-size="39" font-weight="700" letter-spacing="7" fill="#343434">LANGUAGE</text>
+    <text x="256" y="349" font-family="'Brush Script MT','Segoe Script',cursive" font-size="132" font-style="italic" font-weight="700" fill="url(#pink)">School</text>
+    <path d="M122 365c52-8 101-12 134-12 35 0 86 4 137 12" fill="none" stroke="url(#pink)" stroke-width="4" stroke-linecap="round"/>
+    <text x="256" y="411" font-family="Arial, sans-serif" font-size="24" letter-spacing="10" fill="#3f3a3d">ROCÍO RUIZ</text>
+  </g>
+</svg>

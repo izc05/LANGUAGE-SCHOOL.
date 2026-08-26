@@ -1,0 +1,30 @@
+[Unit]
+Description=Language School PILOT loopback mail capture
+After=network.target
+Before=language-school-pocketbase.service
+
+[Service]
+Type=simple
+User=languageschool
+Group=languageschool
+EnvironmentFile=/etc/language-school/production.env
+Environment=PILOT_MAIL_CONTROL_SOCKET=/run/language-school-pilot-mail/control.sock
+ExecStart=/usr/bin/node /opt/language-school/pilot-mail/pilot-mail-server.mjs
+Restart=on-failure
+RestartSec=3s
+RuntimeDirectory=language-school-pilot-mail
+RuntimeDirectoryMode=0700
+UMask=0077
+
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectHome=true
+ProtectSystem=strict
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_UNIX AF_INET
+
+[Install]
+WantedBy=multi-user.target

@@ -3,7 +3,7 @@ import { getCurrentUser } from './auth'
 import { collections } from './collections'
 import { pb } from './client'
 import type { AppUser, UserRole, UserStatus } from './types'
-import type { AttendanceRecord, ClassRecord, CourseRecord, GroupRecord } from './studentPortal'
+import type { AttendanceRecord, ClassRecord, CourseRecord, GroupDeliveryMode, GroupRecord, GroupTargetLevel } from './studentPortal'
 import type { TeacherProfileRecord } from './teacherPortal'
 
 export type AdminStudentProfileRecord = RecordModel & {
@@ -34,6 +34,12 @@ export type AdminGroupRecord = GroupRecord & {
   }
 }
 
+type AdminEnrollmentMoveResponse = {
+  previousId: string | null
+  currentId: string
+  unchanged: boolean
+}
+
 function requireAdmin() {
   const user = getCurrentUser()
   if (!user || user.role !== 'ADMIN') throw new Error('Se requiere una sesión de administrador activa.')
@@ -42,6 +48,17 @@ function requireAdmin() {
 
 function quote(value: string): string {
   return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+}
+
+async function requestAdminEnrollmentMove(studentId: string, targetGroupId: string): Promise<AdminEnrollmentMoveResponse> {
+  return pb.send<AdminEnrollmentMoveResponse>(
+    '/api/language-school/admin/academic/enrollments/move',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ studentId, targetGroupId }),
+    },
+  )
 }
 
 export async function listAdminUsers(role?: UserRole): Promise<AppUser[]> {
@@ -242,6 +259,8 @@ export async function createAdminGroup(input: {
   academicYear: string
   scheduleText?: string
   capacity: number
+  targetLevel: GroupTargetLevel
+  defaultDeliveryMode: GroupDeliveryMode
   status?: GroupRecord['status']
 }): Promise<AdminGroupRecord> {
   requireAdmin()
@@ -252,6 +271,8 @@ export async function createAdminGroup(input: {
     academic_year: input.academicYear.trim(),
     schedule_text: input.scheduleText?.trim() || '',
     capacity: input.capacity,
+    target_level: input.targetLevel,
+    default_delivery_mode: input.defaultDeliveryMode,
     status: input.status || 'ACTIVE',
   }, { expand: 'course,teacher' })
 }
@@ -263,6 +284,8 @@ export async function updateAdminGroup(record: AdminGroupRecord, patch: Partial<
   academic_year: string
   schedule_text: string
   capacity: number
+  target_level: GroupTargetLevel
+  default_delivery_mode: GroupDeliveryMode
   status: GroupRecord['status']
 }>): Promise<AdminGroupRecord> {
   requireAdmin()
@@ -283,13 +306,23 @@ export async function createAdminEnrollment(input: {
   joinedAt?: string
 }): Promise<AdminEnrollmentRecord> {
   requireAdmin()
-  return pb.collection(collections.enrollments).create<AdminEnrollmentRecord>({
-    student: input.studentId,
-    group: input.groupId,
-    status: 'ACTIVE',
-    joined_at: input.joinedAt || new Date().toISOString(),
-    ended_at: '',
-  }, { expand: 'student,group,group.course,group.teacher' })
+
+  try {
+    const existing = await pb.collection(collections.enrollments).getFirstListItem<AdminEnrollmentRecord>(
+      `student = "${quote(input.studentId)}" && status = "ACTIVE"`,
+      { expand: 'student,group,group.course,group.teacher' },
+    )
+    if (existing.group === input.groupId) return existing
+    throw new Error('El alumno ya tiene una matrícula activa. Utiliza su ficha para cambiarlo de grupo y conservar el histórico.')
+  } catch (error: unknown) {
+    const status = typeof error === 'object' && error && 'status' in error ? Number((error as { status?: unknown }).status) : 0
+    if (status !== 404) throw error
+  }
+
+  const result = await requestAdminEnrollmentMove(input.studentId, input.groupId)
+  return pb.collection(collections.enrollments).getOne<AdminEnrollmentRecord>(result.currentId, {
+    expand: 'student,group,group.course,group.teacher',
+  })
 }
 
 export async function updateAdminEnrollmentStatus(record: AdminEnrollmentRecord, status: AdminEnrollmentRecord['status']): Promise<AdminEnrollmentRecord> {
@@ -309,25 +342,15 @@ export async function moveAdminStudentToGroup(input: {
   if (input.targetGroup.status !== 'ACTIVE') throw new Error('El grupo de destino debe estar activo.')
   if (input.currentEnrollment?.group === input.targetGroup.id) return { current: input.currentEnrollment }
 
-  const activeInTarget = await pb.collection(collections.enrollments).getList<AdminEnrollmentRecord>(1, 1, {
-    filter: `student = "${quote(input.studentId)}" && group = "${quote(input.targetGroup.id)}" && status = "ACTIVE"`,
+  const result = await requestAdminEnrollmentMove(input.studentId, input.targetGroup.id)
+  const current = await pb.collection(collections.enrollments).getOne<AdminEnrollmentRecord>(result.currentId, {
+    expand: 'student,group,group.course,group.teacher',
   })
-  if (activeInTarget.totalItems > 0) return { current: activeInTarget.items[0] }
-
-  const targetCount = await pb.collection(collections.enrollments).getList(1, 1, {
-    filter: `group = "${quote(input.targetGroup.id)}" && status = "ACTIVE"`,
+  if (!result.previousId) return { current }
+  const previous = await pb.collection(collections.enrollments).getOne<AdminEnrollmentRecord>(result.previousId, {
+    expand: 'student,group,group.course,group.teacher',
   })
-  if (targetCount.totalItems >= input.targetGroup.capacity) throw new Error('El grupo de destino ya ha alcanzado su capacidad.')
-
-  const current = await createAdminEnrollment({ studentId: input.studentId, groupId: input.targetGroup.id })
-  if (!input.currentEnrollment) return { current }
-  try {
-    const previous = await updateAdminEnrollmentStatus(input.currentEnrollment, 'FINISHED')
-    return { previous, current }
-  } catch (error) {
-    try { await updateAdminEnrollmentStatus(current, 'CANCELLED') } catch { /* avoid two active enrollments if closing history fails */ }
-    throw error
-  }
+  return { previous, current }
 }
 
 export async function listAdminClasses(limit = 250): Promise<ClassRecord[]> {

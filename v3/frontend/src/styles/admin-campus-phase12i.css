@@ -1,0 +1,23 @@
+/* FASE 12.9 · CIERRE GLOBAL ADMIN
+   Unifica el estado activo de navegación con la identidad ciruela/rosa en todos los tamaños. */
+
+.dashboard-shell-admin .dashboard-nav a.active {
+  color: #fff;
+  background: linear-gradient(110deg, rgba(160, 70, 105, 0.42), rgba(255, 255, 255, 0.07));
+}
+
+.dashboard-shell-admin .dashboard-nav a.active .nav-dot {
+  background: #df83a5;
+  box-shadow: 0 0 0 4px rgba(223, 131, 165, 0.16);
+}
+
+.dashboard-shell-admin .dashboard-nav a:hover:not(.active) {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-shell-admin .dashboard-nav a {
+    transition: none !important;
+  }
+}

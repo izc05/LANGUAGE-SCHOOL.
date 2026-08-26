@@ -1,12 +1,12 @@
-import type { ReactNode } from 'react'
-import { Link, NavLink, useNavigate } from 'react-router'
+import { Fragment, type ReactNode } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router'
 import BackendStatusBanner from './BackendStatusBanner'
 import { useBackendHealth } from '../hooks/useBackendHealth'
 import { useAcademyBrand } from '../hooks/useAcademyBrand'
 import { useAuth } from '../features/auth/AuthProvider'
 import type { UserRole } from '../services/pocketbase/types'
 
-type NavItem = string | { label: string; to: string }
+type NavItem = string | { label: string; to: string; section?: string }
 
 type DashboardShellProps = {
   role: 'Alumno' | 'Profesor' | 'Administrador'
@@ -21,8 +21,15 @@ function roleLabel(role: UserRole): DashboardShellProps['role'] {
   return 'Alumno'
 }
 
+function portalRoot(role: DashboardShellProps['role']): string {
+  if (role === 'Administrador') return '/admin'
+  if (role === 'Profesor') return '/profesor'
+  return '/alumno'
+}
+
 export default function DashboardShell({ role, name, nav, children }: DashboardShellProps) {
   const navigate = useNavigate()
+  const location = useLocation()
   const { academyName, logoUrl, initials } = useAcademyBrand()
   const { unavailable, retry } = useBackendHealth()
   const { user, isDemoMode, logout } = useAuth()
@@ -31,6 +38,17 @@ export default function DashboardShell({ role, name, nav, children }: DashboardS
   const effectiveName = !isDemoMode && user
     ? [user.name, user.surname].filter(Boolean).join(' ').trim() || user.email
     : name
+  const roleClass = effectiveRole === 'Alumno'
+    ? 'dashboard-shell-student'
+    : effectiveRole === 'Profesor'
+      ? 'dashboard-shell-teacher'
+      : 'dashboard-shell-admin'
+
+  const rootPath = portalRoot(effectiveRole)
+  const activeNavTo = nav
+    .filter((item): item is Exclude<NavItem, string> => typeof item !== 'string')
+    .filter((item) => location.pathname === item.to || (item.to !== rootPath && location.pathname.startsWith(`${item.to}/`)))
+    .sort((left, right) => right.to.length - left.to.length)[0]?.to
 
   function handleLogout() {
     logout()
@@ -38,7 +56,7 @@ export default function DashboardShell({ role, name, nav, children }: DashboardS
   }
 
   return (
-    <div className="dashboard-shell">
+    <div className={`dashboard-shell ${roleClass}`}>
       <a className="skip-link" href="#main-content">Saltar al contenido</a>
       <aside className="dashboard-sidebar">
         <Link className="brand dashboard-brand" to="/" aria-label={`${academyName} - Inicio`}>
@@ -58,15 +76,18 @@ export default function DashboardShell({ role, name, nav, children }: DashboardS
               )
             }
 
+            const isActive = item.to === activeNavTo
             return (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={item.to === '/admin'}
-                className={({ isActive }) => isActive ? 'active' : undefined}
-              >
-                <span className="nav-dot" /> {item.label}
-              </NavLink>
+              <Fragment key={item.to}>
+                {item.section && <span className="dashboard-nav-section" aria-hidden="true">{item.section}</span>}
+                <Link
+                  to={item.to}
+                  className={isActive ? 'active' : undefined}
+                  aria-current={isActive ? 'page' : undefined}
+                >
+                  <span className="nav-dot" /> {item.label}
+                </Link>
+              </Fragment>
             )
           })}
         </nav>

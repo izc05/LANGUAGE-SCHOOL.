@@ -1,0 +1,248 @@
+/* FASE 10.1 · CAMPUS ALUMNO · INICIO
+   Objetivo: que el alumno entienda en segundos qué tiene ahora y qué debe hacer después.
+   Capa aislada sobre los estilos 8A existentes para evitar regresiones en Profesor/Admin. */
+
+.campus10-home{
+  padding:30px clamp(20px,3vw,48px) 58px;
+  background:
+    radial-gradient(circle at 91% 3%,rgba(216,77,124,.08),transparent 24rem),
+    #f7f6f3;
+}
+
+.campus10-hero{
+  display:grid;
+  grid-template-columns:minmax(0,1.08fr) minmax(350px,.92fr);
+  gap:20px;
+  align-items:stretch;
+}
+
+.campus10-intro{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  min-height:310px;
+  padding:42px clamp(34px,4vw,56px);
+  border:1px solid #ebe5e4;
+  border-radius:30px;
+  background:rgba(255,255,255,.96);
+  box-shadow:0 18px 48px rgba(49,31,40,.04);
+}
+
+.campus10-intro h2{
+  max-width:720px;
+  margin:12px 0 14px;
+  color:#241d21;
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:clamp(2.65rem,4.2vw,4.5rem);
+  line-height:.99;
+  letter-spacing:-.045em;
+}
+
+.campus10-intro h2 em{color:#d44b78;font-weight:500}
+.campus10-intro>p{max-width:650px;margin:0;color:#73686d;font-size:1rem;line-height:1.68}
+
+.campus10-context{
+  display:grid;
+  grid-template-columns:minmax(0,1.25fr) minmax(0,1fr) minmax(118px,.55fr);
+  gap:10px;
+  margin-top:28px;
+}
+
+.campus10-context>span,
+.campus10-context>a{
+  min-width:0;
+  padding:13px 15px;
+  border:1px solid #eee6e8;
+  border-radius:16px;
+  background:#fffafb;
+  color:inherit;
+  text-decoration:none;
+}
+
+.campus10-context small{
+  display:block;
+  margin-bottom:5px;
+  color:#af5575;
+  font-size:.62rem;
+  font-weight:850;
+  letter-spacing:.12em;
+}
+
+.campus10-context strong{
+  display:block;
+  overflow:hidden;
+  color:#3d2d35;
+  font-size:.9rem;
+  line-height:1.25;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.campus10-context>a{transition:border-color .18s ease,background .18s ease}
+.campus10-context>a:hover{border-color:#dfb4c3;background:#fff}
+
+.campus10-home .campus10-next-class{
+  min-height:310px;
+  padding:32px;
+  border-color:#e9c9d5;
+  background:linear-gradient(150deg,#fff 0%,#fff6f9 52%,#f5dce5 100%);
+  box-shadow:0 20px 52px rgba(91,42,61,.065);
+}
+
+.campus10-home .campus10-next-class>strong{margin-top:30px}
+.campus10-home .campus10-next-class p{margin-bottom:18px}
+
+.campus10-class-actions{
+  display:flex;
+  align-items:center;
+  gap:15px;
+  margin-top:auto;
+  padding-top:20px;
+  flex-wrap:wrap;
+}
+
+.campus10-home .campus10-class-actions .campus-online-entry{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:46px;
+  padding:0 20px;
+  border-radius:999px;
+  color:#fff;
+  background:#d94d7c;
+  border:1px solid #d94d7c;
+  text-decoration:none;
+  box-shadow:none;
+}
+
+.campus10-home .campus10-class-actions .campus-online-entry:hover{
+  color:#fff;
+  background:#c93e6f;
+  border-color:#c93e6f;
+  text-decoration:none;
+}
+
+.campus10-home .campus10-class-actions .campus-text-link{font-size:.84rem}
+.campus10-home .campus-online-pending{margin-top:0}
+
+.campus10-next{margin-top:24px}
+
+.campus10-section-heading{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:28px;
+  padding:0 4px 13px;
+}
+
+.campus10-section-heading h3{
+  margin:5px 0 0;
+  color:#30272c;
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:clamp(1.65rem,2.4vw,2.25rem);
+  letter-spacing:-.025em;
+}
+
+.campus10-section-heading>p{max-width:360px;margin:0;color:#8a7b81;font-size:.88rem;line-height:1.5;text-align:right}
+
+.campus10-action-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:16px;
+}
+
+.campus10-action-card{
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+  min-height:188px;
+  padding:23px 24px;
+  border:1px solid #e9e3e2;
+  border-radius:22px;
+  background:#fff;
+  color:inherit;
+  text-decoration:none;
+  box-shadow:0 10px 28px rgba(47,30,37,.025);
+  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;
+}
+
+.campus10-action-card:hover{
+  transform:translateY(-2px);
+  border-color:#e2bdca;
+  box-shadow:0 16px 34px rgba(70,35,48,.05);
+}
+
+.campus10-action-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:18px;
+}
+
+.campus10-action-card>strong{
+  display:block;
+  color:#34282e;
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:1.4rem;
+  line-height:1.15;
+}
+
+.campus10-action-card>p{
+  margin:8px 0 18px;
+  color:#87787e;
+  font-size:.86rem;
+  line-height:1.5;
+}
+
+.campus10-action-link{
+  margin-top:auto;
+  color:#a43561;
+  font-size:.8rem;
+  font-weight:850;
+}
+
+.campus10-work-grid{margin-top:20px}
+.campus10-secondary-grid{align-items:start}
+.campus10-course-strip{margin-top:22px}
+
+.campus10-home a:focus-visible,
+.campus10-home button:focus-visible{
+  outline:3px solid rgba(194,63,114,.34);
+  outline-offset:3px;
+}
+
+@media(max-width:1180px){
+  .campus10-hero{grid-template-columns:1fr}
+  .campus10-intro,.campus10-home .campus10-next-class{min-height:auto}
+  .campus10-action-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+
+@media(max-width:820px){
+  .campus10-home{padding:24px 18px 46px}
+  .campus10-intro{padding:34px 28px}
+  .campus10-context{grid-template-columns:1fr 1fr}
+  .campus10-context>a{grid-column:1/-1}
+  .campus10-action-grid{grid-template-columns:1fr}
+  .campus10-action-card{min-height:auto}
+  .campus10-section-heading{align-items:flex-start;flex-direction:column;gap:6px}
+  .campus10-section-heading>p{text-align:left}
+}
+
+@media(max-width:560px){
+  .campus10-intro,.campus10-home .campus10-next-class{padding:27px 22px;border-radius:22px}
+  .campus10-intro h2{font-size:2.45rem}
+  .campus10-context{grid-template-columns:1fr;margin-top:22px}
+  .campus10-context>a{grid-column:auto}
+  .campus10-context strong{white-space:normal}
+  .campus10-class-actions{align-items:stretch;flex-direction:column}
+  .campus10-home .campus10-class-actions .campus-online-entry{width:100%}
+  .campus10-home .campus10-class-actions .campus-text-link{align-self:flex-start;padding:5px 0}
+  .campus10-action-card{padding:21px 20px}
+  .campus10-action-top{align-items:flex-start}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .campus10-context>a,.campus10-action-card{transition:none}
+  .campus10-action-card:hover{transform:none}
+}

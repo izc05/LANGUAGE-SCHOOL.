@@ -25,6 +25,18 @@ function statusLabel(status: SubmissionRecord['status']): string {
   return 'Pendiente'
 }
 
+function statusPriority(status: SubmissionRecord['status']): number {
+  if (status === 'SUBMITTED') return 0
+  if (status === 'RETURNED') return 1
+  return 2
+}
+
+function statusTone(status: SubmissionRecord['status']): 'warning' | 'info' | 'success' {
+  if (status === 'SUBMITTED') return 'warning'
+  if (status === 'RETURNED') return 'info'
+  return 'success'
+}
+
 export default function TeacherCorrectionsPage() {
   const { isDemoMode } = useAuth()
   const [submissions, setSubmissions] = useState<SubmissionRecord[]>([])
@@ -68,6 +80,11 @@ export default function TeacherCorrectionsPage() {
     const student = item.expand?.student
     return [item.student, student ? [student.name, student.surname].filter(Boolean).join(' ') : 'Alumno']
   })), [enrollments])
+  const orderedSubmissions = useMemo(() => [...submissions].sort((a, b) => {
+    const priority = statusPriority(a.status) - statusPriority(b.status)
+    if (priority !== 0) return priority
+    return new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime()
+  }), [submissions])
   const selected = submissions.find((item) => item.id === selectedId) || null
 
   function selectSubmission(record: SubmissionRecord) {
@@ -77,6 +94,19 @@ export default function TeacherCorrectionsPage() {
     setMessage(null)
     setError(null)
   }
+
+  useEffect(() => {
+    if (orderedSubmissions.length === 0) {
+      if (selectedId) setSelectedId(null)
+      return
+    }
+    if (!selectedId || !submissions.some((item) => item.id === selectedId)) {
+      const first = orderedSubmissions[0]
+      setSelectedId(first.id)
+      setFeedback(first.teacher_feedback || '')
+      setGrade(first.grade_text || '')
+    }
+  }, [orderedSubmissions, selectedId, submissions])
 
   async function openFile(record: SubmissionRecord) {
     if (!record.file) return
@@ -91,8 +121,7 @@ export default function TeacherCorrectionsPage() {
     }
   }
 
-  async function saveReview(event: FormEvent<HTMLFormElement>, status: 'REVIEWED' | 'RETURNED') {
-    event.preventDefault()
+  async function saveReview(status: 'REVIEWED' | 'RETURNED') {
     if (!selected) return
     if (isDemoMode) {
       setSubmissions((current) => current.map((item) => item.id === selected.id ? { ...item, teacher_feedback: feedback, grade_text: grade, status } : item))
@@ -113,36 +142,66 @@ export default function TeacherCorrectionsPage() {
     }
   }
 
+  function submitReview(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    void saveReview('REVIEWED')
+  }
+
   const pending = submissions.filter((item) => item.status === 'SUBMITTED').length
 
   return (
     <DashboardShell role="Profesor" name="Profesor" nav={[...teacherNav]}>
-      <div className="dashboard-content teacher-portal-page">
-        <header className="teacher-page-heading"><div><span className="eyebrow">SEGUIMIENTO</span><h2>Correcciones</h2><p>Revisa las entregas vinculadas a las tareas de tus grupos y devuelve feedback al alumno.</p></div><div className="private-space-badge"><strong>{pending}</strong><span>pendientes</span></div></header>
+      <div className="dashboard-content teacher-portal-page teacher-corrections-page">
+        <header className="teacher-page-heading">
+          <div><span className="eyebrow">SEGUIMIENTO</span><h2>Correcciones</h2><p>Revisa primero lo que necesita respuesta y devuelve al alumno una valoración clara, útil y trazable.</p></div>
+          <div className="private-space-badge"><strong>{pending}</strong><span>{pending === 1 ? 'pendiente' : 'pendientes'}</span></div>
+        </header>
         {loading && <div className="cms-notice" role="status">Cargando entregas…</div>}
         {message && <div className="cms-notice success-notice" role="status">{message}</div>}
         {error && <div className="cms-notice auth-error" role="alert">{error}</div>}
-        <div className="teacher-corrections-grid">
+        <div className="teacher-corrections-grid teacher-corrections-workspace">
           <section className="panel teacher-correction-list">
-            <div className="panel-heading"><div><span className="eyebrow">ENTREGAS</span><h3>{submissions.length} recibidas</h3></div></div>
-            <div>
-              {submissions.map((record) => {
+            <div className="panel-heading"><div><span className="eyebrow">COLA DE REVISIÓN</span><h3>{submissions.length} entregas</h3></div></div>
+            <div className="teacher-correction-items">
+              {orderedSubmissions.map((record) => {
                 const task = assignmentMap.get(record.assignment)
                 const studentName = studentMap.get(record.student) || 'Alumno'
-                return <button key={record.id} className={selectedId === record.id ? 'active' : ''} type="button" onClick={() => selectSubmission(record)}><span className="avatar-mini">{studentName.charAt(0).toUpperCase()}</span><span><strong>{studentName}</strong><small>{task?.title || 'Tarea'} · {formatDate(record.submitted_at)}</small></span><em className={`status ${record.status === 'SUBMITTED' ? 'warning' : 'success'}`}>{statusLabel(record.status)}</em></button>
+                return (
+                  <button
+                    key={record.id}
+                    className={`${selectedId === record.id ? 'active ' : ''}correction-${record.status.toLowerCase()}`}
+                    type="button"
+                    onClick={() => selectSubmission(record)}
+                  >
+                    <span className="avatar-mini">{studentName.charAt(0).toUpperCase()}</span>
+                    <span><strong>{studentName}</strong><small>{task?.title || 'Tarea'} · {formatDate(record.submitted_at)}</small></span>
+                    <em className={`status ${statusTone(record.status)}`}>{statusLabel(record.status)}</em>
+                  </button>
+                )
               })}
               {!loading && submissions.length === 0 && <PortalEmptyState compact title="No tienes entregas pendientes" description="Cuando un alumno entregue una tarea creada por ti, aparecerá aquí para su revisión." action={{ label: 'Ver tareas', to: '/profesor/tareas' }} />}
             </div>
           </section>
           <section className="panel teacher-correction-detail">
             {!selected && <PortalEmptyState title={submissions.length === 0 ? 'Sin entregas para revisar' : 'Selecciona una entrega'} description={submissions.length === 0 ? 'Puedes revisar tus tareas publicadas mientras llegan nuevas entregas.' : 'Aquí podrás leer la respuesta, abrir el archivo entregado y añadir feedback.'} />}
-            {selected && <form onSubmit={(event) => void saveReview(event, 'REVIEWED')}>
-              <div className="student-task-header"><div><span className="eyebrow">{studentMap.get(selected.student) || 'Alumno'}</span><h3>{assignmentMap.get(selected.assignment)?.title || 'Tarea'}</h3><p>{assignmentMap.get(selected.assignment)?.description || 'Sin instrucciones adicionales.'}</p></div><span className={`status ${selected.status === 'SUBMITTED' ? 'warning' : 'success'}`}>{statusLabel(selected.status)}</span></div>
-              {selected.text_answer && <div className="teacher-answer-box"><span className="eyebrow">RESPUESTA</span><p>{selected.text_answer}</p></div>}
-              {selected.file && <button className="button button-ghost button-small" type="button" onClick={() => void openFile(selected)}>Abrir archivo entregado</button>}
-              <label className="field-stack"><span>Feedback</span><textarea rows={6} value={feedback} onChange={(e) => setFeedback(e.target.value)} placeholder="Comentarios para el alumno..." /></label>
-              <label className="field-stack"><span>Calificación / valoración</span><input value={grade} onChange={(e) => setGrade(e.target.value)} placeholder="Ej. Muy bien · 8/10 · A mejorar" /></label>
-              <div className="cms-form-actions"><button className="button button-primary" type="submit" disabled={saving}>{saving ? 'Guardando…' : 'Marcar revisada'}</button><button className="button button-ghost" type="button" disabled={saving} onClick={(event) => void saveReview({ ...event, preventDefault: () => undefined } as unknown as FormEvent<HTMLFormElement>, 'RETURNED')}>Devolver al alumno</button></div>
+            {selected && <form onSubmit={submitReview}>
+              <div className="student-task-header teacher-correction-context">
+                <div><span className="eyebrow">{studentMap.get(selected.student) || 'Alumno'}</span><h3>{assignmentMap.get(selected.assignment)?.title || 'Tarea'}</h3><p>{assignmentMap.get(selected.assignment)?.description || 'Sin instrucciones adicionales.'}</p></div>
+                <span className={`status ${statusTone(selected.status)}`}>{statusLabel(selected.status)}</span>
+              </div>
+              <section className="teacher-correction-evidence" aria-label="Entrega del alumno">
+                <div className="teacher-answer-box"><span className="eyebrow">RESPUESTA DEL ALUMNO</span>{selected.text_answer ? <p>{selected.text_answer}</p> : <p className="muted">La entrega no incluye respuesta escrita.</p>}</div>
+                {selected.file && <button className="button button-ghost button-small" type="button" onClick={() => void openFile(selected)}>Abrir archivo entregado</button>}
+              </section>
+              <div className="teacher-feedback-editor">
+                <div className="teacher-feedback-heading"><span className="eyebrow">VALORACIÓN DOCENTE</span><strong>Feedback para el alumno</strong></div>
+                <label className="field-stack"><span>Feedback</span><textarea rows={6} value={feedback} onChange={(e) => setFeedback(e.target.value)} placeholder="Comentarios para el alumno..." /></label>
+                <label className="field-stack"><span>Calificación / valoración</span><input value={grade} onChange={(e) => setGrade(e.target.value)} placeholder="Ej. Muy bien · 8/10 · A mejorar" /></label>
+                <div className="cms-form-actions teacher-review-actions">
+                  <button className="button button-primary" type="submit" disabled={saving}>{saving ? 'Guardando…' : 'Marcar revisada'}</button>
+                  <button className="button button-ghost" type="button" disabled={saving} onClick={() => void saveReview('RETURNED')}>Devolver al alumno</button>
+                </div>
+              </div>
             </form>}
           </section>
         </div>

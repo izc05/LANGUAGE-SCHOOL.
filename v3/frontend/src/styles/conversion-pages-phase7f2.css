@@ -1,0 +1,110 @@
+/* FASE 7F.2 · Limpieza final Tarifas
+ * Menos ilustración, más criterio de elección y claridad comercial.
+ */
+
+.pricing-premium-v2 .pricing-v2-fit {
+  padding: clamp(2.4rem, 5vw, 4.2rem);
+  background:
+    radial-gradient(circle at 88% 14%, rgba(218, 107, 143, .10), transparent 22rem),
+    linear-gradient(135deg, #fffaf8 0%, #f9e9ed 100%);
+}
+
+.pricing-premium-v2 .pricing-v2-fit-stage {
+  display: block;
+}
+
+.pricing-premium-v2 .pricing-v2-fit-copy {
+  max-width: 760px;
+}
+
+.pricing-premium-v2 .pricing-v2-fit-copy h2 {
+  max-width: 720px;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(2.7rem, 4.2vw, 4.45rem);
+  line-height: .98;
+  letter-spacing: -.05em;
+}
+
+.pricing-premium-v2 .pricing-v2-fit-copy > p {
+  max-width: 650px;
+  color: #75636d;
+  font-size: .96rem;
+  line-height: 1.72;
+}
+
+.pricing-premium-v2 .pricing-v2-fit-visual {
+  display: none;
+}
+
+.pricing-premium-v2 .pricing-v2-fit-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  margin-top: clamp(2.5rem, 5vw, 4rem);
+  padding-top: 0;
+  border-top: 1px solid rgba(101, 61, 78, .12);
+}
+
+.pricing-premium-v2 .pricing-v2-fit-grid::before {
+  display: none;
+}
+
+.pricing-premium-v2 .pricing-v2-fit-grid article {
+  min-height: 0;
+  padding: 1.8rem 1.6rem 0 0;
+  border: 0;
+  border-right: 1px solid rgba(101, 61, 78, .12);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.pricing-premium-v2 .pricing-v2-fit-grid article + article {
+  padding-left: 1.6rem;
+}
+
+.pricing-premium-v2 .pricing-v2-fit-grid article:last-child {
+  border-right: 0;
+}
+
+.pricing-premium-v2 .pricing-v2-fit-grid article > span {
+  color: #b84569;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1rem;
+  font-style: italic;
+}
+
+.pricing-premium-v2 .pricing-v2-fit-grid strong {
+  display: block;
+  margin: 1.2rem 0 .55rem;
+  color: #3e2b35;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(1.45rem, 2vw, 1.8rem);
+}
+
+.pricing-premium-v2 .pricing-v2-fit-grid p {
+  color: #75636d;
+  font-size: .9rem;
+  line-height: 1.62;
+}
+
+@media (max-width: 760px) {
+  .pricing-premium-v2 .pricing-v2-fit {
+    padding: 2rem 1.25rem 2.3rem;
+  }
+
+  .pricing-premium-v2 .pricing-v2-fit-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pricing-premium-v2 .pricing-v2-fit-grid article,
+  .pricing-premium-v2 .pricing-v2-fit-grid article + article {
+    padding: 1.5rem 0;
+    border-right: 0;
+    border-bottom: 1px solid rgba(101, 61, 78, .12);
+  }
+
+  .pricing-premium-v2 .pricing-v2-fit-grid article:last-child {
+    border-bottom: 0;
+  }
+}

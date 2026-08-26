@@ -1,12 +1,12 @@
+import { MeshTransmissionMaterial } from '@react-three/drei'
+import { useFrame } from '@react-three/fiber'
 import { useRef, useState } from 'react'
-import { useFrame, useThree } from '@react-three/fiber'
-import { MeshTransmissionMaterial, Ring, useTexture } from '@react-three/drei'
 import * as THREE from 'three'
 
 const MAGENTA = '#d62974'
 const MAGENTA_LIGHT = '#f4a7c8'
-const GLASS_PINK = '#fff1f7'
-const EARTH_TEXTURE_URL = 'https://raw.githubusercontent.com/izc05/web-v1.1/44fa75a35e59693fd53486a0798f258ac58b0fdb/public/earth.jpg'
+const ROSE_GLASS = '#ffc9de'
+const ROSE_HIGHLIGHT = '#fff0f6'
 
 type PremiumGlobeProps = {
   introComplete: boolean
@@ -26,20 +26,21 @@ function responsiveGlobeY(width: number) {
   return -0.2
 }
 
+function transmissionResolution(width: number) {
+  if (width <= 760) return 512
+  if (width <= 1180) return 768
+  return 1024
+}
+
 export default function PremiumGlobe({ introComplete, scaleRef }: PremiumGlobeProps) {
   const groupRef = useRef<THREE.Group>(null)
-  const coreRef = useRef<THREE.Mesh>(null)
-  const haloRef = useRef<THREE.Group>(null)
-  const [hovered, setHovered] = useState(false)
-  const earthMap = useTexture(EARTH_TEXTURE_URL)
-  const sceneWidth = useThree((state) => state.size.width)
-  const targetScale = useRef(1)
+  const highlightRef = useRef<THREE.Group>(null)
   const pointer = useRef(new THREE.Vector2())
-
-  const transmissionResolution = sceneWidth <= 760 ? 512 : sceneWidth <= 1024 ? 768 : 1024
+  const targetScale = useRef(1)
+  const [hovered, setHovered] = useState(false)
 
   useFrame((state, delta) => {
-    if (!groupRef.current || !coreRef.current || !haloRef.current) return
+    if (!groupRef.current || !highlightRef.current) return
 
     const baseScale = responsiveGlobeScale(state.size.width)
     groupRef.current.position.y = responsiveGlobeY(state.size.width)
@@ -48,67 +49,100 @@ export default function PremiumGlobe({ introComplete, scaleRef }: PremiumGlobePr
       groupRef.current.scale.setScalar(Math.max(0, scaleRef.current) * baseScale)
     }
 
-    groupRef.current.rotation.y += delta * 0.015
+    highlightRef.current.rotation.z = Math.sin(state.clock.elapsedTime * 0.18) * 0.035
+    highlightRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.14) * 0.045
 
     if (introComplete) {
-      pointer.current.x = THREE.MathUtils.lerp(pointer.current.x, state.pointer.x, 0.1)
-      pointer.current.y = THREE.MathUtils.lerp(pointer.current.y, state.pointer.y, 0.1)
+      pointer.current.x = THREE.MathUtils.lerp(pointer.current.x, state.pointer.x, 0.07)
+      pointer.current.y = THREE.MathUtils.lerp(pointer.current.y, state.pointer.y, 0.07)
 
-      groupRef.current.rotation.x = pointer.current.y * 0.2
-      groupRef.current.rotation.z = pointer.current.x * -0.1
+      groupRef.current.rotation.x = pointer.current.y * 0.06
+      groupRef.current.rotation.y = pointer.current.x * 0.08
 
-      targetScale.current = baseScale * (hovered ? 1.04 : 1)
-      const currentScale = groupRef.current.scale.x
-      groupRef.current.scale.setScalar(THREE.MathUtils.damp(currentScale, targetScale.current, 4, delta))
-      haloRef.current.rotation.z = state.clock.elapsedTime * 0.1
+      targetScale.current = baseScale * (hovered ? 1.018 : 1)
+      groupRef.current.scale.setScalar(
+        THREE.MathUtils.damp(groupRef.current.scale.x, targetScale.current, 4, delta),
+      )
     }
   })
 
+  const resolution = typeof window === 'undefined' ? 768 : transmissionResolution(window.innerWidth)
+
   return (
     <group ref={groupRef} position={[0, -0.2, 0]} scale={0}>
-      <group ref={haloRef}>
-        <Ring args={[2.3, 2.33, 64]} rotation={[Math.PI / 2.5, 0.2, 0]}>
-          <meshBasicMaterial color={MAGENTA} transparent opacity={0.48} side={THREE.DoubleSide} />
-        </Ring>
-        <Ring args={[2.1, 2.125, 64]} rotation={[Math.PI / 3, -0.1, 0]}>
-          <meshBasicMaterial color={MAGENTA_LIGHT} transparent opacity={0.34} side={THREE.DoubleSide} />
-        </Ring>
-      </group>
-
       <mesh
-        ref={coreRef}
         onPointerOver={() => introComplete && setHovered(true)}
         onPointerOut={() => setHovered(false)}
       >
-        <sphereGeometry args={[1.5, 64, 64]} />
+        <sphereGeometry args={[1.5, 128, 128]} />
         <MeshTransmissionMaterial
           backside
-          backsideThickness={0.1}
-          thickness={0.2}
-          color={GLASS_PINK}
+          backsideThickness={0.038}
+          thickness={0.068}
+          transmission={1}
+          color="#fffefe"
+          attenuationColor={ROSE_GLASS}
+          attenuationDistance={8.5}
+          roughness={hovered && introComplete ? 0.004 : 0.008}
+          chromaticAberration={hovered && introComplete ? 0.008 : 0.005}
+          anisotropicBlur={0.012}
+          clearcoat={1}
+          clearcoatRoughness={0.006}
+          envMapIntensity={1.34}
+          ior={1.105}
+          resolution={resolution}
+        />
+      </mesh>
+
+      <mesh scale={0.991}>
+        <sphereGeometry args={[1.5, 96, 96]} />
+        <meshPhysicalMaterial
+          color="#fffafd"
+          transparent
+          opacity={0.0035}
+          transmission={1}
+          thickness={0.006}
           roughness={0}
-          chromaticAberration={0.006}
-          anisotropicBlur={0}
           clearcoat={1}
           clearcoatRoughness={0}
-          envMapIntensity={0.72}
-          resolution={transmissionResolution}
+          side={THREE.BackSide}
+          depthWrite={false}
         />
       </mesh>
 
-      <mesh scale={1.44} rotation={[0.45, Math.PI / 1.7, 0]}>
-        <sphereGeometry args={[1, 64, 64]} />
-        <meshStandardMaterial
-          map={earthMap}
-          color="#fff9fb"
-          emissive="#fff4f8"
-          emissiveMap={earthMap}
-          emissiveIntensity={0.32}
-          roughness={0.5}
-        />
-      </mesh>
+      <group ref={highlightRef}>
+        <mesh position={[-0.48, 0.62, 1.27]} rotation={[0.08, 0.32, -0.82]}>
+          <torusGeometry args={[0.54, 0.014, 16, 120, Math.PI * 0.64]} />
+          <meshBasicMaterial color={ROSE_HIGHLIGHT} transparent opacity={0.76} depthWrite={false} />
+        </mesh>
+        <mesh position={[-0.42, 0.55, 1.31]} rotation={[0.06, 0.30, -0.80]}>
+          <torusGeometry args={[0.63, 0.006, 12, 120, Math.PI * 0.52]} />
+          <meshBasicMaterial color={MAGENTA_LIGHT} transparent opacity={0.58} depthWrite={false} />
+        </mesh>
 
-      <pointLight position={[0, 0, 1.5]} color="#ffd8e8" intensity={3.2} distance={6} />
+        <mesh position={[0.88, -0.72, 1.02]} rotation={[0.08, -0.24, 2.36]}>
+          <torusGeometry args={[0.27, 0.007, 12, 72, Math.PI * 0.58]} />
+          <meshBasicMaterial color={MAGENTA_LIGHT} transparent opacity={0.48} depthWrite={false} />
+        </mesh>
+
+        <mesh position={[0.98, 0.18, 1.08]} rotation={[-0.12, -0.38, 1.92]}>
+          <torusGeometry args={[0.42, 0.0045, 10, 88, Math.PI * 0.42]} />
+          <meshBasicMaterial color={MAGENTA} transparent opacity={0.22} depthWrite={false} />
+        </mesh>
+
+        <mesh position={[-0.96, 0.47, 1.11]}>
+          <sphereGeometry args={[0.025, 20, 20]} />
+          <meshBasicMaterial color={ROSE_HIGHLIGHT} transparent opacity={0.94} depthWrite={false} />
+        </mesh>
+        <mesh position={[-0.86, 0.36, 1.20]}>
+          <sphereGeometry args={[0.014, 16, 16]} />
+          <meshBasicMaterial color={MAGENTA_LIGHT} transparent opacity={0.9} depthWrite={false} />
+        </mesh>
+      </group>
+
+      <pointLight position={[-1.7, 1.5, 2.5]} color={ROSE_HIGHLIGHT} intensity={5.4} distance={7} />
+      <pointLight position={[1.55, -0.95, 2.2]} color={MAGENTA_LIGHT} intensity={3.8} distance={6} />
+      <pointLight position={[0.2, -0.1, -0.35]} color="#ffd7e8" intensity={2.2} distance={3.8} />
     </group>
   )
 }

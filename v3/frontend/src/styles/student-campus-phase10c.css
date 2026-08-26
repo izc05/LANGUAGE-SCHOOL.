@@ -1,0 +1,143 @@
+/* FASE 10.3 · TAREAS + CORRECCIONES
+   Prioriza acción requerida y hace visible el feedback sin cambiar contratos de entrega. */
+
+.student-tasks-phase10c{
+  padding:30px clamp(20px,3vw,48px) 58px;
+  background:
+    radial-gradient(circle at 90% 2%,rgba(216,77,124,.065),transparent 25rem),
+    #f7f6f3;
+}
+
+.student-tasks-heading10{margin-bottom:18px}
+
+.student-task-overview10{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:12px;
+  margin-bottom:22px;
+}
+
+.student-task-overview10>div{
+  min-width:0;
+  padding:18px 20px;
+  border:1px solid #e9e3e2;
+  border-radius:18px;
+  background:#fff;
+}
+
+.student-task-overview10>div.needs-attention{
+  border-color:#ebcad5;
+  background:#fff8fa;
+}
+
+.student-task-overview10>div.is-clear{background:#fbfdfb}
+.student-task-overview10 small{display:block;color:#a76880;font-size:.62rem;font-weight:900;letter-spacing:.11em}
+.student-task-overview10 strong{display:block;margin:5px 0 2px;color:#33272d;font-family:'Playfair Display',Georgia,serif;font-size:2rem;line-height:1}
+.student-task-overview10 span{color:#88777e;font-size:.78rem}
+
+.student-tasks-layout10{align-items:start;gap:18px}
+
+.student-task-list-panel10,
+.student-task-detail10{
+  border-color:#e8e2e1;
+  box-shadow:0 14px 38px rgba(48,30,38,.035);
+}
+
+.student-task-list10 button{
+  position:relative;
+  border-left:3px solid transparent;
+  transition:border-color .18s ease,background .18s ease,transform .18s ease;
+}
+
+.student-task-list10 button:hover{transform:translateX(2px)}
+.student-task-list10 button.task-tone-warning{border-left-color:#d94d7c}
+.student-task-list10 button.task-tone-info{border-left-color:#9c7ac5}
+.student-task-list10 button.task-tone-success{border-left-color:#7fa889}
+.student-task-list10 button.task-tone-muted{border-left-color:#d5ced1}
+.student-task-list10 button.active{background:#fff7fa}
+
+.student-task-list-copy{min-width:0}
+.student-task-list-copy strong{display:block}
+.student-task-list-copy small{display:block;margin-top:4px;color:#8c7c83;line-height:1.35}
+
+.student-task-header10{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:28px;
+  align-items:start;
+  padding-bottom:24px;
+  border-bottom:1px solid #eee7e8;
+}
+
+.student-task-due10{
+  min-width:150px;
+  padding:13px 15px;
+  border:1px solid #eadfe2;
+  border-radius:15px;
+  background:#fff9fb;
+}
+
+.student-task-due10 small{display:block;margin-bottom:4px;color:#ac5a77;font-size:.6rem;font-weight:900;letter-spacing:.11em}
+.student-task-due10 strong{color:#4a3841;font-size:.78rem;line-height:1.35}
+
+.student-submission-review10{margin-top:22px}
+
+.student-submission-copy10{
+  padding:22px;
+  border:1px solid #e9e3e3;
+  border-radius:18px;
+  background:#fff;
+}
+
+.student-submission-copy10>p{margin:10px 0 0;color:#6e6267;line-height:1.65}
+.student-submission-copy10 .text-link{margin-top:12px}
+
+.student-feedback-box10{
+  margin-top:14px;
+  padding:24px;
+  border-radius:20px;
+  border:1px solid #e8d8de;
+  background:#fff8fa;
+}
+
+.student-feedback-box10.feedback-reviewed{border-color:#dce8df;background:#fbfdfb}
+.student-feedback-box10.feedback-returned{border-color:#ebc7d3;background:#fff6f8}
+.student-feedback-box10.feedback-submitted{border-color:#ddd7ea;background:#faf9fd}
+
+.student-feedback-heading10{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.student-feedback-box10>strong{display:block;color:#3d2d35;font-family:'Playfair Display',Georgia,serif;font-size:1.45rem;line-height:1.2}
+.student-feedback-box10>p{margin:8px 0 0;color:#75666d;line-height:1.62}
+.student-feedback-box10>small{display:block;margin-top:14px;padding-top:12px;border-top:1px solid rgba(153,93,115,.14);color:#8a727c;font-size:.74rem;line-height:1.5}
+
+.student-submission-form10{margin-top:22px}
+.student-submission-callout10{padding:20px 22px;border:1px solid #edd6df;border-radius:18px;background:#fff9fb}
+.student-submission-callout10 strong{display:block;margin:5px 0;color:#44323b;font-size:1rem}
+.student-submission-callout10 p{margin:0;color:#837179;font-size:.82rem;line-height:1.5}
+
+.student-tasks-phase10c button:focus-visible,
+.student-tasks-phase10c a:focus-visible,
+.student-tasks-phase10c input:focus-visible,
+.student-tasks-phase10c textarea:focus-visible{
+  outline:3px solid rgba(194,63,114,.34);
+  outline-offset:3px;
+}
+
+@media(max-width:920px){
+  .student-task-overview10{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .student-task-header10{grid-template-columns:1fr}
+  .student-task-due10{min-width:0;width:max-content;max-width:100%}
+}
+
+@media(max-width:720px){
+  .student-tasks-phase10c{padding:24px 18px 46px}
+  .student-task-overview10{grid-template-columns:1fr}
+  .student-task-overview10>div{display:grid;grid-template-columns:1fr auto;column-gap:16px;align-items:center}
+  .student-task-overview10 small,.student-task-overview10 span{grid-column:1}
+  .student-task-overview10 strong{grid-column:2;grid-row:1 / span 2;margin:0}
+  .student-feedback-heading10{align-items:flex-start;flex-direction:column}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .student-task-list10 button{transition:none}
+  .student-task-list10 button:hover{transform:none}
+}
