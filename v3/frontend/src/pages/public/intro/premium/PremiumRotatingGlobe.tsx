@@ -1,5 +1,5 @@
 import { Canvas, useFrame } from '@react-three/fiber'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 
 type LonLat = [number, number]
@@ -20,21 +20,6 @@ const LAND_EDGE = '#d85f95'
 const WORLD_ATLAS_110M = 'https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/land-110m.json'
 const TEXTURE_WIDTH = 1280
 const TEXTURE_HEIGHT = 640
-
-// Respaldo inmediato y sin red. Se sustituye por cartografía Natural Earth
-// cuando termina de cargar el atlas; así la portada nunca queda vacía.
-const FALLBACK_LAND: LonLat[][] = [
-  [[-168,72],[-150,66],[-137,57],[-126,50],[-124,42],[-117,32],[-106,24],[-98,19],[-90,20],[-84,25],[-80,31],[-74,39],[-66,45],[-60,53],[-65,60],[-82,66],[-103,72],[-127,73],[-150,72]],
-  [[-82,12],[-73,10],[-64,4],[-52,-5],[-47,-15],[-52,-28],[-58,-38],[-66,-50],[-73,-54],[-77,-40],[-79,-25],[-74,-10],[-69,-2],[-75,6]],
-  [[-18,36],[-7,43],[8,45],[20,39],[31,31],[39,17],[44,5],[41,-10],[33,-24],[22,-34],[10,-35],[1,-28],[-5,-16],[-13,-3],[-17,13]],
-  [[-10,36],[-4,44],[5,51],[17,55],[31,58],[44,55],[56,50],[68,53],[80,57],[95,60],[111,55],[126,48],[139,43],[149,52],[161,58],[174,52],[169,41],[154,32],[141,26],[129,20],[117,14],[108,7],[99,12],[91,22],[80,25],[72,20],[62,24],[52,31],[42,36],[32,38],[22,40],[12,42],[4,40]],
-  [[113,-11],[126,-14],[139,-20],[151,-28],[153,-39],[143,-44],[130,-39],[118,-33],[112,-23]],
-  [[-52,83],[-36,78],[-25,70],[-30,62],[-43,59],[-56,66],[-62,75]],
-  [[43,-12],[50,-16],[50,-25],[45,-26],[42,-20]],
-  [[130,32],[136,35],[141,41],[145,44],[142,36]],
-  [[-10,50],[-3,58],[2,59],[1,52]],
-  [[166,-34],[171,-36],[175,-40],[178,-44],[174,-47],[170,-45],[168,-41]],
-]
 
 function makeCanvasTexture(rings: LonLat[][]) {
   const canvas = document.createElement('canvas')
@@ -171,38 +156,41 @@ async function loadDetailedTexture(signal: AbortSignal) {
 
 function RotatingLand({ reducedMotion }: { reducedMotion: boolean }) {
   const groupRef = useRef<THREE.Group>(null)
-  const fallbackTexture = useMemo(() => makeCanvasTexture(FALLBACK_LAND), [])
-  const [texture, setTexture] = useState<THREE.CanvasTexture | null>(fallbackTexture)
+  const materialRef = useRef<THREE.MeshPhysicalMaterial>(null)
+  const [texture, setTexture] = useState<THREE.CanvasTexture | null>(null)
 
   useEffect(() => {
     const controller = new AbortController()
     let detailedTexture: THREE.CanvasTexture | null = null
-    const loadTimer = window.setTimeout(() => {
-      loadDetailedTexture(controller.signal)
-        .then((loaded) => {
-          if (!loaded || controller.signal.aborted) {
-            loaded?.dispose()
-            return
-          }
-          detailedTexture = loaded
-          setTexture(loaded)
-        })
-        .catch(() => {
-          // El fallback local es intencionado: una caída de CDN no rompe la entrada.
-        })
-    }, 850)
+    loadDetailedTexture(controller.signal)
+      .then((loaded) => {
+        if (!loaded || controller.signal.aborted) {
+          loaded?.dispose()
+          return
+        }
+        detailedTexture = loaded
+        setTexture(loaded)
+      })
+      .catch(() => {
+        // La esfera base permanece visible si la cartografía no está disponible.
+      })
 
     return () => {
-      window.clearTimeout(loadTimer)
       controller.abort()
       detailedTexture?.dispose()
     }
   }, [])
 
-  useEffect(() => () => fallbackTexture?.dispose(), [fallbackTexture])
-
   useFrame((state, delta) => {
     if (!groupRef.current) return
+    if (materialRef.current) {
+      materialRef.current.opacity = THREE.MathUtils.damp(
+        materialRef.current.opacity,
+        0.79,
+        reducedMotion ? 18 : 5.5,
+        delta,
+      )
+    }
     if (!reducedMotion) groupRef.current.rotation.y += delta * 0.16
     groupRef.current.rotation.x = 0.08 + Math.sin(state.clock.elapsedTime * 0.18) * 0.012
     groupRef.current.rotation.z = -0.055
@@ -215,9 +203,10 @@ function RotatingLand({ reducedMotion }: { reducedMotion: boolean }) {
       <mesh>
         <sphereGeometry args={[1.48, 72, 72]} />
         <meshPhysicalMaterial
+          ref={materialRef}
           map={texture}
           transparent
-          opacity={0.79}
+          opacity={0}
           alphaTest={0.02}
           depthWrite={false}
           side={THREE.FrontSide}
