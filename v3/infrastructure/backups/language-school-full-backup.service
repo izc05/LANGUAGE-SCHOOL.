@@ -1,0 +1,15 @@
+[Unit]
+Description=Language School encrypted full recovery backup
+After=language-school-backup.service language-school-pocketbase.service
+RequiresMountsFor=/mnt/pocketbase-backup
+
+[Service]
+Type=oneshot
+EnvironmentFile=-/etc/language-school/production.env
+ExecStart=/usr/local/sbin/language-school-full-backup
+UMask=0077
+Nice=15
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
+TimeoutStartSec=30min
+

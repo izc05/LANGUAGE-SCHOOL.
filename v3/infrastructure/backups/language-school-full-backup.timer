@@ -1,0 +1,12 @@
+[Unit]
+Description=Run Language School encrypted full recovery backup weekly
+
+[Timer]
+OnCalendar=Sun *-*-* 04:15:00
+Persistent=true
+RandomizedDelaySec=30m
+Unit=language-school-full-backup.service
+
+[Install]
+WantedBy=timers.target
+

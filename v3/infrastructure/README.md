@@ -59,10 +59,14 @@ infrastructure/
     config.yml.example
   backups/
     backup.sh
+    full-backup.sh
     restore.sh
     install-backup.sh
+    install-full-backup.sh
     language-school-backup.service
     language-school-backup.timer
+    language-school-full-backup.service
+    language-school-full-backup.timer
 ```
 
 ## Requisitos del host
@@ -162,6 +166,20 @@ Configurar el disco para que `/mnt/language-school-backup` sea un mountpoint rea
 sudo bash v3/infrastructure/backups/install-backup.sh
 sudo systemctl start language-school-backup.service
 ```
+
+Para añadir una copia integral cifrada de recuperación sin sustituir el backup
+diario de PocketBase:
+
+```bash
+sudo bash v3/infrastructure/backups/install-full-backup.sh
+sudo systemctl start language-school-full-backup.service
+```
+
+La copia integral semanal incluye el frontend desplegado, runtime de PocketBase,
+hooks y migraciones, código fuente + `git bundle`, configuración del host y un
+backup de datos recién creado y validado. Los archivos se cifran con una clave
+local `root:root` modo `0600`; debe conservarse una copia offline de esa clave
+fuera tanto del mini PC como del disco de backup.
 
 La primera ejecución manual debe completarse correctamente antes de confiar en el timer nocturno.
 
