@@ -2,23 +2,13 @@ import { getCurrentUser } from './auth'
 import { collections } from './collections'
 import { pb } from './client'
 import type { ClassDeliveryMode, ClassRecord } from './studentPortal'
+import type { OnlineClassProvider } from '../../utils/onlineClassProvider'
+import { normalizeProviderUrl } from '../../utils/onlineClassProvider'
 
 function requireAdmin() {
   const user = getCurrentUser()
   if (!user || user.role !== 'ADMIN') throw new Error('Se requiere una sesión de administrador activa.')
   return user
-}
-
-function normalizeOnlineUrl(value?: string): string {
-  const url = value?.trim() || ''
-  if (!url) return ''
-  try {
-    const parsed = new URL(url)
-    if (parsed.protocol !== 'https:') throw new Error()
-    return parsed.toString()
-  } catch {
-    throw new Error('El enlace online debe ser una URL https válida.')
-  }
 }
 
 export function effectiveDeliveryMode(record: Pick<ClassRecord, 'delivery_mode'>): ClassDeliveryMode {
@@ -38,17 +28,29 @@ export async function updateAdminClassDelivery(
   record: ClassRecord,
   input: {
     deliveryMode: ClassDeliveryMode
+    videoProvider: OnlineClassProvider
     locationText?: string
     onlineJoinUrl?: string
+    meetingRoom?: string
   },
 ): Promise<ClassRecord> {
   requireAdmin()
   const locationText = input.deliveryMode === 'ONLINE' ? '' : input.locationText?.trim() || ''
-  const onlineJoinUrl = input.deliveryMode === 'IN_PERSON' ? '' : normalizeOnlineUrl(input.onlineJoinUrl)
+  const videoProvider = input.deliveryMode === 'IN_PERSON' ? '' : input.videoProvider
+  const onlineJoinUrl = input.deliveryMode === 'IN_PERSON'
+    ? ''
+    : input.videoProvider === 'JITSI'
+      ? normalizeProviderUrl('JITSI', input.onlineJoinUrl)
+      : normalizeProviderUrl(input.videoProvider, input.onlineJoinUrl)
+  const meetingRoom = input.deliveryMode !== 'IN_PERSON' && input.videoProvider === 'JITSI'
+    ? input.meetingRoom?.trim() || ''
+    : ''
 
   return pb.collection(collections.classes).update<ClassRecord>(record.id, {
     delivery_mode: input.deliveryMode,
     location_text: locationText,
+    video_provider: videoProvider,
     online_join_url: onlineJoinUrl,
+    meeting_room: meetingRoom,
   }, { expand: 'group,group.course,teacher' })
 }

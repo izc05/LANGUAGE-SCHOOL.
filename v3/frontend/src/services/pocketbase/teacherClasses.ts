@@ -2,6 +2,8 @@ import { getCurrentUser } from './auth'
 import { collections } from './collections'
 import { pb } from './client'
 import type { AttendanceRecord, ClassDeliveryMode, ClassRecord } from './studentPortal'
+import type { OnlineClassProvider } from '../../utils/onlineClassProvider'
+import { normalizeProviderUrl } from '../../utils/onlineClassProvider'
 import type { TeacherEnrollmentRecord, TeacherGroupRecord } from './teacherPortal'
 import { listMyTeacherGroups } from './teacherPortal'
 
@@ -13,18 +15,6 @@ function requireTeacher() {
 
 function quote(value: string): string {
   return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
-}
-
-function normalizeOnlineUrl(value?: string): string {
-  const url = value?.trim() || ''
-  if (!url) return ''
-  try {
-    const parsed = new URL(url)
-    if (parsed.protocol !== 'https:') throw new Error()
-    return parsed.toString()
-  } catch {
-    throw new Error('El enlace de la clase online debe ser una URL https válida.')
-  }
 }
 
 async function assertMyGroup(groupId: string): Promise<TeacherGroupRecord> {
@@ -57,6 +47,7 @@ export async function createTeacherClass(input: {
   topic: string
   description?: string
   deliveryMode?: ClassDeliveryMode
+  videoProvider?: OnlineClassProvider
   locationText?: string
   onlineJoinUrl?: string
 }): Promise<ClassRecord> {
@@ -70,7 +61,8 @@ export async function createTeacherClass(input: {
   }
 
   const deliveryMode = input.deliveryMode || 'IN_PERSON'
-  const onlineJoinUrl = deliveryMode === 'IN_PERSON' ? '' : normalizeOnlineUrl(input.onlineJoinUrl)
+  const videoProvider = deliveryMode === 'IN_PERSON' ? '' : input.videoProvider || 'ZOOM'
+  const onlineJoinUrl = deliveryMode === 'IN_PERSON' ? '' : normalizeProviderUrl(videoProvider || 'ZOOM', input.onlineJoinUrl)
   const locationText = deliveryMode === 'ONLINE' ? '' : input.locationText?.trim() || ''
 
   return pb.collection(collections.classes).create<ClassRecord>({
@@ -82,6 +74,8 @@ export async function createTeacherClass(input: {
     description: input.description?.trim() || '',
     status: 'SCHEDULED',
     delivery_mode: deliveryMode,
+    video_provider: videoProvider,
+    meeting_room: '',
     location_text: locationText,
     online_join_url: onlineJoinUrl,
   }, { expand: 'group,group.course' })

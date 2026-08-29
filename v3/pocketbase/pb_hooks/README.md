@@ -12,7 +12,18 @@ En producción, `install-pocketbase.sh` debe copiar esta carpeta completa a:
 
 y `start-pocketbase.sh` debe arrancar PocketBase con `--hooksDir=/opt/language-school/pocketbase/pb_hooks`. Si el directorio no existe, el servicio debe fallar en vez de levantar una aplicación incompleta.
 
-Esto es imprescindible porque aquí viven rutas server-side de negocio, entre ellas Zoom y el sistema de test de nivel/Listening.
+Esto es imprescindible porque aquí viven rutas server-side de negocio, entre ellas Zoom, Jitsi y el sistema de test de nivel/Listening.
+
+## Jitsi Meet
+
+La opción Jitsi usa el servicio público `meet.jit.si` como proveedor adicional; no sustituye Zoom, Google Meet, Microsoft Teams ni los enlaces externos.
+
+- `jitsi_classroom.pb.js` genera una sala aleatoria e idempotente para cada clase mediante `POST /api/language-school/jitsi/classes/{classId}/room`. Solo pueden hacerlo Administración o el profesor propietario de una clase Online/Híbrida programada.
+- La misma ruta protege el acceso con `POST /api/language-school/jitsi/classes/{classId}/join`: un alumno necesita matrícula activa en el grupo; Administración y el profesor propietario también pueden acceder.
+- `class_video_provider_guard.pb.js` valida en servidor el proveedor, exige HTTPS y comprueba que una URL Jitsi pertenezca exactamente a `meet.jit.si` y coincida con el identificador de sala guardado.
+- El navegador recibe únicamente el dominio, el nombre aleatorio de sala y el nombre visible del usuario. No existen secretos Jitsi en React ni en `production.env`.
+
+En `meet.jit.si`, el primer moderador debe autenticarse con uno de los proveedores admitidos por Jitsi. El profesor debe entrar primero; los alumnos pueden quedar esperando al moderador. Esta integración comprueba la matrícula antes de entregar la sala, pero el servicio público no ofrece el control JWT propio de una instalación Jitsi privada o de JaaS: el enlace de sala no debe compartirse fuera del campus.
 
 ## Zoom
 

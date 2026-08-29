@@ -14,8 +14,9 @@ import {
   type ZoomMeetingRecord,
 } from '../../services/pocketbase/adminZoomMeetings'
 import { getZoomIntegrationStatus, type ZoomIntegrationStatus } from '../../services/pocketbase/zoomIntegration'
+import { createJitsiRoom } from '../../services/pocketbase/jitsiClassroom'
 import type { ClassDeliveryMode, ClassRecord, CourseRecord, GroupRecord } from '../../services/pocketbase/studentPortal'
-import { getOnlineClassProvider, onlineClassProviderLabel } from '../../utils/onlineClassProvider'
+import { getOnlineClassProvider, onlineClassProviderLabel, providerNeedsManualUrl, type OnlineClassProvider } from '../../utils/onlineClassProvider'
 import { adminNav } from './adminNav'
 
 type DeliveryClass = ClassRecord & {
@@ -58,10 +59,13 @@ export default function AdminClassDeliveryPage() {
   const [mode, setMode] = useState<ClassDeliveryMode>('IN_PERSON')
   const [locationText, setLocationText] = useState('')
   const [onlineJoinUrl, setOnlineJoinUrl] = useState('')
+  const [videoProvider, setVideoProvider] = useState<OnlineClassProvider>('ZOOM')
+  const [meetingRoom, setMeetingRoom] = useState('')
   const [zoomStatus, setZoomStatus] = useState<ZoomIntegrationStatus | null>(isDemoMode ? demoZoomStatus : null)
   const [zoomMeeting, setZoomMeeting] = useState<ZoomMeetingRecord | null>(null)
   const [zoomLoading, setZoomLoading] = useState(false)
   const [zoomCreating, setZoomCreating] = useState(false)
+  const [jitsiCreating, setJitsiCreating] = useState(false)
   const [loading, setLoading] = useState(!isDemoMode)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -86,13 +90,15 @@ export default function AdminClassDeliveryPage() {
   }, [isDemoMode])
 
   const selectedClass = classes.find((record) => record.id === selectedId) || null
-  const onlineProvider = getOnlineClassProvider(onlineJoinUrl)
+  const onlineProvider = videoProvider
 
   useEffect(() => {
     if (!selectedClass) return
     setMode(effectiveDeliveryMode(selectedClass))
     setLocationText(selectedClass.location_text || '')
     setOnlineJoinUrl(selectedClass.online_join_url || '')
+    setVideoProvider(getOnlineClassProvider(selectedClass.online_join_url, selectedClass.video_provider))
+    setMeetingRoom(selectedClass.meeting_room || '')
     setZoomMeeting(null)
     setError(null)
     setMessage(null)
@@ -132,6 +138,8 @@ export default function AdminClassDeliveryPage() {
         delivery_mode: mode,
         location_text: mode === 'ONLINE' ? '' : locationText.trim(),
         online_join_url: mode === 'IN_PERSON' ? '' : onlineJoinUrl.trim(),
+        video_provider: mode === 'IN_PERSON' ? '' : videoProvider,
+        meeting_room: mode !== 'IN_PERSON' && videoProvider === 'JITSI' ? meetingRoom : '',
       } : record))
       setMessage('Modalidad preparada en la demostración.')
       return
@@ -139,7 +147,7 @@ export default function AdminClassDeliveryPage() {
 
     setSaving(true)
     try {
-      const updated = await updateAdminClassDelivery(selectedClass, { deliveryMode: mode, locationText, onlineJoinUrl })
+      const updated = await updateAdminClassDelivery(selectedClass, { deliveryMode: mode, videoProvider, locationText, onlineJoinUrl, meetingRoom })
       setClasses((current) => current.map((record) => record.id === updated.id ? updated as DeliveryClass : record))
       setMessage('Modalidad de la clase actualizada.')
     } catch (saveError) {
@@ -163,6 +171,8 @@ export default function AdminClassDeliveryPage() {
       const refreshed = await getAdminZoomMeetingForClass(selectedClass.id)
       setZoomMeeting(refreshed)
       setOnlineJoinUrl(result.joinUrl)
+      setVideoProvider('ZOOM')
+      setMeetingRoom('')
       setClasses((current) => current.map((record) => record.id === selectedClass.id ? { ...record, online_join_url: result.joinUrl } : record))
       setMessage(result.existing ? 'Esta clase ya tenía una reunión Zoom preparada.' : 'Reunión Zoom creada y asociada a la clase.')
     } catch (creationError) {
@@ -173,6 +183,37 @@ export default function AdminClassDeliveryPage() {
     }
   }
 
+  async function prepareJitsiRoom() {
+    if (!selectedClass || mode === 'IN_PERSON') return
+    setError(null)
+    setMessage(null)
+    if (isDemoMode) {
+      setVideoProvider('JITSI')
+      setMeetingRoom(`ls-${selectedClass.id}-demo-secure-room`)
+      setOnlineJoinUrl(`https://meet.jit.si/ls-${selectedClass.id}-demo-secure-room`)
+      setMessage('Sala Jitsi segura preparada en la demostración.')
+      return
+    }
+    setJitsiCreating(true)
+    try {
+      const result = await createJitsiRoom(selectedClass.id)
+      setVideoProvider('JITSI')
+      setMeetingRoom(result.roomName)
+      setOnlineJoinUrl(result.joinUrl)
+      setClasses((current) => current.map((record) => record.id === selectedClass.id ? {
+        ...record,
+        video_provider: 'JITSI',
+        meeting_room: result.roomName,
+        online_join_url: result.joinUrl,
+      } : record))
+      setMessage(result.existing ? 'Esta clase ya tenía una sala Jitsi segura.' : 'Sala Jitsi creada y asociada a la clase.')
+    } catch (creationError) {
+      setError(creationError instanceof Error ? creationError.message : 'No se ha podido preparar la sala Jitsi.')
+    } finally {
+      setJitsiCreating(false)
+    }
+  }
+
   return (
     <DashboardShell role="Administrador" name="Admin" nav={[...adminNav]}>
       <div className="dashboard-content cms-page class-delivery-admin-page">
@@ -180,7 +221,7 @@ export default function AdminClassDeliveryPage() {
           <div>
             <span className="eyebrow">CAMPUS · AULA</span>
             <h2>Modalidad de las clases</h2>
-            <p>Decide si cada sesión es presencial, online o híbrida y prepara el acceso con Zoom o Google Meet.</p>
+            <p>Decide si cada sesión es presencial, online o híbrida y prepara un acceso uniforme con Jitsi, Zoom, Meet, Teams o un enlace externo.</p>
           </div>
         </header>
 
@@ -232,13 +273,35 @@ export default function AdminClassDeliveryPage() {
                   </fieldset>
 
                   {mode !== 'ONLINE' && <div><label htmlFor="class-location">Lugar / aula</label><input id="class-location" value={locationText} onChange={(event) => setLocationText(event.target.value)} placeholder="Ej. Aula 2 · Language School" /></div>}
-                  {mode !== 'IN_PERSON' && <div><label htmlFor="class-online-url">Enlace de videoclase</label><input id="class-online-url" type="url" value={onlineJoinUrl} onChange={(event) => setOnlineJoinUrl(event.target.value)} placeholder="https://meet.google.com/... o enlace Zoom" /><small className="muted">Pega un enlace de Google Meet para usar Meet. Si dejas el campo vacío, puedes crear Zoom desde Language School; al crearlo, el enlace se sincroniza automáticamente.</small></div>}
+                  {mode !== 'IN_PERSON' && <fieldset>
+                    <legend>Plataforma de videoclase</legend>
+                    <div className="video-provider-picker">
+                      {(['JITSI', 'ZOOM', 'GOOGLE_MEET', 'MICROSOFT_TEAMS', 'EXTERNAL'] as const).map((provider) => (
+                        <label key={provider} className={videoProvider === provider ? 'active' : ''}>
+                          <input type="radio" name="video_provider" value={provider} checked={videoProvider === provider} onChange={() => {
+                            setVideoProvider(provider)
+                            setOnlineJoinUrl('')
+                            setMeetingRoom('')
+                          }} />
+                          {onlineClassProviderLabel(provider)}
+                        </label>
+                      ))}
+                    </div>
+                  </fieldset>}
+                  {mode !== 'IN_PERSON' && videoProvider !== 'JITSI' && <div><label htmlFor="class-online-url">Enlace de videoclase</label><input id="class-online-url" type="url" value={onlineJoinUrl} onChange={(event) => setOnlineJoinUrl(event.target.value)} required={providerNeedsManualUrl(videoProvider)} placeholder={videoProvider === 'GOOGLE_MEET' ? 'https://meet.google.com/...' : videoProvider === 'MICROSOFT_TEAMS' ? 'https://teams.microsoft.com/...' : 'https://...'} /><small className="muted">{videoProvider === 'ZOOM' ? 'Puedes pegar un enlace Zoom o dejarlo vacío para crear la reunión desde Language School.' : 'Introduce el enlace https facilitado por la plataforma.'}</small></div>}
 
                   <div className="class-delivery-preview">
                     <span className={`class-mode class-mode-${mode.toLowerCase()}`}>{modeLabel(mode)}</span>
                     {mode !== 'ONLINE' && <span>📍 {locationText.trim() || 'Lugar pendiente'}</span>}
                     {mode !== 'IN_PERSON' && <span>◉ {onlineJoinUrl.trim() ? `${onlineClassProviderLabel(onlineProvider)} preparado` : 'Acceso online pendiente'}</span>}
                   </div>
+
+                  {mode !== 'IN_PERSON' && videoProvider === 'JITSI' && (
+                    <section className="jitsi-room-card" aria-label="Sala Jitsi de la clase">
+                      <div><span className="eyebrow">JITSI · AULA SEGURA</span><h4>{meetingRoom ? 'Sala Jitsi preparada' : 'Genera una sala privada e impredecible'}</h4><p>El profesor deberá entrar primero y autenticarse en meet.jit.si; los alumnos esperarán al moderador desde Language School.</p></div>
+                      {meetingRoom ? <span className="jitsi-room-ready">Preparada</span> : <button className="button button-primary" type="button" onClick={() => void prepareJitsiRoom()} disabled={jitsiCreating}>{jitsiCreating ? 'Generando…' : 'Generar sala Jitsi'}</button>}
+                    </section>
+                  )}
 
                   {mode !== 'IN_PERSON' && onlineProvider === 'ZOOM' && (
                     <section className={`class-zoom-meeting-card ${zoomMeeting?.status === 'READY' ? 'is-ready' : ''}`} aria-label="Reunión Zoom de la clase">

@@ -47,6 +47,7 @@ test('8A.2: Administración configura modalidad, Google Meet y el alumno recibe 
 
   await page.getByRole('radio', { name: /^Híbrida/ }).check()
   await page.getByLabel('Lugar / aula').fill('Aula E2E')
+  await page.getByRole('radio', { name: 'Google Meet' }).check()
   await page.getByLabel('Enlace de videoclase').fill(googleMeetJoinUrl)
   await page.getByRole('button', { name: 'Guardar modalidad' }).click()
   await expect(page.getByText('Modalidad de la clase actualizada.')).toBeVisible()
@@ -58,12 +59,12 @@ test('8A.2: Administración configura modalidad, Google Meet y el alumno recibe 
   await expect(nextClass.getByText('E2E Speaking class')).toBeVisible()
   await expect(nextClass.getByText('Híbrida')).toBeVisible()
   await expect(nextClass.getByText('Aula E2E')).toBeVisible()
-  const dashboardClassroomLink = nextClass.getByRole('link', { name: /Entrar al aula online/ })
+  const dashboardClassroomLink = nextClass.getByRole('link', { name: /Entrar en clase/ })
   await expect(dashboardClassroomLink).toHaveAttribute('href', /\/alumno\/aula\//)
   await dashboardClassroomLink.click()
   await expect(page).toHaveURL(/\/alumno\/aula\//)
   await expect(page.getByText('GOOGLE MEET', { exact: true })).toBeVisible()
-  await expect(page.getByRole('link', { name: /Entrar en Google Meet/ })).toHaveAttribute('href', googleMeetJoinUrl)
+  await expect(page.getByRole('link', { name: /Entrar en clase/ })).toHaveAttribute('href', googleMeetJoinUrl)
   await expect(page.getByText('Language School no necesita almacenar tu contraseña ni credenciales privadas de Google.')).toBeVisible()
 
   await page.getByRole('link', { name: /Volver a Mis clases/ }).click()
@@ -71,12 +72,13 @@ test('8A.2: Administración configura modalidad, Google Meet y el alumno recibe 
   const upcoming = page.locator('.student-class-list-delivery').first()
   await expect(upcoming.getByText('Híbrida')).toBeVisible()
   await expect(upcoming.getByText(/Aula E2E/)).toBeVisible()
-  await expect(upcoming.getByRole('link', { name: /Entrar al aula online/ })).toHaveAttribute('href', /\/alumno\/aula\//)
+  await expect(upcoming.getByRole('link', { name: /Entrar en clase/ })).toHaveAttribute('href', /\/alumno\/aula\//)
   await logout(page)
 
   // Restore the seeded Zoom fallback so the later Zoom SDK tests keep their original fixture.
   await login(page, credentials.admin.email, credentials.admin.password, /\/admin$/)
   await openAdminClassroom(page)
+  await page.getByRole('radio', { name: 'Zoom' }).check()
   await page.getByLabel('Enlace de videoclase').fill(legacyZoomJoinUrl)
   await page.getByRole('button', { name: 'Guardar modalidad' }).click()
   await expect(page.getByText('Modalidad de la clase actualizada.')).toBeVisible()

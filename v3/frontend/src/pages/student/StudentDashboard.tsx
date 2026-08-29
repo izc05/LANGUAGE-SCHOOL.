@@ -82,7 +82,7 @@ function DemoStudentDashboard() {
             <p>Adult English B1 · B1 Evening</p>
             <div className="campus-next-delivery"><span className="class-mode class-mode-hybrid">Híbrida</span><span>📍 Aula 2</span></div>
             <div className="campus10-class-actions">
-              <Link className="button button-primary campus-online-entry" to="/alumno/aula/demo-u1">Entrar al aula online →</Link>
+              <Link className="button button-primary campus-online-entry" to="/alumno/aula/demo-u1">Entrar en clase →</Link>
               <Link className="campus-text-link" to="/alumno/clases">Ver agenda</Link>
             </div>
           </article>
@@ -163,7 +163,7 @@ function ConnectedStudentDashboard() {
                 {nextClass && <div className="campus-next-delivery"><span className={`class-mode class-mode-${nextMode.toLowerCase()}`}>{classModeLabel(nextMode)}</span>{nextMode !== 'ONLINE' && <span>📍 {nextClass.location_text || 'Aula pendiente'}</span>}</div>}
                 <div className="campus10-class-actions">
                   {canOpenOnlineClass && nextClass
-                    ? <Link className="button button-primary campus-online-entry" to={`/alumno/aula/${encodeURIComponent(nextClass.id)}`}>Entrar al aula online →</Link>
+                    ? <Link className="button button-primary campus-online-entry" to={`/alumno/aula/${encodeURIComponent(nextClass.id)}`}>Entrar en clase →</Link>
                     : nextClass && nextMode !== 'IN_PERSON'
                       ? <span className="campus-online-pending">Acceso online pendiente</span>
                       : null}

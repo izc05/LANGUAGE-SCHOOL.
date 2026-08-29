@@ -1,10 +1,12 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router'
+import JitsiClassroom from '../../components/JitsiClassroom'
 import { useAuth } from '../../features/auth/AuthProvider'
 import { getMyClass, type ClassDeliveryMode, type ClassRecord } from '../../services/pocketbase/studentPortal'
 import { getStudentZoomSdkAuthorization } from '../../services/pocketbase/studentZoomMeeting'
 import { configureZoomMeetingSdk, loadZoomMeetingSdk, type ZoomClientViewApi } from '../../services/zoomMeetingSdkCdn'
-import { getOnlineClassProvider } from '../../utils/onlineClassProvider'
+import { getJitsiJoinAuthorization, type JitsiJoinAuthorization } from '../../services/pocketbase/jitsiClassroom'
+import { getOnlineClassProvider, onlineClassProviderLabel } from '../../utils/onlineClassProvider'
 
 type JoinState = 'idle' | 'authorizing' | 'loading-sdk' | 'joining' | 'joined' | 'error'
 
@@ -91,6 +93,8 @@ export default function StudentOnlineClassPage() {
   const [pageError, setPageError] = useState<string | null>(null)
   const [joinState, setJoinState] = useState<JoinState>('idle')
   const [joinError, setJoinError] = useState<string | null>(null)
+  const [jitsiAuthorization, setJitsiAuthorization] = useState<JitsiJoinAuthorization | null>(null)
+  const [jitsiLoading, setJitsiLoading] = useState(false)
 
   useEffect(() => {
     if (isDemoMode || !classId) return
@@ -116,10 +120,11 @@ export default function StudentOnlineClassPage() {
   const locationText = demoSession?.locationText || classRecord?.location_text || ''
   const startsAt = demoSession?.startsAt || classRecord?.starts_at || ''
   const onlineJoinUrl = classRecord?.online_join_url || ''
-  const onlineProvider = getOnlineClassProvider(onlineJoinUrl)
+  const onlineProvider = getOnlineClassProvider(onlineJoinUrl, classRecord?.video_provider)
   const showSession = Boolean(demoSession || classRecord)
   const canUseOnlineClass = Boolean(classRecord && classRecord.status === 'SCHEDULED' && (mode === 'ONLINE' || mode === 'HYBRID'))
   const canUseZoomClass = canUseOnlineClass && onlineProvider === 'ZOOM'
+  const canUseJitsiClass = canUseOnlineClass && onlineProvider === 'JITSI'
   const busy = joinState === 'authorizing' || joinState === 'loading-sdk' || joinState === 'joining'
 
   const joinLabel = useMemo(() => {
@@ -127,7 +132,7 @@ export default function StudentOnlineClassPage() {
     if (joinState === 'loading-sdk') return 'Cargando Zoom…'
     if (joinState === 'joining') return 'Entrando en la clase…'
     if (joinState === 'joined') return 'Aula iniciada'
-    return 'Entrar al aula Zoom'
+    return 'Entrar en clase'
   }, [joinState])
 
   const handleJoin = async () => {
@@ -146,6 +151,23 @@ export default function StudentOnlineClassPage() {
       setJoinError(getErrorMessage(error))
     }
   }
+
+  const handleJoinJitsi = async () => {
+    if (isDemoMode || !classId || !canUseJitsiClass || jitsiLoading) return
+    setJoinError(null)
+    setJitsiLoading(true)
+    try {
+      setJitsiAuthorization(await getJitsiJoinAuthorization(classId))
+    } catch (error) {
+      setJoinError(getErrorMessage(error))
+    } finally {
+      setJitsiLoading(false)
+    }
+  }
+
+  const handleJitsiError = useCallback((error: Error) => {
+    setJoinError(error.message || 'No se ha podido abrir el aula Jitsi.')
+  }, [])
 
   return (
     <main className="student-online-class-document student-online-class-phase10b">
@@ -192,15 +214,33 @@ export default function StudentOnlineClassPage() {
                     Videoclase real · modo conectado
                   </button>
                 </div>
-              ) : canUseOnlineClass && onlineProvider === 'GOOGLE_MEET' && onlineJoinUrl ? (
+              ) : canUseJitsiClass ? (
+                jitsiAuthorization ? (
+                  <div className="jitsi-classroom-shell">
+                    <div className="jitsi-classroom-notice"><span>◉</span><span>Si el profesor todavía no ha iniciado la sala, Jitsi te mantendrá esperando al moderador. No compartas el enlace del aula.</span></div>
+                    <JitsiClassroom domain={jitsiAuthorization.domain} roomName={jitsiAuthorization.roomName} displayName={jitsiAuthorization.displayName} onError={handleJitsiError} />
+                  </div>
+                ) : (
+                  <div className="student-online-class-actions student-online-class-actions10">
+                    <div className="student-online-class-explainer">
+                      <span className="eyebrow">AULA LANGUAGE SCHOOL</span>
+                      <strong>Tu clase con Jitsi está preparada</strong>
+                      <p>La videollamada se abrirá aquí dentro. Si eres el primero, espera a que el profesor entre como moderador.</p>
+                    </div>
+                    <button className="button primary student-online-join10" type="button" onClick={() => void handleJoinJitsi()} disabled={jitsiLoading}>
+                      {jitsiLoading ? 'Comprobando tu acceso…' : 'Entrar en clase'}
+                    </button>
+                  </div>
+                )
+              ) : canUseOnlineClass && onlineProvider !== 'ZOOM' && onlineJoinUrl ? (
                 <div className="student-online-class-actions student-online-class-actions10">
                   <div className="student-online-class-explainer">
-                    <span className="eyebrow">GOOGLE MEET</span>
+                    <span className="eyebrow">{onlineClassProviderLabel(onlineProvider).toUpperCase()}</span>
                     <strong>Tu videoclase está preparada</strong>
-                    <p>Al pulsar el botón Google Meet se abrirá en una pestaña nueva. Si la reunión requiere admisión, espera a que el profesor te dé acceso.</p>
+                    <p>Al pulsar el botón se abrirá la plataforma en una pestaña nueva. Si la reunión requiere admisión, espera a que el profesor te dé acceso.</p>
                   </div>
                   <a className="button primary student-online-join10" href={onlineJoinUrl} target="_blank" rel="noreferrer">
-                    Entrar en Google Meet ↗
+                    Entrar en clase ↗
                   </a>
                 </div>
               ) : canUseZoomClass ? (
@@ -215,7 +255,7 @@ export default function StudentOnlineClassPage() {
                   </button>
                   {onlineJoinUrl && (
                     <a className="button secondary student-online-fallback10" href={onlineJoinUrl} target="_blank" rel="noreferrer">
-                      Abrir con Zoom ↗
+                      Abrir en otra pestaña ↗
                     </a>
                   )}
                 </div>
@@ -227,7 +267,7 @@ export default function StudentOnlineClassPage() {
                 <div className="cms-notice auth-error student-online-class-error" role="alert">
                   <strong>No hemos podido abrir el aula dentro de Language School.</strong>
                   <span>{joinError}</span>
-                  {onlineJoinUrl && <span>Puedes usar el botón «Abrir con Zoom» como alternativa.</span>}
+                  {onlineJoinUrl && <span>Puedes usar el acceso en otra pestaña como alternativa.</span>}
                 </div>
               )}
             </div>
@@ -238,11 +278,13 @@ export default function StudentOnlineClassPage() {
               <div><small>GRUPO</small><strong>{groupName}</strong></div>
               <div><small>MODALIDAD</small><strong>{mode === 'HYBRID' ? 'Híbrida' : mode === 'ONLINE' ? 'Online' : 'Presencial'}</strong></div>
               {mode === 'HYBRID' && locationText && <div><small>AULA FÍSICA</small><strong>{locationText}</strong></div>}
-              {!demoSession && canUseOnlineClass && <div><small>VIDEOLLAMADA</small><strong>{onlineProvider === 'GOOGLE_MEET' ? 'Google Meet' : 'Zoom'}</strong></div>}
+              {!demoSession && canUseOnlineClass && <div><small>VIDEOLLAMADA</small><strong>{onlineClassProviderLabel(onlineProvider)}</strong></div>}
               <div className="student-online-class-privacy student-online-class-privacy10">
-                <strong>{demoSession ? 'Vista de demostración' : onlineProvider === 'GOOGLE_MEET' ? 'Acceso mediante Google Meet' : 'Acceso protegido'}</strong>
+                <strong>{demoSession ? 'Vista de demostración' : onlineProvider === 'JITSI' ? 'Acceso verificado por Language School' : onlineProvider === 'GOOGLE_MEET' ? 'Acceso mediante Google Meet' : 'Acceso protegido'}</strong>
                 <p>{demoSession
                   ? 'La conexión real permanece desactivada en esta preview local.'
+                  : onlineProvider === 'JITSI'
+                    ? 'Language School comprueba tu matrícula antes de entregar la sala. meet.jit.si gestiona la videollamada y el profesor actúa como moderador.'
                   : onlineProvider === 'GOOGLE_MEET'
                     ? 'El enlace se abre directamente en Google Meet. Language School no necesita almacenar tu contraseña ni credenciales privadas de Google.'
                     : 'Tu autorización es temporal y personal. Las credenciales privadas de Zoom permanecen en el servidor.'}</p>

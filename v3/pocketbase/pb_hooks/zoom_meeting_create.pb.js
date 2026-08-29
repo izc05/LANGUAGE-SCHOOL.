@@ -167,6 +167,8 @@ routerAdd("POST", "/api/language-school/zoom/classes/{classId}/meeting", (e) => 
       txApp.save(meetingRecord)
 
       const classToUpdate = txApp.findRecordById("classes", classId)
+      classToUpdate.set("video_provider", "ZOOM")
+      classToUpdate.set("meeting_room", "")
       classToUpdate.set("online_join_url", String(meetingResponse.json.join_url || ""))
       txApp.save(classToUpdate)
       savedMeeting = meetingRecord

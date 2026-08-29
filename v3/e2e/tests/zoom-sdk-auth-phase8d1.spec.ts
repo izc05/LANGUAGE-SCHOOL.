@@ -140,7 +140,7 @@ test('8D.2: alumno entra desde Campus al aula y el SDK se carga solo al solicita
   await expect(page.locator('script[data-language-school-zoom-src]')).toHaveCount(0)
   await expect(page.locator('link[data-language-school-zoom-style]')).toHaveCount(0)
 
-  const joinButton = page.getByRole('button', { name: 'Entrar al aula Zoom' })
+  const joinButton = page.getByRole('button', { name: 'Entrar en clase' })
   await expect(joinButton).toBeEnabled()
   await joinButton.click()
   await expect(page.getByRole('button', { name: 'Aula iniciada' })).toBeVisible()

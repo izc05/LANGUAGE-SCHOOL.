@@ -24,16 +24,17 @@ type ClassView = {
   deliveryMode: ClassDeliveryMode
   locationText: string
   onlineJoinUrl: string
+  videoProvider: ClassRecord['video_provider']
 }
 
 const demoUpcoming: ClassView[] = [
-  { id: 'demo-u1', startsAt: '2026-08-20T18:00:00+02:00', endsAt: '2026-08-20T19:00:00+02:00', topic: 'Travel & experiences', groupName: 'B1 Evening', courseTitle: 'Adult English B1', status: 'SCHEDULED', deliveryMode: 'HYBRID', locationText: 'Aula 2', onlineJoinUrl: 'https://example.com/language-school-class' },
-  { id: 'demo-u2', startsAt: '2026-08-25T18:00:00+02:00', endsAt: '2026-08-25T19:00:00+02:00', topic: 'Airport situations', groupName: 'B1 Evening', courseTitle: 'Adult English B1', status: 'SCHEDULED', deliveryMode: 'IN_PERSON', locationText: 'Aula 1', onlineJoinUrl: '' },
+  { id: 'demo-u1', startsAt: '2026-08-20T18:00:00+02:00', endsAt: '2026-08-20T19:00:00+02:00', topic: 'Travel & experiences', groupName: 'B1 Evening', courseTitle: 'Adult English B1', status: 'SCHEDULED', deliveryMode: 'HYBRID', locationText: 'Aula 2', onlineJoinUrl: 'https://example.com/language-school-class', videoProvider: 'ZOOM' },
+  { id: 'demo-u2', startsAt: '2026-08-25T18:00:00+02:00', endsAt: '2026-08-25T19:00:00+02:00', topic: 'Airport situations', groupName: 'B1 Evening', courseTitle: 'Adult English B1', status: 'SCHEDULED', deliveryMode: 'IN_PERSON', locationText: 'Aula 1', onlineJoinUrl: '', videoProvider: '' },
 ]
 
 const demoRecent: ClassView[] = [
-  { id: 'demo-r1', startsAt: '2026-08-11T18:00:00+02:00', endsAt: '2026-08-11T19:00:00+02:00', topic: 'Past experiences', groupName: 'B1 Evening', courseTitle: 'Adult English B1', status: 'COMPLETED', deliveryMode: 'ONLINE', locationText: '', onlineJoinUrl: '' },
-  { id: 'demo-r2', startsAt: '2026-08-06T18:00:00+02:00', endsAt: '2026-08-06T19:00:00+02:00', topic: 'Travel vocabulary', groupName: 'B1 Evening', courseTitle: 'Adult English B1', status: 'COMPLETED', deliveryMode: 'IN_PERSON', locationText: 'Aula 2', onlineJoinUrl: '' },
+  { id: 'demo-r1', startsAt: '2026-08-11T18:00:00+02:00', endsAt: '2026-08-11T19:00:00+02:00', topic: 'Past experiences', groupName: 'B1 Evening', courseTitle: 'Adult English B1', status: 'COMPLETED', deliveryMode: 'ONLINE', locationText: '', onlineJoinUrl: '', videoProvider: 'ZOOM' },
+  { id: 'demo-r2', startsAt: '2026-08-06T18:00:00+02:00', endsAt: '2026-08-06T19:00:00+02:00', topic: 'Travel vocabulary', groupName: 'B1 Evening', courseTitle: 'Adult English B1', status: 'COMPLETED', deliveryMode: 'IN_PERSON', locationText: 'Aula 2', onlineJoinUrl: '', videoProvider: '' },
 ]
 
 function toView(record: ClassRecord): ClassView {
@@ -48,6 +49,7 @@ function toView(record: ClassRecord): ClassView {
     deliveryMode: record.delivery_mode || 'IN_PERSON',
     locationText: record.location_text || '',
     onlineJoinUrl: record.online_join_url || '',
+    videoProvider: record.video_provider || '',
   }
 }
 
@@ -69,25 +71,25 @@ function formatTime(value: string): string {
   return new Intl.DateTimeFormat('es-ES', { hour: '2-digit', minute: '2-digit' }).format(date)
 }
 
-function ClassDelivery({ item, upcoming = false, isDemoMode = false, prominent = false }: { item: ClassView; upcoming?: boolean; isDemoMode?: boolean; prominent?: boolean }) {
+function ClassDelivery({ item, upcoming = false, prominent = false }: { item: ClassView; upcoming?: boolean; prominent?: boolean }) {
   return (
     <div className={`student-class-delivery${prominent ? ' student-class-delivery-prominent' : ''}`}>
       <span className={`class-mode class-mode-${item.deliveryMode.toLowerCase()}`}>{modeLabel(item.deliveryMode)}</span>
       {item.deliveryMode !== 'ONLINE' && <span className="student-class-location">📍 {item.locationText || 'Aula pendiente'}</span>}
       {upcoming && item.deliveryMode !== 'IN_PERSON' && (
         item.onlineJoinUrl
-          ? <Link className="student-online-class-link" to={`/alumno/aula/${encodeURIComponent(item.id)}`}>{isDemoMode ? 'Entrar en clase online →' : 'Entrar al aula online →'}</Link>
+          ? <Link className="student-online-class-link" to={`/alumno/aula/${encodeURIComponent(item.id)}`}>Entrar en clase →</Link>
           : <span className="student-online-pending">Acceso online pendiente</span>
       )}
     </div>
   )
 }
 
-function UpcomingClassRow({ item, isDemoMode }: { item: ClassView; isDemoMode: boolean }) {
+function UpcomingClassRow({ item }: { item: ClassView }) {
   return (
     <article>
       <div className="student-class-date"><strong>{formatDate(item.startsAt)}</strong><span>{formatTime(item.startsAt)} – {formatTime(item.endsAt)}</span></div>
-      <div className="student-class-main"><h4>{item.topic}</h4><p>{item.courseTitle} · {item.groupName}</p><ClassDelivery item={item} upcoming isDemoMode={isDemoMode} /></div>
+      <div className="student-class-main"><h4>{item.topic}</h4><p>{item.courseTitle} · {item.groupName}</p><ClassDelivery item={item} upcoming /></div>
       <span className="status info">Programada</span>
     </article>
   )
@@ -143,7 +145,7 @@ export default function StudentClassesPage() {
               <h3 id="student-next-session-title">{nextClass.topic}</h3>
               <p>{nextClass.courseTitle} · {nextClass.groupName}</p>
               <div className="student-class-list-delivery student-next-session-delivery">
-                <ClassDelivery item={nextClass} upcoming isDemoMode={isDemoMode} prominent />
+                <ClassDelivery item={nextClass} upcoming prominent />
               </div>
             </div>
             <div className="student-next-session-side" aria-label="Preparación para la siguiente clase">
@@ -170,7 +172,7 @@ export default function StudentClassesPage() {
           <section className="panel student-class-section student-class-later-section">
             <div className="panel-heading"><div><span className="eyebrow">DESPUÉS</span><h3>Próximas en tu agenda</h3></div><span className="student-class-count">{laterClasses.length} más</span></div>
             <div className="student-class-list student-class-list-delivery">
-              {laterClasses.map((item) => <UpcomingClassRow key={item.id} item={item} isDemoMode={isDemoMode} />)}
+              {laterClasses.map((item) => <UpcomingClassRow key={item.id} item={item} />)}
             </div>
           </section>
         )}

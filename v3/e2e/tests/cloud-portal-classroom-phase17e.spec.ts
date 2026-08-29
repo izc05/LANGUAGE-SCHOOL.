@@ -43,7 +43,7 @@ test('17E: el acceso al aula desde Mis clases usa el mismo portal', async ({ pag
   await page.goto('/alumno/clases')
   await expect(page.getByRole('heading', { name: 'Mis clases' })).toBeVisible()
 
-  const classesEntry = page.getByRole('link', { name: /Entrar al aula online/ }).first()
+  const classesEntry = page.getByRole('link', { name: /Entrar en clase/ }).first()
   await expect(classesEntry).toBeVisible()
   await enterClassroomWithPortal(page, classesEntry, /\/alumno\/clases$/)
 })

@@ -47,6 +47,7 @@ export type EnrollmentRecord = RecordModel & {
 }
 
 export type ClassDeliveryMode = GroupDeliveryMode
+export type VideoProvider = 'ZOOM' | 'GOOGLE_MEET' | 'JITSI' | 'MICROSOFT_TEAMS' | 'EXTERNAL'
 
 export type ClassRecord = RecordModel & {
   group: string
@@ -59,6 +60,8 @@ export type ClassRecord = RecordModel & {
   delivery_mode?: ClassDeliveryMode | ''
   location_text?: string
   online_join_url?: string
+  video_provider?: VideoProvider | ''
+  meeting_room?: string
   expand?: { group?: GroupRecord }
 }
 

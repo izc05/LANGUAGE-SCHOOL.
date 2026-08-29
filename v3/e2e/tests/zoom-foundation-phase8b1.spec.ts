@@ -181,5 +181,5 @@ test('8C.2: una clase nueva recorre la creación Zoom y entrega solo el acceso d
   const createdClassCard = page.locator('.student-class-list-delivery article').filter({ hasText: 'E2E Zoom create class' })
   await expect(createdClassCard).toHaveCount(1)
   await expect(createdClassCard).toBeVisible()
-  await expect(createdClassCard.getByRole('link', { name: /Entrar al aula online/ })).toHaveAttribute('href', `/alumno/aula/${targetClassId}`)
+  await expect(createdClassCard.getByRole('link', { name: /Entrar en clase/ })).toHaveAttribute('href', `/alumno/aula/${targetClassId}`)
 })

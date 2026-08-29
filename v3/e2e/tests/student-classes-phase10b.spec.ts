@@ -33,7 +33,7 @@ test('10.2: Mis clases prioriza la próxima sesión y mantiene el aula interna p
   await expect(nextSession.getByRole('heading', { name: 'E2E Speaking class' })).toBeVisible()
   await expect(nextSession.locator('a[href^="http"]')).toHaveCount(0)
 
-  const classroomLink = nextSession.getByRole('link', { name: /Entrar al aula online/ })
+  const classroomLink = nextSession.getByRole('link', { name: /Entrar en clase/ })
   await expect(classroomLink).toHaveAttribute('href', /\/alumno\/aula\//)
   await classroomLink.click()
 
@@ -42,9 +42,9 @@ test('10.2: Mis clases prioriza la próxima sesión y mantiene el aula interna p
   await expect(page.getByRole('heading', { name: 'E2E Speaking class', level: 1 })).toBeVisible()
   await expect(page.locator('.student-online-session10')).toBeVisible()
   await expect(page.getByText('Acceso protegido', { exact: true })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Entrar al aula Zoom' })).toBeEnabled()
+  await expect(page.getByRole('button', { name: 'Entrar en clase' })).toBeEnabled()
   await expect(page.locator('script[data-language-school-zoom-src]')).toHaveCount(0)
-  await expect(page.getByRole('link', { name: /Abrir con Zoom/ })).toHaveAttribute('href', /^https:\/\//)
+  await expect(page.getByRole('link', { name: /Abrir en otra pestaña/ })).toHaveAttribute('href', /^https:\/\//)
 
   await page.setViewportSize({ width: 390, height: 844 })
   await expectNoHorizontalOverflow(page)

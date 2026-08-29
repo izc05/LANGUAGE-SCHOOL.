@@ -12,6 +12,8 @@ import {
   updateTeacherClassStatus,
 } from '../../services/pocketbase/teacherClasses'
 import { listMyTeacherGroups, type TeacherEnrollmentRecord, type TeacherGroupRecord } from '../../services/pocketbase/teacherPortal'
+import { createJitsiRoom } from '../../services/pocketbase/jitsiClassroom'
+import { getOnlineClassProvider, onlineClassProviderLabel, providerNeedsManualUrl, type OnlineClassProvider } from '../../utils/onlineClassProvider'
 import { teacherNav } from './teacherNav'
 
 function formatDateTime(value: string): string {
@@ -103,6 +105,7 @@ export default function TeacherClassesPage() {
   const [deliveryMode, setDeliveryMode] = useState<ClassDeliveryMode>('IN_PERSON')
   const [locationText, setLocationText] = useState('')
   const [onlineJoinUrl, setOnlineJoinUrl] = useState('')
+  const [videoProvider, setVideoProvider] = useState<OnlineClassProvider>('ZOOM')
 
   useEffect(() => {
     if (isDemoMode) return
@@ -160,12 +163,24 @@ export default function TeacherClassesPage() {
     }
     setSaving(true)
     try {
-      const record = await createTeacherClass({ groupId, startsAt, endsAt, topic, description, deliveryMode, locationText, onlineJoinUrl })
+      let record = await createTeacherClass({ groupId, startsAt, endsAt, topic, description, deliveryMode, videoProvider, locationText, onlineJoinUrl })
       setClasses((current) => [record, ...current])
       setSelectedId(record.id)
+      if (deliveryMode !== 'IN_PERSON' && videoProvider === 'JITSI') {
+        try {
+          const jitsi = await createJitsiRoom(record.id)
+          record = { ...record, video_provider: 'JITSI', meeting_room: jitsi.roomName, online_join_url: jitsi.joinUrl }
+          setClasses((current) => current.map((item) => item.id === record.id ? record : item))
+        } catch (jitsiError) {
+          setError(jitsiError instanceof Error ? `La clase se ha creado, pero Jitsi no ha podido preparar la sala: ${jitsiError.message}` : 'La clase se ha creado, pero Jitsi no ha podido preparar la sala.')
+          setMessage('La clase está guardada. Administración puede preparar su sala Jitsi desde Aula online.')
+          return
+        }
+      }
       setTopic('')
       setDescription('')
       setOnlineJoinUrl('')
+      setVideoProvider('ZOOM')
       setMessage('Clase creada correctamente.')
     } catch (creationError) {
       setError(creationError instanceof Error ? creationError.message : 'No se ha podido crear la clase. Comprueba el grupo y el horario y vuelve a intentarlo.')
@@ -240,7 +255,11 @@ export default function TeacherClassesPage() {
                 <option value="HYBRID">Híbrida</option>
               </select>
               {deliveryMode !== 'ONLINE' && <><label>Lugar / aula</label><input value={locationText} onChange={(e) => setLocationText(e.target.value)} placeholder="Ej. Aula 2" disabled={noGroups} /></>}
-              {deliveryMode !== 'IN_PERSON' && <><label>Enlace de videoclase</label><input type="url" value={onlineJoinUrl} onChange={(e) => setOnlineJoinUrl(e.target.value)} placeholder="https://meet.google.com/... (opcional)" disabled={noGroups} /><small className="muted">Si la sesión usa Google Meet, pega aquí su enlace. Si lo dejas vacío, Administración puede preparar Zoom de forma segura desde Language School.</small></>}
+              {deliveryMode !== 'IN_PERSON' && <><label>Plataforma de videoclase</label><select value={videoProvider} onChange={(e) => { setVideoProvider(e.target.value as OnlineClassProvider); setOnlineJoinUrl('') }} disabled={noGroups}>
+                <option value="JITSI">Jitsi Meet</option><option value="ZOOM">Zoom</option><option value="GOOGLE_MEET">Google Meet</option><option value="MICROSOFT_TEAMS">Microsoft Teams</option><option value="EXTERNAL">Enlace externo</option>
+              </select></>}
+              {deliveryMode !== 'IN_PERSON' && videoProvider !== 'JITSI' && <><label>Enlace de videoclase</label><input type="url" value={onlineJoinUrl} onChange={(e) => setOnlineJoinUrl(e.target.value)} required={providerNeedsManualUrl(videoProvider)} placeholder={videoProvider === 'GOOGLE_MEET' ? 'https://meet.google.com/...' : videoProvider === 'MICROSOFT_TEAMS' ? 'https://teams.microsoft.com/...' : 'https://...'} disabled={noGroups} /><small className="muted">{videoProvider === 'ZOOM' ? 'Puedes pegar un enlace Zoom o dejarlo pendiente para que Administración cree la reunión.' : 'Introduce un enlace https válido de la plataforma seleccionada.'}</small></>}
+              {deliveryMode !== 'IN_PERSON' && videoProvider === 'JITSI' && <div className="jitsi-classroom-notice"><span>◉</span><span>Language School generará una sala Jitsi segura al crear la clase. Entra tú primero para autenticarte como moderador.</span></div>}
               <label>Tema</label>
               <input value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="Ej. Travel & experiences" required disabled={noGroups} />
               <label>Descripción</label>
@@ -282,7 +301,7 @@ export default function TeacherClassesPage() {
                 <div className="class-delivery-summary">
                   <span className={`class-mode class-mode-${modeOf(selectedClass).toLowerCase()}`}>{modeLabel(modeOf(selectedClass))}</span>
                   {selectedClass.location_text && <span>📍 {selectedClass.location_text}</span>}
-                  {modeOf(selectedClass) !== 'IN_PERSON' && selectedClass.online_join_url && <a href={selectedClass.online_join_url} target="_blank" rel="noreferrer">Abrir videoclase ↗</a>}
+                  {modeOf(selectedClass) !== 'IN_PERSON' && selectedClass.online_join_url && <><span>◉ {onlineClassProviderLabel(getOnlineClassProvider(selectedClass.online_join_url, selectedClass.video_provider))}</span><a href={selectedClass.online_join_url} target="_blank" rel="noreferrer">Abrir aula ↗</a></>}
                   {modeOf(selectedClass) !== 'IN_PERSON' && !selectedClass.online_join_url && <span>Acceso online pendiente</span>}
                 </div>
               </div>
