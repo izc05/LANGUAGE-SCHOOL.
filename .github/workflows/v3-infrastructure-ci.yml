@@ -1,0 +1,102 @@
+name: V3 Infrastructure CI
+
+on:
+  pull_request:
+    paths:
+      - 'v3/infrastructure/**'
+      - '.github/workflows/v3-infrastructure-ci.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'v3/infrastructure/**'
+      - '.github/workflows/v3-infrastructure-ci.yml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate shell syntax
+        run: |
+          mapfile -d '' scripts < <(find v3/infrastructure -type f -name '*.sh' -print0)
+          if [ "${#scripts[@]}" -eq 0 ]; then
+            echo 'No infrastructure shell scripts found.' >&2
+            exit 1
+          fi
+          for script in "${scripts[@]}"; do
+            echo "bash -n $script"
+            bash -n "$script"
+          done
+
+      - name: Validate PocketBase loopback start wrapper
+        run: |
+          OUTPUT=$(PB_URL=http://127.0.0.1:8090 \
+            PB_BIN=/usr/bin/echo \
+            PB_DATA=/tmp/pb_data \
+            PB_MIGRATIONS=/tmp/pb_migrations \
+            bash v3/infrastructure/raspberry-pi/start-pocketbase.sh)
+          printf '%s' "$OUTPUT" | grep -q -- '--http=127.0.0.1:8090'
+
+          if PB_URL=http://0.0.0.0:8090 \
+            PB_BIN=/usr/bin/echo \
+            bash v3/infrastructure/raspberry-pi/start-pocketbase.sh; then
+            echo 'PocketBase start wrapper accepted a non-loopback origin.' >&2
+            exit 1
+          fi
+
+      - name: Reject secret-like environment keys
+        run: |
+          ENV_FILE='v3/infrastructure/.env.example'
+          test -f "$ENV_FILE"
+          if grep -E '^[[:space:]]*[A-Z0-9_]*(PASSWORD|SECRET|TOKEN|CREDENTIAL)[A-Z0-9_]*=' "$ENV_FILE"; then
+            echo 'Secret-like variable keys are not allowed in the tracked production env example.' >&2
+            exit 1
+          fi
+
+      - name: Verify pinned PocketBase Linux artifact checksums
+        run: |
+          source v3/infrastructure/.env.example
+          for ARCH in amd64 arm64; do
+            if [ "$ARCH" = 'amd64' ]; then
+              EXPECTED="$PB_SHA256_AMD64"
+            else
+              EXPECTED="$PB_SHA256_ARM64"
+            fi
+            ARCHIVE="pocketbase_${PB_VERSION}_linux_${ARCH}.zip"
+            curl --fail --location --retry 3 \
+              --output "$RUNNER_TEMP/$ARCHIVE" \
+              "https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}/$ARCHIVE"
+            echo "$EXPECTED  $RUNNER_TEMP/$ARCHIVE" | sha256sum --check
+          done
+
+      - name: Validate Nginx configuration
+        run: |
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y nginx
+          sudo install -d -m 0755 /opt/language-school/frontend
+          sed \
+            -e 's|__PROXY_LISTEN__|127.0.0.1:8080|g' \
+            -e 's|__PB_URL__|http://127.0.0.1:8090|g' \
+            v3/infrastructure/reverse-proxy/language-school.nginx.conf \
+            | sudo tee /etc/nginx/conf.d/language-school.conf >/dev/null
+          sudo nginx -t
+
+      - name: Validate Cloudflare ingress catch-all
+        run: |
+          CONFIG='v3/infrastructure/cloudflare/config.yml.example'
+          test -f "$CONFIG"
+          grep -q '^ingress:' "$CONFIG"
+          LAST_SERVICE=$(grep -E '^[[:space:]]+- service:' "$CONFIG" | tail -n 1 | sed 's/^[[:space:]]*//')
+          test "$LAST_SERVICE" = '- service: http_status:404' || {
+            echo 'Cloudflare ingress must end with a 404 catch-all.' >&2
+            exit 1
+          }
+
+      - name: Validate backup timer calendar
+        run: |
+          grep -q '^OnCalendar=\*-\*-\* 03:30:00$' v3/infrastructure/backups/language-school-backup.timer
+          systemd-analyze calendar '*-*-* 03:30:00'

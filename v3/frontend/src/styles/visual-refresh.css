@@ -1,0 +1,356 @@
+/*
+ * Visual refresh — boutique editorial direction selected for Language School.
+ * This layer only changes presentation. It deliberately does not alter routes,
+ * data, form controls, labels, or interaction behaviour.
+ */
+:root {
+  --ink: #301d2c;
+  --ink-soft: #563749;
+  --cream: #f7f0ea;
+  --paper: #fcf8f5;
+  --sage: #a8b56a;
+  --sage-dark: #667338;
+  --gold: #f08ba7;
+  --line: #eadfd9;
+  --muted: #806f79;
+  --white: #ffffff;
+  --rose: #ec5d85;
+  --rose-dark: #ad365d;
+  --plum: #2e1b2b;
+  --plum-soft: #573448;
+  --surface: rgba(255, 253, 251, .88);
+  --shadow: 0 18px 45px rgba(74, 37, 55, .09);
+}
+
+body {
+  background:
+    radial-gradient(circle at 87% 8%, rgba(236, 93, 133, .08), transparent 25rem),
+    var(--paper);
+}
+
+.eyebrow { color: var(--rose-dark); }
+.button {
+  border-radius: 12px;
+  transition: transform .2s ease, box-shadow .2s ease, background .2s ease, border-color .2s ease;
+}
+.button-primary {
+  background: linear-gradient(135deg, #e8537e, #c93f6c);
+  box-shadow: 0 12px 26px rgba(193, 54, 100, .22);
+}
+.button-primary:hover { box-shadow: 0 16px 34px rgba(193, 54, 100, .3); }
+.button-ghost,
+.button-outline {
+  border-color: rgba(197, 71, 108, .28);
+  color: var(--rose-dark);
+  background: rgba(255, 252, 250, .76);
+}
+
+/* Shared portal frame — used unchanged by Admin, Profesor and Alumno. */
+.dashboard-shell { background: #fcf8f5; }
+.dashboard-sidebar {
+  background:
+    radial-gradient(circle at 5% 10%, rgba(244, 117, 152, .22), transparent 19rem),
+    linear-gradient(160deg, #3b2336 0%, #241927 100%);
+  box-shadow: 10px 0 35px rgba(52, 25, 41, .08);
+}
+.dashboard-brand { border-color: rgba(255, 225, 235, .16); }
+.dashboard-brand small { color: #f4adc1; }
+.dashboard-nav button,
+.dashboard-nav a { color: #e6d7df; border-radius: 13px; }
+.dashboard-nav button:hover,
+.dashboard-nav button.active,
+.dashboard-nav a:hover,
+.dashboard-nav a.active { color: #fff; background: rgba(255, 177, 202, .16); }
+.nav-dot { border-color: #d99aae; }
+.dashboard-nav button.active .nav-dot,
+.dashboard-nav a.active .nav-dot { background: var(--rose); border-color: var(--rose); }
+.sidebar-footer { border-color: rgba(255, 225, 235, .16); }
+.sidebar-footer small { color: #caa7b5; }
+
+.dashboard-topbar {
+  min-height: 98px;
+  border-color: rgba(91, 53, 73, .09);
+  background: rgba(255, 252, 250, .78);
+  backdrop-filter: blur(18px);
+}
+.dashboard-topbar h1 { font-family: 'Playfair Display', Georgia, serif; color: var(--ink); font-size: 1.72rem; }
+.user-chip > span,
+.avatar-mini { background: #f8e1e8; color: var(--rose-dark); }
+.dashboard-content { max-width: 1540px; margin: 0 auto; }
+
+/* Surfaces and data presentation. */
+.panel,
+.metric-grid article,
+.admin-action-card,
+.public-course-card,
+.public-pricing-card,
+.public-teacher-card,
+.about-value-card {
+  border-color: rgba(91, 53, 73, .12);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.panel { border-radius: 22px; }
+.panel-heading { border-color: var(--line); }
+.panel-heading h3 { font-family: 'Playfair Display', Georgia, serif; font-size: 1.22rem; }
+.metric-grid article { border-radius: 18px; }
+.metric-grid article strong { color: var(--ink); }
+.status.success { color: #526321; background: #edf2da; }
+.status.info { color: #8e3654; background: #f9e5eb; }
+.status.warning { color: #83571b; background: #fff0d5; }
+.progress-line { background: #eee6e2; }
+.progress-line span { background: linear-gradient(90deg, #75873c, #b4c46b); }
+
+/* Cursos: one composed workspace instead of a narrow card and dead space. */
+.admin-course-workspace {
+  display: grid;
+  grid-template-columns: minmax(320px, .78fr) minmax(0, 1.72fr);
+  gap: 22px;
+  align-items: stretch;
+  margin-top: 24px;
+}
+.admin-course-workspace .course-admin-grid {
+  grid-template-columns: 1fr;
+  gap: 18px;
+  margin: 0;
+}
+.admin-course-workspace .groups-overview-panel { min-height: 100%; }
+.course-admin-card {
+  min-height: 470px;
+  align-content: start;
+  gap: 17px;
+  padding: 31px;
+  border-radius: 22px;
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.96) 0%, rgba(252,244,240,.92) 100%);
+}
+.course-admin-card::before {
+  content: '';
+  height: 5px;
+  margin: -31px -31px 9px;
+  border-radius: 22px 22px 0 0;
+  background: linear-gradient(90deg, var(--rose), #f6a0b7);
+}
+.course-card-number { color: #e9d8df; font-size: 3rem; line-height: 1; }
+.course-admin-card h3 { font-size: clamp(2rem, 3vw, 3rem); line-height: 1.04; }
+.course-admin-card p { color: var(--ink-soft); font-size: .9rem; }
+.course-admin-card dl > div,
+.teacher-card-metrics > div { border-color: var(--line); background: rgba(255,255,255,.5); }
+.course-admin-card dt,
+.course-capacity span { color: var(--muted); }
+.course-card-actions button,
+.teacher-card-actions button {
+  min-height: 44px;
+  border-color: rgba(197, 71, 108, .28);
+  border-radius: 11px;
+  color: var(--rose-dark);
+  background: rgba(255,255,255,.72);
+}
+.course-card-actions button:last-child { color: #fff; border-color: transparent; background: linear-gradient(135deg, #e8537e, #c93f6c); }
+
+.groups-overview-panel { padding-bottom: 8px; }
+.groups-overview-panel .panel-heading { min-height: 104px; padding: 24px 28px; }
+.group-row {
+  grid-template-columns: 68px minmax(180px, 1.55fr) minmax(150px, .9fr) minmax(110px, .7fr) auto;
+  gap: 18px;
+  min-height: 94px;
+  margin: 0 16px;
+  width: calc(100% - 32px);
+}
+.group-code { background: #f0f2e6; color: #61702d; }
+.admin-group-row:hover,
+.admin-group-row.selected {
+  margin-inline: 16px;
+  width: calc(100% - 32px);
+  padding-inline: 14px;
+  border-radius: 14px;
+  background: #fbf3f5;
+}
+.admin-group-row.selected { box-shadow: inset 3px 0 0 var(--rose); }
+
+/* Forms and list rows remain their existing controls, with clearer premium surfaces. */
+.admin-inline-create,
+.admin-enrollment-panel { box-shadow: var(--shadow); }
+.admin-create-grid input,
+.admin-create-grid select,
+.admin-create-grid textarea,
+.settings-list button,
+.admin-enrollment-list article,
+.admin-attendance-list article { border-color: var(--line); }
+.admin-group-actions button,
+.admin-enrollment-actions button,
+.admin-class-status-actions button,
+.admin-attendance-actions button,
+.admin-calendar-filters button { border-color: rgba(91, 53, 73, .16); color: var(--ink-soft); }
+
+@media (max-width: 1120px) {
+  .admin-course-workspace { grid-template-columns: minmax(290px, .85fr) minmax(0, 1.35fr); }
+  .group-row { grid-template-columns: 58px minmax(150px, 1.2fr) minmax(130px, .9fr) auto; }
+  .group-row > span:nth-last-child(2) { display: none; }
+}
+
+@media (max-width: 860px) {
+  .admin-course-workspace { grid-template-columns: 1fr; }
+  .course-admin-card { min-height: 0; }
+  .group-row { grid-template-columns: 58px 1fr; margin-inline: 14px; width: calc(100% - 28px); }
+  .admin-group-row:hover,
+  .admin-group-row.selected { margin-inline: 14px; width: calc(100% - 28px); }
+}
+
+@media (max-width: 760px) {
+  .dashboard-topbar h1 { font-size: 1.35rem; }
+  .course-admin-card { padding: 24px; }
+  .course-admin-card::before { margin: -24px -24px 9px; }
+  .groups-overview-panel .panel-heading { padding: 20px; }
+}
+
+/* Profesor y Alumno: same visual language, retaining their own workflows. */
+.teacher-page-heading h2,
+.student-page-heading h2 { color: var(--ink); }
+.private-space-badge {
+  min-width: 154px;
+  border-color: rgba(197, 71, 108, .18);
+  border-radius: 16px;
+  background: linear-gradient(135deg, #fff8fa, #f8e7ed);
+  box-shadow: 0 10px 24px rgba(110, 46, 73, .06);
+}
+.private-space-badge strong { color: var(--rose-dark); }
+
+.teacher-record-icon,
+.teacher-profile-avatar,
+.student-file-type,
+.student-resource-icon {
+  background: linear-gradient(145deg, #fbebf0, #f5dde5);
+  color: var(--rose-dark);
+}
+.teacher-answer-box,
+.teacher-profile-note,
+.student-feedback-box,
+.student-security-note {
+  border-color: rgba(197, 71, 108, .13);
+  background: #fff8f9;
+}
+
+.teacher-correction-list button.active,
+.teacher-student-picker button.active,
+.teacher-class-list button.active,
+.student-task-list > button.active {
+  background: #fbf0f3;
+  box-shadow: inset 3px 0 0 var(--rose);
+}
+.teacher-correction-list button.active,
+.teacher-student-picker button.active,
+.teacher-class-list button.active { border-radius: 13px; }
+.teacher-class-list time,
+.student-class-date span,
+.student-task-list b,
+.student-notice-meta span { color: var(--rose-dark); }
+
+.teacher-record-actions button,
+.teacher-student-files button,
+.teacher-class-status-actions button,
+.teacher-attendance-actions button,
+.student-file-actions button {
+  border-color: rgba(91, 53, 73, .16);
+  color: var(--ink-soft);
+  background: rgba(255,255,255,.75);
+}
+.teacher-record-actions button:hover,
+.teacher-student-files button:hover,
+.teacher-class-status-actions button:hover,
+.teacher-attendance-actions button:hover,
+.student-file-actions button:hover { background: #fdf1f4; }
+.teacher-attendance-actions button.active {
+  border-color: rgba(102, 115, 56, .32);
+  background: #edf2da;
+  color: #596828;
+}
+
+.student-task-state {
+  background: #f7e5eb;
+  color: var(--rose-dark);
+}
+.student-notice-list article.unread .student-notice-dot {
+  background: var(--rose);
+  box-shadow: 0 0 0 4px rgba(236, 93, 133, .13);
+}
+.student-notice-dot { background: #dfd4d8; }
+
+.filter-pills button.active {
+  border-color: var(--rose-dark);
+  background: var(--rose-dark);
+}
+.student-files-search,
+.media-search input {
+  border-color: rgba(91, 53, 73, .16);
+  background: rgba(255,255,255,.82);
+}
+
+/* Web pública: editorial, cálida y conectada con el logotipo existente. */
+.site-header {
+  border-color: rgba(91, 53, 73, .09);
+  background: rgba(255, 251, 248, .9);
+}
+.brand strong { color: var(--ink); }
+.main-nav a { color: var(--ink-soft); }
+.main-nav a.active,
+.main-nav a:hover { color: var(--rose-dark); }
+.hero-v3 {
+  background:
+    radial-gradient(circle at 82% 21%, rgba(236, 93, 133, .17), transparent 23rem),
+    radial-gradient(circle at 74% 75%, rgba(173, 54, 93, .08), transparent 30rem),
+    linear-gradient(135deg, #fffaf7 0%, #f9edea 100%);
+}
+.hero-copy h1 em { color: var(--rose-dark); }
+.trust-row span::before { color: var(--rose); }
+.portal-card { border-color: rgba(91, 53, 73, .13); }
+.portal-label { color: var(--rose-dark); }
+.hero-orbit { border-color: rgba(197, 71, 108, .2); }
+
+.section-soft { background: #f9f1ee; }
+.program-card,
+.article-card {
+  border-color: rgba(91, 53, 73, .12);
+  border-radius: 22px;
+  box-shadow: 0 14px 35px rgba(74, 37, 55, .05);
+}
+.program-card:hover,
+.article-card:hover { box-shadow: 0 20px 42px rgba(74, 37, 55, .11); }
+.pill { background: #fae5eb; color: var(--rose-dark); }
+.program-number { color: #eedce2; }
+.program-card a,
+.article-card a,
+.text-link { color: var(--rose-dark); }
+.step-row > span { color: var(--rose-dark); }
+.platform-band {
+  background:
+    radial-gradient(circle at 88% 15%, rgba(236, 93, 133, .25), transparent 23rem),
+    linear-gradient(145deg, #342033, #211823);
+}
+.platform-features div { border-color: rgba(255, 215, 228, .16); }
+.platform-features span { color: #fff; background: var(--rose); }
+.cta-panel {
+  border: 1px solid rgba(197, 71, 108, .12);
+  background: linear-gradient(135deg, #f9e6ec, #f5efdf);
+}
+.site-footer { background: #251a26; }
+
+.public-page-hero,
+.about-hero {
+  background:
+    radial-gradient(circle at 85% 20%, rgba(236, 93, 133, .14), transparent 28rem),
+    linear-gradient(180deg, #fffdfb 0%, #fbf3f0 100%);
+}
+.public-course-card,
+.public-pricing-card,
+.public-teacher-card,
+.about-value-card {
+  border-color: rgba(91, 53, 73, .12);
+  background: rgba(255, 253, 251, .92);
+}
+.public-pricing-card.featured {
+  border-color: rgba(197, 71, 108, .4);
+  box-shadow: 0 24px 60px rgba(150, 47, 88, .14);
+}
+.pricing-badge { background: #fae3ea; color: var(--rose-dark); }
+.public-teacher-photo { color: var(--rose-dark); }

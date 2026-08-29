@@ -1,0 +1,12 @@
+# Example only for a locally-managed Cloudflare Tunnel.
+# Do not commit the real tunnel UUID or credentials JSON.
+
+tunnel: <TUNNEL-UUID>
+credentials-file: /etc/cloudflared/<TUNNEL-UUID>.json
+
+ingress:
+  - hostname: languageschoolrocio.com
+    service: http://127.0.0.1:8083
+  - hostname: www.languageschoolrocio.com
+    service: http://127.0.0.1:8083
+  - service: http_status:404

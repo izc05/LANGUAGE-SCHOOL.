@@ -1,0 +1,11 @@
+[Unit]
+Description=Run Language School backup every night
+
+[Timer]
+OnCalendar=*-*-* 03:30:00
+Persistent=true
+RandomizedDelaySec=15m
+Unit=language-school-backup.service
+
+[Install]
+WantedBy=timers.target

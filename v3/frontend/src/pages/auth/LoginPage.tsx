@@ -1,0 +1,127 @@
+import { type FormEvent, useEffect, useState } from 'react'
+import { Link, useNavigate } from 'react-router'
+import { useAuth } from '../../features/auth/AuthProvider'
+import { useAcademyBrand } from '../../hooks/useAcademyBrand'
+import { getLoginErrorMessage } from '../../services/pocketbase/auth'
+import type { UserRole } from '../../services/pocketbase/types'
+
+function routeForRole(role: UserRole): string {
+  if (role === 'ADMIN') return '/admin'
+  if (role === 'TEACHER') return '/profesor'
+  return '/alumno'
+}
+
+export default function LoginPage() {
+  const navigate = useNavigate()
+  const { academyName, logoUrl, initials } = useAcademyBrand()
+  const { login, isDemoMode, ready, user, isAuthenticated } = useAuth()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!isDemoMode && ready && isAuthenticated && user) {
+      navigate(routeForRole(user.role), { replace: true })
+    }
+  }, [isAuthenticated, isDemoMode, navigate, ready, user])
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (isDemoMode) return
+
+    setSubmitting(true)
+    setError(null)
+
+    try {
+      const authenticatedUser = await login(email, password)
+      navigate(routeForRole(authenticatedUser.role), { replace: true })
+    } catch (loginError) {
+      setError(getLoginErrorMessage(loginError))
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <div className="auth-page">
+      <section className="auth-brand-panel">
+        <Link className="brand brand-light" to="/" aria-label={`${academyName} - Inicio`}>
+          {logoUrl
+            ? <img className="brand-logo-image" src={logoUrl} alt="" />
+            : <span className="brand-mark">{initials}</span>}
+          <span><strong>{academyName}</strong><small>English with confidence</small></span>
+        </Link>
+        <div className="auth-brand-copy">
+          <span className="eyebrow eyebrow-light">TU ESPACIO</span>
+          <h1>La clase continúa aquí.</h1>
+          <p>Accede a tus materiales, tareas, próximas clases y archivos privados desde un único lugar.</p>
+          <div className="auth-feature-list">
+            <span>Material organizado por alumno</span>
+            <span>Tareas y entregas</span>
+            <span>Calendario de clases</span>
+            <span>Archivos privados</span>
+          </div>
+        </div>
+        <small className="auth-note">
+          {isDemoMode ? 'Vista de demostración para revisar la plataforma.' : 'Acceso seguro a tu espacio privado.'}
+        </small>
+      </section>
+
+      <section className="auth-form-panel">
+        <div className="auth-card">
+          <span className="eyebrow">ACCESO A LA PLATAFORMA</span>
+          <h2>Bienvenido de nuevo.</h2>
+          <p className="muted">
+            {isDemoMode
+              ? 'Puedes recorrer las distintas vistas de la plataforma en modo demostración.'
+              : 'Introduce tu email y contraseña para acceder a tu espacio.'}
+          </p>
+
+          {error && <div className="cms-notice auth-error" role="alert">{error}</div>}
+
+          <form onSubmit={handleSubmit}>
+            <label htmlFor="email">Email</label>
+            <input
+              id="email"
+              type="email"
+              autoComplete="email"
+              placeholder="nombre@email.com"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              disabled={isDemoMode || submitting || !ready}
+              required
+            />
+            <label htmlFor="password">Contraseña</label>
+            <input
+              id="password"
+              type="password"
+              autoComplete="current-password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              disabled={isDemoMode || submitting || !ready}
+              required
+            />
+            <button className="button button-primary button-full" type="submit" disabled={isDemoMode || submitting || !ready}>
+              {!ready && !isDemoMode ? 'Comprobando sesión…' : submitting ? 'Entrando…' : 'Entrar'}
+            </button>
+          </form>
+
+          {isDemoMode && (
+            <>
+              <div className="demo-divider"><span>Vistas de desarrollo</span></div>
+              <div className="demo-links">
+                <Link to="/alumno">Demo alumno</Link>
+                <Link to="/profesor">Demo profesor</Link>
+                <Link to="/admin">Demo administrador</Link>
+              </div>
+            </>
+          )}
+
+          <Link className="back-link" to="/">← Volver a {academyName}</Link>
+        </div>
+      </section>
+    </div>
+  )
+}

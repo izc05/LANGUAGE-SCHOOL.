@@ -1,0 +1,41 @@
+.dashboard-sidebar {
+  overflow: hidden;
+}
+
+.dashboard-nav {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.24) transparent;
+  padding-right: 4px;
+}
+
+.dashboard-nav::-webkit-scrollbar {
+  width: 6px;
+}
+
+.dashboard-nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dashboard-nav::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.dashboard-nav a,
+.dashboard-nav button {
+  flex: 0 0 auto;
+}
+
+@media (max-width: 720px) {
+  .dashboard-sidebar {
+    overflow: visible;
+  }
+
+  .dashboard-nav {
+    overflow: visible;
+    padding-right: 0;
+  }
+}

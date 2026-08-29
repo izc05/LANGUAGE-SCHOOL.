@@ -1,0 +1,109 @@
+name: V3 PocketBase CI
+
+on:
+  pull_request:
+    paths:
+      - 'v3/pocketbase/**'
+      - '.github/workflows/v3-pocketbase-ci.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'v3/pocketbase/**'
+      - '.github/workflows/v3-pocketbase-ci.yml'
+
+jobs:
+  migrations:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PB_SUPERUSER_EMAIL: ci-superuser@example.com
+      PB_SUPERUSER_PASSWORD: CiSuperuserPass123!
+      PB_URL: http://127.0.0.1:8090
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download PocketBase 0.39.9
+        run: |
+          mkdir -p "$RUNNER_TEMP/pocketbase"
+          gh release download v0.39.9 \
+            --repo pocketbase/pocketbase \
+            --pattern 'pocketbase_0.39.9_linux_amd64.zip' \
+            --dir "$RUNNER_TEMP/pocketbase"
+          unzip -q "$RUNNER_TEMP/pocketbase/pocketbase_0.39.9_linux_amd64.zip" -d "$RUNNER_TEMP/pocketbase"
+          chmod +x "$RUNNER_TEMP/pocketbase/pocketbase"
+
+      - name: Apply V3 migrations to temporary database
+        run: |
+          mkdir -p "$RUNNER_TEMP/language-school-pb-data"
+          set +e
+          MIGRATION_OUTPUT=$("$RUNNER_TEMP/pocketbase/pocketbase" migrate up \
+            --dir="$RUNNER_TEMP/language-school-pb-data" \
+            --migrationsDir="$GITHUB_WORKSPACE/v3/pocketbase/pb_migrations" 2>&1)
+          MIGRATION_EXIT=$?
+          set -e
+          printf '%s\n' "$MIGRATION_OUTPUT"
+
+          if [ "$MIGRATION_EXIT" -ne 0 ] || printf '%s\n' "$MIGRATION_OUTPUT" | grep -Eqi '(^|[[:space:]])Error:|failed to apply migration'; then
+            echo 'PocketBase migration step reported an error.' >&2
+            exit 1
+          fi
+
+      - name: Create temporary CI superuser
+        run: |
+          "$RUNNER_TEMP/pocketbase/pocketbase" superuser create \
+            "$PB_SUPERUSER_EMAIL" "$PB_SUPERUSER_PASSWORD" \
+            --dir="$RUNNER_TEMP/language-school-pb-data"
+
+      - name: Start temporary PocketBase server
+        run: |
+          nohup "$RUNNER_TEMP/pocketbase/pocketbase" serve \
+            --http=127.0.0.1:8090 \
+            --dir="$RUNNER_TEMP/language-school-pb-data" \
+            --migrationsDir="$GITHUB_WORKSPACE/v3/pocketbase/pb_migrations" \
+            >"$RUNNER_TEMP/pocketbase-server.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/pocketbase-server.pid"
+
+          for attempt in {1..30}; do
+            if curl -fsS "$PB_URL/api/health" >/dev/null; then
+              echo 'PocketBase is ready.'
+              exit 0
+            fi
+            sleep 1
+          done
+
+          echo 'PocketBase failed to start.' >&2
+          cat "$RUNNER_TEMP/pocketbase-server.log" >&2
+          exit 1
+
+      - name: Run ADMIN academic flow smoke test
+        run: bash "$GITHUB_WORKSPACE/v3/pocketbase/ci/admin-flow-smoke.sh"
+
+      - name: Run student and teacher isolation smoke test
+        run: bash "$GITHUB_WORKSPACE/v3/pocketbase/ci/security-isolation-smoke.sh"
+
+      - name: Stop temporary PocketBase server
+        if: always()
+        run: |
+          if [ -f "$RUNNER_TEMP/pocketbase-server.pid" ]; then
+            kill "$(cat "$RUNNER_TEMP/pocketbase-server.pid")" 2>/dev/null || true
+            wait "$(cat "$RUNNER_TEMP/pocketbase-server.pid")" 2>/dev/null || true
+          fi
+
+      - name: Roll back latest migration
+        if: success()
+        run: |
+          set +e
+          ROLLBACK_OUTPUT=$("$RUNNER_TEMP/pocketbase/pocketbase" migrate down 1 \
+            --dir="$RUNNER_TEMP/language-school-pb-data" \
+            --migrationsDir="$GITHUB_WORKSPACE/v3/pocketbase/pb_migrations" 2>&1)
+          ROLLBACK_EXIT=$?
+          set -e
+          printf '%s\n' "$ROLLBACK_OUTPUT"
+
+          if [ "$ROLLBACK_EXIT" -ne 0 ] || printf '%s\n' "$ROLLBACK_OUTPUT" | grep -Eqi '(^|[[:space:]])Error:|failed to revert migration|failed to apply migration'; then
+            echo 'PocketBase rollback step reported an error.' >&2
+            exit 1
+          fi

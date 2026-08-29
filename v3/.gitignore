@@ -1,0 +1,45 @@
+# Dependencies and builds
+node_modules/
+dist/
+build/
+coverage/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# PocketBase runtime data
+pb_data/
+**/pb_data/
+pb_backups/
+**/pb_backups/
+
+# Private/user uploads outside PocketBase runtime
+uploads/
+private-files/
+student-files/
+
+# Real backups
+backups/*.zip
+backups/*.tar
+backups/*.tar.gz
+backups/*.db
+backups/*.sqlite*
+
+# Logs
+*.log
+logs/
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Temporary files
+.tmp/
+tmp/
+*.tmp

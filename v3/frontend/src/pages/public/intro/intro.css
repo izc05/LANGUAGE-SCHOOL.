@@ -1,0 +1,240 @@
+.intro-loading,
+.intro-gate {
+  width: 100%;
+  min-width: 320px;
+  height: 100dvh;
+}
+
+.intro-loading {
+  display: grid;
+  place-items: center;
+  color: #9c7186;
+  background: #fffafc;
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.intro-gate {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  color: #29252a;
+  background: #fffafc;
+}
+
+.intro-canvas-wrap {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  transition: filter 900ms ease, transform 900ms ease;
+}
+
+.intro-gate::after {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  background:
+    radial-gradient(circle at 52% 48%, transparent 0 24%, rgba(255, 250, 252, .05) 48%, rgba(247, 216, 231, .12) 100%),
+    linear-gradient(180deg, rgba(255, 255, 255, .12), rgba(255, 246, 250, .05));
+  content: '';
+  pointer-events: none;
+}
+
+.intro-soft-glow {
+  position: absolute;
+  z-index: 1;
+  width: 34rem;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  filter: blur(70px);
+  opacity: .2;
+  pointer-events: none;
+}
+
+.intro-glow-a { top: -13rem; left: 12vw; background: #ffddea; }
+.intro-glow-b { right: -12rem; bottom: -14rem; background: #eca1c5; opacity: .14; }
+
+.intro-brand-lockup {
+  position: absolute;
+  z-index: 4;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  width: min(34rem, 90vw);
+  flex-direction: column;
+  align-items: center;
+  transform: translate(-50%, 9.4rem);
+  text-align: center;
+  pointer-events: none;
+}
+
+.intro-brand-language,
+.intro-brand-school,
+.intro-brand-rocio {
+  opacity: 0;
+  animation-duration: 7.6s;
+  animation-iteration-count: 1;
+  animation-fill-mode: forwards;
+  animation-timing-function: cubic-bezier(.22, 1, .36, 1);
+}
+
+.intro-brand-language {
+  color: #484047;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(.95rem, 1.65vw, 1.35rem);
+  letter-spacing: .28em;
+  animation-name: intro-reveal-language;
+}
+
+.intro-brand-school {
+  margin-top: -.08rem;
+  color: #d62974;
+  font-family: 'Segoe Script', 'Bradley Hand', 'Brush Script MT', cursive;
+  font-size: clamp(3.6rem, 7vw, 6.7rem);
+  font-weight: 600;
+  line-height: .98;
+  letter-spacing: -.07em;
+  text-shadow: 0 20px 55px rgba(214, 41, 116, .12);
+  animation-name: intro-reveal-school;
+}
+
+.intro-brand-rocio {
+  margin-top: .42rem;
+  color: #625960;
+  font-size: clamp(.66rem, 1vw, .82rem);
+  font-weight: 650;
+  letter-spacing: .46em;
+  animation-name: intro-reveal-rocio;
+}
+
+.skip-intro {
+  position: absolute;
+  z-index: 6;
+  top: clamp(1.1rem, 3vw, 2rem);
+  left: clamp(1.1rem, 3vw, 2rem);
+  padding: .64rem .92rem;
+  border: 1px solid rgba(214, 41, 116, .12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .56);
+  color: #8e7381;
+  font-size: .65rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+}
+
+.skip-intro:hover { border-color: rgba(214, 41, 116, .28); color: #d62974; }
+
+.intro-entry-actions {
+  position: absolute;
+  z-index: 6;
+  left: 50%;
+  bottom: clamp(2rem, 5vh, 3.8rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .75rem;
+  opacity: 0;
+  transform: translate(-50%, 18px);
+  transition: opacity 700ms cubic-bezier(.22, 1, .36, 1), transform 700ms cubic-bezier(.22, 1, .36, 1);
+  pointer-events: none;
+}
+
+.intro-settled .intro-entry-actions {
+  opacity: 1;
+  transform: translate(-50%, 0);
+  pointer-events: auto;
+}
+
+.intro-enter-button {
+  display: flex;
+  min-width: 10.5rem;
+  align-items: center;
+  justify-content: center;
+  gap: .9rem;
+  padding: .9rem 1.25rem;
+  border: 1px solid rgba(214, 41, 116, .2);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .66);
+  box-shadow: 0 16px 55px rgba(159, 76, 111, .12);
+  color: #51454c;
+  font-size: .72rem;
+  font-weight: 780;
+  letter-spacing: .2em;
+  cursor: pointer;
+  backdrop-filter: blur(16px);
+  transition: transform 220ms ease, background 220ms ease, color 220ms ease, box-shadow 220ms ease;
+}
+
+.intro-enter-button:hover { transform: translateY(-2px); background: #d62974; color: white; box-shadow: 0 18px 60px rgba(214, 41, 116, .25); }
+.intro-enter-button:active { transform: translateY(0) scale(.985); }
+.intro-enter-button:disabled { opacity: .4; cursor: default; }
+.intro-enter-arrow { font-size: 1rem; letter-spacing: 0; }
+.intro-entry-actions p { margin: 0; color: #a28a96; font-size: .61rem; letter-spacing: .08em; }
+
+.intro-enter-button:focus-visible,
+.skip-intro:focus-visible {
+  outline: 3px solid rgba(214, 41, 116, .28);
+  outline-offset: 4px;
+}
+
+.intro-static-globe {
+  position: absolute;
+  top: 42%;
+  left: 50%;
+  width: min(19rem, 65vw);
+  aspect-ratio: 1;
+  border: 2px solid rgba(214, 41, 116, .48);
+  border-radius: 50%;
+  background: radial-gradient(circle at 34% 28%, #fff, #f6b2d0 42%, #d62974 100%);
+  box-shadow: 0 0 90px rgba(214, 41, 116, .18);
+  transform: translate(-50%, -65%);
+}
+
+@keyframes intro-reveal-language {
+  0%, 49% { opacity: 0; transform: translateY(14px); filter: blur(7px); }
+  59%, 100% { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+
+@keyframes intro-reveal-school {
+  0%, 56% { opacity: 0; transform: translateY(18px) scale(.96); filter: blur(9px); }
+  67%, 100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+
+@keyframes intro-reveal-rocio {
+  0%, 63% { opacity: 0; transform: translateY(11px); filter: blur(6px); }
+  75%, 100% { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+
+.intro-settled .intro-brand-language,
+.intro-settled .intro-brand-school,
+.intro-settled .intro-brand-rocio,
+.reduced-motion .intro-brand-language,
+.reduced-motion .intro-brand-school,
+.reduced-motion .intro-brand-rocio {
+  opacity: 1;
+  animation: none;
+  filter: none;
+  transform: none;
+}
+
+@media (max-width: 760px) {
+  .intro-canvas-wrap { transform: scale(.88); transform-origin: center; }
+  .intro-brand-lockup { transform: translate(-50%, 7.7rem) scale(.82); }
+  .intro-entry-actions { bottom: 2rem; }
+  .skip-intro { top: 1rem; left: 1rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intro-gate *,
+  .intro-gate *::before,
+  .intro-gate *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,247 @@
+.admin-academic-header-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.admin-create-wide {
+  grid-column: 1 / -1;
+}
+
+.course-admin-card.course-archived {
+  opacity: .68;
+}
+
+.admin-group-row {
+  width: 100%;
+  padding-inline: 0;
+  border-top: 0;
+  border-left: 0;
+  border-right: 0;
+  background: transparent;
+  text-align: left;
+  transition: background .18s ease, padding .18s ease;
+}
+
+.admin-group-row:hover,
+.admin-group-row.selected {
+  margin-inline: -8px;
+  width: calc(100% + 16px);
+  padding-inline: 8px;
+  border-radius: 12px;
+  background: #f5f8f4;
+}
+
+.admin-enrollment-panel {
+  display: grid;
+  gap: 16px;
+}
+
+.admin-group-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.admin-group-actions button,
+.admin-enrollment-actions button,
+.admin-class-status-actions button,
+.admin-attendance-actions button,
+.admin-calendar-filters button {
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: #fff;
+  color: var(--ink-soft);
+  font-size: .7rem;
+  font-weight: 700;
+}
+
+.admin-group-actions button:hover,
+.admin-enrollment-actions button:hover,
+.admin-class-status-actions button:hover,
+.admin-attendance-actions button:hover,
+.admin-calendar-filters button:hover {
+  background: #f4f7f4;
+}
+
+.admin-enrollment-list {
+  display: grid;
+}
+
+.admin-enrollment-list article {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 13px;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.admin-enrollment-list article:last-child {
+  border-bottom: 0;
+}
+
+.admin-enrollment-list article > div:nth-child(2) {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.admin-enrollment-list small {
+  color: var(--muted);
+}
+
+.admin-enrollment-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.admin-calendar-filters {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(180px, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.admin-calendar-filters > div {
+  display: grid;
+  gap: 7px;
+}
+
+.admin-real-calendar .week-calendar {
+  grid-template-columns: repeat(7, minmax(145px, 1fr));
+  overflow-x: auto;
+}
+
+.admin-real-calendar .calendar-day {
+  min-height: 330px;
+}
+
+.admin-real-calendar .calendar-class.selected {
+  box-shadow: inset 0 0 0 2px var(--sage-dark);
+  background: #edf4ee;
+}
+
+.admin-calendar-empty {
+  display: grid;
+  place-items: center;
+  min-height: 72px;
+  color: var(--muted);
+  font-size: .7rem;
+}
+
+.admin-class-attendance {
+  display: grid;
+  gap: 18px;
+}
+
+.admin-class-detail-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.admin-class-detail-heading h3 {
+  margin: 5px 0;
+}
+
+.admin-class-detail-heading p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.admin-class-status-actions {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.admin-attendance-list {
+  display: grid;
+}
+
+.admin-attendance-list article {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 13px;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.admin-attendance-list article:last-child {
+  border-bottom: 0;
+}
+
+.admin-attendance-list article > div:nth-child(2) {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.admin-attendance-list small {
+  color: var(--muted);
+}
+
+.admin-attendance-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.admin-attendance-actions button.active {
+  border-color: var(--sage-dark);
+  background: #edf4ee;
+  color: var(--sage-dark);
+}
+
+@media (max-width: 800px) {
+  .admin-academic-header-actions {
+    justify-content: flex-start;
+  }
+
+  .admin-enrollment-list article,
+  .admin-attendance-list article {
+    grid-template-columns: auto 1fr;
+  }
+
+  .admin-enrollment-actions,
+  .admin-attendance-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+
+  .admin-calendar-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-class-detail-heading {
+    flex-direction: column;
+  }
+
+  .admin-class-status-actions {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 560px) {
+  .admin-academic-header-actions {
+    display: grid;
+    width: 100%;
+  }
+
+  .admin-academic-header-actions .button {
+    width: 100%;
+  }
+}

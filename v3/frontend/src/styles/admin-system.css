@@ -1,0 +1,80 @@
+.system-status-page {
+  display: grid;
+  gap: 1.2rem;
+}
+
+.system-status-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.system-status-card {
+  display: grid;
+  gap: 0.65rem;
+  min-height: 170px;
+  align-content: start;
+}
+
+.system-status-value {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-size: 1.35rem;
+}
+
+.system-status-dot {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 5px rgba(28, 43, 58, 0.06);
+}
+
+.system-status-dot.ok {
+  background: #1f9d5c;
+}
+
+.system-status-dot.down {
+  background: #c53b3b;
+}
+
+.system-status-number {
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+}
+
+.system-status-origin {
+  overflow-wrap: anywhere;
+  font-size: 1rem;
+}
+
+.system-status-card small,
+.system-status-detail span {
+  color: var(--text-muted, #68717a);
+}
+
+.system-status-checklist {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.system-status-checklist > div {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.85rem 0.95rem;
+  border-radius: 14px;
+  background: rgba(245, 242, 238, 0.7);
+}
+
+@media (max-width: 1080px) {
+  .system-status-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .system-status-grid,
+  .system-status-checklist {
+    grid-template-columns: 1fr;
+  }
+}
