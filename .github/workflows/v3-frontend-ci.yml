@@ -10,6 +10,10 @@ on:
       - main
     paths:
       - 'v3/frontend/**'
+      - '.github/workflows/v3-frontend-ci.yml'
+
+permissions:
+  contents: read
 
 jobs:
   build:
@@ -32,5 +36,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build V3 frontend
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Build V3 frontend in connected mode
+        env:
+          VITE_APP_MODE: connected
+          VITE_POCKETBASE_URL: http://127.0.0.1:8090
         run: npm run build
