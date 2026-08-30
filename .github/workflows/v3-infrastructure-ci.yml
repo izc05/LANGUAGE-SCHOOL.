@@ -12,6 +12,9 @@ on:
       - 'v3/infrastructure/**'
       - '.github/workflows/v3-infrastructure-ci.yml'
 
+permissions:
+  contents: read
+
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -84,6 +87,18 @@ jobs:
             v3/infrastructure/reverse-proxy/language-school.nginx.conf \
             | sudo tee /etc/nginx/conf.d/language-school.conf >/dev/null
           sudo nginx -t
+
+      - name: Validate mandatory security headers
+        run: |
+          CONFIG='v3/infrastructure/reverse-proxy/language-school.nginx.conf'
+          grep -Fq 'X-Content-Type-Options "nosniff"' "$CONFIG"
+          grep -Fq 'X-Frame-Options "SAMEORIGIN"' "$CONFIG"
+          grep -Fq 'Strict-Transport-Security "max-age=31536000"' "$CONFIG"
+          grep -Fq 'Content-Security-Policy ' "$CONFIG"
+          grep -Fq "object-src 'none'" "$CONFIG"
+          grep -Fq "base-uri 'self'" "$CONFIG"
+          grep -Fq "connect-src 'self'" "$CONFIG"
+          grep -Fq 'location ^~ /_/' "$CONFIG"
 
       - name: Validate Cloudflare ingress catch-all
         run: |
