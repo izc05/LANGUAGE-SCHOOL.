@@ -2,7 +2,7 @@ import type { RecordModel } from 'pocketbase'
 import { isDemoMode } from '../../config/environment'
 import { collections } from './collections'
 import { pb } from './client'
-import { demoSiteSettings, type SiteSettingsInput, type SiteSettingsRecord } from './siteManagement'
+import { defaultEnrollmentTermsText, demoSiteSettings, type SiteSettingsInput, type SiteSettingsRecord } from './siteManagement'
 
 export type PublicCourseRecord = RecordModel & {
   title: string
@@ -60,6 +60,7 @@ export const connectedPublicSettingsFallback: PublicSettings = {
   cookiePolicyText: '',
   privacyPolicyText: '',
   legalNoticeText: '',
+  enrollmentTermsText: defaultEnrollmentTermsText,
   logoUrl: '',
 }
 
@@ -130,6 +131,7 @@ export async function getPublicSettings(): Promise<PublicSettings> {
     cookiePolicyText: record.legal_texts?.cookie_policy || '',
     privacyPolicyText: record.legal_texts?.privacy_policy || '',
     legalNoticeText: record.legal_texts?.legal_notice || '',
+    enrollmentTermsText: record.legal_texts?.enrollment_terms || defaultEnrollmentTermsText,
     logoUrl: record.logo ? pb.files.getURL(record, record.logo, { thumb: '160x160' }) : '',
   }
 }

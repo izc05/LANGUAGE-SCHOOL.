@@ -25,6 +25,7 @@ const publicMeta: Record<string, PageMeta> = {
   '/cookies': { title: 'Política de cookies · Language School', description: 'Consulta y configura el uso de cookies y tecnologías similares en Language School.' },
   '/privacidad': { title: 'Política de privacidad · Language School', description: 'Información sobre privacidad y tratamiento de datos en Language School.' },
   '/aviso-legal': { title: 'Aviso legal · Language School', description: 'Información legal y condiciones de uso de Language School.' },
+  '/condiciones-de-matricula': { title: 'Condiciones de matrícula · Language School', description: 'Consulta cómo se formaliza la matrícula y las condiciones académicas aplicables.' },
 }
 
 function applyPageMeta(pathname: string) {
@@ -227,6 +228,7 @@ export default function SiteShell({ children }: SiteShellProps) {
             <Link to="/aviso-legal">Aviso legal</Link>
             <Link to="/privacidad">Privacidad</Link>
             <Link to="/cookies">Cookies</Link>
+            <Link to="/condiciones-de-matricula">Condiciones de matrícula</Link>
             {settings.cookieBannerEnabled && <button className="footer-cookie-settings" type="button" onClick={requestCookieSettings}>Configurar cookies</button>}
             <Link to="/acceso">Área alumnos</Link>
           </div>

@@ -48,6 +48,21 @@ test('el footer permite reabrir la configuración de cookies', async ({ page }) 
   await expect(page.getByText('Configura tus preferencias.')).toBeVisible()
 })
 
+test('un consentimiento de cookies caducado se vuelve a solicitar', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.localStorage.setItem('language-school-cookie-consent-v1', JSON.stringify({
+      necessary: true,
+      preferences: true,
+      analytics: true,
+      marketing: true,
+      updatedAt: '2020-01-01T00:00:00.000Z',
+    }))
+  })
+
+  await page.goto('/programas')
+  await expect(page.locator('.cookie-consent-card')).toBeVisible()
+})
+
 test('15A: WhatsApp usa número normalizado, mensaje administrable y botón móvil accesible', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/programas')
@@ -129,6 +144,11 @@ test('las rutas legales públicas contienen información estructurada y conserva
   await expect(page.getByRole('heading', { name: 'Identificación del titular' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Condiciones de uso' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Legislación aplicable' })).toBeVisible()
+
+  await page.goto('/condiciones-de-matricula')
+  await expect(page.getByRole('heading', { name: 'Cómo se formaliza la matrícula' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Condiciones generales de matrícula' })).toBeVisible()
+  await expect(page.getByText('Las solicitudes de baja, cancelación o modificación deben comunicarse por escrito a la academia.')).toBeVisible()
 })
 
 test('ADMIN configura identidad legal y se publica sin tocar código', async ({ page }) => {

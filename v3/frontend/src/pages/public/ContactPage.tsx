@@ -106,7 +106,7 @@ export default function ContactPage() {
             <div className="contact-v2-hero-copy">
               <span className="eyebrow">CONTACTO · LANGUAGE SCHOOL</span>
               <h1>Cuéntanos qué quieres conseguir.</h1>
-              <p>Edad, nivel aproximado, objetivo o simplemente una duda. Con esa información podemos darte una primera orientación útil.</p>
+              <p>Nivel aproximado, objetivo o simplemente una duda. Con esa información podemos darte una primera orientación útil.</p>
               <div className="contact-v2-direct" aria-label="Datos de contacto de la academia">
                 {settings.phone && <a href={`tel:${settings.phone}`}><small>TELÉFONO</small><strong>{settings.phone}</strong></a>}
                 {settings.email && <a href={`mailto:${settings.email}`}><small>EMAIL</small><strong>{settings.email}</strong></a>}
@@ -145,6 +145,7 @@ export default function ContactPage() {
               <div className="contact-privacy-layer" role="note">
                 <strong>Información básica de privacidad</strong>
                 <p><b>Responsable:</b> {privacyOwner}. <b>Finalidad:</b> atender tu consulta y orientarte sobre los servicios solicitados. <b>Base:</b> medidas precontractuales a petición de la persona interesada. <b>Derechos:</b> acceso, rectificación, supresión, oposición, limitación y portabilidad cuando proceda.</p>
+                <p>Si la consulta se refiere a una persona menor de 14 años, debe realizarla su padre, madre o representante legal.</p>
                 <Link to="/privacidad">Ver Política de privacidad completa →</Link>
               </div>
               {!isDemoMode && (

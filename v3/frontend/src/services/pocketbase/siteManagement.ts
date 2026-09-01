@@ -55,7 +55,18 @@ export type SiteSettingsInput = {
   cookiePolicyText: string
   privacyPolicyText: string
   legalNoticeText: string
+  enrollmentTermsText: string
 }
+
+export const defaultEnrollmentTermsText = `La información de programas y tarifas de esta web es orientativa y no constituye por sí sola una matrícula ni un cobro online. La matrícula se formaliza cuando la academia confirma por escrito la plaza, el grupo, el horario, el precio total y las condiciones aplicables.
+
+Antes de formalizarla se facilitarán las condiciones concretas del programa, incluidos duración, calendario, materiales, forma y fechas de pago. Cualquier cambio de grupo, horario o recuperación de clase se valorará según disponibilidad y se confirmará con la academia.
+
+Las solicitudes de baja, cancelación o modificación deben comunicarse por escrito a la academia. La confirmación de matrícula indicará, cuando proceda, las condiciones económicas aplicables a cada caso.
+
+El acceso al área privada, las videoclases y los materiales es personal y se limita al alumno matriculado. No se permite compartir credenciales, enlaces de clase o materiales sin autorización. Las clases no se graban salvo información previa y autorización cuando resulte necesaria.
+
+Cuando el alumno sea menor, la matrícula y las autorizaciones necesarias serán gestionadas por su padre, madre o representante legal. Para consultas, incidencias o reclamaciones puedes escribir a languageschool_rocioruiz@hotmail.com.`
 
 export const demoPricingPlans: PricingPlanRecord[] = [
   {
@@ -89,6 +100,7 @@ export const demoSiteSettings: SiteSettingsInput = {
   cookiePolicyText: '',
   privacyPolicyText: '',
   legalNoticeText: '',
+  enrollmentTermsText: defaultEnrollmentTermsText,
 }
 
 function requireAdmin() {
@@ -172,6 +184,7 @@ export async function saveSiteSettings(input: SiteSettingsInput, logo?: File | n
     cookie_policy: input.cookiePolicyText.trim(),
     privacy_policy: input.privacyPolicyText.trim(),
     legal_notice: input.legalNoticeText.trim(),
+    enrollment_terms: input.enrollmentTermsText.trim(),
   }))
   if (logo) payload.set('logo', logo)
 
@@ -200,5 +213,6 @@ export function settingsToInput(record: SiteSettingsRecord | null): SiteSettings
     cookiePolicyText: record.legal_texts?.cookie_policy || '',
     privacyPolicyText: record.legal_texts?.privacy_policy || '',
     legalNoticeText: record.legal_texts?.legal_notice || '',
+    enrollmentTermsText: record.legal_texts?.enrollment_terms || defaultEnrollmentTermsText,
   }
 }

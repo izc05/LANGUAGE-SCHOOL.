@@ -4,7 +4,7 @@ import { isDemoMode } from '../../config/environment'
 import { demoSiteSettings } from '../../services/pocketbase/siteManagement'
 import { connectedPublicSettingsFallback, getPublicSettings, type PublicSettings } from '../../services/pocketbase/publicAcademy'
 
-type LegalPageKind = 'cookies' | 'privacy' | 'legal'
+type LegalPageKind = 'cookies' | 'privacy' | 'legal' | 'enrollment'
 type LegalPageProps = { kind: LegalPageKind }
 
 type LegalSectionProps = {
@@ -12,7 +12,7 @@ type LegalSectionProps = {
   children: ReactNode
 }
 
-const metadata: Record<LegalPageKind, { eyebrow: string; title: string; intro: string; field: keyof Pick<PublicSettings, 'cookiePolicyText' | 'privacyPolicyText' | 'legalNoticeText'> }> = {
+const metadata: Record<LegalPageKind, { eyebrow: string; title: string; intro: string; field: keyof Pick<PublicSettings, 'cookiePolicyText' | 'privacyPolicyText' | 'legalNoticeText' | 'enrollmentTermsText'> }> = {
   cookies: {
     eyebrow: 'PRIVACIDAD · COOKIES',
     title: 'Política de cookies',
@@ -31,15 +31,21 @@ const metadata: Record<LegalPageKind, { eyebrow: string; title: string; intro: s
     intro: 'Identificación del responsable de este sitio y condiciones generales de acceso y utilización de los servicios digitales de Language School.',
     field: 'legalNoticeText',
   },
+  enrollment: {
+    eyebrow: 'MATRÍCULA · CONDICIONES',
+    title: 'Condiciones de matrícula',
+    intro: 'Información previa sobre cómo se formaliza una matrícula y las condiciones académicas aplicables.',
+    field: 'enrollmentTermsText',
+  },
 }
 
 function LegalSection({ title, children }: LegalSectionProps) {
   return <section className="legal-content-section"><h2>{title}</h2><div>{children}</div></section>
 }
 
-function AdditionalText({ text }: { text: string }) {
+function AdditionalText({ text, title = 'Información adicional de la academia' }: { text: string; title?: string }) {
   if (!text.trim()) return null
-  return <LegalSection title="Información adicional de la academia"><div className="legal-custom-text">{text.trim()}</div></LegalSection>
+  return <LegalSection title={title}><div className="legal-custom-text">{text.trim()}</div></LegalSection>
 }
 
 export default function LegalPage({ kind }: LegalPageProps) {
@@ -156,7 +162,7 @@ export default function LegalPage({ kind }: LegalPageProps) {
                 </LegalSection>
 
                 <LegalSection title="5. Duración y actualización">
-                  <p>La preferencia de consentimiento se conserva hasta que la cambies o elimines los datos del sitio desde el navegador. Si se incorporan nuevos servicios opcionales, esta política y el panel deberán actualizarse antes de activarlos.</p>
+                  <p>La preferencia de consentimiento se conserva durante un máximo de 24 meses, salvo que la cambies o elimines los datos del sitio desde el navegador. Si se incorporan nuevos servicios opcionales, esta política y el panel deberán actualizarse antes de activarlos.</p>
                 </LegalSection>
               </>
             )}
@@ -202,7 +208,24 @@ export default function LegalPage({ kind }: LegalPageProps) {
               </>
             )}
 
-            <AdditionalText text={additionalText} />
+            {kind === 'enrollment' && (
+              <>
+                <LegalSection title="1. Cómo se formaliza la matrícula">
+                  <p>La publicación de programas y tarifas tiene carácter informativo. Esta web no formaliza por sí sola una matrícula ni cobra pagos online: la academia confirma individualmente plaza, grupo, horario, precio y condiciones antes de activar el acceso privado.</p>
+                </LegalSection>
+                <LegalSection title="2. Información que debe confirmarse antes de contratar">
+                  <p>Antes de una matrícula, la academia facilitará las condiciones aplicables al programa: identidad del titular, características del servicio, duración, precio total e impuestos, forma y calendario de pago, materiales, política de bajas, recuperaciones y cambios, así como el canal de reclamaciones.</p>
+                </LegalSection>
+                <LegalSection title="3. Menores y clases online">
+                  <p>Cuando el alumno sea menor, la matrícula y las autorizaciones necesarias deben ser gestionadas por su padre, madre o representante legal. Las reglas de uso de videoclases, materiales, imagen, grabaciones y comunicación con menores deben quedar expresamente confirmadas antes de activar el servicio.</p>
+                </LegalSection>
+                <LegalSection title="4. Desistimiento y contenidos digitales">
+                  <p>Si en el futuro se habilita contratación o pago a distancia, la academia informará antes de contratar sobre el derecho de desistimiento y, cuando proceda, recabará las manifestaciones expresas exigidas para iniciar un servicio o facilitar contenido digital antes de que venza ese plazo.</p>
+                </LegalSection>
+              </>
+            )}
+
+            <AdditionalText text={additionalText} title={kind === 'enrollment' ? '5. Condiciones generales de matrícula' : undefined} />
           </div>
         </div>
       </section>

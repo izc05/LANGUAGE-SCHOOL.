@@ -87,6 +87,7 @@ export default function App() {
         <Route path="/cookies" element={<LegalPage kind="cookies" />} />
         <Route path="/privacidad" element={<LegalPage kind="privacy" />} />
         <Route path="/aviso-legal" element={<LegalPage kind="legal" />} />
+        <Route path="/condiciones-de-matricula" element={<LegalPage kind="enrollment" />} />
         <Route path="/acceso" element={<LoginPage />} />
         <Route path="/activar-cuenta" element={<AccountActivationPage />} />
         <Route path="/recuperar-cuenta" element={<PasswordRecoveryPage />} />

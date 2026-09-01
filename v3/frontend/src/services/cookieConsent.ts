@@ -11,6 +11,10 @@ export type CookieConsentCategory = 'necessary' | 'preferences' | 'analytics' | 
 const STORAGE_KEY = 'language-school-cookie-consent-v1'
 const CHANGE_EVENT = 'language-school:cookie-consent-change'
 const OPEN_EVENT = 'language-school:cookie-consent-open'
+// The AEPD cookie guide treats a validity period longer than 24 months as a
+// poor practice. Expiring a decision also makes a changed cookie inventory
+// visible to returning visitors instead of silently relying on an old choice.
+const CONSENT_MAX_AGE_MS = 24 * 30 * 24 * 60 * 60 * 1000
 
 export function readCookieConsent(): CookieConsentPreferences | null {
   if (typeof window === 'undefined') return null
@@ -18,12 +22,18 @@ export function readCookieConsent(): CookieConsentPreferences | null {
     const raw = window.localStorage.getItem(STORAGE_KEY)
     if (!raw) return null
     const parsed = JSON.parse(raw) as Partial<CookieConsentPreferences>
+    const updatedAt = typeof parsed.updatedAt === 'string' ? parsed.updatedAt : ''
+    const updatedAtMs = Date.parse(updatedAt)
+    if (!Number.isFinite(updatedAtMs) || Date.now() - updatedAtMs >= CONSENT_MAX_AGE_MS) {
+      window.localStorage.removeItem(STORAGE_KEY)
+      return null
+    }
     return {
       necessary: true,
       preferences: parsed.preferences === true,
       analytics: parsed.analytics === true,
       marketing: parsed.marketing === true,
-      updatedAt: typeof parsed.updatedAt === 'string' ? parsed.updatedAt : '',
+      updatedAt,
     }
   } catch {
     return null
