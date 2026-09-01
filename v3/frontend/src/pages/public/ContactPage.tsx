@@ -64,13 +64,13 @@ export default function ContactPage() {
             <div className="panel-heading"><div><span className="eyebrow">SOLICITUD</span><h2>Quiero información</h2></div></div>
             {notice && <div className="cms-notice success-notice" role="status">{notice}</div>}
             {error && <div className="cms-notice" role="alert">{error}</div>}
-            <label className="field-stack"><span>Nombre</span><input value={name} onChange={(event) => setName(event.target.value)} required /></label>
+            <label className="field-stack"><span>Nombre</span><input autoComplete="name" value={name} onChange={(event) => setName(event.target.value)} required /></label>
             <div className="field-row">
-              <label className="field-stack"><span>Email</span><input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required /></label>
-              <label className="field-stack"><span>Teléfono</span><input value={phone} onChange={(event) => setPhone(event.target.value)} /></label>
+              <label className="field-stack"><span>Email</span><input type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} required /></label>
+              <label className="field-stack"><span>Teléfono</span><input type="tel" autoComplete="tel" inputMode="tel" value={phone} onChange={(event) => setPhone(event.target.value)} /></label>
             </div>
-            <label className="field-stack"><span>Me interesa</span><input value={interest} onChange={(event) => setInterest(event.target.value)} placeholder="Kids, B1, conversación..." /></label>
-            <label className="field-stack"><span>Mensaje</span><textarea rows={6} value={message} onChange={(event) => setMessage(event.target.value)} required /></label>
+            <label className="field-stack"><span>Me interesa</span><input autoComplete="off" value={interest} onChange={(event) => setInterest(event.target.value)} placeholder="Kids, B1, conversación..." /></label>
+            <label className="field-stack"><span>Mensaje</span><textarea autoComplete="off" rows={6} value={message} onChange={(event) => setMessage(event.target.value)} required /></label>
             <button className="button button-primary" type="submit" disabled={sending}>{sending ? 'Enviando…' : 'Enviar solicitud'}</button>
             <small className="muted">Este formulario todavía no está abierto para solicitudes reales.</small>
           </form>
