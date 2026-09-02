@@ -2,14 +2,15 @@
 
 // Keep a single operational timestamp, not a browsing history or a live
 // presence signal. The server, rather than the browser, owns this value.
-const LAST_ACCESS_THROTTLE_MS = 15 * 60 * 1000
-
 onRecordAuthRequest((e) => {
+  // PocketBase invokes hook handlers in their own runtime scope, so keep this
+  // value local to the handler instead of relying on a module-level binding.
+  const throttleMs = 15 * 60 * 1000
   const record = e.record
   const previous = new Date(record.getString('last_access_at')).getTime()
   const now = Date.now()
 
-  if (!Number.isFinite(previous) || now - previous >= LAST_ACCESS_THROTTLE_MS) {
+  if (!Number.isFinite(previous) || now - previous >= throttleMs) {
     try {
       record.set('last_access_at', new Date(now).toISOString())
       e.app.save(record)
