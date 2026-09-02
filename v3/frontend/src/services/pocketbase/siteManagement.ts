@@ -66,7 +66,7 @@ Las solicitudes de baja, cancelación o modificación deben comunicarse por escr
 
 El acceso al área privada, las videoclases y los materiales es personal y se limita al alumno matriculado. No se permite compartir credenciales, enlaces de clase o materiales sin autorización. Las clases no se graban salvo información previa y autorización cuando resulte necesaria.
 
-Cuando el alumno sea menor, la matrícula y las autorizaciones necesarias serán gestionadas por su padre, madre o representante legal. Para consultas, incidencias o reclamaciones puedes escribir a languageschool_rocioruiz@hotmail.com.`
+Cuando el alumno sea menor, la matrícula y las autorizaciones necesarias serán gestionadas por su padre, madre o representante legal. Para consultas, incidencias o reclamaciones, utiliza los canales de contacto publicados por la academia.`
 
 export const demoPricingPlans: PricingPlanRecord[] = [
   {
