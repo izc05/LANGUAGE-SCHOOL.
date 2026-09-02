@@ -7,5 +7,6 @@ export const teacherNav = [
   { label: 'Material', to: '/profesor/material' },
   { label: 'Tareas', to: '/profesor/tareas' },
   { label: 'Correcciones', to: '/profesor/correcciones' },
+  { label: 'Avisos', to: '/profesor/avisos' },
   { label: 'Mi perfil', to: '/profesor/perfil' },
 ] as const

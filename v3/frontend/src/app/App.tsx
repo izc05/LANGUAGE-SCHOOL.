@@ -27,6 +27,7 @@ const StudentAssignmentsPage = lazy(() => import('../pages/student/StudentAssign
 const StudentClassesPage = lazy(() => import('../pages/student/StudentClassesPage'))
 const StudentOnlineClassPage = lazy(() => import('../pages/student/StudentOnlineClassPage'))
 const StudentNotificationsPage = lazy(() => import('../pages/student/StudentNotificationsPage'))
+const TeacherNotificationsPage = lazy(() => import('../pages/teacher/TeacherNotificationsPage'))
 
 const TeacherDashboard = lazy(() => import('../pages/teacher/TeacherDashboard'))
 const TeacherStudentsPage = lazy(() => import('../pages/teacher/TeacherStudentsPage'))
@@ -108,8 +109,9 @@ export default function App() {
         <Route path="/profesor/agenda" element={<RequireRole allow={['TEACHER']}><TeacherAgendaPage /></RequireRole>} />
         <Route path="/profesor/material" element={<RequireRole allow={['TEACHER']}><TeacherMaterialPage /></RequireRole>} />
         <Route path="/profesor/tareas" element={<RequireRole allow={['TEACHER']}><TeacherAssignmentsPage /></RequireRole>} />
-        <Route path="/profesor/correcciones" element={<RequireRole allow={['TEACHER']}><TeacherCorrectionsPage /></RequireRole>} />
-        <Route path="/profesor/perfil" element={<RequireRole allow={['TEACHER']}><AccountProfilePage portal="TEACHER" /></RequireRole>} />
+          <Route path="/profesor/correcciones" element={<RequireRole allow={['TEACHER']}><TeacherCorrectionsPage /></RequireRole>} />
+          <Route path="/profesor/avisos" element={<RequireRole allow={['TEACHER']}><TeacherNotificationsPage /></RequireRole>} />
+          <Route path="/profesor/perfil" element={<RequireRole allow={['TEACHER']}><AccountProfilePage portal="TEACHER" /></RequireRole>} />
 
         <Route path="/admin" element={<RequireRole allow={['ADMIN']}><AdminDashboard /></RequireRole>} />
         <Route path="/admin/web" element={<RequireRole allow={['ADMIN']}><AdminSiteEditor /></RequireRole>} />

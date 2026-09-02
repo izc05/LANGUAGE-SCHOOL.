@@ -44,3 +44,29 @@ test('ADMIN envía un aviso y el alumno lo recibe en su portal', async ({ page }
   await expect(page.getByText(title)).toBeVisible()
   await expect(page.getByText(body)).toBeVisible()
 })
+
+test('ADMIN envía un aviso y el profesor lo recibe en su portal', async ({ page }) => {
+  const title = 'E2E Coordinación docente'
+  const body = 'Recuerda revisar el material preparado para la próxima clase.'
+
+  await login(page, requiredEnv('E2E_ADMIN_EMAIL'), requiredEnv('E2E_ADMIN_PASSWORD'), /\/admin$/)
+  await page.goto('/admin/avisos')
+  await page.getByRole('radio', { name: 'Profesorado', exact: true }).check()
+  await page.getByRole('combobox', { name: 'Profesor', exact: true }).selectOption({ label: 'E2E Teacher' })
+  await page.getByLabel('Título').fill(title)
+  await page.getByLabel('Mensaje').fill(body)
+  await page.getByRole('button', { name: 'Enviar aviso' }).click()
+  await expect(page.getByText('Aviso enviado a 1 profesor.')).toBeVisible()
+  await expect(page.getByText(title).first()).toBeVisible()
+
+  await page.getByRole('button', { name: 'Cerrar sesión' }).click()
+  await expect(page).toHaveURL(/\/acceso$/)
+
+  await login(page, requiredEnv('E2E_TEACHER_EMAIL'), requiredEnv('E2E_TEACHER_PASSWORD'), /\/profesor$/)
+  const teacherNav = page.getByRole('navigation', { name: 'Menú de Profesor' })
+  await teacherNav.getByRole('link', { name: 'Avisos' }).click()
+  await expect(page).toHaveURL(/\/profesor\/avisos$/)
+  await expect(page.getByRole('heading', { name: 'Avisos', exact: true })).toBeVisible()
+  await expect(page.getByText(title)).toBeVisible()
+  await expect(page.getByText(body)).toBeVisible()
+})

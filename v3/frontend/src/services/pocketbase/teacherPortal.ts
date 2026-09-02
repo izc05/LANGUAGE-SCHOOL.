@@ -8,6 +8,7 @@ import type {
   CourseRecord,
   GroupRecord,
   MaterialRecord,
+  NotificationRecord,
   SubmissionRecord,
 } from './studentPortal'
 
@@ -98,6 +99,21 @@ export async function listMyTeacherEnrollments(): Promise<TeacherEnrollmentRecor
     sort: 'group.name,student.name',
     expand: 'student,group,group.course',
   })
+}
+
+export async function listMyTeacherNotifications(limit = 30): Promise<NotificationRecord[]> {
+  const user = requireTeacher()
+  const result = await pb.collection(collections.notifications).getList<NotificationRecord>(1, limit, {
+    filter: `recipient = "${quote(user.id)}"`,
+    sort: '-created',
+  })
+  return result.items
+}
+
+export async function markMyTeacherNotificationRead(record: NotificationRecord): Promise<NotificationRecord> {
+  const user = requireTeacher()
+  if (record.recipient !== user.id) throw new Error('No puedes modificar avisos de otro usuario.')
+  return pb.collection(collections.notifications).update<NotificationRecord>(record.id, { read_at: new Date().toISOString() })
 }
 
 export async function listMyTeacherUpcomingClasses(limit = 50): Promise<ClassRecord[]> {

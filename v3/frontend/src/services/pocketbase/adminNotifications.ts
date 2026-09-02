@@ -6,6 +6,7 @@ import type { NotificationRecord } from './studentPortal'
 import type { AppUser } from './types'
 
 export type AdminNotificationType = NotificationRecord['type']
+export type NotificationRecipientRole = Extract<AppUser['role'], 'STUDENT' | 'TEACHER'>
 
 export type AdminNotificationRecord = NotificationRecord & {
   expand?: {
@@ -27,18 +28,18 @@ function requireAdmin(): AppUser {
   return user
 }
 
-export async function listNotificationRecipients(): Promise<AppUser[]> {
+export async function listNotificationRecipients(role: NotificationRecipientRole = 'STUDENT'): Promise<AppUser[]> {
   if (isDemoMode) {
     return [
       {
         id: 'demo-student', collectionId: 'demo', collectionName: collections.users,
-        created: '', updated: '', expand: {}, email: 'alumno@demo.local', emailVisibility: false,
-        verified: true, name: 'Emma', surname: 'Demo', role: 'STUDENT', status: 'ACTIVE', avatar: '', phone: '',
+        created: '', updated: '', expand: {}, email: role === 'TEACHER' ? 'profesor@demo.local' : 'alumno@demo.local', emailVisibility: false,
+        verified: true, name: role === 'TEACHER' ? 'Laura' : 'Emma', surname: 'Demo', role, status: 'ACTIVE', avatar: '', phone: '',
       },
     ]
   }
   requireAdmin()
-  return (await listAdminUsers('STUDENT')).filter((user) => user.status === 'ACTIVE')
+  return (await listAdminUsers(role)).filter((user) => user.status === 'ACTIVE')
 }
 
 export async function listAdminNotifications(limit = 100): Promise<AdminNotificationRecord[]> {
@@ -55,7 +56,7 @@ export async function sendAdminNotifications(input: SendAdminNotificationInput):
   if (isDemoMode) return input.recipientIds.length
   const admin = requireAdmin()
   const uniqueRecipients = [...new Set(input.recipientIds.filter(Boolean))]
-  if (uniqueRecipients.length === 0) throw new Error('Selecciona al menos un alumno.')
+  if (uniqueRecipients.length === 0) throw new Error('Selecciona al menos un destinatario.')
 
   let sent = 0
   for (const recipient of uniqueRecipients) {

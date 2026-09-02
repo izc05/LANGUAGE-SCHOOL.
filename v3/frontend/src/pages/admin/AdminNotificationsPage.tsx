@@ -7,6 +7,7 @@ import {
   sendAdminNotifications,
   type AdminNotificationRecord,
   type AdminNotificationType,
+  type NotificationRecipientRole,
 } from '../../services/pocketbase/adminNotifications'
 import type { AppUser } from '../../services/pocketbase/types'
 import { adminNav } from './adminNav'
@@ -20,7 +21,7 @@ const types: { value: AdminNotificationType; label: string }[] = [
 ]
 
 function fullName(user?: AppUser): string {
-  if (!user) return 'Alumno'
+  if (!user) return 'Destinatario'
   return [user.name, user.surname].filter(Boolean).join(' ').trim() || user.email
 }
 
@@ -32,8 +33,9 @@ function formatDate(value: string): string {
 }
 
 export default function AdminNotificationsPage() {
-  const [students, setStudents] = useState<AppUser[]>([])
+  const [recipients, setRecipients] = useState<AppUser[]>([])
   const [history, setHistory] = useState<AdminNotificationRecord[]>([])
+  const [audience, setAudience] = useState<NotificationRecipientRole>('STUDENT')
   const [recipientMode, setRecipientMode] = useState<'ONE' | 'ALL'>('ONE')
   const [recipientId, setRecipientId] = useState('')
   const [title, setTitle] = useState('')
@@ -46,8 +48,8 @@ export default function AdminNotificationsPage() {
 
   async function loadData() {
     if (isDemoMode) {
-      const recipients = await listNotificationRecipients()
-      setStudents(recipients)
+      const recipients = await listNotificationRecipients(audience)
+      setRecipients(recipients)
       setRecipientId(recipients[0]?.id ?? '')
       setLoading(false)
       return
@@ -56,10 +58,10 @@ export default function AdminNotificationsPage() {
     setLoading(true)
     try {
       const [recipients, records] = await Promise.all([
-        listNotificationRecipients(),
+        listNotificationRecipients(audience),
         listAdminNotifications(),
       ])
-      setStudents(recipients)
+      setRecipients(recipients)
       setHistory(records)
       setRecipientId((current) => current || recipients[0]?.id || '')
     } catch {
@@ -71,9 +73,11 @@ export default function AdminNotificationsPage() {
 
   useEffect(() => {
     void loadData()
-  }, [])
+  }, [audience])
 
-  const activeStudents = students.length
+  const activeRecipients = recipients.length
+  const audienceLabel = audience === 'TEACHER' ? 'profesorado' : 'alumnado'
+  const singularAudienceLabel = audience === 'TEACHER' ? 'profesor' : 'alumno'
   const unreadHistory = useMemo(() => history.filter((item) => !item.read_at).length, [history])
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -83,7 +87,7 @@ export default function AdminNotificationsPage() {
 
     const cleanTitle = title.trim()
     const cleanBody = body.trim()
-    const recipientIds = recipientMode === 'ALL' ? students.map((student) => student.id) : [recipientId]
+    const recipientIds = recipientMode === 'ALL' ? recipients.map((recipient) => recipient.id) : [recipientId]
 
     if (!cleanTitle || !cleanBody) {
       setError('Escribe un título y un mensaje.')
@@ -91,14 +95,14 @@ export default function AdminNotificationsPage() {
     }
 
     if (recipientIds.filter(Boolean).length === 0) {
-      setError('No hay alumnos activos disponibles para recibir el aviso.')
+      setError(`No hay ${audienceLabel} activo disponible para recibir el aviso.`)
       return
     }
 
     setSending(true)
     try {
       const sent = await sendAdminNotifications({ recipientIds, title: cleanTitle, body: cleanBody, type })
-      setNotice(`Aviso enviado a ${sent} ${sent === 1 ? 'alumno' : 'alumnos'}.`)
+      setNotice(`Aviso enviado a ${sent} ${sent === 1 ? singularAudienceLabel : audienceLabel}.`)
       setTitle('')
       setBody('')
       setType('GENERAL')
@@ -117,10 +121,10 @@ export default function AdminNotificationsPage() {
           <div>
             <span className="eyebrow">COMUNICACIÓN · AVISOS</span>
             <h2>Centro de avisos</h2>
-            <p>Envía mensajes dentro del espacio privado del alumno sin depender de WhatsApp o correo.</p>
+            <p>Envía mensajes dentro de los espacios privados de alumnado y profesorado sin depender de WhatsApp o correo.</p>
           </div>
           <div className="notification-admin-metrics">
-            <span className="status info">{activeStudents} alumnos activos</span>
+            <span className="status info">{activeRecipients} {audience === 'TEACHER' ? (activeRecipients === 1 ? 'profesor activo' : 'profesores activos') : (activeRecipients === 1 ? 'alumno activo' : 'alumnos activos')}</span>
             {!isDemoMode && <span className="status warning">{unreadHistory} sin leer</span>}
           </div>
         </header>
@@ -134,21 +138,27 @@ export default function AdminNotificationsPage() {
 
             <fieldset className="notification-recipient-mode">
               <legend>Destinatarios</legend>
-              <label><input type="radio" name="recipientMode" checked={recipientMode === 'ONE'} onChange={() => setRecipientMode('ONE')} /> Un alumno</label>
-              <label><input type="radio" name="recipientMode" checked={recipientMode === 'ALL'} onChange={() => setRecipientMode('ALL')} /> Todos los alumnos activos</label>
+              <label><input type="radio" name="audience" checked={audience === 'STUDENT'} onChange={() => { setAudience('STUDENT'); setRecipientId('') }} /> Alumnado</label>
+              <label><input type="radio" name="audience" checked={audience === 'TEACHER'} onChange={() => { setAudience('TEACHER'); setRecipientId('') }} /> Profesorado</label>
+            </fieldset>
+
+            <fieldset className="notification-recipient-mode">
+              <legend>Alcance</legend>
+              <label><input type="radio" name="recipientMode" checked={recipientMode === 'ONE'} onChange={() => setRecipientMode('ONE')} /> Un {singularAudienceLabel}</label>
+              <label><input type="radio" name="recipientMode" checked={recipientMode === 'ALL'} onChange={() => setRecipientMode('ALL')} /> Todo el {audienceLabel} activo</label>
             </fieldset>
 
             {recipientMode === 'ONE' && (
               <label className="field-stack">
-                <span>Alumno</span>
-                <select value={recipientId} onChange={(event) => setRecipientId(event.target.value)} disabled={loading || students.length === 0}>
-                  {students.length === 0 && <option value="">Sin alumnos activos</option>}
-                  {students.map((student) => <option value={student.id} key={student.id}>{fullName(student)}</option>)}
+                <span>{audience === 'TEACHER' ? 'Profesor' : 'Alumno'}</span>
+                <select value={recipientId} onChange={(event) => setRecipientId(event.target.value)} disabled={loading || recipients.length === 0}>
+                  {recipients.length === 0 && <option value="">Sin {audienceLabel} activo</option>}
+                  {recipients.map((recipient) => <option value={recipient.id} key={recipient.id}>{fullName(recipient)}</option>)}
                 </select>
               </label>
             )}
 
-            {recipientMode === 'ALL' && <div className="notification-audience-note">Se crearán {activeStudents} avisos individuales, uno para cada alumno activo.</div>}
+            {recipientMode === 'ALL' && <div className="notification-audience-note">Se crearán {activeRecipients} avisos individuales, uno para cada persona activa del {audienceLabel}.</div>}
 
             <label className="field-stack"><span>Tipo</span><select value={type} onChange={(event) => setType(event.target.value as AdminNotificationType)}>{types.map((item) => <option value={item.value} key={item.value}>{item.label}</option>)}</select></label>
             <label className="field-stack"><span>Título</span><input value={title} onChange={(event) => setTitle(event.target.value)} maxLength={220} required /></label>
