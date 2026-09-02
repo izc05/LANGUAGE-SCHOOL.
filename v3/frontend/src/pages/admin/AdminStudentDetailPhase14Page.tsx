@@ -21,6 +21,7 @@ import { demoSiteSettings, getSiteSettings, type SiteSettingsRecord } from '../.
 import type { AppUser } from '../../services/pocketbase/types'
 import type { ClassDeliveryMode, ClassRecord } from '../../services/pocketbase/studentPortal'
 import { downloadPaymentReceiptPdf, downloadPaymentsExcel, type PaymentReceiptAcademy } from '../../utils/paymentExcel'
+import { formatLastAccess } from '../../utils/lastAccess'
 import AdminStudentLevelCard from './AdminStudentLevelCard'
 import { adminNav } from './adminNav'
 
@@ -284,6 +285,7 @@ export default function AdminStudentDetailPhase14Page() {
             <div><span>Email</span><strong>{student?.email || '—'}</strong></div><div><span>Teléfono</span><strong>{student?.phone || 'Sin teléfono'}</strong></div>
             <div><span>Fecha de nacimiento</span><strong>{formatDate(profile?.birth_date)}</strong></div><div><span>Tutor/a</span><strong>{profile?.guardian_name || 'No indicado'}</strong></div>
             <div><span>Teléfono tutor/a</span><strong>{profile?.guardian_phone || 'No indicado'}</strong></div><div><span>Cuenta</span><strong>{accountStateLabel(student || undefined)}</strong></div>
+            <div><span>Último acceso</span><strong>{formatLastAccess(student?.last_access_at)}</strong></div>
           </div></article>
 
           {student && <AdminAccountInvitationCard userId={student.id} accountStatus={student.status} isDemoMode={isDemoMode} />}

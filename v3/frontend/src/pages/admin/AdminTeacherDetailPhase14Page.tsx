@@ -18,6 +18,7 @@ import { getAdminTeacherProfilePhase14, saveAdminTeacherProfilePhase14 } from '.
 import type { AppUser } from '../../services/pocketbase/types'
 import type { ClassDeliveryMode, ClassRecord } from '../../services/pocketbase/studentPortal'
 import type { TeacherProfileRecord } from '../../services/pocketbase/teacherPortal'
+import { formatLastAccess } from '../../utils/lastAccess'
 import { adminNav } from './adminNav'
 
 function fullName(user?: AppUser): string {
@@ -163,7 +164,7 @@ export default function AdminTeacherDetailPhase14Page() {
         <section className="phase14-profile-grid">
           <article className="panel phase14-profile-card"><div className="panel-heading"><div><span className="eyebrow">DOCENCIA</span><h3>Carga académica</h3></div></div><div className="phase14-data-grid"><div><span>Alumnos</span><strong>{assignedStudentIds.size}</strong></div><div><span>Grupos activos</span><strong>{activeGroups.length}</strong></div><div><span>Clases totales</span><strong>{classes.length}</strong></div><div><span>Completadas</span><strong>{completedCount}</strong></div><div><span>Cursos</span><strong>{courseNames.length ? courseNames.join(' · ') : 'Sin asignar'}</strong></div><div><span>Modalidad</span><strong>{modes.length ? modes.map(modeLabel).join(' · ') : 'Sin definir'}</strong></div></div></article>
 
-          <article className="panel phase14-profile-card"><div className="panel-heading"><div><span className="eyebrow">PERFIL</span><h3>Datos docentes</h3></div></div><div className="phase14-data-grid"><div><span>Email</span><strong>{teacher?.email || '—'}</strong></div><div><span>Teléfono</span><strong>{teacher?.phone || 'Sin teléfono'}</strong></div><div><span>Perfil público</span><strong>{profile?.public_profile ? 'Visible en la web' : 'Oculto'}</strong></div><div><span>Especialidades</span><strong>{profileSpecialties(profile).length ? profileSpecialties(profile).join(' · ') : 'Sin completar'}</strong></div></div><div className="phase14-bio"><span>Biografía</span><p>{profile?.bio || 'Sin biografía. Puedes completarla desde Editar ficha.'}</p></div></article>
+          <article className="panel phase14-profile-card"><div className="panel-heading"><div><span className="eyebrow">PERFIL</span><h3>Datos docentes</h3></div></div><div className="phase14-data-grid"><div><span>Email</span><strong>{teacher?.email || '—'}</strong></div><div><span>Teléfono</span><strong>{teacher?.phone || 'Sin teléfono'}</strong></div><div><span>Último acceso</span><strong>{formatLastAccess(teacher?.last_access_at)}</strong></div><div><span>Perfil público</span><strong>{profile?.public_profile ? 'Visible en la web' : 'Oculto'}</strong></div><div><span>Especialidades</span><strong>{profileSpecialties(profile).length ? profileSpecialties(profile).join(' · ') : 'Sin completar'}</strong></div></div><div className="phase14-bio"><span>Biografía</span><p>{profile?.bio || 'Sin biografía. Puedes completarla desde Editar ficha.'}</p></div></article>
 
           {teacher && <AdminAccountInvitationCard userId={teacher.id} accountStatus={teacher.status} isDemoMode={isDemoMode} />}
 

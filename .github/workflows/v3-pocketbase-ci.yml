@@ -131,6 +131,9 @@ jobs:
       - name: Run student and teacher isolation smoke test
         run: bash "$GITHUB_WORKSPACE/v3/pocketbase/ci/security-isolation-smoke.sh"
 
+      - name: Run last access privacy smoke test
+        run: bash "$GITHUB_WORKSPACE/v3/pocketbase/ci/last-access-security-smoke.sh"
+
       - name: Run learning synchronization smoke test
         run: bash "$GITHUB_WORKSPACE/v3/pocketbase/ci/learning-sync-smoke.sh"
 

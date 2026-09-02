@@ -10,6 +10,7 @@ import {
   type AdminAccountRow,
 } from '../../services/pocketbase/adminAccounts'
 import { adminNav } from './adminNav'
+import { formatLastAccess } from '../../utils/lastAccess'
 
 type InviteForm = {
   name: string
@@ -74,6 +75,7 @@ export default function AdminAdministratorsPage() {
         phone: currentAdmin.phone || '',
         status: currentAdmin.status,
         invitationStatus: 'NONE',
+        lastAccessAt: currentAdmin.last_access_at,
       }] : [])
       return
     }
@@ -223,6 +225,7 @@ export default function AdminAdministratorsPage() {
                     <div><span>Activación</span><strong>{invitationLabel(account.invitationStatus)}</strong></div>
                     <div><span>Caduca</span><strong>{formatDate(account.invitationExpiresAt)}</strong></div>
                     <div><span>Último envío</span><strong>{formatDate(account.invitationSentAt)}</strong></div>
+                    <div><span>Último acceso</span><strong>{formatLastAccess(account.lastAccessAt)}</strong></div>
                   </div>
 
                   {isCurrent && <p className="phase14-private-notes">Esta es tu sesión actual. Desde aquí no se muestra ni se modifica ninguna contraseña.</p>}

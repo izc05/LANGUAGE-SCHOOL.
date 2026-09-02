@@ -11,6 +11,7 @@ export type AppUser = RecordModel & {
   status: UserStatus
   avatar?: string
   phone?: string
+  last_access_at?: string
 }
 
 export type AuthSnapshot = {

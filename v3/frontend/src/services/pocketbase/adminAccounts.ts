@@ -21,6 +21,7 @@ export type AdminAccountRow = {
   invitationStatus: AdminAccountInvitationStatus
   invitationExpiresAt?: string
   invitationSentAt?: string | null
+  lastAccessAt?: string
 }
 
 function requireAdmin() {
@@ -34,7 +35,7 @@ export async function listAdminAccounts(): Promise<AdminAccountRow[]> {
   const accounts = await pb.collection(collections.users).getFullList<AppUser>({
     filter: 'role = "ADMIN"',
     sort: 'name,surname,email',
-    fields: 'id,email,name,surname,phone,role,status,verified,created,updated',
+    fields: 'id,email,name,surname,phone,role,status,last_access_at,verified,created,updated',
   })
 
   return Promise.all(accounts.map(async (account) => {
@@ -59,6 +60,7 @@ export async function listAdminAccounts(): Promise<AdminAccountRow[]> {
       invitationStatus,
       invitationExpiresAt,
       invitationSentAt,
+      lastAccessAt: account.last_access_at,
     }
   }))
 }
